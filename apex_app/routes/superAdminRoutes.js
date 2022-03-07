@@ -1,5 +1,5 @@
-const userViewController  = require('../controllers/userController');
-const userValidator = require('../validators/userValidator');
+const userViewController  = require('../controllers/superAdminController');
+const userValidator = require('../validators/superAdminValidator');
 const router = require('express').Router();
 const debug = require('debug')('app:routes');
 
@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).send('Email does not exist.');
     };
 
-    res.status(200).send('Login Successful.');
+    res.status(200).send({message: 'Login successful', isLoggedIn});
 });
 
 router.post('/forgot-password', async (req, res) => {

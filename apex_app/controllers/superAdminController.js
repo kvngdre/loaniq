@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
-const User = require('../models/userModel');
+const User = require('../models/superAdminModel');
 const debug = require('debug')('app:email');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
@@ -88,12 +88,13 @@ const user = {
             if(!user) throw new Error('Invalid email or password.');
 
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(isValidPassword instanceof Error) {
+            if(isValidPassword instanceof Error)  throw new Error(isValidPassword.message);
 
-                throw new Error(isValidPassword.message);
-            };
+            const token = user.generateToken();
 
+            user.token = token;
 
+            return user
 
         }catch(exception) {
             return exception;
