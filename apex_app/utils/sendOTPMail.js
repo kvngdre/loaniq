@@ -13,6 +13,10 @@ oauth2Client.setCredentials( {refresh_token: config.get('mail.refreshToken')} );
 const senderEmailAddress = config.get('mail.senderEmailAddress');
 
 
+/**
+ * Create a nodeMail transporter
+ * @returns transporter
+ */
 async function getTransporter() {
     try{
         // Creating reusable transport object

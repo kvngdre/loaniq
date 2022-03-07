@@ -33,6 +33,9 @@ const user = {
     validateRegVerification: function(user) {
         const schema = Joi.object({
             email: Joi.string().required().email().min(10).max(50),
+            otp: Joi.string().required()
+                        .pattern(/^[0-9]{6}$/)
+                        .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
             password: joiPassword
                         .string()
                         .required()
@@ -40,10 +43,7 @@ const user = {
                         .noWhiteSpaces()
                         .messages({
                             'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        }),
-            otp: Joi.string().required().pattern(/^[0-9]{6}$/).messages({
-                'string.pattern.base': '{#label} must be 6 digits.'
-            })
+                        })
         });
 
         return schema.validate(user);

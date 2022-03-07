@@ -1,6 +1,6 @@
 const express = require('express');
 const authRoute = require('../routes/authRoute');
-const userRoutes = require('../routes/superAdminRoutes');
+const adminRoutes = require('../routes/adminRoutes');
 const errorHandler = require('../middleware/errorHandler');
 
 module.exports = function(app) {
@@ -8,7 +8,7 @@ module.exports = function(app) {
     app.use(express.json());
 
     // Route handlers
-    app.use('/api/users', userRoutes);
+    app.use('/api/admin', adminRoutes);
     app.use('/api/auth', authRoute);
 
     // Error handling middleware

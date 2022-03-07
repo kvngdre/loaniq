@@ -58,13 +58,8 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
 
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
-    
     createdAt: {
-        // TODO: Look up how to set timezone for this.
+        // TODO: Look up how to set timezone for this to Nigerian time.
         type: Date,
         default: () => Date.now()
     }

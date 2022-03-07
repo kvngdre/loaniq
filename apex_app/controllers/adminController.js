@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
-const User = require('../models/superAdminModel');
-const debug = require('debug')('app:email');
+const User = require('../models/adminModel');
+const emailDebug = require('debug')('app:email');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 
@@ -41,12 +41,18 @@ const user = {
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
 
             if(mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
+                emailDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
 
-            debug('Email sent successfully');
+            emailDebug('Email sent successfully');
             await newUser.save();
+
+            // OTP will expire after one minute
+            setTimeout(() => {
+                newUser.otp = null;
+                newUser.save();
+            }, 60_000);
 
             return {
                 message: 'User created and OTP sent to email.', 
@@ -70,10 +76,9 @@ const user = {
 
             // confirm OTP
             const isOTPValid = requestBody.otp === user.otp
-            console.log(requestBody.otp);
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await user.updateOne( {emailVerify: true} );
+            await user.updateOne( {emailVerify: true, otp: null} );
 
             return user.generateToken();
 
@@ -84,7 +89,7 @@ const user = {
 
     login: async function(requestBody) {
         try{
-            const user = await User.findOne( {email: requestBody.email} );
+            let user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
 
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
@@ -93,8 +98,9 @@ const user = {
             const token = user.generateToken();
 
             user.token = token;
+            user = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'token']);
 
-            return user
+            return user;
 
         }catch(exception) {
             return exception;

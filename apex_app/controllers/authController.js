@@ -1,4 +1,4 @@
-const User = require('../models/superAdminModel');
+const User = require('../models/adminModel');
 const bcrypt = require('bcrypt');
 
 const auth = {
@@ -15,8 +15,8 @@ const auth = {
 
             return user.generateToken();
 
-        } catch(except) {
-            return except;
+        } catch(exception) {
+            return exception;
         };         
     }
 
