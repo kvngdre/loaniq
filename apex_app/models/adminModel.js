@@ -1,7 +1,6 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const { DateTime } = require('luxon');
 
 
 const userSchema = new mongoose.Schema({
@@ -52,14 +51,9 @@ const userSchema = new mongoose.Schema({
 
     otp: {
         type: String,
-    },
+    }
 
-    // createdAt: {
-    //     type: Date,
-    //     default: () => DateTime.now().toISO()
-    // }
-},
-{
+}, {
     timestamps: true
 });
 

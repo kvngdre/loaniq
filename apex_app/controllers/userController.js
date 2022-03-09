@@ -75,7 +75,7 @@ const user = {
             if(isValidPassword instanceof Error) throw new Error(isValidPassword.message);
 
             // Check if user already verified.
-            if(user.emailVerify) throw new Error('Email verified.');
+            if(user.emailVerify) throw new Error('Email already verified.');
 
             // confirm OTP
             const isOTPValid = requestBody.otp === user.otp

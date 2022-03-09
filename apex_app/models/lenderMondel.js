@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { DateTime } = require('luxon');
 
 
 const lenderSchema = new mongoose.Schema({
@@ -42,14 +41,9 @@ const lenderSchema = new mongoose.Schema({
     adminUser: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'
-    },
-
-    createdAt: {
-        type: Date,
-        default: () => DateTime.now().toISO()
     }
-},
-{
+    
+}, {
     timestamps: true
 });
 
