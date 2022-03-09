@@ -7,7 +7,7 @@ const configurations = require('./startUp/config');
 
 
 // Setup
-configurations();
+// configurations();
 connectDB();
 appRoutes(app);
 

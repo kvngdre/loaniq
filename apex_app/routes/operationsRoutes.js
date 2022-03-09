@@ -1,5 +1,5 @@
-const userViewController  = require('../controllers/operationsController');
-const userValidator = require('../validators/operationsValidator');
+const userViewController  = require('../controllers/userController');
+const userValidator = require('../validators/userValidator');
 const router = require('express').Router();
 const debug = require('debug')('app:routes');
 

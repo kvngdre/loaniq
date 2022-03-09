@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const debug = require('debug')('app:routes');
-const userValidator = require('../validators/loanAgentValidator');
-const userViewController  = require('../controllers/loanAgentController');
+const userValidator = require('../validators/userValidator');
+const userViewController  = require('../controllers/userController');
 
 
 router.get('/', async (req, res) => {

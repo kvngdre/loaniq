@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
-const User = require('../models/loanAgentModel');
+const User = require('../models/adminModel');
 const emailDebug = require('debug')('app:email');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
@@ -141,6 +141,27 @@ const user = {
             return exception;
         };
     },
+
+    createUser: async function(requestBody) {
+        try{
+            switch(requestBody.role) {
+                case "credit officer":
+                    // create user
+                    break;
+                
+                case "operations officer":
+                    break;
+                
+                case "loan agent":
+                    break;
+
+                default:
+            }
+
+        }catch(exception) {
+            return exception;
+        }
+    }
 }
 
 module.exports = user;
