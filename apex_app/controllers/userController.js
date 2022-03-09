@@ -48,11 +48,11 @@ const user = {
             emailDebug('Email sent successfully');
             await newUser.save();
 
-            // OTP will expire after one minute
+            // OTP will expire after two minutes
             setTimeout(() => {
                 newUser.otp = null;
                 newUser.save();
-            }, 60_000);
+            }, 120_000);
 
             return {
                 message: 'User created and OTP sent to email.', 
@@ -73,6 +73,9 @@ const user = {
             // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(isValidPassword instanceof Error) throw new Error(isValidPassword.message);
+
+            // Check if user already verified.
+            if(user.emailVerify) throw new Error('Email verified.');
 
             // confirm OTP
             const isOTPValid = requestBody.otp === user.otp
@@ -119,7 +122,7 @@ const user = {
             return exception;
         };
     },
-
+    // TODO: Ensure this has been completed.
     changePassword: async function(requestBody) {
         try{
             // Check if user exists
@@ -156,11 +159,11 @@ const user = {
                     break;
 
                 default:
-            }
+            };
 
         }catch(exception) {
             return exception;
-        }
+        };
     }
 }
 

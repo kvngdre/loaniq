@@ -1,12 +1,8 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const { DateTime } = require('luxon');
 
-const lagosTimezone = function() {
-    return new Date().toLocaleString('en-GB', {
-        timeZone: 'Africa/Lagos'
-    });
-};
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -58,11 +54,13 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
 
-    createdAt: {
-        // TODO: Look up how to set timezone for this to Nigerian time.
-        type: Date,
-        default: () => Date.now()
-    }
+    // createdAt: {
+    //     type: Date,
+    //     default: () => DateTime.now().toISO()
+    // }
+},
+{
+    timestamps: true
 });
 
 userSchema.methods.generateToken = function() {
@@ -74,6 +72,6 @@ userSchema.methods.generateToken = function() {
     }, config.get('jwtPrivateKey'));
 }
 
-const User = mongoose.model('User', userSchema);
+const Admin = mongoose.model('Admin', userSchema);
 
-module.exports = User;
+module.exports = Admin;

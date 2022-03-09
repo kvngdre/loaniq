@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 
-const loanSchema = new mongoose.Schema({
+const customerSchema = new mongoose.Schema({
     firstName: {
         type: String,
         minLength: 3,
@@ -140,7 +140,8 @@ const loanSchema = new mongoose.Schema({
     },
 
     companyName: {
-        type: segmentSchema,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Segment',
         required: true,
     },
 
@@ -190,5 +191,13 @@ const loanSchema = new mongoose.Schema({
 
     }, 
 
+    loans: {
+        type: [ mongoose.Schema.Types.ObjectId],
+        ref: "LoanSchema"
+    }
 
+
+},
+{
+    timestamps: true
 });

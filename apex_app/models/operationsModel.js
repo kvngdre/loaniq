@@ -1,6 +1,7 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const { DateTime } = require('luxon');
 
 
 // Operations officer user schema
@@ -55,10 +56,12 @@ const userSchema = new mongoose.Schema({
     },
 
     createdAt: {
-        // TODO: Look up how to set timezone for this to Nigerian time.
         type: Date,
-        default: () => Date.now()
+        default: () => DateTime.now().toISO()
     }
+},
+{
+    timestamps: true
 });
 
 userSchema.methods.generateToken = function() {
@@ -70,6 +73,6 @@ userSchema.methods.generateToken = function() {
     }, config.get('jwtPrivateKey'));
 }
 
-const opUser = mongoose.model('UserOperations', userSchema);
+const opUser = mongoose.model('Operations', userSchema);
 
 module.exports = opUser;
