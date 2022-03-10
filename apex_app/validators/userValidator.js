@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const { joiPassword } = require('joi-password');
 
-const user = {
+const validators = {
     validateRegistration: function (user) {
         const schema = Joi.object({
             firstName: Joi.string().required().min(3).max(50),
@@ -74,4 +74,4 @@ const user = {
     }
 }
 
-module.exports = user;
+module.exports = validators;

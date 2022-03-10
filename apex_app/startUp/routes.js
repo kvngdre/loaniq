@@ -4,6 +4,7 @@ const userRoutes = require('../routes/userRoutes');
 const adminRoutes = require('../routes/adminRoutes');
 const loanAgentRoutes = require('../routes/loanAgentRoutes');
 const operationsRoutes = require('../routes/operationsRoutes');
+const lenderRoutes = require('../routes/lenderRoutes');
 const errorHandler = require('../middleware/errorHandler');
 
 module.exports = function(app) {
@@ -14,6 +15,7 @@ module.exports = function(app) {
     app.use('/api/auth', authRoute);
     app.use('/api/users', userRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api/lender', lenderRoutes);
     app.use('/api/operations', operationsRoutes);
     app.use('/api/loan-agent', loanAgentRoutes);
 

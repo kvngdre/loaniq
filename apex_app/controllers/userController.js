@@ -44,8 +44,8 @@ const user = {
                 emailDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
-
             emailDebug('Email sent successfully');
+            
             await newUser.save();
 
             // OTP will expire after two minutes

@@ -33,6 +33,11 @@ const lenderSchema = new mongoose.Schema({
         trim: true
     },
 
+    email: {
+        type: String,
+        required: true
+    },
+
     lenderURL: {
         type: String,
         trim: true
