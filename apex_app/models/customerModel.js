@@ -1,4 +1,8 @@
 const mongoose = require('mongoose');
+const Bank = require('../models/bankModel');
+const State = require('../models/stateModel');
+const Segment = require('../models/segmentModel');
+const debug = require('debug')('app:customerModel');
 
 
 const customerSchema = new mongoose.Schema({
@@ -30,9 +34,10 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['Male', 'Female'],
-        // default: 'Male'
+        default: 'Male'
     },
 
+    // TODO: work on exception return 
     dateOfBirth: {
         type: Date,
         required: true,
@@ -43,7 +48,7 @@ const customerSchema = new mongoose.Schema({
                     const dob_ = new Date(dob);
     
                     // Get the milliseconds between dates.
-                    const month_diff = new Date.now() - dob_.getTime();
+                    const month_diff = Date.now() - dob_.getTime();
     
                     // Convert to date format
                     const ageDate = new Date(month_diff);
@@ -52,20 +57,23 @@ const customerSchema = new mongoose.Schema({
                     const ageYear = ageDate.getUTCFullYear();
     
                     const age = ageYear - 1970;
-    
-                    return age >= 21;
+                    // TODO: Don't forget to delete this console.log
+                    console.log(age);
+                    return age >= 21 && age <= 60;
 
                 }catch(exception) {
-                    return exception;
+                    debug(exception.message);
+                    return false;
                 };
             },
-            message: "Age cannot be less than 21."
+            // TODO: research how to get to the age constant in the validator.
+            message: "Age should be minimum 21."
         },
     },
 
     residentialAddress: {
         type: String,
-        required: true,
+        // required: true,
         minLength: 5,
         maxLength: 255,
         trim: true,
@@ -73,8 +81,9 @@ const customerSchema = new mongoose.Schema({
     },
 
     stateResident: {
-        type: String,
-        required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State',
+        required: true
     },
     
     maritalStatus: {
@@ -87,6 +96,7 @@ const customerSchema = new mongoose.Schema({
             'Widow',
             'Widower'
         ],
+        default: 'Single',
         required: true,
         trim: true
     },
@@ -94,8 +104,9 @@ const customerSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: true,
-        unique: true,
-        trim: true
+        default: null,
+        // unique: true,
+        trim: true,
     },
 
     email: {
@@ -121,18 +132,18 @@ const customerSchema = new mongoose.Schema({
             "National ID card",
             "Driver's license"
         ],
-        required: true
+        // required: true
     },
 
     idNumber: {
         type: String,
-        required: true,
+        // required: true,
         minLength: 4,
         maxLength: 50,
         trim: true
     },
 
-    ippisNo: {
+    ippis: {
         type: String,
         required: true,
         unique: true,
@@ -147,56 +158,77 @@ const customerSchema = new mongoose.Schema({
 
     companyLocation: {
         type: String,
-        required: true,
+        // required: true,
         minLength: 6,
         maxLength: 255,
         lowercase: true,
         trim: true
     },
 
-    companyState:{
-        type: stateSchema,
+    // companyState:{
+    //     type: stateSchema,
 
-    },
+    // },
 
     dateOFEnlistment: {
         type: Date,
-        required: true
+        // required: true
     },
     
     // NOK - Next of Kin
     nameNOK: {
         type: String,
-        required: true,
+        // required: true,
         
     },
 
     addressNOK: {
         type: String,
-        required: true,
+        // required: true,
     },
 
-    stateNOK: {
-        type: stateSchema,
-    },
+    // stateNOK: {
+    //     type: stateSchema,
+    // },
 
     phoneNOK: {
         type: String,
-        required: true,
+        // required: true,
         trim: true
     },
 
     relationshipNOK: {
         type: String,
 
-    }, 
+    },
+
+    salaryAccountName: {
+        type: String,
+        // required: true,
+        trim: true,     
+    },
+
+    salaryAccountNumber: {
+        type: String,
+        // required: true,
+        trim: true
+    },
+
+    bankName: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Bank'
+    },
 
     loans: {
-        type: [ mongoose.Schema.Types.ObjectId],
-        ref: "LoanSchema"
+        type: [ mongoose.Schema.Types.ObjectId ],
+        ref: "Loan"
     }
 
 
 }, {
     timestamps: true
 });
+
+const Customer = mongoose.model('Customer', customerSchema);
+
+module.exports = Customer;
