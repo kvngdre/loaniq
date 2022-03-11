@@ -57,8 +57,7 @@ const customerSchema = new mongoose.Schema({
                     const ageYear = ageDate.getUTCFullYear();
     
                     const age = ageYear - 1970;
-                    // TODO: Don't forget to delete this console.log
-                    console.log(age);
+                    
                     return age >= 21 && age <= 60;
 
                 }catch(exception) {
@@ -145,7 +144,7 @@ const customerSchema = new mongoose.Schema({
 
     ippis: {
         type: String,
-        required: true,
+        // required: true,
         unique: true,
         uppercase: true
     },
@@ -223,7 +222,6 @@ const customerSchema = new mongoose.Schema({
         type: [ mongoose.Schema.Types.ObjectId ],
         ref: "Loan"
     }
-
 
 }, {
     timestamps: true

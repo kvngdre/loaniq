@@ -1,43 +1,43 @@
+const config = require('config');
 const mongoose = require('mongoose');
+
 
 const loanSchema = new mongoose.Schema({
     ippis: {
         type: String,
         required: true,
-        default: ""
-        // TODO: How do get access to the ippis in the customer.
     },
 
     netPay: {
-         type: Number,
-         required: true
-        // Should read netPay from our db
+        type: Number,
+        required: true
+        // Should read netPay from another db
     },
 
     amount: {
-         type: Number,
-         required: true,
-         min: 50_000
+        type: Number,
+        required: true,
+        min: 50_000
     },
 
     amountInWords: {
-         type: String,
+        type: String,
         //  required: true,
-         trim: true
+        trim: true
     },
 
     tenor: {
-         type: Number,
-         required: true,
-         min: 3,
-         max: 18
+        type: Number,
+        required: true,
+        min: config.get('minTenor'),
+        max: config.get('maxTenor')
     },
 
     recommendedTenor: {
-         type: Number,
-         default: function() { return this.tenor; }
+        type: Number,
+        default: (self=this) => self.tenor
     },
-    // TODO: how this is assigned??
+
     loanType: {
         type: String,
         enum: [

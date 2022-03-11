@@ -6,5 +6,9 @@
         "clientSecret": "08980qpFCcWlva5kKNEJKZCu",
         "refreshToken": "1//04UgEihHdFFj3CgYIARAAGAQSNwF-L9IruVhTtNMIbbFldBEtUW9jyqEySn3Any1Z1jANdVgEt9mchYG59ebF76JOVcGLDj-BH44",
         "senderEmailAddress": "ucheprince26@gmail.com"
-    }
+    },
+    "minLoanAmount": 50000,
+    "maxLoanAmount": 1000000, 
+    "minTenor": 1,
+    "maxTenor": 18
 }

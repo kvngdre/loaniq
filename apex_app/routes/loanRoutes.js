@@ -1,9 +1,27 @@
 const loanViewController = require('../controllers/loanController');
+const customerValidators = require('../validators/customerValidator');
+const loanValidators = require('../validators/loanValidator');
+const _ = require('lodash');
+const debug = require('debug')('loanRoute');
 const router = require('express').Router();
 
 router.post('/create-request', async (req, res) => {
+    try{
+        const customerObj = _.omit(req.body, ['loan']);
+        const loanObj = req.body.loan;
+
+        var { error } = customerValidators.validateCreation(customerObj);
+        if(error) throw error;
+        var { error } = loanValidators.validateCreation(loanObj);
+        if(error) throw error;
+
+    }catch(exception) {
+        return res.status(400).send(exception.details[0].message);
+    };
+
     const loanRequest = await loanViewController.createLoan(req.body);
-    if (loanRequest instanceof Error) return res.status(400).send(loanRequest.message) ;
+    debug(loanRequest.message, loanRequest.stack);
+    if (loanRequest instanceof Error) return res.status(200).send(loanRequest.message) ;
 
     res.status(200).send(loanRequest);
 });

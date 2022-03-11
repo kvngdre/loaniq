@@ -8,26 +8,29 @@ const manager = {
     createLoanRequest: async function(requestBody) {
         // create customer then loan and save.
         try{
-            const customer = await Customer.findOne( {ippis: requestBody.ippis} );
+            const doesExist = await Customer.findOne( {ippis: requestBody.ippis} ).exec();
+            
             // if customer exists
-            if(customer) {
-                // requestBody.loanRequest expecting ab obj
+            if(doesExist) {
                 requestBody.loan.ippis = requestBody.ippis;
-                const loan = new Loan(requestBody.loan);
-                await loan.save();
+                const newLoan = new Loan(requestBody.loan);
+                await newLoan.save();
 
-                customer.loans.push(loan._id);
+                doesExist.loans.push(newLoan._id);
                 
-                await customer.save();
+                await doesExist.save();
 
-                return customer;
+                return newLoan;
             };
 
+            const newCustomer = new Customer(_.omit(requestBody, ['loan']));
+            
+            // Create customer loan
             const customerLoan = new Loan(requestBody.loan);
-            // customerLoan.ippis = requestBody.ippis;
+            customerLoan.ippis = requestBody.ippis;
             await customerLoan.save();
 
-            const newCustomer = new Customer(_.omit(requestBody, ['loan']));
+            // Tie customer and loan
             newCustomer.loans.push(customerLoan._id);
             
             await newCustomer.save();
@@ -45,11 +48,13 @@ const manager = {
         try{
             const customers = Customer.find()
                                       .populate(['companyName', 'loans'])
+                                      .select(['firstName', 'companyName'])
             // TODO: implement sort the loans.
 
             if (!customers) throw new Error('No customers.')
 
             return customers;
+            
         }catch(exception) {
             return exception;
         };
