@@ -53,7 +53,7 @@ router.post('/forgot-password', async (req, res) => {
     const user = await userViewController.forgotPassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
     
-    res.redirect(`/change-password/?email=${user.email}`);
+    res.redirect(307, `/change-password/?email=${user.email}`);
 });
 
 router.post('/change-password/', async (req, res) => {

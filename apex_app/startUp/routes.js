@@ -16,10 +16,10 @@ module.exports = function(app) {
     app.use('/api/auth', authRoute);
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
-    app.use('/api/admin', adminRoutes);
+    app.use('/api/admins', adminRoutes);
     app.use('/api/lenders', lenderRoutes);
+    app.use('/api/agents', loanAgentRoutes);
     app.use('/api/operations', operationsRoutes);
-    app.use('/api/loan-agent', loanAgentRoutes);
 
     // Error handling middleware
     app.use(errorHandler);

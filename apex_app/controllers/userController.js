@@ -133,7 +133,7 @@ const user = {
             // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
-            const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+            const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
             
             // Updating password
             await user.updateOne( {password: encryptedPassword} );

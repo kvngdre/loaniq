@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { joiPassword } = require('joi-password');
 
 const validators = {
@@ -65,9 +65,47 @@ const validators = {
         return schema.validate(user);
     },
     
-    validateEmail: function(user) {
+    validateForgotPassword: function(user) {
         const schema = Joi.object({
-            email: Joi.string().required().email().min(10).max(50)
+            email: Joi.string().required().email().min(10).max(50),
+            newPassword: joiPassword
+                        .string()
+                        .required()
+                        .minOfUppercase(1)
+                        .minOfSpecialCharacters(2)
+                        .minOfNumeric(2)
+                        .noWhiteSpaces()
+                        .min(6)
+                        .max(255)
+                        .messages({
+                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                        })
+        });
+
+        return schema.validate(user);
+    },
+
+    validateChangePassword: function(user) {
+        const schema = Joi.object({
+            email: Joi.string().optional().email().min(10).max(50),
+            newPassword: joiPassword
+                        .string()
+                        .required()
+                        .minOfUppercase(1)
+                        .minOfSpecialCharacters(2)
+                        .minOfNumeric(2)
+                        .noWhiteSpaces()
+                        .min(6)
+                        .max(255)
+                        .messages({
+                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                        })
         });
 
         return schema.validate(user);

@@ -3,7 +3,7 @@ const config = require('config');
 
 module.exports = function () {
     try{
-        // Check for presence of jwt Private key
+        // Check for presence of jwtPrivatekey
         config.get("jwtPrivateKey");
 
     }catch(exception) {
