@@ -6,15 +6,7 @@ const lender = {
             const lender = await Lender.findOne( {email: requestBody.email} );
             if(lender) throw new Error('Email has already been taken.');
 
-
-            const newLender = new Lender({
-                companyName: requestBody.companyName,
-                companyAddress: requestBody.companyAddress,
-                cacNumber: requestBody.cacNumber,
-                email: requestBody.email
-            });
-
-            await newLender.save();
+            const newLender = await Lender.create(requestBody);
 
             return newLender;
 
@@ -23,13 +15,13 @@ const lender = {
         };
     },
 
-    update: async function(requestBody) {
+    update: async function(id, requestBody) {
         try{
             const lender = await Lender.findOneAndUpdate(
-                 {email: requestBody.email}, requestBody, options={new: true}
-                 );
+                 {_id: id}, requestBody, options={new: true}
+                );
             
-            if (!lender) throw new Error('No lender found.');
+            if (!lender) throw new Error('Lender not found.');
 
             return lender;
 

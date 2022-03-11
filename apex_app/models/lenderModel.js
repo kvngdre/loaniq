@@ -23,6 +23,7 @@ const lenderSchema = new mongoose.Schema({
 
     category: {
         type: String,
+        required: true,
         enum: ['MFB', 'MFI', 'Money lender'],
         default: 'MFB'
     },
@@ -37,12 +38,13 @@ const lenderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
+    // TODO: Work on auto generating url
     lenderURL: {
         type: String,
+        lowercase: true,
         trim: true
     },
-
+    // Should there be more than one admin?
     adminUser: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'

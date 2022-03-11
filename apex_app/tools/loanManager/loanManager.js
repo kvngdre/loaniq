@@ -1,44 +1,34 @@
-const loans = require('../../controllers/loanController');
-const Customer = require('../../models/customerModel');
-const Loan = require('../../models/loanModel');
 const _ = require('lodash');
+const Loan = require('../../models/loanModel');
+const Customer = require('../../models/customerModel');
 
 const manager = {
     // TODO: Come back to loan manager
     createLoanRequest: async function(requestBody) {
-        // create customer then loan and save.
         try{
-            const doesExist = await Customer.findOne( {ippis: requestBody.ippis} ).exec();
-            
-            // if customer exists
-            if(doesExist) {
-                requestBody.loan.ippis = requestBody.ippis;
-                const newLoan = new Loan(requestBody.loan);
-                await newLoan.save();
+            requestBody.loan.ippis = requestBody.ippis;
 
-                doesExist.loans.push(newLoan._id);
-                
-                await doesExist.save();
+            const customerExists = await Customer.findOne( {ippis: requestBody.ippis} );
+            if(customerExists) {
+                const newLoan = await Loan.create(requestBody.loan);
+
+                customerExists.loans.push(newLoan._id);
+                await customerExists.save();
 
                 return newLoan;
             };
 
-            const newCustomer = new Customer(_.omit(requestBody, ['loan']));
+            // TODO: Make this a transaction
+            const customerLoan = await Loan.create(requestBody.loan);
             
-            // Create customer loan
-            const customerLoan = new Loan(requestBody.loan);
-            customerLoan.ippis = requestBody.ippis;
-            await customerLoan.save();
-
             // Tie customer and loan
+            const newCustomer = new Customer( _.omit(requestBody, ['loan']) );
             newCustomer.loans.push(customerLoan._id);
-            
             await newCustomer.save();
 
             return newCustomer;
 
         }catch(exception) {
-            console.log(exception.message);
             return exception;
         };
 

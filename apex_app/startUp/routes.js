@@ -17,7 +17,7 @@ module.exports = function(app) {
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/admin', adminRoutes);
-    app.use('/api/lender', lenderRoutes);
+    app.use('/api/lenders', lenderRoutes);
     app.use('/api/operations', operationsRoutes);
     app.use('/api/loan-agent', loanAgentRoutes);
 
