@@ -70,7 +70,8 @@ const loanSchema = new mongoose.Schema({
     
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
     }
   
 }, {

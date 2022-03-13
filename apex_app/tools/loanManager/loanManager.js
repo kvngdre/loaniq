@@ -2,6 +2,7 @@ const _ = require('lodash');
 const Loan = require('../../models/loanModel');
 const User = require('../../models/userModel');
 const Customer = require('../../models/customerModel');
+const pickRandomAgent = require('../../utils/pickRandomAgent');
 
 const manager = {
     // TODO: Come back to loan manager
@@ -11,11 +12,15 @@ const manager = {
 
             const customerExists = await Customer.findOne( {ippis: requestBody.ippis} );
             if(customerExists) {
+                // If no loan agent pick on at random
+                if(!requestBody.loan.agent) requestBody.loan.agent = await pickRandomAgent(requestBody.companyName);
+
                 // TODO: Make this a transaction
                 const newLoan = await Loan.create(requestBody.loan);
 
                 const agent = await User.findById(requestBody.loan.agent);
                 if (!agent) throw new Error ('Agent does not exist.');
+
                 agent.loans.push(newLoan._id);
                 await agent.save();
 

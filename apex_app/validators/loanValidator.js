@@ -15,12 +15,12 @@ const validators = {
                        .min(config.get("minLoanAmount")),
 
             amountInWords: Joi.string(),
-            
+
             tenor: Joi.number()
                       .min(config.get("minTenor")),
 
             agent: Joi.objectId()
-                      .required()
+                      .optional()
         });
     return schema.validate(loan);
     }
