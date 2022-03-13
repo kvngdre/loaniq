@@ -8,8 +8,8 @@ const loanSchema = new mongoose.Schema({
         required: true,
     },
 
-    netPay: {
-        type: Number,
+    netPay: { 
+        type: [ Number ],
         required: true
         // Should read netPay from another db
     },
@@ -45,9 +45,31 @@ const loanSchema = new mongoose.Schema({
             'TopUp'
         ],
         default: "new"
-    }
+    },
 
+    status: {
+        type: String,
+        enum: [
+            'Approved',
+            'Declined',
+            'Pending',
+            'On Hold',
+            'Liquidated',
+            'Discontinued',
+            'Exceptional Approval'
+        ],
+        default: 'Pending'
+    },
+
+    // TODO: figure out how to update this with every change to status.
+    dateAppORDec: {
+        type: Date
+    },
     
+    agent: {
+        type: mongoose.Schema.Types.ObjectId
+    }
+  
 }, {
     timestamps: true
 });

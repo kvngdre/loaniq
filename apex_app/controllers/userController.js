@@ -1,42 +1,128 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
-const User = require('../models/adminModel');
+const User = require('../models/userModel');
 const emailDebug = require('debug')('app:email');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 
 
-
 const user = {
     getAll: async function() {
-        const users = await User.find().select('-password').sort('firstName');
+        const users = await User.find().select('-password -otp').sort('firstName');
 
         return users;
     },
 
-    register: async function(requestBody) {
+    create: async function(requestBody) {
         try {
-            // Check if user email has been registered.
-            const user = await User.findOne( {email: requestBody.email} );
-            if(user) throw new Error('Email has already been taken.');
-            
-            // Encrypting password
-            const saltRounds = 10;
-            const salt = await bcrypt.genSalt(saltRounds);
-            const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
-            
-            const OTP = generateOTP();
+            let role = requestBody.role;
 
-            // create new user
-            const newUser = new User({
-                firstName: requestBody.firstName,
-                lastName: requestBody.lastName,
-                middleName: requestBody.middleName,
-                email: requestBody.email,
-                password: encryptedPassword,
-                otp: OTP
-            });
-                        
+            const users = await User.find()
+            if (users.length === 0) role = "admin";
+
+            switch(role) {
+                case "admin":
+                    // Check if admin email has been registered.
+                    var user = await User.findOne( {email: requestBody.email} );
+                    if (user) throw new Error('Email has already been taken.');
+                    
+                    // Encrypting password
+                    var saltRounds = 10;
+                    var salt = await bcrypt.genSalt(saltRounds);
+                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    
+                    var OTP = generateOTP();
+
+                    // create new user
+                    var newUser = new User({
+                        firstName: requestBody.firstName,
+                        lastName: requestBody.lastName,
+                        middleName: requestBody.middleName,
+                        email: requestBody.email,
+                        password: encryptedPassword,
+                        otp: OTP,
+                        role
+                    });
+
+                    break;
+
+                case "credit":
+                    // Check if admin email has been registered.
+                    var user = await User.findOne( {email: requestBody.email} );
+                    if (user) throw new Error('Email has already been taken.');
+                    
+                    // Encrypting password
+                    var saltRounds = 10;
+                    var salt = await bcrypt.genSalt(saltRounds);
+                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    
+                    var OTP = generateOTP();
+
+                    // create new user
+                    var newUser = new User({
+                        firstName: requestBody.firstName,
+                        lastName: requestBody.lastName,
+                        middleName: requestBody.middleName,
+                        email: requestBody.email,
+                        password: encryptedPassword,
+                        otp: OTP,
+                        role
+                    });
+
+                    break;
+
+                case "operations":
+                    // Check if admin email has been registered.
+                    var user = await User.findOne( {email: requestBody.email} );
+                    if (user) throw new Error('Email has already been taken.');
+                    
+                    // Encrypting password
+                    var saltRounds = 10;
+                    var salt = await bcrypt.genSalt(saltRounds);
+                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    
+                    var OTP = generateOTP();
+
+                    // create new user
+                    var newUser = new User({
+                        firstName: requestBody.firstName,
+                        lastName: requestBody.lastName,
+                        middleName: requestBody.middleName,
+                        email: requestBody.email,
+                        password: encryptedPassword,
+                        otp: OTP,
+                        role
+                    });
+
+                    break;
+                
+                case "loanAgent":
+                        // Check if admin email has been registered.
+                    var user = await User.findOne( {email: requestBody.email} );
+                    if (user) throw new Error('Email has already been taken.');
+                    
+                    // Encrypting password
+                    var saltRounds = 10;
+                    var salt = await bcrypt.genSalt(saltRounds);
+                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    
+                    var OTP = generateOTP();
+
+                    // create new user
+                    var newUser = new User({
+                        firstName: requestBody.firstName,
+                        lastName: requestBody.lastName,
+                        middleName: requestBody.middleName,
+                        email: requestBody.email,
+                        password: encryptedPassword,
+                        otp: OTP,
+                        role
+                    });
+
+                    break;
+
+            };
+                       
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
 
@@ -94,8 +180,9 @@ const user = {
         try{
             let user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
+            
 
-            const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
+            const isValidPassword = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isValidPassword instanceof Error)  throw new Error(isValidPassword.message);
 
             const token = user.generateToken();
@@ -128,8 +215,11 @@ const user = {
             // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Account does not exist.');
-
             
+            // 
+            const isValidPassword = await bcrypt.compare(requestBody.newPassword, user.password);
+            if(isValidPassword)  throw new Error('Password is too similar to old password.');
+
             // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);

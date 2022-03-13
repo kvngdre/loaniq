@@ -37,7 +37,7 @@ const manager = {
     getAllLoans: async function() {
         try{
             const customers = Customer.find()
-                                      .populate(['companyName', 'loans'])
+                                      .populate(['companyName', 'bankName', 'loans'])
                                       .select(['firstName', 'companyName'])
             // TODO: implement sort the loans.
 
@@ -48,6 +48,17 @@ const manager = {
         }catch(exception) {
             return exception;
         };
+    },
+
+    updateLoanStatus: async function(requestBody) {
+        try {
+            const customer = loan.findOne( {ippis: requestBody} );
+            const loans = Loan.find( {ippis: requestBody.ippis} );
+            if(!customer || loans.length === 0) throw new Error('Customer does not exist or no loans.')
+        }catch(exception) {
+            return exception;
+        };
+
     }
 };
 

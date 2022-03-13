@@ -12,11 +12,33 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-    // validate user data
-    const { error } = userValidator.validateRegistration(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    const role = req.body.role;
+    if (!role) return res.status(400).send('Role is required.');
 
-    const user = await userViewController.register(req.body);
+    switch(role) {
+        case "admin":
+            var { error } = userValidator.validateAdminReg(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            break;
+        
+        case "credit":
+            var { error } = userValidator.validateCreditReg(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            break;
+        
+        case "operations":
+            var { error } = userValidator.validateOperationsReg(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            break;
+
+        case "loanAgent":
+            var { error } = userValidator.validateLoanAgentReg(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            break;
+    };
+    
+
+    const user = await userViewController.create(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
     res.status(200).send(user);
@@ -47,18 +69,21 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/forgot-password', async (req, res) => {
-    const { error } = userValidator.validateEmail(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+    const { error } = userValidator.validateForgotPassword(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
     const user = await userViewController.forgotPassword(req.body);
-    if(user instanceof Error) return res.status(400).send(user.message);
-    
-    res.redirect(307, `/change-password/?email=${user.email}`);
+    if (user instanceof Error) return res.status(400).send(user.message);
+
+    res.redirect(307, `http://localhost:8480/api/admins/change-password/`);
 });
 
 router.post('/change-password/', async (req, res) => {
-    const userEmail = req.query.email;
-    res.status(200).send(userEmail);
+    console.log(req.body.newPassword)
+    const user = await userViewController.changePassword(req.body);
+    if (user instanceof Error) return res.status(400).send(user.message);
+
+    res.status(200).send(user);
 
 });
 

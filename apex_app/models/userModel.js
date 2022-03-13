@@ -1,9 +1,9 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const Segment = require('../models/segmentModel');
 
 
-// Operations officer user schema
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
@@ -52,6 +52,37 @@ const userSchema = new mongoose.Schema({
 
     otp: {
         type: String,
+    },
+
+    role: {
+        type: String,
+        enum: [
+            'admin',
+            'credit',
+            'operations',
+            'loanAgent'
+        ],
+        required: true
+    },
+
+    // following fields below are for loan agents
+    segments: {
+        type: [ mongoose.Schema.Types.ObjectId ],
+        ref: 'Segment',
+    },
+
+    target: {
+        type: Number,
+        default: null
+    },
+
+    achieved: {
+        type: Number,
+        default: null
+    },
+
+    loans: {
+        type: [ mongoose.Schema.Types.ObjectId ]
     }
     
 }, {
@@ -67,6 +98,13 @@ userSchema.methods.generateToken = function() {
     }, config.get('jwtPrivateKey'));
 }
 
-const opUser = mongoose.model('Operations', userSchema);
+if(userSchema.role === "loanAgent") {
+    userSchema.methods.percentageAchieved = function() {
+        const value = (this.achieved / this.target) * 100;
+        return value.toFixed(2);
+    }
+};
 
-module.exports = opUser;
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;

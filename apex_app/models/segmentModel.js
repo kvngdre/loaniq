@@ -16,3 +16,5 @@ const segmentSchema = new mongoose.Schema({
 });
 
 const Segment = mongoose.model('Segment', segmentSchema);
+
+module.exports = Segment;

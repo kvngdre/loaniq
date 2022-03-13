@@ -15,7 +15,7 @@ router.post('/register', async (req, res) => {
     const { error } = adminValidator.validateRegistration(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const user = await adminViewController.register(req.body);
+    const user = await adminViewController.create(req.body);
     if (user instanceof Error) return res.status(400).send(user.message);
 
     res.status(201).send(user);

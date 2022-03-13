@@ -57,7 +57,7 @@ const customerSchema = new mongoose.Schema({
                     const ageYear = ageDate.getUTCFullYear();
     
                     const age = ageYear - 1970;
-                    
+
                     return age >= 21 && age <= 60;
 
                 }catch(exception) {
@@ -164,10 +164,11 @@ const customerSchema = new mongoose.Schema({
         trim: true
     },
 
-    // companyState:{
-    //     type: stateSchema,
-
-    // },
+    companyState:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State',
+        // required: true
+    },
 
     dateOFEnlistment: {
         type: Date,
