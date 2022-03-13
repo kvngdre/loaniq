@@ -72,11 +72,13 @@ const sendOTP = async function(userEmailAddress, firstName, generatedOTP) {
     }; 
 
     // Sending mail with transporter object
-    try{
-        return await transporter.sendMail(mailOptions);
-    }catch(exception) {
-        return exception;
-    };
-};
+   try {
+
+   await transporter.sendMail(mailOptions);
+
+}catch (err){
+    console.log("Error sending token to email", err);
+}
+}
 
 module.exports = sendOTP;
