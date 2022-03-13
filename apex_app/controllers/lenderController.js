@@ -3,8 +3,8 @@ const Lender = require('../models/lenderModel');
 const lender = {
     createLender: async function(requestBody) {
         try{
-            const lender = await Lender.findOne( {email: requestBody.email} );
-            if(lender) throw new Error('Email has already been taken.');
+            const doesExist = await Lender.findOne( {email: requestBody.email} );
+            if(doesExist) throw new Error('Email has already been taken.');
 
             const newLender = await Lender.create(requestBody);
 
@@ -20,8 +20,7 @@ const lender = {
             const lender = await Lender.findOneAndUpdate(
                  {_id: id}, requestBody, options={new: true}
                 );
-            
-            if (!lender) throw new Error('Lender not found.');
+            if(!lender) throw new Error('Lender not found.');
 
             return lender;
 
@@ -33,8 +32,7 @@ const lender = {
     delete: async function(requestBody) {
         try{
             const lender = await Lender.findOneAndRemove( {email: requestBody.email} );
-
-            if (!lender) throw new Error('Lender does not exist.');
+            if(!lender) throw new Error('Lender does not exist.');
 
             return lender;
 

@@ -22,9 +22,8 @@ const user = {
 
             switch(role) {
                 case "admin":
-                    // Check if admin email has been registered.
-                    var user = await User.findOne( {email: requestBody.email} );
-                    if (user) throw new Error('Email has already been taken.');
+                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
                     var saltRounds = 10;
@@ -33,7 +32,6 @@ const user = {
                     
                     var OTP = generateOTP();
 
-                    // create new user
                     var newUser = new User({
                         firstName: requestBody.firstName,
                         lastName: requestBody.lastName,
@@ -43,13 +41,11 @@ const user = {
                         otp: OTP,
                         role
                     });
-
                     break;
 
                 case "credit":
-                    // Check if admin email has been registered.
-                    var user = await User.findOne( {email: requestBody.email} );
-                    if (user) throw new Error('Email has already been taken.');
+                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
                     var saltRounds = 10;
@@ -58,7 +54,6 @@ const user = {
                     
                     var OTP = generateOTP();
 
-                    // create new user
                     var newUser = new User({
                         firstName: requestBody.firstName,
                         lastName: requestBody.lastName,
@@ -68,13 +63,11 @@ const user = {
                         otp: OTP,
                         role
                     });
-
                     break;
 
                 case "operations":
-                    // Check if admin email has been registered.
-                    var user = await User.findOne( {email: requestBody.email} );
-                    if (user) throw new Error('Email has already been taken.');
+                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
                     var saltRounds = 10;
@@ -83,7 +76,6 @@ const user = {
                     
                     var OTP = generateOTP();
 
-                    // create new user
                     var newUser = new User({
                         firstName: requestBody.firstName,
                         lastName: requestBody.lastName,
@@ -93,13 +85,12 @@ const user = {
                         otp: OTP,
                         role
                     });
-
                     break;
                 
                 case "loanAgent":
                         // Check if admin email has been registered.
-                    var user = await User.findOne( {email: requestBody.email} );
-                    if (user) throw new Error('Email has already been taken.');
+                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
                     var saltRounds = 10;
@@ -108,7 +99,6 @@ const user = {
                     
                     var OTP = generateOTP();
 
-                    // create new user
                     var newUser = new User({
                         firstName: requestBody.firstName,
                         lastName: requestBody.lastName,
@@ -116,16 +106,15 @@ const user = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
-                        role
+                        role,
+                        segments: requestBody.segments
                     });
-
                     break;
 
             };
                        
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
-
             if(mailResponse instanceof Error) {
                 emailDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
@@ -152,7 +141,6 @@ const user = {
 
     verifyRegister: async function (requestBody) {
         try{
-            // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
 
@@ -217,14 +205,14 @@ const user = {
             if(!user) throw new Error('Account does not exist.');
             
             // 
-            const isValidPassword = await bcrypt.compare(requestBody.newPassword, user.password);
-            if(isValidPassword)  throw new Error('Password is too similar to old password.');
+            const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
+            if(isSimilar)  throw new Error('Password is too similar to old password.');
 
             // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
-            
+
             // Updating password
             await user.updateOne( {password: encryptedPassword} );
 
@@ -234,27 +222,7 @@ const user = {
             return exception;
         };
     },
-
-    createUser: async function(requestBody) {
-        try{
-            switch(requestBody.role) {
-                case "credit officer":
-                    // create user
-                    break;
-                
-                case "operations officer":
-                    break;
-                
-                case "loan agent":
-                    break;
-
-                default:
-            };
-
-        }catch(exception) {
-            return exception;
-        };
-    }
+    
 }
 
 module.exports = user;

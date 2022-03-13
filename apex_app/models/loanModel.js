@@ -1,15 +1,17 @@
 const config = require('config');
 const mongoose = require('mongoose');
+const User = require('../models/userModel');
 
 
 const loanSchema = new mongoose.Schema({
     ippis: {
         type: String,
+        uppercase: true,
         required: true,
     },
 
-    netPay: { 
-        type: [ Number ],
+    netPay: {
+        type: Number,
         required: true
         // Should read netPay from another db
     },
@@ -67,7 +69,8 @@ const loanSchema = new mongoose.Schema({
     },
     
     agent: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
   
 }, {

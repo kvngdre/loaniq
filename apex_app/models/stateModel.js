@@ -16,8 +16,7 @@ const stateSchema = new mongoose.Schema({
     },
 
     lgas: {
-        type: [String],
-        
+        type: [String], 
     }
 
 });

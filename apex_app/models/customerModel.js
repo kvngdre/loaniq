@@ -1,3 +1,4 @@
+const Loan = require('./loanModel');
 const mongoose = require('mongoose');
 const Bank = require('../models/bankModel');
 const State = require('../models/stateModel');
@@ -99,7 +100,7 @@ const customerSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-
+    // TODO: uncomment required and unique.
     phone: {
         type: String,
         required: true,
@@ -226,6 +227,11 @@ const customerSchema = new mongoose.Schema({
 
 }, {
     timestamps: true
+});
+
+customerSchema.pre('deleteOne', function(next) {
+    Loan.deleteMany( {ippis: this.ippis});
+    next();
 });
 
 const Customer = mongoose.model('Customer', customerSchema);

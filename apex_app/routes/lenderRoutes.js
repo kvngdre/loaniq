@@ -7,20 +7,19 @@ router.post('/create', async (req, res) => {
     const { error } = validateLender.creation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const createdLender = await lenderViewController.createLender(req.body);
-    if(createdLender instanceof Error) return res.status(400).send(createdLender.message);
+    const lender = await lenderViewController.createLender(req.body);
+    if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    //TODO: generate url.
-
-    res.status(201).send(createdLender);
+    //TODO: generate lender url.
+    res.status(201).send(lender);
 });
 
 router.put('/:id', async (req, res) => {
     const { error } = validateLender.update(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if(error) return res.status(400).send(error.details[0].message);
 
     const lender = await lenderViewController.update(req.params.id, req.body);
-    if (lender instanceof Error) return res.status(404).send(lender.message);
+    if(lender instanceof Error) return res.status(404).send(lender.message);
     
     res.status(200).send(lender);
 });
@@ -28,7 +27,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/', async (req, res) => {
     const lender = await lenderViewController.delete(req.body);
 
-    if (lender instanceof Error) return res.status(400).send(lender.message);
+    if(lender instanceof Error) return res.status(400).send(lender.message);
 
     res.status(200).send(lender);
 });

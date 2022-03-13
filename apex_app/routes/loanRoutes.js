@@ -1,9 +1,9 @@
+const _ = require('lodash');
+const router = require('express').Router();
+const debug = require('debug')('loanRoute');
+const loanValidators = require('../validators/loanValidator');
 const loanViewController = require('../controllers/loanController');
 const customerValidators = require('../validators/customerValidator');
-const loanValidators = require('../validators/loanValidator');
-const _ = require('lodash');
-const debug = require('debug')('loanRoute');
-const router = require('express').Router();
 
 router.post('/create-request', async (req, res) => {
     try{
@@ -12,6 +12,7 @@ router.post('/create-request', async (req, res) => {
 
         var { error } = customerValidators.validateCreation(customerObj);
         if(error) throw error;
+        
         var { error } = loanValidators.validateCreation(loanObj);
         if(error) throw error;
 
@@ -21,7 +22,7 @@ router.post('/create-request', async (req, res) => {
 
     const loanRequest = await loanViewController.createLoan(req.body);
     debug(loanRequest.message, loanRequest.stack);
-    if (loanRequest instanceof Error) return res.status(200).send(loanRequest.message) ;
+    if (loanRequest instanceof Error) return res.status(200).send(loanRequest.message);
 
     res.status(200).send(loanRequest);
 });
@@ -30,7 +31,7 @@ router.get('/', async (req, res) => {
     const loans = await loanViewController.getAll();
     if(loans instanceof Error) return loans.message;
 
-    res.status(200).send(loans)
+    res.status(200).send(loans);
 });
 
 module.exports = router;

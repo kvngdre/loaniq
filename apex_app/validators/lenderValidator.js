@@ -5,13 +5,28 @@ const validators = {
     creation: function(lender) {
         const schema = Joi.object({
             // TODO: change values to required.
-            companyName: Joi.string().required().trim(),
-            companyAddress: Joi.string().required(),
-            cacNumber: Joi.string().required(),
-            category: Joi.string().optional(),
-            phone: Joi.string().length(11).optional(),
-            email: Joi.string().email().required(),
-            lenderURL: Joi.string().optional(),
+            companyName: Joi.string()
+                            .required(),
+
+            companyAddress: Joi.string()
+                              .required(),
+
+            cacNumber: Joi.string()
+                          .required(),
+
+            category: Joi.string()
+                         .optional(),
+
+            phone: Joi.string()
+                      .length(11)
+                      .optional(),
+
+            email: Joi.string()
+                      .email()
+                      .required(),
+
+            lenderURL: Joi.string()
+                          .optional(),
 
         });
         return schema.validate(lender);
@@ -19,11 +34,21 @@ const validators = {
 
     update: function (lender) {
         const schema = Joi.object({
-            companyName: Joi.string().required().trim(),
-            companyAddress: Joi.string().required(),
-            cacNumber: Joi.string().required(),
-            category: Joi.string().optional(),
-            phone: Joi.string().length(11).optional(),
+            companyName: Joi.string()
+                            .required(),
+
+            companyAddress: Joi.string()
+                               .required(),
+
+            cacNumber: Joi.string()
+                          .required(),
+
+            category: Joi.string()
+                         .optional(),
+
+            phone: Joi.string()
+                      .length(11)
+                      .optional(),
         });
         return schema.validate(lender);  
     },

@@ -8,11 +8,7 @@ const loans = {
     },
 
     getAll: async function() {
-        const loans = await loanManager.getAllLoans();
-
-        // if (loans instanceof Error) return loanRequest;
-
-        return loans;
+        return await loanManager.getAllLoans();
     }
 };
 
