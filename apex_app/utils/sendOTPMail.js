@@ -73,7 +73,7 @@ const sendOTP = async function(userEmailAddress, firstName, generatedOTP) {
 
     // Sending mail with transporter object
     try{
-        return await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
     }catch(exception) {
         return exception;
     };

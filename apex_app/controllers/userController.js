@@ -115,6 +115,7 @@ const user = {
                        
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
+            console.log(mailResponse)
             if(mailResponse instanceof Error) {
                 emailDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');

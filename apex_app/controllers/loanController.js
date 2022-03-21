@@ -1,4 +1,4 @@
-const loanManager = require('../tools/loanManager/loanManager');
+const loanManager = require('../tools/Managers/loanManager');
 
 
 const loans = {
