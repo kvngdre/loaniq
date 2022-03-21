@@ -17,7 +17,8 @@ const manager = {
 
                 // TODO: Make this a transaction
                 const newLoan = await Loan.create(requestBody.loan);
-
+                
+                // Map loan request to agent
                 const agent = await User.findById(requestBody.loan.agent);
                 if (!agent) throw new Error ('Agent does not exist.');
 
@@ -33,6 +34,7 @@ const manager = {
             // TODO: Make this a transaction
             const customerLoan = await Loan.create(requestBody.loan);
 
+            // Map loan agent and loan request
             const agent = await User.findById(requestBody.loan.agent);
                 if (!agent) throw new Error ('Agent does not exist.');
                 agent.loans.push(customerLoan._id);
