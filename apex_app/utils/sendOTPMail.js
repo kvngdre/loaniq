@@ -79,4 +79,5 @@ const sendOTP = async function(userEmailAddress, firstName, generatedOTP) {
     };
 };
 
+
 module.exports = sendOTP;
