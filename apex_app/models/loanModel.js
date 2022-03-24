@@ -79,11 +79,11 @@ const loanSchema = new mongoose.Schema({
     },
 
     // TODO: figure out how to update this with every change to status.
-    dateAppORDec: {
+    dateAppOrDec: {
         type: Date
     },
     
-    agent: {
+    loanAgent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },

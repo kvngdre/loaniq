@@ -19,7 +19,7 @@ const validators = {
             tenor: Joi.number()
                       .min(config.get("minTenor")),
 
-            agent: Joi.objectId()
+            loanAgent: Joi.objectId()
                       .optional()
         });
     return schema.validate(loan);

@@ -153,7 +153,7 @@ const customerSchema = new mongoose.Schema({
         required: true
     },
 
-    companyName: {
+    segment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Segment',
         required: true,
@@ -241,8 +241,8 @@ const customerSchema = new mongoose.Schema({
         ref: 'Loan'
     },
 
-    loanAgent: {
-        type: mongoose.Schema.Types.ObjectId,
+    loanAgents: {
+        type: [ mongoose.Schema.Types.ObjectId ],
         ref: 'User'
     },
 

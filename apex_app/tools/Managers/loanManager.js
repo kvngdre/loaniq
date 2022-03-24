@@ -9,26 +9,25 @@ const manager = {
     createLoanRequest: async function(requestBody) {
         try{
             // If no loan agent, pick on at random
-            if(!requestBody.loan.agent) requestBody.loan.agent = await pickRandomAgent(requestBody.companyName);
+            if(!requestBody.loan.loanAgent) requestBody.loan.loanAgent = await pickRandomAgent(requestBody.segment);
             
             requestBody.loan.ippis = requestBody.ippis;
 
             const customerExists = await Customer.findOne( {ippis: requestBody.ippis} );
             if(customerExists) {
-                
-
                 // TODO: Make this a transaction
                 const newLoan = await Loan.create(requestBody.loan);
                 newLoan.customer = customerExists._id;
                 
                 // Map loan request to agent
-                const agent = await User.findById(requestBody.loan.agent);
+                const agent = await User.findById(requestBody.loan.loanAgent);
                 if (!agent) throw new Error ('Agent does not exist.');
-
-                agent.loans.push(newLoan._id);
+                // agent.loans.push(newLoan._id);
+                if (!agent.customers.includes(customerExists._id)) agent.customers.push(customerExists._id);
                 await agent.save();
 
                 customerExists.loans.push(newLoan._id);
+                if (!customerExists.loanAgents.includes(agent._id)) customerExists.loanAgents.push(agent._id);
                 await customerExists.save();
                 
                 return newLoan;
@@ -37,17 +36,18 @@ const manager = {
             // TODO: Make this a transaction
             const customerLoan = await Loan.create(requestBody.loan);
 
-            // Map loan agent and loan request
-            const agent = await User.findById(requestBody.loan.agent);
-                if (!agent) throw new Error ('Agent does not exist.');
-                agent.loans.push(customerLoan._id);
-                await agent.save();
-            
             // Tie customer and loan
             const newCustomer = new Customer( _.omit(requestBody, ['loan']) );
             newCustomer.loans.push(customerLoan._id);
             await newCustomer.save();
 
+            // Map loan agent and customer
+            const agent = await User.findById(requestBody.loan.agent);
+            if (!agent) throw new Error ('Agent does not exist.');
+            // agent.loans.push(customerLoan._id);
+            if (!agent.customers.includes(newCustomer._id)) agent.customers.push(newCustomer._id);
+            await agent.save();
+            
             return newCustomer;
 
         }catch(exception) {

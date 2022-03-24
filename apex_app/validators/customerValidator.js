@@ -60,7 +60,7 @@ const validators = {
                       .messages( {'string.pattern.base': 'Invalid IPPIS number.'} )
                       .required(),
 
-            companyName: Joi.objectId()
+            segment: Joi.objectId()
                             .required(),
             
             bankName: Joi.objectId()

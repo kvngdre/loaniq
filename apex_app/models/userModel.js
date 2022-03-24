@@ -95,10 +95,15 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
-    customer: {
+    customers: {
         type: [ mongoose.Schema.Types.ObjectId ],
         ref: 'Customer'
-    }
+    },
+
+    // loans: {
+    //     type: [ mongoose.Schema,Types.ObjectId ],
+    //     ref: 'Loan'
+    // }
     
 }, {
     timestamps: true
