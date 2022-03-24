@@ -9,7 +9,16 @@ const loans = {
 
     getAll: async function() {
         return await loanManager.getAllLoans();
-    }
+    },
+
+    getOne: async function() {
+
+    },
+
+    // modify
+
+    // delete also delete loan agent
+    
 };
 
 module.exports = loans;

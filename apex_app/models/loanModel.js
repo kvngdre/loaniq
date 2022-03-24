@@ -1,6 +1,7 @@
 const config = require('config');
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
+const Customer = require('../models/customerModel');
 
 
 const loanSchema = new mongoose.Schema({
@@ -8,6 +9,11 @@ const loanSchema = new mongoose.Schema({
         type: String,
         uppercase: true,
         required: true,
+    },
+
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
     },
 
     netPay: {
@@ -19,7 +25,7 @@ const loanSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
-        min: 50_000
+        min: config.get('minLoanAmount')
     },
 
     amountInWords: {
@@ -28,9 +34,10 @@ const loanSchema = new mongoose.Schema({
         trim: true
     },
 
+    // TODO: uncomment required.
     tenor: {
         type: Number,
-        required: true,
+        // required: true,
         min: config.get('minTenor'),
         max: config.get('maxTenor')
     },
@@ -47,6 +54,14 @@ const loanSchema = new mongoose.Schema({
             'TopUp'
         ],
         default: "new"
+    },
+
+    interestRate: {
+        type: Number
+    },
+
+    upfrontPercentage: {
+        type: Number
     },
 
     status: {
@@ -71,7 +86,37 @@ const loanSchema = new mongoose.Schema({
     agent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+    },
+
+    metrics: {
+        ageValid: {
+            type: Boolean
+        },
+
+        serviceLengthValid: {
+            type: Boolean
+        },
+
+        netPayValid: {
+            type: Boolean
+        },
+
+        netPayConsistency: {
+            type: Boolean
+        },
+
+        bvnValid: {
+            type: Boolean
+        },
+
+        salaryAccountValid: {
+            type: Boolean
+        },
+
+        debtToIncomeRatio: {
+            type: Boolean
+        }
+
     }
   
 }, {

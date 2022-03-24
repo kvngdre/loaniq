@@ -1,6 +1,7 @@
 const Loan = require('./loanModel');
 const mongoose = require('mongoose');
 const Bank = require('../models/bankModel');
+const User = require('../models/userModel');
 const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:customerModel');
@@ -35,7 +36,6 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['Male', 'Female'],
-        default: 'Male'
     },
 
     // TODO: work on exception return 
@@ -100,7 +100,7 @@ const customerSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    // TODO: uncomment required and unique.
+    // TODO: uncomment/add required and unique.
     phone: {
         type: String,
         required: true,
@@ -117,8 +117,7 @@ const customerSchema = new mongoose.Schema({
     },
 
     bvn: {
-        type: Number,
-        lowercase: true,
+        type: String,
         unique: true,
         trim: true
     },
@@ -135,6 +134,11 @@ const customerSchema = new mongoose.Schema({
         // required: true
     },
 
+    idCardUrl: {
+        type: String,
+        // required: true
+    },
+
     idNumber: {
         type: String,
         // required: true,
@@ -145,9 +149,8 @@ const customerSchema = new mongoose.Schema({
 
     ippis: {
         type: String,
-        // required: true,
-        unique: true,
-        uppercase: true
+        uppercase: true,
+        required: true
     },
 
     companyName: {
@@ -171,7 +174,7 @@ const customerSchema = new mongoose.Schema({
         // required: true
     },
 
-    dateOFEnlistment: {
+    dateOfEnlistment: {
         type: Date,
         // required: true
     },
@@ -188,9 +191,11 @@ const customerSchema = new mongoose.Schema({
         // required: true,
     },
 
-    // stateNOK: {
-    //     type: stateSchema,
-    // },
+    stateNOK: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State',
+        // required: true
+    },
 
     phoneNOK: {
         type: String,
@@ -200,6 +205,17 @@ const customerSchema = new mongoose.Schema({
 
     relationshipNOK: {
         type: String,
+        enum: [ 'Father',
+                'Mother',
+                'Brother',
+                'Sister',
+                'Nephew',
+                'Niece',
+                'Cousin',
+                'Spouse',
+                'Son',
+                'Daughter'
+            ]
 
     },
 
@@ -222,15 +238,24 @@ const customerSchema = new mongoose.Schema({
 
     loans: {
         type: [ mongoose.Schema.Types.ObjectId ],
-        ref: "Loan"
+        ref: 'Loan'
+    },
+
+    loanAgent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+
+    netPay: {
+        type: Number
     }
 
 }, {
     timestamps: true
 });
 
-customerSchema.pre('deleteOne', function(next) {
-    Loan.deleteMany( {ippis: this.ippis});
+customerSchema.pre('deleteOne', async function(next) {
+    await Loan.deleteMany( {ippis: this.ippis});
     next();
 });
 

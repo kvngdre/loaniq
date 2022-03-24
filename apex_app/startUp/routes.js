@@ -3,6 +3,7 @@ const authRoute = require('../routes/authRoute');
 const loanRoutes = require('../routes/loanRoutes');
 const userRoutes = require('../routes/userRoutes');
 const adminRoutes = require('../routes/adminRoutes');
+const creditRoutes = require('../routes/creditRoutes');
 const lenderRoutes = require('../routes/lenderRoutes');
 const loanAgentRoutes = require('../routes/loanAgentRoutes');
 const operationsRoutes = require('../routes/operationsRoutes');
@@ -17,6 +18,7 @@ module.exports = function(app) {
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/admins', adminRoutes);
+    app.use('/api/credit', creditRoutes);
     app.use('/api/lenders', lenderRoutes);
     app.use('/api/agents', loanAgentRoutes);
     app.use('/api/operations', operationsRoutes);

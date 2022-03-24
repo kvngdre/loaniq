@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const User = require('./userModel');
 
 const lenderSchema = new mongoose.Schema({
     companyName: {
@@ -47,8 +47,10 @@ const lenderSchema = new mongoose.Schema({
     // Should there be more than one admin?
     adminUser: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Admin'
-    }
+        ref: 'User'
+    },
+
+    // TODO: Add OTP verification
     
 }, {
     timestamps: true

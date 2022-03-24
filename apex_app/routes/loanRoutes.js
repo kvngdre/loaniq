@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const router = require('express').Router();
-const debug = require('debug')('loanRoute');
+const debug = require('debug')('app:loanRoute');
 const loanValidators = require('../validators/loanValidator');
 const loanViewController = require('../controllers/loanController');
 const customerValidators = require('../validators/customerValidator');
@@ -13,16 +13,17 @@ router.post('/create-request', async (req, res) => {
         var { error } = customerValidators.validateCreation(customerObj);
         if(error) throw error;
         
-        var { error } = loanValidators.validateCreation(loanObj);
+        var { error }= loanValidators.validateCreation(loanObj);
         if(error) throw error;
 
     }catch(exception) {
-        return res.status(400).send(exception.details[0].message);
+        debug(exception);
+        return res.status(400).send(exception.message);
     };
 
     const loanRequest = await loanViewController.createLoan(req.body);
     debug(loanRequest.message, loanRequest.stack);
-    if (loanRequest instanceof Error) return res.status(200).send(loanRequest.message);
+    if (loanRequest instanceof Error) return res.status(400).send(loanRequest.message);
 
     res.status(200).send(loanRequest);
 });

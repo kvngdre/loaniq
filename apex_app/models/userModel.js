@@ -1,7 +1,10 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const Lender = require('./lenderModel');
 const Segment = require('../models/segmentModel');
+const Customer = require('../models/customerModel');
+
 
 
 const userSchema = new mongoose.Schema({
@@ -50,8 +53,18 @@ const userSchema = new mongoose.Schema({
         default: false
     },
 
+    active: {
+        type: Boolean,
+        default: false
+    },
+
     otp: {
         type: String,
+    },
+
+    lenderID: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lender'
     },
 
     role: {
@@ -71,6 +84,7 @@ const userSchema = new mongoose.Schema({
         ref: 'Segment',
     },
 
+    // TODO: Duration of target
     target: {
         type: Number,
         default: null
@@ -81,8 +95,9 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
-    loans: {
-        type: [ mongoose.Schema.Types.ObjectId ]
+    customer: {
+        type: [ mongoose.Schema.Types.ObjectId ],
+        ref: 'Customer'
     }
     
 }, {
@@ -94,7 +109,8 @@ userSchema.methods.generateToken = function() {
         _id: this._id, 
         firstName: this.firstName, 
         lastName: this.lastName,
-        email: this.email
+        email: this.email,
+        role: this.role
     }, config.get('jwtPrivateKey'));
 }
 

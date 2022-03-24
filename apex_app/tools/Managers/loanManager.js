@@ -8,15 +8,18 @@ const manager = {
     // TODO: Come back to loan manager
     createLoanRequest: async function(requestBody) {
         try{
+            // If no loan agent, pick on at random
+            if(!requestBody.loan.agent) requestBody.loan.agent = await pickRandomAgent(requestBody.companyName);
+            
             requestBody.loan.ippis = requestBody.ippis;
 
             const customerExists = await Customer.findOne( {ippis: requestBody.ippis} );
             if(customerExists) {
-                // If no loan agent pick on at random
-                if(!requestBody.loan.agent) requestBody.loan.agent = await pickRandomAgent(requestBody.companyName);
+                
 
                 // TODO: Make this a transaction
                 const newLoan = await Loan.create(requestBody.loan);
+                newLoan.customer = customerExists._id;
                 
                 // Map loan request to agent
                 const agent = await User.findById(requestBody.loan.agent);
@@ -54,7 +57,7 @@ const manager = {
 
     getAllLoans: async function() {
         try{
-            const loans = Loan.find()
+            const loans = await Loan.find()
                                   .populate(['agent'])
                                   .sort('_id');
             // TODO: implement sort the loans.
@@ -62,6 +65,18 @@ const manager = {
 
             return loans;
             
+        }catch(exception) {
+            return exception;
+        };
+    },
+
+    getOne: async function(requestBody) {
+        try{
+                const doesExist = await Loan.findOne( {_id: requestBody.params.id} ).populate('customer');
+                if(!doesExist) throw new Error('Loan does not exist.');
+
+                return doesExist;
+
         }catch(exception) {
             return exception;
         };

@@ -125,6 +125,7 @@ const user = {
             await newUser.save();
 
             // OTP will expire after two minutes
+            // TODO: Implement OTP in user model.
             setTimeout(() => {
                 newUser.otp = null;
                 newUser.save();

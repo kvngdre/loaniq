@@ -1,4 +1,5 @@
 const Joi = require('@hapi/joi');
+const { ref } = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
 const validators = {
@@ -30,7 +31,8 @@ const validators = {
             // TODO: Google how to validate dates with Joi
             // TODO: fix timezone for today variable.
             dateOfBirth: Joi.date()
-                            .less(today)
+                            .less('now')
+                            .message( {'date.less': 'Date of Birth must be valid.'} )
                             .required(),
 
             // TODO: Add required to fields.
@@ -48,16 +50,31 @@ const validators = {
                       .max(255)
                       .required(),
 
+            bvn: Joi.string()
+                    .pattern(/^22/)
+                    .message( {'string.pattern.base': 'Invalid BVN'} )
+                    .length(11),
+
             ippis: Joi.string()
-                      .required()
                       .pattern(/([a-zA-z]{2,3})?[0-9]{3,7}/)
-                      .messages( {'string.pattern.base': 'Invalid IPPIS number.'} ),
+                      .messages( {'string.pattern.base': 'Invalid IPPIS number.'} )
+                      .required(),
 
             companyName: Joi.objectId()
                             .required(),
-
+            
             bankName: Joi.objectId()
-                         .required()
+                         .required(),
+
+            dateOfEnlistment: Joi.date()
+                                 .greater(Joi.ref('dateOfBirth', {adjust: (value) => {
+                                    value.setFullYear(value.getFullYear() + 18);
+                                    return value;
+                                }}))
+                                // TODO: Improve on this error message
+                                 .message( {'date.greater': 'Invalid Date of Enlistment.'} )
+                                 .required()
+
         });
 
     return schema.validate(customer);
