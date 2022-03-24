@@ -47,7 +47,8 @@ const manager = {
             // agent.loans.push(customerLoan._id);
             if (!agent.customers.includes(newCustomer._id)) agent.customers.push(newCustomer._id);
             await agent.save();
-            
+            console.log(newCustomer);
+
             return newCustomer;
 
         }catch(exception) {
@@ -58,7 +59,7 @@ const manager = {
     getAllLoans: async function() {
         try{
             const loans = await Loan.find()
-                                  .populate(['agent'])
+                                  .populate(['loanAgent'])
                                   .sort('_id');
             // TODO: implement sort the loans.
             if(!loans) throw new Error('No customers.');
@@ -70,9 +71,9 @@ const manager = {
         };
     },
 
-    getOne: async function(requestBody) {
+    getOne: async function(id) {
         try{
-                const doesExist = await Loan.findOne( {_id: requestBody.params.id} ).populate('customer');
+                const doesExist = await Loan.findById(id).populate('customer').select('firsName, lastName, Gender');
                 if(!doesExist) throw new Error('Loan does not exist.');
 
                 return doesExist;

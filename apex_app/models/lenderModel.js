@@ -36,6 +36,7 @@ const lenderSchema = new mongoose.Schema({
 
     email: {
         type: String,
+        unique: true,
         required: true
     },
     // TODO: Work on auto generating url

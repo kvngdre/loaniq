@@ -105,7 +105,7 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true,
         default: null,
-        // unique: true,
+        unique: true,
         trim: true,
     },
 

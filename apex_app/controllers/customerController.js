@@ -2,27 +2,22 @@ const Customer = require('../models/customerModel');
 
 const customer = {
     getAll: async function() {
-        try{
-            const customers = await Customer.find()
-                                            .populate('companyName')
-                                            .select( ['firstName, lastName, ippis, companyName'] )
-                                            .sort('_id');
-            if (customers.length === 0) throw new Error('No customers.');
+        return await Customer.find()
+                             .populate( [ 'segment', 'loanAgent' ] )
+                             .select( [ 'firstName', 'lastName', 'ippis', 'segment', 'loanAgent' ] )
+                             .sort('_id');
 
-            return customers;
-
-        }catch(exception) {
-            return exception;
-        };
     },
 
     create: async function(requestBody) {
         try{
-            const doesExist = await Customer.findOne( {ippis: requestBody.ippis} );
-            if(doesExist) throw new Error('Customer exists', doesExists);
+            const doesExist = await Customer.findOne( { ippis: requestBody.ippis } );
+            if(doesExist) throw new Error('Duplicate IPPIS NO. Customer already exists');
 
         }catch(exception) {
-            return exception;
+            return {exception, customer: doesExist};
         };
     }
 }
+
+module.exports = customer;

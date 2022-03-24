@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const debug = require('debug')('app:routes');
+const debug = require('debug')('app:userRoutes');
 const userValidator = require('../validators/userValidator');
 const userViewController  = require('../controllers/userController');
 
@@ -11,27 +11,29 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
+    var { error } = userValidator.validateRegistration.admin(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
     const role = req.body.role;
     if (!role) return res.status(400).send('Role is required.');
 
     switch(role) {
         case "admin":
-            var { error } = userValidator.validateAdminReg(req.body);
+            var { error } = userValidator.validateRegistration.admin(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
         
         case "credit":
-            var { error } = userValidator.validateCreditReg(req.body);
+            var { error } = userValidator.validateRegistration.credit(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
         
         case "operations":
-            var { error } = userValidator.validateOperationsReg(req.body);
+            var { error } = userValidator.validateRegistration.operations(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
 
         case "loanAgent":
-            var { error } = userValidator.validateLoanAgentReg(req.body);
+            var { error } = userValidator.validateRegistration.loanAgent(req.body);
             if (error) return res.status(400).send(error.details[0].message);
             break;
     };
@@ -61,7 +63,7 @@ router.post('/login', async (req, res) => {
     
     if(isLoggedIn instanceof Error) {
         debug(isLoggedIn.message);
-        return res.status(400).send('Email does not exist.');
+        return res.status(400).send(isLoggedIn.message);
     };
 
     res.status(200).send({message: 'Login successful.', user: isLoggedIn});
@@ -74,7 +76,7 @@ router.post('/forgot-password', async (req, res) => {
     const user = await userViewController.forgotPassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    res.redirect(307, `http://localhost:8480/api/admins/change-password/`);
+    res.redirect(307, `http://localhost:8480/api/users/change-password/`);
 });
 
 router.post('/change-password/', async (req, res) => {

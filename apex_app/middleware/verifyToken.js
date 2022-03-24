@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 function verifyToken(req, res, next) {
     try{
         const token = req.header('auth-token');
-        if(!token) return res.status(401).send('Access Denied. No token provided.');
+        if(!token) return res.status(403).send('Access Denied. No token provided.');
 
         const isVerified = jwt.verify(token, config.get('jwtPrivateKey'));
         req.user = isVerified;
@@ -12,7 +12,7 @@ function verifyToken(req, res, next) {
         next();
 
     }catch (exception) {
-        return exception;
+        return res.status(400).send('Invalid Token provided.');
     };
 }
 

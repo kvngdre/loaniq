@@ -1,16 +1,15 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
-const emailDebug = require('debug')('app:email');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
+const userDebug = require('debug')('app:userContr');
+const emailDebug = require('debug')('app:userEmailContr');
 
 
 const user = {
     getAll: async function() {
-        const users = await User.find().select('-password -otp').sort('firstName');
-
-        return users;
+        return await User.find().select('-password -otp').sort('firstName');
     },
 
     create: async function(requestBody) {
@@ -169,16 +168,17 @@ const user = {
     login: async function(requestBody) {
         try{
             let user = await User.findOne( {email: requestBody.email} );
+            console.log(user);
             if(!user) throw new Error('Invalid email or password.');
             
 
-            const isValidPassword = await bcrypt.compare(requestBody.newPassword, user.password);
+            const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(isValidPassword instanceof Error)  throw new Error(isValidPassword.message);
 
             const token = user.generateToken();
 
             user.token = token;
-            user = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'token']);
+            user = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'token']);
 
             return user;
 
@@ -224,6 +224,19 @@ const user = {
             return exception;
         };
     },
+
+    delete: async function(id) {
+        try{
+            const user = await User.findByIdAndRemove( {_id: id} );
+            if(!user) throw new Error(user.message);
+
+            return user;
+
+        }catch(exception) {
+            userDebug(exception.message, exception.stack)
+            return exception;
+        }
+    }
     
 }
 

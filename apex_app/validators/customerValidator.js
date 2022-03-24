@@ -52,7 +52,7 @@ const validators = {
 
             bvn: Joi.string()
                     .pattern(/^22/)
-                    .message( {'string.pattern.base': 'Invalid BVN'} )
+                    .message( {'string.pattern.base': 'Invalid BVN.'} )
                     .length(11),
 
             ippis: Joi.string()

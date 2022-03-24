@@ -62,10 +62,10 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
 
-    lenderID: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Lender'
-    },
+    // lenderID: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Lender'
+    // },
 
     role: {
         type: String,

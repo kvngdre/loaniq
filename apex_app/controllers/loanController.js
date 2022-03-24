@@ -3,16 +3,15 @@ const loanManager = require('../tools/Managers/loanManager');
 
 const loans = {
     createLoan: async function(requestBody) {
-        const loanRequest = await loanManager.createLoanRequest(requestBody);
-        return loanRequest;
+        return await loanManager.createLoanRequest(requestBody);
     },
 
     getAll: async function() {
         return await loanManager.getAllLoans();
     },
 
-    getOne: async function() {
-
+    getOne: async function(id) {
+        return await loanManager.getOne(id)
     },
 
     // modify

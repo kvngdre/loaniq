@@ -3,118 +3,120 @@ const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
 
 const validators = {
-    validateAdminReg: function (user) {
-        const schema = Joi.object({
-            firstName: Joi.string().required().min(3).max(50),
-            lastName: Joi.string().required().min(3).max(50),
-            middleName: Joi.string().optional().min(3).max(50),
-            email: Joi.string().required().email().min(10).max(255),
-            role: Joi.string().required(),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+    validateRegistration: {
+        admin: function (user) {
+            const schema = Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
+                lastName: Joi.string().required().min(3).max(50),
+                middleName: Joi.string().optional().min(3).max(50),
+                email: Joi.string().required().email().min(10).max(255),
+                role: Joi.string().required(),
+                password: joiPassword
+                            .string()
+                            .required()
+                            .minOfUppercase(1)
+                            .minOfSpecialCharacters(2)
+                            .minOfNumeric(2)
+                            .noWhiteSpaces()
+                            .min(6)
+                            .max(255)
+                            .messages({
+                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                            })
+        
+            });
+        
+            return schema.validate(user);
+        },
     
-        });
+        credit: function (user) {
+            const schema = Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
+                lastName: Joi.string().required().min(3).max(50),
+                middleName: Joi.string().optional().min(3).max(50),
+                email: Joi.string().required().email().min(10).max(255),
+                role: Joi.string().required(),
+                password: joiPassword
+                            .string()
+                            .required()
+                            .minOfUppercase(1)
+                            .minOfSpecialCharacters(2)
+                            .minOfNumeric(2)
+                            .noWhiteSpaces()
+                            .min(6)
+                            .max(255)
+                            .messages({
+                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                            })
+        
+            });
+        
+            return schema.validate(user);
+        },
     
-        return schema.validate(user);
-    },
-
-    validateCreditReg: function (user) {
-        const schema = Joi.object({
-            firstName: Joi.string().required().min(3).max(50),
-            lastName: Joi.string().required().min(3).max(50),
-            middleName: Joi.string().optional().min(3).max(50),
-            email: Joi.string().required().email().min(10).max(255),
-            role: Joi.string().required(),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+        operations: function (user) {
+            const schema = Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
+                lastName: Joi.string().required().min(3).max(50),
+                middleName: Joi.string().optional().min(3).max(50),
+                email: Joi.string().required().email().min(10).max(255),
+                role: Joi.string().required(),
+                password: joiPassword
+                            .string()
+                            .required()
+                            .minOfUppercase(1)
+                            .minOfSpecialCharacters(2)
+                            .minOfNumeric(2)
+                            .noWhiteSpaces()
+                            .min(6)
+                            .max(255)
+                            .messages({
+                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                            })
+        
+            });
+        
+            return schema.validate(user);
+        },
     
-        });
-    
-        return schema.validate(user);
-    },
-
-    validateOperationsReg: function (user) {
-        const schema = Joi.object({
-            firstName: Joi.string().required().min(3).max(50),
-            lastName: Joi.string().required().min(3).max(50),
-            middleName: Joi.string().optional().min(3).max(50),
-            email: Joi.string().required().email().min(10).max(255),
-            role: Joi.string().required(),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
-    
-        });
-    
-        return schema.validate(user);
-    },
-
-    validateLoanAgentReg: function (user) {
-        const schema = Joi.object({
-            firstName: Joi.string().required().min(3).max(50),
-            lastName: Joi.string().required().min(3).max(50),
-            middleName: Joi.string().optional().min(3).max(50),
-            email: Joi.string().required().email().min(10).max(255),
-            role: Joi.string().required(),
-            segments: Joi.array().items(Joi.objectId).required(),
-            target: Joi.number(),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
-    
-        });
-    
-        return schema.validate(user);
+        loanAgent: function (user) {
+            const schema = Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
+                lastName: Joi.string().required().min(3).max(50),
+                middleName: Joi.string().optional().min(3).max(50),
+                email: Joi.string().required().email().min(10).max(255),
+                role: Joi.string().required(),
+                segments: Joi.array().items(Joi.objectId).required(),
+                target: Joi.number(),
+                password: joiPassword
+                            .string()
+                            .required()
+                            .minOfUppercase(1)
+                            .minOfSpecialCharacters(2)
+                            .minOfNumeric(2)
+                            .noWhiteSpaces()
+                            .min(6)
+                            .max(255)
+                            .messages({
+                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                            })
+        
+            });
+        
+            return schema.validate(user);
+        },
     },
 
     validateRegVerification: function(user) {

@@ -6,6 +6,7 @@ const loanViewController = require('../controllers/loanController');
 const customerValidators = require('../validators/customerValidator');
 
 router.post('/create-request', async (req, res) => {
+    // Joi validation
     try{
         const customerObj = _.omit(req.body, ['loan']);
         const loanObj = req.body.loan;
@@ -30,9 +31,15 @@ router.post('/create-request', async (req, res) => {
 
 router.get('/', async (req, res) => {
     const loans = await loanViewController.getAll();
-    if(loans instanceof Error) return loans.message;
+    if(loans.length === 0) return res.status(404).send('No loans have been created.');
 
     res.status(200).send(loans);
 });
 
+router.get('/:id', async (req, res) => {
+    const loan = await loanViewController.getOne(req.params.id);
+    if(loan instanceof Error) return res.status(404).send('Loan does not exist.');
+
+    res.status(200).send(loan);
+})
 module.exports = router;
