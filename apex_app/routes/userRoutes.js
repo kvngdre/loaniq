@@ -1,19 +1,27 @@
 const router = require('express').Router();
 const debug = require('debug')('app:userRoutes');
+const verifyRole  = require('../middleware/verifyRole');
+const verifyToken = require('../middleware/verifyToken');
 const userValidator = require('../validators/userValidator');
 const userViewController  = require('../controllers/userController');
 
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
     const users = await userViewController.getAll();
     if(users.length === 0) return res.status(400).send('No users registered.');
 
     res.status(200).send(users);
 });
 
-router.post('/register', async (req, res) => {
-    var { error } = userValidator.validateRegistration.admin(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+    const user = await userViewController.get(req.params.id);
+    if(user instanceof Error) return res.status(404).send(customer.message);
+
+    res.status(200).send(user);
+});
+
+router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) => {
     const role = req.body.role;
+    console.log(req.body);
     if (!role) return res.status(400).send('Role is required.');
 
     switch(role) {
@@ -83,6 +91,21 @@ router.post('/change-password/', async (req, res) => {
     console.log(req.body.newPassword)
     const user = await userViewController.changePassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
+
+    res.status(200).send(user);
+});
+
+router.put('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+    // const { error } = userValidator.validateRegistration.
+    const user = await userViewController.update(req.params.id, req.body);
+    if(user instanceof Error) return res.status(400).send(user.message);
+
+    res.status(200).send({message: 'Update Successful', user})
+});
+
+router.delete('/:id', verifyToken, verifyRole('admin'),  async (req, res) => {
+    const user = await userViewController.delete(req.params.id);
+    if(user instanceof Error) return res.status(401).send(user.message);
 
     res.status(200).send(user);
 });

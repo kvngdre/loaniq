@@ -61,7 +61,7 @@ const validators = {
                       .required(),
 
             segment: Joi.objectId()
-                            .required(),
+                         .required(),
             
             bankName: Joi.objectId()
                          .required(),

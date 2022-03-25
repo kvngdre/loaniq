@@ -10,5 +10,7 @@
     "minLoanAmount": 50000,
     "maxLoanAmount": 1000000, 
     "minTenor": 1,
-    "maxTenor": 18
+    "maxTenor": 18,
+    "interestRate": 0.03,
+    "fee": 100
 }

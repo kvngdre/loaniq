@@ -12,6 +12,10 @@ const user = {
         return await User.find().select('-password -otp').sort('firstName');
     },
 
+    get: async function(id) {
+        return await User.findById(id).select('-password -otp');
+    },
+
     create: async function(requestBody) {
         try {
             let role = requestBody.role;
@@ -234,6 +238,18 @@ const user = {
 
         }catch(exception) {
             userDebug(exception.message, exception.stack)
+            return exception;
+        }
+    },
+
+    update: async function(id, requestBody) {
+        try{
+            const user = await User.findOneAndUpdate( {_id: id}, requestBody);
+            if(!user) throw new Error('User not found.');
+
+            return user;
+
+        }catch(exception) {
             return exception;
         }
     }

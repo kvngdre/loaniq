@@ -14,9 +14,9 @@ check if the user has been paid.
 approval levels build
 */
 
-const credit ={
-    getLoan: async function(requestBody) { return await loanManager.getOne(requestBody); }
+// const credit ={
+//     getLoan: async function(requestBody) { return await loanManager.getOne(requestBody); }
     
-};
+// };
 
-module.exports = credit;
+// module.exports = credit;

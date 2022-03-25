@@ -10,30 +10,30 @@ const loanSchema = new mongoose.Schema({
         uppercase: true,
         required: true,
     },
-
+    
     customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer'
     },
-
+    
     netPay: {
         type: Number,
         required: true
         // Should read netPay from another db
     },
-
+    
     amount: {
         type: Number,
         required: true,
         min: config.get('minLoanAmount')
     },
-
+    
     amountInWords: {
         type: String,
         //  required: true,
         trim: true
     },
-
+    
     // TODO: uncomment required.
     tenor: {
         type: Number,
@@ -41,12 +41,12 @@ const loanSchema = new mongoose.Schema({
         min: config.get('minTenor'),
         max: config.get('maxTenor')
     },
-
+    
     recommendedTenor: {
         type: Number,
         default: (self=this) => self.tenor
     },
-
+    
     loanType: {
         type: String,
         enum: [
@@ -55,15 +55,69 @@ const loanSchema = new mongoose.Schema({
         ],
         default: "new"
     },
+    
+    loanAgent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
 
     interestRate: {
         type: Number
     },
-
+    
     upfrontPercentage: {
         type: Number
     },
 
+    fee: {
+        type: Number,
+        default: config.get('fee')
+    },
+
+    // TODO: figure out how to update this with every change to status.
+    repayment: {
+        type: Number,
+    },
+    
+    totalRepayment: {
+        type: Number
+    },
+    
+    netValue: {
+        type: Number
+    },
+
+    metrics: {
+        ageValid: {
+            type: Boolean
+        },
+        
+        serviceLengthValid: {
+            type: Boolean
+        },
+        
+        netPayValid: {
+            type: Boolean
+        },
+        
+        netPayConsistency: {
+            type: Boolean
+        },
+        
+        bvnValid: {
+            type: Boolean
+        },
+        
+        salaryAccountValid: {
+            type: Boolean
+        },
+        
+        debtToIncomeRatio: {
+            type: Number
+        }
+        
+    },
+    
     status: {
         type: String,
         enum: [
@@ -78,50 +132,18 @@ const loanSchema = new mongoose.Schema({
         default: 'Pending'
     },
 
-    // TODO: figure out how to update this with every change to status.
     dateAppOrDec: {
         type: Date
-    },
-    
-    loanAgent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    },
-
-    metrics: {
-        ageValid: {
-            type: Boolean
-        },
-
-        serviceLengthValid: {
-            type: Boolean
-        },
-
-        netPayValid: {
-            type: Boolean
-        },
-
-        netPayConsistency: {
-            type: Boolean
-        },
-
-        bvnValid: {
-            type: Boolean
-        },
-
-        salaryAccountValid: {
-            type: Boolean
-        },
-
-        debtToIncomeRatio: {
-            type: Boolean
-        }
-
     }
-  
+    
 }, {
     timestamps: true
 });
+
+loanSchema.pre('save', function() {
+    this.fee = config.get('fee');
+    config
+})
 
 const Loan = mongoose.model('Loan', loanSchema);
 
