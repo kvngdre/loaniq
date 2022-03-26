@@ -14,7 +14,7 @@ appRoutes(app);
 
 
 // Get Node Environment
-debug(`${app.get('env')}`);
+debug(`ENV: ${app.get('env')}`);
 
 
 // Listener

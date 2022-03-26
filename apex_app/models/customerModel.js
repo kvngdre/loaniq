@@ -149,8 +149,7 @@ const customerSchema = new mongoose.Schema({
 
     ippis: {
         type: String,
-        uppercase: true,
-        required: true
+        uppercase: true
     },
 
     segment: {
@@ -180,6 +179,7 @@ const customerSchema = new mongoose.Schema({
     },
     
     // NOK - Next of Kin
+    // TODO: Finish up on this model
     nameNOK: {
         type: String,
         // required: true,

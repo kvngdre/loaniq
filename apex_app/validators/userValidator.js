@@ -2,6 +2,7 @@ const Joi = require('joi');
 const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
 
+// TODO: Reposition required and remove optional.
 const validators = {
     validateRegistration: {
         admin: function (user) {
@@ -99,7 +100,6 @@ const validators = {
                 target: Joi.number(),
                 password: joiPassword
                             .string()
-                            .required()
                             .minOfUppercase(1)
                             .minOfSpecialCharacters(2)
                             .minOfNumeric(2)
@@ -117,6 +117,20 @@ const validators = {
         
             return schema.validate(user);
         },
+    },
+
+    validateEdit: function(user) {
+        const schema = Joi.object({
+                firstName: Joi.string().min(3).max(50),
+                lastName: Joi.string().min(3).max(50),
+                middleName: Joi.string().min(3).max(50),
+                email: Joi.string().email().min(10).max(255),
+                role: Joi.string(),
+                segments: Joi.array().items(Joi.objectId),
+                target: Joi.number(),
+        });
+
+        return schema.validate(user);
     },
 
     validateRegVerification: function(user) {

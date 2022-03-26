@@ -4,9 +4,6 @@ Joi.objectId = require('joi-objectid')(Joi);
 
 const validators = {
     validateCreation: function(customer) {
-        const dateTime = new Date()
-        const today = dateTime.getFullYear()+'-'+(dateTime.getMonth()+1)+'-'+dateTime.getDate();
-        
         const schema = Joi.object({
             firstName: Joi.string()
                           .min(3)
@@ -74,6 +71,101 @@ const validators = {
                                 // TODO: Improve on this error message
                                  .message( {'date.greater': 'Invalid Date of Enlistment.'} )
                                  .required()
+
+        });
+
+    return schema.validate(customer);
+    },
+
+    validateEdit: function(customer) {     
+        const schema = Joi.object({
+            firstName: Joi.string()
+                          .min(3)
+                          .max(50)
+                          .message({'string.error': 'First name is invalid'}),
+
+            lastName: Joi.string()
+                         .min(3)
+                         .max(50),
+
+            middleName: Joi.string()
+                           .min(3)
+                           .max(50),
+                           
+            gender: Joi.string()
+                       .valid('Male', 'Female'),
+
+            dateOfBirth: Joi.date()
+                            .less('now')
+                            .message( {'date.less': 'Date of Birth must be valid.'} ),
+
+            residentialAddress: Joi.string()
+                                   .min(5)
+                                   .max(255),
+
+            stateResident: Joi.objectId(),
+
+            maritalStatus: Joi.string(),
+
+            phone: Joi.string()
+                      .length(11),
+
+            email: Joi.string()
+                      .email()
+                      .min(10)
+                      .max(255),
+
+            bvn: Joi.string()
+                    .pattern(/^22/)
+                    .message( {'string.pattern.base': 'Invalid BVN.'} ),
+            
+            validId: Joi.string(),
+
+            idNumber: Joi.string(),
+
+            ippis: Joi.string()
+                      .pattern(/([a-zA-z]{2,3})?[0-9]{3,7}/)
+                      .messages( {'string.pattern.base': 'Invalid IPPIS number.'} ),
+
+            segment: Joi.objectId(),
+
+            companyLocation: Joi.string()
+                                .min(6),
+
+            companyState: Joi.objectId(),
+            
+            dateOfEnlistment: Joi.date()
+                                 .greater(Joi.ref('dateOfBirth', {adjust: (value) => {
+                                    value.setFullYear(value.getFullYear() + 18);
+                                    return value;
+                                }}))
+                                // TODO: Improve on this error message
+                                 .message( {'date.greater': 'Invalid Date of Enlistment.'} ),
+            
+            nameNOK: Joi.string(),
+
+            addressNOK: Joi.string(),
+
+            stateNOK: Joi.objectId(),
+
+            phoneNOK: Joi.string()
+                         .length(11),
+            
+            relationshipNOK: Joi.string(),
+
+            salaryAccountName: Joi.string(),
+
+            salaryAccountNumber: Joi.string()
+                                    .length(10),
+            
+            bankName: Joi.objectId(),
+            
+            // TODO: OR should be a string? 
+            loans: Joi.array()
+                      .items(Joi.objectId()),
+            
+            loanAgents: Joi.array()
+                           .items(Joi.objectId()),
 
         });
 

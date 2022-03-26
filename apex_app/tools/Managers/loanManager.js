@@ -5,6 +5,18 @@ const Customer = require('../../models/customerModel');
 const pickRandomAgent = require('../../utils/pickRandomAgent');
 
 const manager = {
+    createLoan: async function(requestBody) {
+        try{
+            const newLoan = Loan.create(requestBody);
+            if(!newLoan) throw new Error(newLoan);
+
+            return newLoan;
+
+        }catch(exception) {
+            return exception;
+        };
+    },
+
     // TODO: Come back to loan manager
     createLoanRequest: async function(requestBody) {
         try{
@@ -47,7 +59,6 @@ const manager = {
             // agent.loans.push(customerLoan._id);
             if (!agent.customers.includes(newCustomer._id)) agent.customers.push(newCustomer._id);
             await agent.save();
-            console.log(newCustomer);
 
             return newCustomer;
 
@@ -59,8 +70,8 @@ const manager = {
     getAllLoans: async function() {
         try{
             const loans = await Loan.find()
-                                  .populate(['loanAgent'])
-                                  .sort('_id');
+                                    .populate(['loanAgent'])
+                                    .sort('_id');
             // TODO: implement sort the loans.
             if(!loans) throw new Error('No customers.');
 

@@ -229,31 +229,45 @@ const user = {
         };
     },
 
-    delete: async function(id) {
+    
+    update: async function(id, requestBody) {
         try{
-            const user = await User.findByIdAndRemove( {_id: id} );
-            if(!user) throw new Error(user.message);
+            const user = await User.findByIdAndUpdate( {_id: id}, requestBody, {new: true});
+            if(!user) {
+                userDebug(user);
+                throw new Error('User not found.');
+            };
 
+            // TODO: how to specify if it's a delete or ADD??
+            // if(requestBody.segments || requestBody.customers) {
+            //     segments
+            // }
+            
             return user;
-
+            
         }catch(exception) {
-            userDebug(exception.message, exception.stack)
             return exception;
         }
     },
-
-    update: async function(id, requestBody) {
+    
+    delete: async function(id) {
         try{
-            const user = await User.findOneAndUpdate( {_id: id}, requestBody);
+            const user = await User.findById(id);
             if(!user) throw new Error('User not found.');
 
-            return user;
+            if(user.customers.length > 0) {
+                return 'Are you sure you want to delete?';
+            };
 
+            user.delete();
+    
+            return user;
+    
         }catch(exception) {
+            // userDebug(exception.message, exception.stack);
             return exception;
         }
-    }
-    
+    },
 }
 
 module.exports = user;

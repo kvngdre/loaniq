@@ -101,17 +101,17 @@ const userSchema = new mongoose.Schema({
     },
 
     // loans: {
-    //     type: [ mongoose.Schema,Types.ObjectId ],
+//     type: [ mongoose.Schema,Types.ObjectId ],
     //     ref: 'Loan'
     // }
-    
+
 }, {
     timestamps: true
 });
 
 userSchema.methods.generateToken = function() {
     return jwt.sign( {
-        _id: this._id, 
+        id: this._id, 
         firstName: this.firstName, 
         lastName: this.lastName,
         email: this.email,
