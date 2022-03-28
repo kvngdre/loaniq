@@ -1,14 +1,38 @@
 const _ = require('lodash');
+const debug = require('debug')('app:loanMgr')
 const Loan = require('../../models/loanModel');
 const User = require('../../models/userModel');
 const Customer = require('../../models/customerModel');
 const pickRandomAgent = require('../../utils/pickRandomAgent');
+const userViewController = require('../../controllers/userController');
+const customerViewController = require('../../controllers/customerController');
 
 const manager = {
-    createLoan: async function(requestBody) {
+    createLoan: async function(request) {
         try{
-            const newLoan = Loan.create(requestBody);
-            if(!newLoan) throw new Error(newLoan);
+            const customer = await customerViewController.get(request.body.customer, request.user);
+            if(customer instanceof Error) throw new Error(customer.message);
+
+            // Find the loan agent
+            const agent = await userViewController.get( { _id: customer.loanAgent, active: true, segments: customer.segment } );
+            if(agent instanceof Error) {
+                debug(agent);
+                throw new Error('Invalid loan agent.');
+            };
+
+            const newLoan =  new Loan(request.body);
+            
+            // Updating customer loans
+            customer.loans.push(newLoan._id);
+            // if(customer.loanAgent !== agent._id) customer.loanAgent = agent._id;
+            
+            // Updating loan agent customers.
+            if(!agent.customers.includes(customer._id)) agent.customers.push(customer._id);
+            agent.loans.push(newLoan._id);
+            
+            await customer.save();
+            await agent.save();
+            await newLoan.save();
 
             return newLoan;
 
@@ -19,45 +43,49 @@ const manager = {
 
     // TODO: Come back to loan manager
     createLoanRequest: async function(requestBody) {
-        try{
-            // If no loan agent, pick on at random
-            if(!requestBody.loan.loanAgent) requestBody.loan.loanAgent = await pickRandomAgent(requestBody.segment);
-            
-            requestBody.loan.ippis = requestBody.ippis;
-
+        try{          
             const customerExists = await Customer.findOne( {ippis: requestBody.ippis} );
             if(customerExists) {
-                // TODO: Make this a transaction
-                const newLoan = await Loan.create(requestBody.loan);
-                newLoan.customer = customerExists._id;
-                
-                // Map loan request to agent
-                const agent = await User.findById(requestBody.loan.loanAgent);
-                if (!agent) throw new Error ('Agent does not exist.');
-                // agent.loans.push(newLoan._id);
+                const agent = await User.findOne(requestBody.loanAgent ? { _id: requestBody.loanAgent, active: true, segments: requestBody.segment } : { _id: customerExists.loanAgent } );
+                if (!agent) throw new Error ('Agent does not exist or inactive.');
                 if (!agent.customers.includes(customerExists._id)) agent.customers.push(customerExists._id);
-                await agent.save();
-
+                            
+                // TODO: Make this a transaction
+                requestBody.loan.customer = customerExists._id;
+                requestBody.loan.loanAgent = agent._id;
+                const newLoan = await Loan.create(requestBody.loan);
+                
+                // Updating loanAgent loans array.
+                agent.loans.push(newLoan._id);
+                
+                // Updating the customer loans and loan agent.
                 customerExists.loans.push(newLoan._id);
-                if (!customerExists.loanAgents.includes(agent._id)) customerExists.loanAgents.push(agent._id);
+                if (!customerExists.loanAgent !== agent._id) customerExists.loanAgent = agent._id;
+                
+                await agent.save();
                 await customerExists.save();
                 
                 return newLoan;
             };
 
-            // TODO: Make this a transaction
-            const customerLoan = await Loan.create(requestBody.loan);
+            //NEW CUSTOMER
+            const result = customerViewController.create( _.omit(requestBody, ['loan']) );
+            if(result instanceof Error) throw result;
 
-            // Tie customer and loan
-            const newCustomer = new Customer( _.omit(requestBody, ['loan']) );
-            newCustomer.loans.push(customerLoan._id);
+            const { newCustomer, agent } = result;
+            
+            // creating customer loan.
+            requestBody.loan.customer = newCustomer._id;
+            requestBody.loan.loanAgent = newCustomer.loanAgent;
+            const newLoan = await Loan.create(requestBody.loan);
+            
+            // Updating loan agent array with new loan.
+            agent.loans.push(newLoan._id);
+
+            // Updating new customer loans.
+            newCustomer.loans.push(newLoan._id);
+            
             await newCustomer.save();
-
-            // Map loan agent and customer
-            const agent = await User.findById(requestBody.loan.agent);
-            if (!agent) throw new Error ('Agent does not exist.');
-            // agent.loans.push(customerLoan._id);
-            if (!agent.customers.includes(newCustomer._id)) agent.customers.push(newCustomer._id);
             await agent.save();
 
             return newCustomer;
@@ -67,27 +95,35 @@ const manager = {
         };
     },
 
-    getAllLoans: async function() {
-        try{
+    getAllLoans: async function(user) {
+        if(user.role !== 'loanAgent') {
             const loans = await Loan.find()
-                                    .populate(['loanAgent'])
-                                    .sort('_id');
-            // TODO: implement sort the loans.
-            if(!loans) throw new Error('No customers.');
-
-            return loans;
+                                        .populate('loanAgent')
+                                        .sort('_id');
             
-        }catch(exception) {
-            return exception;
+            return loans;
         };
+
+        const loans = await Loan.find( { loanAgent: user.id } )
+                                .populate('loanAgent')
+                                .sort('_id');
+            
+        return loans; 
     },
 
-    getOne: async function(id) {
+    get: async function(id, user) {
         try{
-                const doesExist = await Loan.findById(id).populate('customer').select('firsName, lastName, Gender');
-                if(!doesExist) throw new Error('Loan does not exist.');
-
-                return doesExist;
+            if(user.role !== 'loanAgent') {
+                const loan = await Loan.findById(id).populate('customer');
+                if(!loan) throw new Error('Loan not found.');
+    
+                return loan;
+            };
+            const loan = await Loan.findOne( {_id: id, loanAgent:user.id })
+                                   .populate('customer');
+            if(!loan) throw new Error('Loan not found.');
+    
+            return loan;
 
         }catch(exception) {
             return exception;

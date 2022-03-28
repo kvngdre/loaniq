@@ -6,10 +6,10 @@ Joi.objectId = require('joi-objectid')(Joi);
 const validators = {
     validateCreation: {
         loanRequest: function(loan) {
-            const schema = Joi.object({
-                ippis: Joi.string(),
-    
-                customer: Joi.objectId(),
+            const schema = Joi.object({  
+                customer: Joi.string(),
+
+                loanAgent: Joi.string(),
     
                 netPay: Joi.number()
                            .required(),
@@ -24,9 +24,7 @@ const validators = {
                           .min(config.get('minTenor'))
                           .max(config.get('maxTenor')),
     
-                loanType: Joi.string(),
-    
-                loanAgent: Joi.objectId()
+                loanType: Joi.string()
             });
     
         return schema.validate(loan);
@@ -35,12 +33,9 @@ const validators = {
 
         loan: function(loan) {
             const schema = Joi.object({
-                ippis: Joi.string()
-                          .required(),
-    
-                customer: Joi.objectId()
+                customer: Joi.string()
                              .required(),
-    
+
                 netPay: Joi.number()
                            .required(),
     
@@ -58,10 +53,7 @@ const validators = {
                           .required(),
     
                 loanType: Joi.string()
-                             .required(),
-    
-                loanAgent: Joi.objectId()
-                              .required()
+                             .required()
             });
     
         return schema.validate(loan);

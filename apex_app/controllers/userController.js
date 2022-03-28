@@ -4,27 +4,51 @@ const User = require('../models/userModel');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 const userDebug = require('debug')('app:userContr');
-const emailDebug = require('debug')('app:userEmailContr');
+const Segment = require('../models/segmentModel');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 
 const user = {
-    getAll: async function() {
-        return await User.find().select('-password -otp').sort('firstName');
+    getAll: async function(queryParam) {
+        if(queryParam) return await User.find(queryParam)
+                                        .select('-password -otp')
+                                        .sort('firstName');
+
+        return await User.find()
+                          .select('-password -otp')
+                          .sort('firstName');
     },
 
-    get: async function(id) {
-        return await User.findById(id).select('-password -otp');
+    get: async function(queryParam) {
+        try{
+            const user = await User.findOne(ObjectId.isValid(queryParam) ? { _id: queryParam } : queryParam ).select('-password -otp');
+            if(!user) {
+                userDebug(user);
+                throw new Error('User not found.');
+            };
+
+            return user;
+
+        }catch(exception) {
+            return exception;
+        }
     },
 
-    create: async function(requestBody) {
+    /**
+     *  function creates a user.
+     * @param {object} requestBody 
+     * @param {object} user 
+     * @param {string} lenderID 
+     * @returns new user
+     */
+    create: async function(requestBody, user, lenderID) {
         try {
             let role = requestBody.role;
 
-            const users = await User.find()
-            if (users.length === 0) role = "admin";
-
             switch(role) {
                 case "admin":
+                    if(user && user.role === 'admin') throw new Error('Cannot create role.')
+
                     var doesExist = await User.findOne( {email: requestBody.email} );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
@@ -42,7 +66,9 @@ const user = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
-                        role
+                        role,
+                        active: requestBody.active,
+                        lenderId: lenderID
                     });
                     break;
 
@@ -64,7 +90,9 @@ const user = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
-                        role
+                        role,
+                        active: requestBody.active,
+                        lenderId: user.lenderId
                     });
                     break;
 
@@ -86,7 +114,9 @@ const user = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
-                        role
+                        role,
+                        active: requestBody.active,
+                        lenderId: user.lenderId
                     });
                     break;
                 
@@ -102,6 +132,9 @@ const user = {
                     
                     var OTP = generateOTP();
 
+                    let allSegments;
+                    if(requestBody.segments === 'all') { allSegments = await Segment.find().select('_id') };
+
                     var newUser = new User({
                         firstName: requestBody.firstName,
                         lastName: requestBody.lastName,
@@ -110,20 +143,21 @@ const user = {
                         password: encryptedPassword,
                         otp: OTP,
                         role,
-                        segments: requestBody.segments
+                        active: requestBody.active,
+                        segments: allSegments ? allSegments : requestBody.segments,
+                        lenderId: user.lenderId
                     });
                     break;
-
             };
                        
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
-            console.log(mailResponse)
+            userDebug(mailResponse);
             if(mailResponse instanceof Error) {
-                emailDebug(`Error sending OTP: ${mailResponse.message}`);
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
-            emailDebug('Email sent successfully');
+            userDebug('Email sent successfully');
             
             await newUser.save();
 
@@ -172,10 +206,8 @@ const user = {
     login: async function(requestBody) {
         try{
             let user = await User.findOne( {email: requestBody.email} );
-            console.log(user);
             if(!user) throw new Error('Invalid email or password.');
             
-
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(isValidPassword instanceof Error)  throw new Error(isValidPassword.message);
 
@@ -255,11 +287,11 @@ const user = {
             const user = await User.findById(id);
             if(!user) throw new Error('User not found.');
 
-            if(user.customers.length > 0) {
-                return 'Are you sure you want to delete?';
-            };
+            // if(user.customers.length > 0) {
+            //     return 'Are you sure you want to delete?';
+            // };
 
-            user.delete();
+            user.deleteOne();
     
             return user;
     

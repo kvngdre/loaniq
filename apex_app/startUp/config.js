@@ -1,6 +1,5 @@
 const config = require('config');
 
-
 module.exports = function () {
     try{
         // Check for presence of jwtPrivatekey

@@ -14,14 +14,14 @@ router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
 
 router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const user = await userViewController.get(req.params.id);
-    if(user instanceof Error) return res.status(404).send(customer.message);
+    if(user instanceof Error) return res.status(404).send(user.message);
 
     res.status(200).send(user);
 });
 
 router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) => {
     const role = req.body.role;
-    console.log(req.body);
+
     if (!role) return res.status(400).send('Role is required.');
 
     switch(role) {
@@ -47,8 +47,11 @@ router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) =
     };
     
 
-    const user = await userViewController.create(req.body);
-    if(user instanceof Error) return res.status(400).send(user.message);
+    const user = await userViewController.create(req.body, req.user);
+    if(user instanceof Error) {
+        debug(user);
+        return res.status(400).send(user.message);
+    };
 
     res.status(200).send(user);
 });
@@ -88,7 +91,6 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 router.post('/change-password/', async (req, res) => {
-    console.log(req.body.newPassword)
     const user = await userViewController.changePassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 

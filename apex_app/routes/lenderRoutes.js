@@ -1,10 +1,11 @@
 const router = require('express').Router();
-const validateLender = require('../validators/lenderValidator');
+const lenderValidators = require('../validators/lenderValidator');
+const userViewController= require('../controllers/userController');
 const lenderViewController = require('../controllers/lenderController');
 
 
-router.post('/create', async (req, res) => {
-    const { error } = validateLender.creation(req.body);
+router.post('/create-lender', async (req, res) => {
+    const { error } = lenderValidators.creation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const lender = await lenderViewController.createLender(req.body);
@@ -14,8 +15,18 @@ router.post('/create', async (req, res) => {
     res.status(201).send(lender);
 });
 
+router.post('/create-admin/:id', async (req, res) => {
+    const { error } = lenderValidators.adminCreation(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const adminUser = await lenderViewController.createAdmin(req.params.id, req.body);
+    if(adminUser instanceof Error) return res.status(400).send(adminUser.message);
+
+    res.status(201).send(adminUser);
+});
+
 router.put('/:id', async (req, res) => {
-    const { error } = validateLender.update(req.body);
+    const { error } = lenderValidators.update(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const lender = await lenderViewController.update(req.params.id, req.body);

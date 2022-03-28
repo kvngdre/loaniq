@@ -63,6 +63,8 @@ const validators = {
             bankName: Joi.objectId()
                          .required(),
 
+            loanAgent: Joi.string(),
+
             dateOfEnlistment: Joi.date()
                                  .greater(Joi.ref('dateOfBirth', {adjust: (value) => {
                                     value.setFullYear(value.getFullYear() + 18);
@@ -164,8 +166,7 @@ const validators = {
             loans: Joi.array()
                       .items(Joi.objectId()),
             
-            loanAgents: Joi.array()
-                           .items(Joi.objectId()),
+            loanAgent: Joi.string()
 
         });
 

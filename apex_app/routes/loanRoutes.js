@@ -8,14 +8,14 @@ const loanViewController = require('../controllers/loanController');
 const customerValidators = require('../validators/customerValidator');
 
 router.get('/', verifyToken, async (req, res) => {
-    const loans = await loanViewController.getAll();
+    const loans = await loanViewController.getAll(req.user);
     if(loans.length === 0) return res.status(404).send('No loans have been created.');
 
     res.status(200).send(loans);
 });
 
 router.get('/:id', verifyToken, async (req, res) => {
-    const loan = await loanViewController.getOne(req.params.id);
+    const loan = await loanViewController.get(req.params.id, req.user);
     if(loan instanceof Error) return res.status(404).send('Loan does not exist.');
 
     res.status(200).send(loan);
@@ -47,17 +47,23 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
 });
 
 router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), async (req, res) => {
-    const { error }= loanValidators.validateCreation.loan(loanObj);
+    const { error }= loanValidators.validateCreation.loan(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const loan = await loanViewController.createLoan(req.body);
-    debug(loan.message, loan.stack);
-    if (loan instanceof Error) return res.status(400).send(loan.message);
+    const loan = await loanViewController.createLoan(req);
+    if (loan instanceof Error) {
+        debug(loan.message, loan.stack);
+        return res.status(400).send(loan.message);
+    };
 
     res.status(200).send(loan);
 });
 
-router.put('/:id', verifyToken, verifyRole(['admin', 'credit']), (req, res) => {
+router.put('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+
+});
+
+router.delete('/:id', verifyToken, verifyRole('admin'), async () => {
 
 });
 

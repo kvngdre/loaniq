@@ -6,16 +6,16 @@ const loans = {
         return await loanManager.createLoanRequest(requestBody);
     },
 
-    createLoan: async function(requestBody) {
-        return await loanManager.createLoan(requestBody);
+    createLoan: async function(request) {
+        return await loanManager.createLoan(request);
     },
 
-    getAll: async function() {
-        return await loanManager.getAllLoans();
+    getAll: async function(user) {
+        return await loanManager.getAllLoans(user);
     },
 
-    getOne: async function(id) {
-        return await loanManager.getOne(id)
+    get: async function(id, user) {
+        return await loanManager.get(id, user)
     },
 
     // modify

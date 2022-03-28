@@ -5,8 +5,6 @@ const Lender = require('./lenderModel');
 const Segment = require('../models/segmentModel');
 const Customer = require('../models/customerModel');
 
-
-
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
@@ -62,10 +60,10 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
 
-    // lenderID: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Lender'
-    // },
+    lenderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lender'
+    },
 
     role: {
         type: String,
@@ -100,10 +98,9 @@ const userSchema = new mongoose.Schema({
         ref: 'Customer'
     },
 
-    // loans: {
-//     type: [ mongoose.Schema,Types.ObjectId ],
-    //     ref: 'Loan'
-    // }
+    loans: {
+        type: [ String ]
+    }
 
 }, {
     timestamps: true
@@ -112,19 +109,21 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.generateToken = function() {
     return jwt.sign( {
         id: this._id, 
+        lenderId: this.lenderId,
         firstName: this.firstName, 
         lastName: this.lastName,
         email: this.email,
-        role: this.role
+        role: this.role,
+        segments: this.segments
     }, config.get('jwtPrivateKey'));
 }
 
-if(userSchema.role === "loanAgent") {
-    userSchema.methods.percentageAchieved = function() {
-        const value = (this.achieved / this.target) * 100;
-        return value.toFixed(2);
-    }
-};
+// if(userSchema.role === "loanAgent") {
+//     userSchema.methods.percentageAchieved = function() {
+//         const value = (this.achieved / this.target) * 100;
+//         return value.toFixed(2);
+//     }
+// };
 
 const User = mongoose.model('User', userSchema);
 

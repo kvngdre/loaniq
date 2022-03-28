@@ -1,9 +1,8 @@
-const Loan = require('./loanModel');
 const mongoose = require('mongoose');
-const Bank = require('../models/bankModel');
-const User = require('../models/userModel');
-const State = require('../models/stateModel');
-const Segment = require('../models/segmentModel');
+const Bank = require('./bankModel');
+const Loan = require('./loanModel');
+const State = require('./stateModel');
+const Segment = require('./segmentModel');
 const debug = require('debug')('app:customerModel');
 
 
@@ -152,6 +151,7 @@ const customerSchema = new mongoose.Schema({
         uppercase: true
     },
 
+    // TODO: Set segment depending on ippis
     segment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Segment',
@@ -216,7 +216,6 @@ const customerSchema = new mongoose.Schema({
                 'Son',
                 'Daughter'
             ]
-
     },
 
     salaryAccountName: {
@@ -241,9 +240,8 @@ const customerSchema = new mongoose.Schema({
         ref: 'Loan'
     },
 
-    loanAgents: {
-        type: [ mongoose.Schema.Types.ObjectId ],
-        ref: 'User'
+    loanAgent: {
+        type: String,
     },
 
     netPay: {
@@ -254,8 +252,36 @@ const customerSchema = new mongoose.Schema({
     timestamps: true
 });
 
-customerSchema.pre('deleteOne', async function(next) {
-    await Loan.deleteMany( {ippis: this.ippis});
+customerSchema.methods.validateSegment = async function() {
+    const segments = await Segment.find().select('code');
+    const ippisPrefix = this.ippis.slice(0, 2);
+
+    switch(ippisPrefix) {
+        case 'PF': 
+            this.segment = segments.find(segment => segment.code === "NPF")._id;
+            break;
+
+        case 'PR':
+            this.segment = segments.find(segment => segment.code === "NCOS")._id;
+            break;
+
+        case 'FC':
+            this.segment = segments.find(segment => segment.code === "FCTA")._id;
+            break;
+
+        case 'NC':
+            this.segment = segments.find(segment => segment.code === "NCS")._id;
+            break;
+    };
+}
+
+
+// before a customer is deleted all loans
+customerSchema.pre(/(.+)?([dD]el)\w+/, {document: true}, async function(next) {
+    console.log('case was matched');
+    const result = await Loan.deleteMany( { customer: this._id } );
+    debug(result.deletedCount);
+    
     next();
 });
 

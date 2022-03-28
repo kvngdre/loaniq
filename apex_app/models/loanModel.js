@@ -1,21 +1,18 @@
 const config = require('config');
 const mongoose = require('mongoose');
+const Customer = require('./customerModel');
 const User = require('../models/userModel');
-const Customer = require('../models/customerModel');
 
 
-const loanSchema = new mongoose.Schema({
-    ippis: {
-        type: String,
-        uppercase: true,
-        required: true,
-    },
-    
+const loanSchema = new mongoose.Schema({  
     customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer'
+        type: String
     },
     
+    loanAgent: {
+        type: String
+    },
+
     netPay: {
         type: Number,
         required: true
@@ -30,14 +27,13 @@ const loanSchema = new mongoose.Schema({
     
     amountInWords: {
         type: String,
-        //  required: true,
         trim: true
     },
     
     // TODO: uncomment required.
     tenor: {
         type: Number,
-        // required: true,
+        required: true,
         min: config.get('minTenor'),
         max: config.get('maxTenor')
     },
@@ -50,15 +46,9 @@ const loanSchema = new mongoose.Schema({
     loanType: {
         type: String,
         enum: [
-            'new',
-            'TopUp'
+            'New',
+            'Top Up'
         ],
-        default: "new"
-    },
-    
-    loanAgent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
     },
 
     interestRate: {
@@ -140,9 +130,10 @@ const loanSchema = new mongoose.Schema({
     timestamps: true
 });
 
-loanSchema.pre('save', function() {
+loanSchema.pre('save', function(next) {
     this.fee = config.get('fee');
-    config
+
+    next();
 })
 
 const Loan = mongoose.model('Loan', loanSchema);

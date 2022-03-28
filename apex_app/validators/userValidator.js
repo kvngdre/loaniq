@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const joiObjectid = require('joi-objectid');
 const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
 
@@ -12,6 +13,7 @@ const validators = {
                 middleName: Joi.string().optional().min(3).max(50),
                 email: Joi.string().required().email().min(10).max(255),
                 role: Joi.string().required(),
+                active: Joi.boolean(),
                 password: joiPassword
                             .string()
                             .required()
@@ -40,6 +42,7 @@ const validators = {
                 middleName: Joi.string().optional().min(3).max(50),
                 email: Joi.string().required().email().min(10).max(255),
                 role: Joi.string().required(),
+                active: Joi.boolean(),
                 password: joiPassword
                             .string()
                             .required()
@@ -68,6 +71,7 @@ const validators = {
                 middleName: Joi.string().optional().min(3).max(50),
                 email: Joi.string().required().email().min(10).max(255),
                 role: Joi.string().required(),
+                active: Joi.boolean(),
                 password: joiPassword
                             .string()
                             .required()
@@ -94,10 +98,13 @@ const validators = {
                 firstName: Joi.string().required().min(3).max(50),
                 lastName: Joi.string().required().min(3).max(50),
                 middleName: Joi.string().optional().min(3).max(50),
-                email: Joi.string().required().email().min(10).max(255),
+                email: Joi.string().email().min(10).max(255).required(),
                 role: Joi.string().required(),
-                segments: Joi.array().items(Joi.objectId).required(),
+                segments: Joi.alternatives()
+                             .try(Joi.array().items(Joi.objectId), Joi.string().valid('all'))
+                             .required(),
                 target: Joi.number(),
+                active: Joi.boolean(),
                 password: joiPassword
                             .string()
                             .minOfUppercase(1)
@@ -119,6 +126,7 @@ const validators = {
         },
     },
 
+    // TODO: Should users be allowed to change their email?
     validateEdit: function(user) {
         const schema = Joi.object({
                 firstName: Joi.string().min(3).max(50),
@@ -128,6 +136,7 @@ const validators = {
                 role: Joi.string(),
                 segments: Joi.array().items(Joi.objectId),
                 target: Joi.number(),
+                active: Joi.boolean()
         });
 
         return schema.validate(user);
