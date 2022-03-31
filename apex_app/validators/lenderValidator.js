@@ -35,11 +35,13 @@ const validators = {
 
     adminCreation: function (user) {
         const schema = Joi.object({
-            firstName: Joi.string().required().min(3).max(50),
-            lastName: Joi.string().required().min(3).max(50),
-            middleName: Joi.string().optional().min(3).max(50),
+            name: Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
+                lastName: Joi.string().required().min(3).max(50),
+                middleName: Joi.string().min(3).max(50),
+            }),            
             email: Joi.string().required().email().min(10).max(255),
-            role: Joi.string().equal('admin').required(),
+            role: Joi.string().equal('admin'),
             active: Joi.boolean().equal(true),
             lenderId: Joi.objectId(),
             password: joiPassword
@@ -74,12 +76,10 @@ const validators = {
             cacNumber: Joi.string()
                           .required(),
 
-            category: Joi.string()
-                         .optional(),
+            category: Joi.string(),
 
             phone: Joi.string()
                       .length(11)
-                      .optional(),
         });
         return schema.validate(lender);  
     },

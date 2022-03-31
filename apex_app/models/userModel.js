@@ -1,34 +1,37 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const Lender = require('./lenderModel');
 const Segment = require('../models/segmentModel');
-const Customer = require('../models/customerModel');
 
 const userSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        required: true,
-        trim:true
+    lenderId: {
+        type: String
     },
 
-    lastName: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        required: true,
-        trim:true
-    },
-
-    middleName: {
-        type: String,
-        default: null,
-        // minLength: 3,
-        maxLength: 50,
-        trim:true
-    },
+    name: {
+        firstName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            trim:true,
+            required: true
+        },
+    
+        lastName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            trim:true,
+            required: true
+        },
+    
+        middleName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            trim:true
+        },
+    },    
 
     email: {
         type: String,
@@ -60,11 +63,6 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
 
-    lenderId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Lender'
-    },
-
     role: {
         type: String,
         enum: [
@@ -85,24 +83,23 @@ const userSchema = new mongoose.Schema({
     // TODO: Duration of target
     target: {
         type: Number,
-        default: null
     },
 
     achieved: {
         type: Number,
-        default: null
-    },
-
-    customers: {
-        type: [ mongoose.Schema.Types.ObjectId ],
-        ref: 'Customer'
     },
 
     loans: {
-        type: [ String ]
+        type: [ mongoose.Schema.Types.ObjectId ],
+        ref: 'Loan'
+    },
+
+    customers: {
+        type: [ String ],
     }
 
 }, {
+
     timestamps: true
 });
 
@@ -110,10 +107,11 @@ userSchema.methods.generateToken = function() {
     return jwt.sign( {
         id: this._id, 
         lenderId: this.lenderId,
-        firstName: this.firstName, 
-        lastName: this.lastName,
+        firstName: this.name.firstName, 
+        lastName: this.name.lastName,
         email: this.email,
         role: this.role,
+        active: this.active,
         segments: this.segments
     }, config.get('jwtPrivateKey'));
 }

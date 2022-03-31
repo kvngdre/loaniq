@@ -22,7 +22,8 @@ const lender = {
             const adminUsers = await userViewController.getAll( {role: 'admin'} );
             if(adminUsers.length > 0) throw new Error('Admin user already created.')
 
-            const adminUser = await userViewController.create(requestBody,null,lenderID);
+            requestBody.role = 'admin';
+            const adminUser = await userViewController.create(requestBody, null, lenderID);
             if(!adminUser) throw new Error(adminUser.message);
             adminUser.lenderId = lenderID;
 

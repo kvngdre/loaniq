@@ -1,11 +1,12 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ref } = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
 const validators = {
     validateCreation: function(customer) {
         const schema = Joi.object({
-            firstName: Joi.string()
+            name: Joi.object({
+                firstName: Joi.string()
                           .min(3)
                           .max(50)
                           .message({'string.error': 'First name is invalid'})
@@ -20,60 +21,103 @@ const validators = {
                            .min(3)
                            .max(50)
                            .optional(),
-                           
+            }),
+                          
             gender: Joi.string()
                        .valid('Male', 'Female')
                        .required(),
 
-            // TODO: Google how to validate dates with Joi
-            // TODO: fix timezone for today variable.
             dateOfBirth: Joi.date()
                             .less('now')
-                            .message( {'date.less': 'Date of Birth must be valid.'} )
+                            .message({'date.less': 'Date of Birth must be valid.'})
                             .required(),
 
             // TODO: Add required to fields.
-            // residentialAddress: Joi.string().min(5).max(255),
-            stateResident: Joi.objectId()
-                              .required(),
+            residentialAddress: Joi.object({
+                street: Joi.string()
+                           .min(5)
+                           .max(255),
 
-            phone: Joi.string()
-                      .length(11)
-                      .required(),
+                state: Joi.objectId()
+                          .required(),
+            }),
 
-            email: Joi.string()
-                      .email()
-                      .min(10)
-                      .max(255)
-                      .required(),
+            contact: {
+                phone: Joi.string()
+                          .length(11)
+                          .required(),
+
+                email: Joi.string()
+                          .email()
+                          .min(10)
+                          .max(255)
+                          .required(),
+            },
+
+            maritalStatus: Joi.string(),
 
             bvn: Joi.string()
                     .pattern(/^22/)
                     .message( {'string.pattern.base': 'Invalid BVN.'} )
-                    .length(11),
+                    .length(11)
+                    .required(),
 
-            ippis: Joi.string()
-                      .pattern(/([a-zA-z]{2,3})?[0-9]{3,7}/)
-                      .messages( {'string.pattern.base': 'Invalid IPPIS number.'} )
-                      .required(),
+            idCardInfo: Joi.object({
+                idType: Joi.string(),
 
-            segment: Joi.objectId()
-                         .required(),
+                idNumber: Joi.string(),
+            }),
+
+            employmentInfo: Joi.object({
+                segment: Joi.objectId()
+                            .required(),
+                
+                ippis: Joi.string()
+                          .pattern(/([a-zA-z]{2,3})?[0-9]{3,7}/)
+                          .messages({'string.pattern.base': 'Invalid IPPIS number.'})
+                          .required(),
+
+                companyLocation: Joi.string(),
+
+                state: Joi.objectId(),
+
+                dateOfEnlistment: Joi.date()
+                                     .greater(Joi.ref('...dateOfBirth', { adjust: (value) => {
+                                            value.setFullYear(value.getFullYear() + 18);
+                                            return value;
+                                            }}))
+                                    // TODO: Improve on this error message
+                                     .message( {'date.greater': 'Invalid Date of Enlistment.'} )
+                                     .required()
+            }),
+
+            nok: Joi.object({
+                name: Joi.string(),
+
+                address: Joi.object({
+                    street: Joi.string(),
+
+                    state: Joi.objectId()
+                }),
+
+                phone: Joi.string(),
+
+                relationship: Joi.string()
+            }),
             
-            bankName: Joi.objectId()
-                         .required(),
+            accountInfo: Joi.object({
+                salaryAccountName: Joi.string(),
 
-            loanAgent: Joi.string(),
+                salaryAccountNumber: Joi.string()
+                                        .length(10),
 
-            dateOfEnlistment: Joi.date()
-                                 .greater(Joi.ref('dateOfBirth', {adjust: (value) => {
-                                    value.setFullYear(value.getFullYear() + 18);
-                                    return value;
-                                }}))
-                                // TODO: Improve on this error message
-                                 .message( {'date.greater': 'Invalid Date of Enlistment.'} )
-                                 .required()
+                bankName: Joi.objectId()
+                             .required(),
+            }),
 
+            loanAgent: Joi.objectId(),
+
+            netPay: Joi.number()
         });
 
     return schema.validate(customer);
@@ -119,7 +163,8 @@ const validators = {
 
             bvn: Joi.string()
                     .pattern(/^22/)
-                    .message( {'string.pattern.base': 'Invalid BVN.'} ),
+                    .message( {'string.pattern.base': 'Invalid BVN.'} )
+                    .length(11),
             
             validId: Joi.string(),
 
@@ -166,7 +211,11 @@ const validators = {
             loans: Joi.array()
                       .items(Joi.objectId()),
             
-            loanAgent: Joi.string()
+            loanAgent: Joi.object({
+                id: Joi.objectId(),
+                firstName: Joi.string(),
+                lastName: Joi.string()
+            }),
 
         });
 

@@ -6,4 +6,4 @@ async function pickAgentId(segmentId) {
 return users[randomNumber];
 }
 
-module.exports = pickAgentId
+module.exports = pickAgentId;

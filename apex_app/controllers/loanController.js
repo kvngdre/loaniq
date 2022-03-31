@@ -2,15 +2,15 @@ const loanManager = require('../tools/Managers/loanManager');
 
 
 const loans = {
-    createLoanRequest: async function(requestBody) {
-        return await loanManager.createLoanRequest(requestBody);
+    createLoanRequest: async function(request) {
+        return await loanManager.createLoanRequest(request);
     },
 
     createLoan: async function(request) {
         return await loanManager.createLoan(request);
     },
 
-    getAll: async function(user) {
+    getAll: async function(user, queryParam) {
         return await loanManager.getAllLoans(user);
     },
 
@@ -18,9 +18,9 @@ const loans = {
         return await loanManager.get(id, user)
     },
 
-    // modify
-
-    // delete also delete loan agent
+    edit: async function(request) {
+        return await loanManager.edit(request);
+    }
     
 };
 

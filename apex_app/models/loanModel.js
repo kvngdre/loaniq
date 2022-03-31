@@ -5,14 +5,6 @@ const User = require('../models/userModel');
 
 
 const loanSchema = new mongoose.Schema({  
-    customer: {
-        type: String
-    },
-    
-    loanAgent: {
-        type: String
-    },
-
     netPay: {
         type: Number,
         required: true
@@ -24,18 +16,32 @@ const loanSchema = new mongoose.Schema({
         required: true,
         min: config.get('minLoanAmount')
     },
-    
+   
     amountInWords: {
         type: String,
         trim: true
     },
-    
-    // TODO: uncomment required.
+
     tenor: {
         type: Number,
         required: true,
         min: config.get('minTenor'),
         max: config.get('maxTenor')
+    },
+
+    loanType: {
+        // Look to automate this.
+        type: String,
+        enum: [
+            'New',
+            'Top Up'
+        ],
+    },
+    // End of the line where loan agent user can edit.
+
+    recommendedAmount: {
+        type: Number,
+        default: (self=this) => self.amount
     },
     
     recommendedTenor: {
@@ -43,28 +49,46 @@ const loanSchema = new mongoose.Schema({
         default: (self=this) => self.tenor
     },
     
-    loanType: {
+    status: {
         type: String,
         enum: [
-            'New',
-            'Top Up'
+            'approved',
+            'declined',
+            'pending',
+            'onHold',
+            'liquidated',
+            'discontinued',
+            'exceptionalApproval'
         ],
+        default: 'pending'
+    },
+    // End of the line where credit user can edit.
+
+    customer: {
+        type: String
     },
 
-    interestRate: {
-        type: Number
+    loanAgent: {
+        type: String
     },
     
-    upfrontPercentage: {
-        type: Number
+    interestRate: {
+        type: Number,
+        default: () =>  config.get('interestRate')
+    },
+    
+    upfrontFeePercentage: {
+        type: Number,
+        default: () => config.get('upfrontFeePercentage')
     },
 
     fee: {
         type: Number,
         default: config.get('fee')
     },
+    // End of the line where admin user can edit
 
-    // TODO: figure out how to update this with every change to status.
+    // Below are set programmatically, no user can edit.
     repayment: {
         type: Number,
     },
@@ -107,29 +131,21 @@ const loanSchema = new mongoose.Schema({
         }
         
     },
-    
-    status: {
-        type: String,
-        enum: [
-            'Approved',
-            'Declined',
-            'Pending',
-            'On Hold',
-            'Liquidated',
-            'Discontinued',
-            'Exceptional Approval'
-        ],
-        default: 'Pending'
-    },
 
     dateAppOrDec: {
-        type: Date
-    }
-    
+        type: Date,
+        default: (self=this) => {
+            if(['approved', 'declined'].includes(this.status)) {
+                this.dateAppOrDec = Date.now();
+            }
+        }
+    },
+      
 }, {
     timestamps: true
 });
 
+// loanSchema.post
 loanSchema.pre('save', function(next) {
     this.fee = config.get('fee');
 

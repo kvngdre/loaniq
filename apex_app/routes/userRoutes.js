@@ -14,7 +14,7 @@ router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
 
 router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const user = await userViewController.get(req.params.id);
-    if(user instanceof Error) return res.status(404).send(user.message);
+    if(!user) return res.status(404).send(user.message);
 
     res.status(200).send(user);
 });

@@ -1,10 +1,10 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
+const Segment = require('../models/segmentModel');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 const userDebug = require('debug')('app:userContr');
-const Segment = require('../models/segmentModel');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 
@@ -12,26 +12,18 @@ const user = {
     getAll: async function(queryParam) {
         if(queryParam) return await User.find(queryParam)
                                         .select('-password -otp')
-                                        .sort('firstName');
+                                        .sort('name.firstName');
 
         return await User.find()
                           .select('-password -otp')
-                          .sort('firstName');
+                          .sort('name.firstName');
     },
 
     get: async function(queryParam) {
-        try{
-            const user = await User.findOne(ObjectId.isValid(queryParam) ? { _id: queryParam } : queryParam ).select('-password -otp');
-            if(!user) {
-                userDebug(user);
-                throw new Error('User not found.');
-            };
+        const user = await User.findOne(ObjectId.isValid(queryParam) ? { _id: queryParam } : queryParam ).select('-password -otp');
+        if(!user) userDebug(user);
 
-            return user;
-
-        }catch(exception) {
-            return exception;
-        }
+        return user;
     },
 
     /**
@@ -60,9 +52,7 @@ const user = {
                     var OTP = generateOTP();
 
                     var newUser = new User({
-                        firstName: requestBody.firstName,
-                        lastName: requestBody.lastName,
-                        middleName: requestBody.middleName,
+                        name: requestBody.name,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -84,9 +74,7 @@ const user = {
                     var OTP = generateOTP();
 
                     var newUser = new User({
-                        firstName: requestBody.firstName,
-                        lastName: requestBody.lastName,
-                        middleName: requestBody.middleName,
+                        name: requestBody.name,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -108,9 +96,7 @@ const user = {
                     var OTP = generateOTP();
 
                     var newUser = new User({
-                        firstName: requestBody.firstName,
-                        lastName: requestBody.lastName,
-                        middleName: requestBody.middleName,
+                        name: requestBody.name,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -136,15 +122,14 @@ const user = {
                     if(requestBody.segments === 'all') { allSegments = await Segment.find().select('_id') };
 
                     var newUser = new User({
-                        firstName: requestBody.firstName,
-                        lastName: requestBody.lastName,
-                        middleName: requestBody.middleName,
+                        name: requestBody.name,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
                         role,
                         active: requestBody.active,
                         segments: allSegments ? allSegments : requestBody.segments,
+                        target: requestBody.target,
                         lenderId: user.lenderId
                     });
                     break;
@@ -194,7 +179,7 @@ const user = {
             const isOTPValid = requestBody.otp === user.otp
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await user.updateOne( {emailVerify: true, otp: null} );
+            await user.updateOne( {emailVerify: true, otp: null, active: true} );
 
             return user.generateToken();
 

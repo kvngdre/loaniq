@@ -6,11 +6,7 @@ Joi.objectId = require('joi-objectid')(Joi);
 const validators = {
     validateCreation: {
         loanRequest: function(loan) {
-            const schema = Joi.object({  
-                customer: Joi.string(),
-
-                loanAgent: Joi.string(),
-    
+            const schema = Joi.object({     
                 netPay: Joi.number()
                            .required(),
     
@@ -24,7 +20,11 @@ const validators = {
                           .min(config.get('minTenor'))
                           .max(config.get('maxTenor')),
     
-                loanType: Joi.string()
+                loanType: Joi.string(),
+
+                ippis: Joi.string(),
+
+                loanAgent: Joi.string(),
             });
     
         return schema.validate(loan);
@@ -33,7 +33,7 @@ const validators = {
 
         loan: function(loan) {
             const schema = Joi.object({
-                customer: Joi.string()
+                customer: Joi.objectId()
                              .required(),
 
                 netPay: Joi.number()
@@ -61,6 +61,42 @@ const validators = {
         }
     },
 
+    validateEdit: function(loan) {
+        const schema = Joi.object({
+            netPay: Joi.number(),
+                    //    .min(config.get('minNetPay')),
+
+            amount: Joi.number()
+                       .min(config.get('minLoanAmount'))
+                       .max(config.get('maxLoanAmount')),
+
+            amountInWords: Joi.string(),
+
+            tenor: Joi.number()
+                      .min(config.get('minTenor'))
+                      .max(config.get('maxTenor')),
+
+            loanType: Joi.string(),
+
+            recommendedAmount: Joi.number(),
+
+            recommendedTenor: Joi.number(),
+
+            status: Joi.string(),
+
+            ippis: Joi.string(),
+            
+            loanAgent: Joi.string(),
+
+            interestRate: Joi.number(),
+
+            upfrontFeePercentage: Joi.number(),
+
+            fee: Joi.number(),
+        });
+
+        return schema.validate(loan);
+    },
 
 };
 

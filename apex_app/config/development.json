@@ -12,5 +12,6 @@
     "minTenor": 1,
     "maxTenor": 18,
     "interestRate": 0.03,
+    "upfrontFeePercentage": 0.03,
     "fee": 100
 }

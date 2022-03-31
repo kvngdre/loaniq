@@ -23,7 +23,7 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     const { error } = customerValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
-    const result = await customerViewController.create(req.body);
+    const result = await customerViewController.create(req);
     if(result instanceof Error) { return res.status(400).send(result.message); };
     
     res.status(201).send(result.newCustomer);
@@ -38,13 +38,6 @@ router.put('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res
     if(customer instanceof Error) return res.status(400).send(customer.message);
 
     res.status(200).send({message: 'Update Successful', customer})
-});
-
-router.delete('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
-    const customer = await customerViewController.delete(req.params.id);
-    if(customer instanceof Error) return res.status(401).send(customer.message);
-
-    res.status(200).send(customer);
 });
 
 module.exports = router;

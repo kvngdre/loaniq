@@ -1,34 +1,36 @@
-const mongoose = require('mongoose');
 const Bank = require('./bankModel');
 const Loan = require('./loanModel');
+const mongoose = require('mongoose');
 const State = require('./stateModel');
 const Segment = require('./segmentModel');
+const User = require('../models/userModel');
 const debug = require('debug')('app:customerModel');
 
 
 const customerSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        required: true,
-        trim:true
-    },
-
-    lastName: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        required: true,
-        trim:true
-    },
-
-    middleName: {
-        type: String,
-        default: null,
-        // minLength: 3,
-        maxLength: 50,
-        trim:true
+    name: {
+        firstName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            required: true,
+            trim:true
+        },
+    
+        lastName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            required: true,
+            trim:true
+        },
+    
+        middleName: {
+            type: String,
+            minLength: 3,
+            maxLength: 50,
+            trim:true
+        }
     },
     
     gender: {
@@ -71,18 +73,33 @@ const customerSchema = new mongoose.Schema({
     },
 
     residentialAddress: {
-        type: String,
-        // required: true,
-        minLength: 5,
-        maxLength: 255,
-        trim: true,
-        lowercase: true
+        street: {
+            type: String,
+            minLength: 5,
+            maxLength: 255,
+            trim: true,
+            lowercase: true
+        },
+    
+        state: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+            required: true
+        }
     },
 
-    stateResident: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        required: true
+    contact: {
+        phone: {
+            type: String,
+            trim: true,
+            required: true
+        },
+    
+        email: {
+            type: String,
+            lowercase: true,
+            trim: true
+        }
     },
     
     maritalStatus: {
@@ -96,152 +113,153 @@ const customerSchema = new mongoose.Schema({
             'Widower'
         ],
         default: 'Single',
-        required: true,
-        trim: true
+        trim: true,
+        required: true
     },
     // TODO: uncomment/add required and unique.
-    phone: {
-        type: String,
-        required: true,
-        default: null,
-        unique: true,
-        trim: true,
-    },
-
-    email: {
-        type: String,
-        lowercase: true,
-        unique: true,
-        trim: true
-    },
+    
 
     bvn: {
         type: String,
         unique: true,
-        trim: true
+        trim: true,
+        required: true
     },
 
-    validId: {
-        type: String,
-        enum: [
-            "Voters card",
-            "International passport",
-            "Staff ID card",
-            "National ID card",
-            "Driver's license"
-        ],
-        // required: true
-    },
-
-    idCardUrl: {
-        type: String,
-        // required: true
-    },
-
-    idNumber: {
-        type: String,
-        // required: true,
-        minLength: 4,
-        maxLength: 50,
-        trim: true
-    },
-
-    ippis: {
-        type: String,
-        uppercase: true
-    },
-
-    // TODO: Set segment depending on ippis
-    segment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Segment',
-        required: true,
-    },
-
-    companyLocation: {
-        type: String,
-        // required: true,
-        minLength: 6,
-        maxLength: 255,
-        lowercase: true,
-        trim: true
-    },
-
-    companyState:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        // required: true
-    },
-
-    dateOfEnlistment: {
-        type: Date,
-        // required: true
+    idCardInfo: {
+        idType: {
+            type: String,
+            enum: [
+                "Voters card",
+                "International passport",
+                "Staff ID card",
+                "National ID card",
+                "Driver's license"
+            ],
+            // required: true
+        },
+    
+        idCardUrl: {
+            type: String,
+            // required: true
+        },
+    
+        idNumber: {
+            type: String,
+            minLength: 4,
+            maxLength: 50,
+            trim: true
+        }
     },
     
-    // NOK - Next of Kin
-    // TODO: Finish up on this model
-    nameNOK: {
-        type: String,
-        // required: true,
-        
+    employmentInfo: {
+        segment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Segment',
+            required: true,
+        },
+
+        ippis: {
+            type: String,
+            uppercase: true,
+            unique: true
+        },
+    
+        companyLocation: {
+            type: String,
+            // required: true,
+            minLength: 6,
+            maxLength: 255,
+            lowercase: true,
+            trim: true
+        },
+    
+        state:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+            // required: true
+        },
+    
+        dateOfEnlistment: {
+            type: Date,
+            required: true
+        }
+    },   
+    
+    nok: {
+        name: {
+            type: String,
+            // required: true,
+            
+        },
+    
+        address: {
+            street: {
+                type: String
+            },
+
+            state: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'State',
+                // required: true
+            },
+
+        },
+    
+        phone: {
+            type: String,
+            trim: true
+        },
+    
+        relationship: {
+            type: String,
+            enum: [ 'Father',
+                    'Mother',
+                    'Brother',
+                    'Sister',
+                    'Nephew',
+                    'Niece',
+                    'Cousin',
+                    'Spouse',
+                    'Son',
+                    'Daughter'
+                ]
+        },
     },
 
-    addressNOK: {
-        type: String,
-        // required: true,
-    },
-
-    stateNOK: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        // required: true
-    },
-
-    phoneNOK: {
-        type: String,
-        // required: true,
-        trim: true
-    },
-
-    relationshipNOK: {
-        type: String,
-        enum: [ 'Father',
-                'Mother',
-                'Brother',
-                'Sister',
-                'Nephew',
-                'Niece',
-                'Cousin',
-                'Spouse',
-                'Son',
-                'Daughter'
-            ]
-    },
-
-    salaryAccountName: {
-        type: String,
-        // required: true,
-        trim: true,     
-    },
-
-    salaryAccountNumber: {
-        type: String,
-        // required: true,
-        trim: true
-    },
-
-    bankName: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Bank'
+    accountInfo: {
+        salaryAccountName: {
+            type: String,
+            trim: true,     
+        },
+    
+        salaryAccountNumber: {
+            type: String,
+            trim: true
+        },
+    
+        bankName: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Bank'
+        },
     },
 
     loans: {
-        type: [ mongoose.Schema.Types.ObjectId ],
-        ref: 'Loan'
+        type: [ String ],
     },
 
     loanAgent: {
-        type: String,
+        id: {
+            type: String,
+        },
+
+        firstName: {
+            type: String
+        },
+
+        lastName: {
+            type: String
+        }
     },
 
     netPay: {
@@ -249,41 +267,32 @@ const customerSchema = new mongoose.Schema({
     }
 
 }, {
+    
     timestamps: true
 });
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('code');
-    const ippisPrefix = this.ippis.slice(0, 2);
+    const ippisPrefix = this.employmentInfo.ippis.slice(0, 2);
 
     switch(ippisPrefix) {
         case 'PF': 
-            this.segment = segments.find(segment => segment.code === "NPF")._id;
+            this.employmentInfo.segment = segments.find(segment => segment.code === "NPF")._id;
             break;
 
         case 'PR':
-            this.segment = segments.find(segment => segment.code === "NCOS")._id;
+            this.employmentInfo.segment = segments.find(segment => segment.code === "NCOS")._id;
             break;
 
         case 'FC':
-            this.segment = segments.find(segment => segment.code === "FCTA")._id;
+            this.employmentInfo.segment = segments.find(segment => segment.code === "FCTA")._id;
             break;
 
         case 'NC':
-            this.segment = segments.find(segment => segment.code === "NCS")._id;
+            this.employmentInfo.segment = segments.find(segment => segment.code === "NCS")._id;
             break;
     };
 }
-
-
-// before a customer is deleted all loans
-customerSchema.pre(/(.+)?([dD]el)\w+/, {document: true}, async function(next) {
-    console.log('case was matched');
-    const result = await Loan.deleteMany( { customer: this._id } );
-    debug(result.deletedCount);
-    
-    next();
-});
 
 const Customer = mongoose.model('Customer', customerSchema);
 

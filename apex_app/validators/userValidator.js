@@ -8,12 +8,14 @@ const validators = {
     validateRegistration: {
         admin: function (user) {
             const schema = Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
-                lastName: Joi.string().required().min(3).max(50),
-                middleName: Joi.string().optional().min(3).max(50),
+                name: Joi.object({
+                    firstName: Joi.string().required().min(3).max(50),
+                    lastName: Joi.string().required().min(3).max(50),
+                    middleName: Joi.string().optional().min(3).max(50)
+                }),
                 email: Joi.string().required().email().min(10).max(255),
-                role: Joi.string().required(),
                 active: Joi.boolean(),
+                role: Joi.string().required(),
                 password: joiPassword
                             .string()
                             .required()
@@ -37,12 +39,14 @@ const validators = {
     
         credit: function (user) {
             const schema = Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
-                lastName: Joi.string().required().min(3).max(50),
-                middleName: Joi.string().optional().min(3).max(50),
+                name: Joi.object({
+                    firstName: Joi.string().required().min(3).max(50),
+                    lastName: Joi.string().required().min(3).max(50),
+                    middleName: Joi.string().optional().min(3).max(50)
+                }),
                 email: Joi.string().required().email().min(10).max(255),
-                role: Joi.string().required(),
                 active: Joi.boolean(),
+                role: Joi.string().required(),
                 password: joiPassword
                             .string()
                             .required()
@@ -66,12 +70,14 @@ const validators = {
     
         operations: function (user) {
             const schema = Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
-                lastName: Joi.string().required().min(3).max(50),
-                middleName: Joi.string().optional().min(3).max(50),
+                name: Joi.object({
+                    firstName: Joi.string().required().min(3).max(50),
+                    lastName: Joi.string().required().min(3).max(50),
+                    middleName: Joi.string().optional().min(3).max(50)
+                }),
                 email: Joi.string().required().email().min(10).max(255),
-                role: Joi.string().required(),
                 active: Joi.boolean(),
+                role: Joi.string().required(),
                 password: joiPassword
                             .string()
                             .required()
@@ -95,16 +101,19 @@ const validators = {
     
         loanAgent: function (user) {
             const schema = Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
-                lastName: Joi.string().required().min(3).max(50),
-                middleName: Joi.string().optional().min(3).max(50),
+                name: Joi.object({
+                    firstName: Joi.string().required().min(3).max(50),
+                    lastName: Joi.string().required().min(3).max(50),
+                    middleName: Joi.string().optional().min(3).max(50)
+                }),
                 email: Joi.string().email().min(10).max(255).required(),
+                active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.alternatives()
                              .try(Joi.array().items(Joi.objectId), Joi.string().valid('all'))
                              .required(),
-                target: Joi.number(),
-                active: Joi.boolean(),
+                target: Joi.number().required(),
+                achieved: Joi.number(),
                 password: joiPassword
                             .string()
                             .minOfUppercase(1)
@@ -129,14 +138,16 @@ const validators = {
     // TODO: Should users be allowed to change their email?
     validateEdit: function(user) {
         const schema = Joi.object({
+            name: Joi.object({
                 firstName: Joi.string().min(3).max(50),
                 lastName: Joi.string().min(3).max(50),
                 middleName: Joi.string().min(3).max(50),
-                email: Joi.string().email().min(10).max(255),
-                role: Joi.string(),
-                segments: Joi.array().items(Joi.objectId),
-                target: Joi.number(),
-                active: Joi.boolean()
+            }),
+            email: Joi.string().email().min(10).max(255),
+            role: Joi.string(),
+            segments: Joi.array().items(Joi.objectId),
+            target: Joi.number(),
+            active: Joi.boolean()
         });
 
         return schema.validate(user);
