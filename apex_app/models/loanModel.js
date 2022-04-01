@@ -9,7 +9,7 @@ const loanSchema = new mongoose.Schema({
         type: Number,
         required: true
         // Should read netPay from another db
-    },
+    },  
     
     amount: {
         type: Number,
@@ -33,9 +33,10 @@ const loanSchema = new mongoose.Schema({
         // Look to automate this.
         type: String,
         enum: [
-            'New',
-            'Top Up'
+            'new',
+            'topUp'
         ],
+        default:'new'
     },
     // End of the line where loan agent user can edit.
 
@@ -65,11 +66,13 @@ const loanSchema = new mongoose.Schema({
     // End of the line where credit user can edit.
 
     customer: {
-        type: String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
     },
 
     loanAgent: {
-        type: String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     
     interestRate: {

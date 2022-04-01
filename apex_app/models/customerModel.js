@@ -1,9 +1,7 @@
 const Bank = require('./bankModel');
-const Loan = require('./loanModel');
 const mongoose = require('mongoose');
 const State = require('./stateModel');
 const Segment = require('./segmentModel');
-const User = require('../models/userModel');
 const debug = require('debug')('app:customerModel');
 
 
@@ -244,10 +242,6 @@ const customerSchema = new mongoose.Schema({
         },
     },
 
-    loans: {
-        type: [ String ],
-    },
-
     loanAgent: {
         id: {
             type: String,
@@ -258,6 +252,10 @@ const customerSchema = new mongoose.Schema({
         },
 
         lastName: {
+            type: String
+        },
+
+        phone: {
             type: String
         }
     },

@@ -53,6 +53,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -75,6 +76,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -97,6 +99,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -123,6 +126,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: OTP,
@@ -155,7 +159,7 @@ const user = {
 
             return {
                 message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'firstName', 'lastName', 'email']) 
+                user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'email', 'role']) 
                 };
 
         }catch(exception) {
@@ -249,7 +253,7 @@ const user = {
     
     update: async function(id, requestBody) {
         try{
-            const user = await User.findByIdAndUpdate( {_id: id}, requestBody, {new: true});
+            const user = await User.findByIdAndUpdate( { _id: id }, requestBody, {new: true});
             if(!user) {
                 userDebug(user);
                 throw new Error('User not found.');

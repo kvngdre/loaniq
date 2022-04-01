@@ -13,6 +13,11 @@ const validators = {
                     lastName: Joi.string().required().min(3).max(50),
                     middleName: Joi.string().optional().min(3).max(50)
                 }),
+                phone: Joi.string()
+                          .pattern(/^0([7-9])[0-9]{9}/)
+                          .message({
+                            "string.pattern.base": "Invalid phone number."
+                            }),
                 email: Joi.string().required().email().min(10).max(255),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
@@ -44,6 +49,11 @@ const validators = {
                     lastName: Joi.string().required().min(3).max(50),
                     middleName: Joi.string().optional().min(3).max(50)
                 }),
+                phone: Joi.string()
+                          .pattern(/^0([7-9])[0-9]{9}/)
+                          .message({
+                            "string.pattern.base": "Invalid phone number."
+                            }),
                 email: Joi.string().required().email().min(10).max(255),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
@@ -75,6 +85,11 @@ const validators = {
                     lastName: Joi.string().required().min(3).max(50),
                     middleName: Joi.string().optional().min(3).max(50)
                 }),
+                phone: Joi.string()
+                          .pattern(/^0([7-9])[0-9]{9}/)
+                          .message({
+                            "string.pattern.base": "Invalid phone number."
+                            }),
                 email: Joi.string().required().email().min(10).max(255),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
@@ -106,6 +121,12 @@ const validators = {
                     lastName: Joi.string().required().min(3).max(50),
                     middleName: Joi.string().optional().min(3).max(50)
                 }),
+                phone: Joi.string()
+                          .pattern(/^0([7-9])[0-9]{9}/)
+                          .message({
+                              "string.pattern.base": "Invalid phone number."
+                          })
+                          .required(),
                 email: Joi.string().email().min(10).max(255).required(),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
@@ -143,6 +164,11 @@ const validators = {
                 lastName: Joi.string().min(3).max(50),
                 middleName: Joi.string().min(3).max(50),
             }),
+            phone: Joi.string()
+                      .pattern(/^0([7-9])[0-9]{9}/)
+                      .message({
+                        "string.pattern.base": "Invalid phone number."
+                       }),
             email: Joi.string().email().min(10).max(255),
             role: Joi.string(),
             segments: Joi.array().items(Joi.objectId),

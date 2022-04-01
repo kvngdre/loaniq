@@ -7,14 +7,14 @@ const userViewController  = require('../controllers/userController');
 
 router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
     const users = await userViewController.getAll();
-    if(users.length === 0) return res.status(400).send('No users registered.');
+    if(users.length === 0) return res.status(404).send('No users registered.');
 
     res.status(200).send(users);
 });
 
 router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const user = await userViewController.get(req.params.id);
-    if(!user) return res.status(404).send(user.message);
+    if(!user) return res.status(404).send('User not found.');
 
     res.status(200).send(user);
 });

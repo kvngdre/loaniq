@@ -12,7 +12,7 @@ const customer = {
                                  .sort('_id');
         };
 
-        return await Customer.find( { loanAgents: user.id } )
+        return await Customer.find( { 'loanAgents.id': user.id } )
                                  .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] )
                                  .sort('_id');
     },
@@ -20,14 +20,14 @@ const customer = {
     get: async function(id, user) {
         try{
             if(user.role !== 'loanAgent') {
-                const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id } : { ippis: id } )
+                const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id } : { 'employmentInfo.ippis': id } )
                                                .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] );
                 if(!customer) throw new Error('Customer not found.');
 
                 return customer; 
             };
 
-            const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id, loanAgent: user.id } : { ippis: id, loanAgent: user.id } )
+            const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id, 'loanAgent.id': user.id } : { 'employmentInfo.ippis': id, 'loanAgent.id': user.id } )
                                            .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] );
             if(!customer) {
                 debug(customer);     
@@ -43,10 +43,12 @@ const customer = {
 
     create: async function(request) {
         try{
-            const customerExists = await Customer.findOne( { ippis: request.body.employmentInfo.ippis } );
+            const customerExists = await Customer.findOne( { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );
             if(customerExists) throw new Error('Duplicate IPPIS NO. Customer already exists');
 
-            const newCustomer = new Customer(request.body);
+            const newCustomer = await Customer.create(request.body);
+            if(newCustomer instanceof Error) throw(newCustomer.message);
+            
             newCustomer.validateSegment();
 
             // assigning agent
@@ -60,7 +62,7 @@ const customer = {
                 };
             }else if (request.body.loanAgent && request.user.role !== 'loanAgent') {
                 console.log('branch 2');
-                agent = await User.findOne( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment });
+                agent = await User.findOne( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment } );
                 if(!agent) {
                     debug(agent);
                     throw new Error('Agent does not exist or is inactive.');
@@ -77,12 +79,11 @@ const customer = {
             newCustomer.loanAgent = {id: agent._id};
             newCustomer.loanAgent.firstName = agent.name.firstName;
             newCustomer.loanAgent.lastName = agent.name.lastName;
-            agent.customers.push(newCustomer._id);
+            newCustomer.loanAgent.phone = agent.name.phone;
             
-            await newCustomer.save();
-            await agent.save();                                                                                                                                                                                                                                                                                                                                                                     
+            await newCustomer.save();                                                                                                                                                                                                                                                                                                                                                                    
 
-            return {newCustomer, agent};
+            return newCustomer;
 
         }catch(exception) {
             debug(exception);
@@ -92,7 +93,7 @@ const customer = {
 
     update: async function(id, requestBody) {
         try{
-            const customer = await Customer.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
+            const customer = await Customer.findByIdAndUpdate( { _id: id }, requestBody, { new: true } );
             if(!customer) {
                     debug(customer);
                 throw new Error('Customer not found.')

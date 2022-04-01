@@ -10,25 +10,21 @@ const validators = {
                             .required(),
 
             companyAddress: Joi.string()
-                              .required(),
+                               .required(),
 
             cacNumber: Joi.string()
                           .required(),
 
-            category: Joi.string()
-                         .optional(),
+            category: Joi.string(),
 
             phone: Joi.string()
-                      .length(11)
-                      .optional(),
+                      .length(11),
 
             email: Joi.string()
                       .email()
                       .required(),
 
             lenderURL: Joi.string()
-                          .optional(),
-
         });
         return schema.validate(lender);
     },
@@ -39,7 +35,8 @@ const validators = {
                 firstName: Joi.string().required().min(3).max(50),
                 lastName: Joi.string().required().min(3).max(50),
                 middleName: Joi.string().min(3).max(50),
-            }),            
+            }),
+            phone: Joi.string().length(11),            
             email: Joi.string().required().email().min(10).max(255),
             role: Joi.string().equal('admin'),
             active: Joi.boolean().equal(true),

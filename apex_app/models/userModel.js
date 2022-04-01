@@ -31,15 +31,28 @@ const userSchema = new mongoose.Schema({
             maxLength: 50,
             trim:true
         },
-    },    
+    }, 
+    
+    phone: {
+        // TODO: figure how to validate no letters in the phone number.
+        type: String,
+        unique: true,
+        trim: true
+    },
 
     email: {
         type: String,
-        required: true,
+        unique: true,
         lowercase: true,
         trim: true,
         minLength: 10,
-        maxLength: 255
+        maxLength: 255,
+        required: true
+    },
+    
+    emailVerify: {
+        type: Boolean,
+        default: false
     },
 
     password: {
@@ -47,11 +60,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         minLength: 6,
         maxLength: 1024
-    },
-
-    emailVerify: {
-        type: Boolean,
-        default: false
     },
 
     active: {
@@ -87,19 +95,9 @@ const userSchema = new mongoose.Schema({
 
     achieved: {
         type: Number,
-    },
-
-    loans: {
-        type: [ mongoose.Schema.Types.ObjectId ],
-        ref: 'Loan'
-    },
-
-    customers: {
-        type: [ String ],
     }
 
 }, {
-
     timestamps: true
 });
 

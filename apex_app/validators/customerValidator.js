@@ -45,6 +45,7 @@ const validators = {
             contact: {
                 phone: Joi.string()
                           .length(11)
+                          .pattern(/^0([7-9])[0-9]{9}/)
                           .required(),
 
                 email: Joi.string()
@@ -57,15 +58,17 @@ const validators = {
             maritalStatus: Joi.string(),
 
             bvn: Joi.string()
-                    .pattern(/^22/)
+                    .pattern(/^22[0-9]{9}/)
                     .message( {'string.pattern.base': 'Invalid BVN.'} )
                     .length(11)
                     .required(),
 
             idCardInfo: Joi.object({
-                idType: Joi.string(),
+                idType: Joi.string()
+                           .required(),
 
-                idNumber: Joi.string(),
+                idNumber: Joi.string()
+                             .required(),
             }),
 
             employmentInfo: Joi.object({
@@ -77,9 +80,11 @@ const validators = {
                           .messages({'string.pattern.base': 'Invalid IPPIS number.'})
                           .required(),
 
-                companyLocation: Joi.string(),
+                companyLocation: Joi.string()
+                                    .required(),
 
-                state: Joi.objectId(),
+                state: Joi.objectId()
+                          .required(),
 
                 dateOfEnlistment: Joi.date()
                                      .greater(Joi.ref('...dateOfBirth', { adjust: (value) => {
@@ -92,24 +97,33 @@ const validators = {
             }),
 
             nok: Joi.object({
-                name: Joi.string(),
+                name: Joi.string()
+                         .required(),
 
                 address: Joi.object({
-                    street: Joi.string(),
+                    street: Joi.string()
+                               .required(),
 
                     state: Joi.objectId()
+                              .required()
                 }),
 
-                phone: Joi.string(),
+                phone: Joi.string()
+                          .length(11)
+                          .pattern(/^0([7-9])[0-9]{9}/)
+                          .required(),
 
                 relationship: Joi.string()
+                                 .required()
             }),
             
             accountInfo: Joi.object({
-                salaryAccountName: Joi.string(),
+                salaryAccountName: Joi.string()
+                                      .required(),
 
                 salaryAccountNumber: Joi.string()
-                                        .length(10),
+                                        .length(10)
+                                        .required(),
 
                 bankName: Joi.objectId()
                              .required(),
@@ -154,7 +168,8 @@ const validators = {
             maritalStatus: Joi.string(),
 
             phone: Joi.string()
-                      .length(11),
+                      .length(11)
+                      .pattern(/^0([7-9])[0-9]{9}/),
 
             email: Joi.string()
                       .email()
@@ -162,7 +177,7 @@ const validators = {
                       .max(255),
 
             bvn: Joi.string()
-                    .pattern(/^22/)
+                    .pattern(/^22[0-9]{9}/)
                     .message( {'string.pattern.base': 'Invalid BVN.'} )
                     .length(11),
             
@@ -196,7 +211,8 @@ const validators = {
             stateNOK: Joi.objectId(),
 
             phoneNOK: Joi.string()
-                         .length(11),
+                         .length(11)
+                         .pattern(/^0([7-9])[0-9]{9}/),
             
             relationshipNOK: Joi.string(),
 

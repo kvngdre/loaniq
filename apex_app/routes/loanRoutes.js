@@ -27,7 +27,7 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
         const loanObj = req.body.loan;
 
         // customer validation
-        var { error } = customerValidators.validateCreation(customerObj);
+        var { error } = customerValidators.validateCxreation(customerObj);
         if(error) throw error;
         
         // loan validation

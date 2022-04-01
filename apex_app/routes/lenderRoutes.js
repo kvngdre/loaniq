@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const lenderValidators = require('../validators/lenderValidator');
-const userViewController= require('../controllers/userController');
 const lenderViewController = require('../controllers/lenderController');
 
 

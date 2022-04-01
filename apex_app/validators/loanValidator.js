@@ -22,9 +22,9 @@ const validators = {
     
                 loanType: Joi.string(),
 
-                ippis: Joi.string(),
+                customer: Joi.objectId(),
 
-                loanAgent: Joi.string(),
+                loanAgent: Joi.objectId(),
             });
     
         return schema.validate(loan);
@@ -84,9 +84,9 @@ const validators = {
 
             status: Joi.string(),
 
-            ippis: Joi.string(),
+            customer: Joi.objectId(),
             
-            loanAgent: Joi.string(),
+            loanAgent: Joi.objectId(),
 
             interestRate: Joi.number(),
 

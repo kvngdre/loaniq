@@ -23,10 +23,10 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     const { error } = customerValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
-    const result = await customerViewController.create(req);
-    if(result instanceof Error) { return res.status(400).send(result.message); };
+    const newCustomer = await customerViewController.create(req);
+    if(newCustomer instanceof Error) { return res.status(400).send(result.message); };
     
-    res.status(201).send(result.newCustomer);
+    res.status(201).send(newCustomer);
 });
 
 // TODO: have front end ensure no empty obj is passed.
