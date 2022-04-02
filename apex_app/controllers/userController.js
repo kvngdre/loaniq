@@ -36,6 +36,7 @@ const user = {
     create: async function(requestBody, user, lenderID) {
         try {
             let role = requestBody.role;
+            const allSegments = await Segment.find().select('_id')
 
             switch(role) {
                 case "admin":
@@ -82,6 +83,7 @@ const user = {
                         otp: OTP,
                         role,
                         active: requestBody.active,
+                        segments: !requestBody.segments ? allSegments : requestBody.segments,
                         lenderId: user.lenderId
                     });
                     break;
@@ -121,9 +123,6 @@ const user = {
                     
                     var OTP = generateOTP();
 
-                    let allSegments;
-                    if(requestBody.segments === 'all') { allSegments = await Segment.find().select('_id') };
-
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
@@ -132,7 +131,7 @@ const user = {
                         otp: OTP,
                         role,
                         active: requestBody.active,
-                        segments: allSegments ? allSegments : requestBody.segments,
+                        segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
                         target: requestBody.target,
                         lenderId: user.lenderId
                     });
@@ -140,7 +139,7 @@ const user = {
             };
                        
             // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.firstName, OTP);
+            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
             userDebug(mailResponse);
             if(mailResponse instanceof Error) {
                 userDebug(`Error sending OTP: ${mailResponse.message}`);

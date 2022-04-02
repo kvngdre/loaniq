@@ -11,30 +11,33 @@ const customerSchema = new mongoose.Schema({
             type: String,
             minLength: 3,
             maxLength: 50,
-            required: true,
-            trim:true
+            trim:true,
+            lowercase: true,
+            required: true
         },
     
         lastName: {
             type: String,
             minLength: 3,
             maxLength: 50,
-            required: true,
-            trim:true
+            trim:true,
+            lowercase: true,
+            required: true
         },
     
         middleName: {
             type: String,
             minLength: 3,
             maxLength: 50,
+            lowercase: true,
             trim:true
         }
     },
     
     gender: {
         type: String,
-        required: true,
         enum: ['Male', 'Female'],
+        required: true
     },
 
     // TODO: work on exception return 
@@ -58,7 +61,7 @@ const customerSchema = new mongoose.Schema({
     
                     const age = ageYear - 1970;
 
-                    return age >= 21 && age <= 60;
+                    return age >= 18 && age <= 60;
 
                 }catch(exception) {
                     debug(exception.message);
@@ -66,7 +69,7 @@ const customerSchema = new mongoose.Schema({
                 };
             },
             // TODO: research how to get to the age constant in the validator.
-            message: "Age should be minimum 21."
+            message: "Age should be minimum 18."
         },
     },
 
@@ -76,7 +79,8 @@ const customerSchema = new mongoose.Schema({
             minLength: 5,
             maxLength: 255,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            required: true
         },
     
         state: {
@@ -96,7 +100,8 @@ const customerSchema = new mongoose.Schema({
         email: {
             type: String,
             lowercase: true,
-            trim: true
+            trim: true,
+            required: true
         }
     },
     
@@ -114,8 +119,6 @@ const customerSchema = new mongoose.Schema({
         trim: true,
         required: true
     },
-    // TODO: uncomment/add required and unique.
-    
 
     bvn: {
         type: String,
@@ -134,19 +137,19 @@ const customerSchema = new mongoose.Schema({
                 "National ID card",
                 "Driver's license"
             ],
-            // required: true
+            required: true
         },
     
         idCardUrl: {
-            type: String,
-            // required: true
+            type: String``
         },
     
         idNumber: {
             type: String,
             minLength: 4,
             maxLength: 50,
-            trim: true
+            trim: true,
+            required: true
         }
     },
     
@@ -159,23 +162,25 @@ const customerSchema = new mongoose.Schema({
 
         ippis: {
             type: String,
+            trim: true,
             uppercase: true,
-            unique: true
+            unique: true,
+            required: true
         },
     
         companyLocation: {
             type: String,
-            // required: true,
             minLength: 6,
             maxLength: 255,
+            trim: true,
             lowercase: true,
-            trim: true
+            required: true
         },
     
         state:{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'State',
-            // required: true
+            required: true
         },
     
         dateOfEnlistment: {
@@ -187,26 +192,31 @@ const customerSchema = new mongoose.Schema({
     nok: {
         name: {
             type: String,
-            // required: true,
+            trim: true,
+            required: true
             
         },
     
         address: {
             street: {
-                type: String
+                type: String,
+                trim: true,
+                lowercase: true,
+                required: true
             },
 
             state: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'State',
-                // required: true
+                required: true
             },
 
         },
     
         phone: {
             type: String,
-            trim: true
+            trim: true,
+            required: true
         },
     
         relationship: {
@@ -221,30 +231,35 @@ const customerSchema = new mongoose.Schema({
                     'Spouse',
                     'Son',
                     'Daughter'
-                ]
+                ],
+            required: true
         },
     },
 
     accountInfo: {
         salaryAccountName: {
             type: String,
-            trim: true,     
+            trim: true,
+            lowercase: true,
+            required: true    
         },
     
         salaryAccountNumber: {
             type: String,
-            trim: true
+            trim: true,
+            required: true
         },
     
         bankName: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Bank'
+            ref: 'Bank',
+            required: true
         },
     },
 
     loanAgent: {
         id: {
-            type: String,
+            type: String
         },
 
         firstName: {
@@ -291,6 +306,15 @@ customerSchema.methods.validateSegment = async function() {
             break;
     };
 }
+
+customerSchema.pre('save', function (next) {
+    // capitalize names
+    this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
+    this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
+    if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
+    
+    next();
+  });
 
 const Customer = mongoose.model('Customer', customerSchema);
 

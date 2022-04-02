@@ -7,11 +7,16 @@
         "refreshToken": "1//04UgEihHdFFj3CgYIARAAGAQSNwF-L9IruVhTtNMIbbFldBEtUW9jyqEySn3Any1Z1jANdVgEt9mchYG59ebF76JOVcGLDj-BH44",
         "senderEmailAddress": "ucheprince26@gmail.com"
     },
-    "minLoanAmount": 50000,
-    "maxLoanAmount": 1000000, 
-    "minTenor": 1,
-    "maxTenor": 18,
-    "interestRate": 0.03,
-    "upfrontFeePercentage": 0.03,
-    "fee": 100
+
+    "loanMetrics": {
+        "minNetPay": 50000,
+        "minLoanAmount": 50000,
+        "maxLoanAmount": 1000000, 
+        "minTenor": 1,
+        "maxTenor": 18,
+        "interestRate": 0.03,
+        "upfrontFeePercentage": 0.03,
+        "fee": 100,
+        "dtiThreshold": 0.45
+    }
 }

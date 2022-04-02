@@ -1,77 +1,72 @@
 const Joi = require('joi');
-const joiObjectid = require('joi-objectid');
 const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
+
+const nameSchema = Joi.object({
+    firstName: Joi.string()
+                  .min(3)
+                  .max(50),
+
+    lastName: Joi.string()
+                 .min(3)
+                 .max(50),
+
+    middleName: Joi.string()
+                   .min(3)
+                   .max(50)
+});
+
+const phoneSchema = Joi.string()
+                       .pattern(/^0([7-9])[0-9]{9}$/)
+                       .message({
+                          "string.pattern.base": "Invalid phone number."
+                        })
+
+const emailSchema = Joi.string()
+                       .email()
+                       .min(10)
+                       .max(255)
+
+const passwordSchema = joiPassword.string()
+                                  .minOfUppercase(1)
+                                  .minOfSpecialCharacters(2)
+                                  .minOfNumeric(2)
+                                  .noWhiteSpaces()
+                                  .min(6)
+                                  .max(255)
+                                  .messages({
+                                    'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                    'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                    'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                    'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                                    });
+
 
 // TODO: Reposition required and remove optional.
 const validators = {
     validateRegistration: {
         admin: function (user) {
             const schema = Joi.object({
-                name: Joi.object({
-                    firstName: Joi.string().required().min(3).max(50),
-                    lastName: Joi.string().required().min(3).max(50),
-                    middleName: Joi.string().optional().min(3).max(50)
-                }),
-                phone: Joi.string()
-                          .pattern(/^0([7-9])[0-9]{9}/)
-                          .message({
-                            "string.pattern.base": "Invalid phone number."
-                            }),
-                email: Joi.string().required().email().min(10).max(255),
+                name: nameSchema,
+                phone: phoneSchema,
+                email: emailSchema,
                 active: Joi.boolean(),
                 role: Joi.string().required(),
-                password: joiPassword
-                            .string()
-                            .required()
-                            .minOfUppercase(1)
-                            .minOfSpecialCharacters(2)
-                            .minOfNumeric(2)
-                            .noWhiteSpaces()
-                            .min(6)
-                            .max(255)
-                            .messages({
-                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                            })
-        
+                password: passwordSchema
             });
-        
+
             return schema.validate(user);
         },
     
         credit: function (user) {
             const schema = Joi.object({
-                name: Joi.object({
-                    firstName: Joi.string().required().min(3).max(50),
-                    lastName: Joi.string().required().min(3).max(50),
-                    middleName: Joi.string().optional().min(3).max(50)
-                }),
-                phone: Joi.string()
-                          .pattern(/^0([7-9])[0-9]{9}/)
-                          .message({
-                            "string.pattern.base": "Invalid phone number."
-                            }),
-                email: Joi.string().required().email().min(10).max(255),
+                name: nameSchema,
+                phone: phoneSchema,
+                email: emailSchema,
                 active: Joi.boolean(),
                 role: Joi.string().required(),
-                password: joiPassword
-                            .string()
-                            .required()
-                            .minOfUppercase(1)
-                            .minOfSpecialCharacters(2)
-                            .minOfNumeric(2)
-                            .noWhiteSpaces()
-                            .min(6)
-                            .max(255)
-                            .messages({
-                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                            })
+                segments: Joi.array().items(Joi.objectId),
+                password: passwordSchema
         
             });
         
@@ -80,34 +75,12 @@ const validators = {
     
         operations: function (user) {
             const schema = Joi.object({
-                name: Joi.object({
-                    firstName: Joi.string().required().min(3).max(50),
-                    lastName: Joi.string().required().min(3).max(50),
-                    middleName: Joi.string().optional().min(3).max(50)
-                }),
-                phone: Joi.string()
-                          .pattern(/^0([7-9])[0-9]{9}/)
-                          .message({
-                            "string.pattern.base": "Invalid phone number."
-                            }),
-                email: Joi.string().required().email().min(10).max(255),
+                name: nameSchema,
+                phone: phoneSchema,
+                email: emailSchema,
                 active: Joi.boolean(),
                 role: Joi.string().required(),
-                password: joiPassword
-                            .string()
-                            .required()
-                            .minOfUppercase(1)
-                            .minOfSpecialCharacters(2)
-                            .minOfNumeric(2)
-                            .noWhiteSpaces()
-                            .min(6)
-                            .max(255)
-                            .messages({
-                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                            })
+                password: passwordSchema
         
             });
         
@@ -116,18 +89,9 @@ const validators = {
     
         loanAgent: function (user) {
             const schema = Joi.object({
-                name: Joi.object({
-                    firstName: Joi.string().required().min(3).max(50),
-                    lastName: Joi.string().required().min(3).max(50),
-                    middleName: Joi.string().optional().min(3).max(50)
-                }),
-                phone: Joi.string()
-                          .pattern(/^0([7-9])[0-9]{9}/)
-                          .message({
-                              "string.pattern.base": "Invalid phone number."
-                          })
-                          .required(),
-                email: Joi.string().email().min(10).max(255).required(),
+                name: nameSchema,
+                phone: phoneSchema,
+                email: emailSchema,
                 active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.alternatives()
@@ -135,20 +99,7 @@ const validators = {
                              .required(),
                 target: Joi.number().required(),
                 achieved: Joi.number(),
-                password: joiPassword
-                            .string()
-                            .minOfUppercase(1)
-                            .minOfSpecialCharacters(2)
-                            .minOfNumeric(2)
-                            .noWhiteSpaces()
-                            .min(6)
-                            .max(255)
-                            .messages({
-                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                            })
+                password: passwordSchema
         
             });
         
@@ -159,17 +110,9 @@ const validators = {
     // TODO: Should users be allowed to change their email?
     validateEdit: function(user) {
         const schema = Joi.object({
-            name: Joi.object({
-                firstName: Joi.string().min(3).max(50),
-                lastName: Joi.string().min(3).max(50),
-                middleName: Joi.string().min(3).max(50),
-            }),
-            phone: Joi.string()
-                      .pattern(/^0([7-9])[0-9]{9}/)
-                      .message({
-                        "string.pattern.base": "Invalid phone number."
-                       }),
-            email: Joi.string().email().min(10).max(255),
+            name: nameSchema,
+            phone: phoneSchema,
+            email: emailSchema,
             role: Joi.string(),
             segments: Joi.array().items(Joi.objectId),
             target: Joi.number(),
@@ -181,18 +124,12 @@ const validators = {
 
     validateRegVerification: function(user) {
         const schema = Joi.object({
-            email: Joi.string().required().email().min(10).max(50),
-            otp: Joi.string().required()
-                        .pattern(/^[0-9]{6}$/)
-                        .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .min(6)
-                        .noWhiteSpaces()
-                        .messages({
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+            email: emailSchema,
+            otp: Joi.string()
+                    .required()
+                    .pattern(/^[0-9]{6}$/)
+                    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
+            password: passwordSchema
         });
 
         return schema.validate(user);
@@ -200,15 +137,8 @@ const validators = {
 
     validateLogin: function(user) {
         const schema = Joi.object({
-            email: Joi.string().required().email().min(10).max(50),
-            password: joiPassword
-                        .string()
-                        .required()
-                        .min(6)
-                        .noWhiteSpaces()
-                        .messages({
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+            email: emailSchema,
+            password: passwordSchema
         });
 
         return schema.validate(user);
@@ -216,22 +146,8 @@ const validators = {
     
     validateForgotPassword: function(user) {
         const schema = Joi.object({
-            email: Joi.string().required().email().min(10).max(50),
-            newPassword: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+            email: emailSchema,
+            newPassword: passwordSchema
         });
 
         return schema.validate(user);
@@ -239,22 +155,8 @@ const validators = {
 
     validateChangePassword: function(user) {
         const schema = Joi.object({
-            email: Joi.string().optional().email().min(10).max(50),
-            newPassword: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
+            email: emailSchema,
+            newPassword: passwordSchema
         });
 
         return schema.validate(user);

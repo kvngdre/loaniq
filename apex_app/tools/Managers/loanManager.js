@@ -3,6 +3,7 @@ const debug = require('debug')('app:loanMgr')
 const Loan = require('../../models/loanModel');
 const userViewController = require('../../controllers/userController');
 const customerViewController = require('../../controllers/customerController');
+const pickRandomCreditUser = require('../../utils/pickRandomAgent');
 
 const manager = {
     createLoan: async function(request) {
@@ -17,7 +18,14 @@ const manager = {
                 throw new Error('Invalid loan agent.');
             };
 
+            const creditOfficer = await pickRandomCreditUser('credit', customer.employmentInfo.segment);
+            if(!creditOfficer){
+                debug(creditOfficer);
+                throw new Error('Could not assign credit officer.');
+            };
+
             request.body.loanAgent = agent._id;
+            request.body.creditOfficer = creditOfficer._id;
             const newLoan =  new Loan(request.body);
             
             // await customer.save();
@@ -33,16 +41,23 @@ const manager = {
     // TODO: Come back to loan manager
     createLoanRequest: async function(request) {
         try{          
-            const customerExists = await customerViewController.get( { ippis: request.body.employmentInfo.ippis }, request.user );
-            
-            if(!customerExists instanceof Error) {
+            const customerExists = await customerViewController.get( request.body.employmentInfo.ippis, request.user );   
+            if(!customerExists.message && !customerExists.stack) {
                 let agent = await userViewController.get( { _id: customerExists.loanAgent.id, active: true, segments: request.body.employmentInfo.segment } );
                 if(!agent && request.body.loanAgent) agent = await userViewController.get( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment } );
                 if(!agent) throw new Error ('Invalid loan agent.');
-                            
+
+                // Picking credit officer
+                let creditOfficer = await pickRandomCreditUser('credit', customerExists.employmentInfo.segment);
+                if(!creditOfficer){
+                    debug(creditOfficer);
+                    throw new Error('Could not assign credit officer.');
+                };
+
                 // TODO: Make this a transaction
                 request.body.loan.customer = customerExists._id;
                 request.body.loan.loanAgent = agent._id;
+                request.body.loan.creditOfficer = creditOfficer._id;
                 const newLoan = await Loan.create(request.body.loan);
                 
                 // Updating the customer loans and loan agent.
@@ -62,14 +77,22 @@ const manager = {
             const newCustomer = await customerViewController.create( _.omit(request, ['body.loan']) );
             if(newCustomer instanceof Error) throw newCustomer;
 
+            // Picking credit officer
+            creditOfficer = await pickRandomCreditUser('credit', request.body.employmentInfo.segment);
+            if(!creditOfficer){
+                debug(creditOfficer);
+                throw new Error('Could not assign credit officer.');
+            };
+
             // creating customer loan.
             request.body.loan.customer = newCustomer._id;
-            request.body.loan.loanAgent = newCustomer.loanAgent;
-            const newLoan = await Loan.create(request.body.loan);
+            request.body.loan.loanAgent = newCustomer.loanAgent.id;
+            request.body.creditOfficer = creditOfficer._id;
+            await Loan.create(request.body.loan);
             
             await newCustomer.save();
 
-            return newCustomer;
+            return Loan;
 
         }catch(exception) {
             return exception;

@@ -2,6 +2,7 @@ const config = require('config');
 const mongoose = require('mongoose');
 const Customer = require('./customerModel');
 const User = require('../models/userModel');
+const Metrics = require('../tools/Managers/loanMetricsEval')
 
 
 const loanSchema = new mongoose.Schema({  
@@ -14,7 +15,7 @@ const loanSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
-        min: config.get('minLoanAmount')
+        min: config.get('loanMetrics.minLoanAmount')
     },
    
     amountInWords: {
@@ -25,8 +26,8 @@ const loanSchema = new mongoose.Schema({
     tenor: {
         type: Number,
         required: true,
-        min: config.get('minTenor'),
-        max: config.get('maxTenor')
+        min: config.get('loanMetrics.minTenor'),
+        max: config.get('loanMetrics.maxTenor')
     },
 
     loanType: {
@@ -77,17 +78,17 @@ const loanSchema = new mongoose.Schema({
     
     interestRate: {
         type: Number,
-        default: () =>  config.get('interestRate')
+        default: () =>  config.get('loanMetrics.interestRate')
     },
     
     upfrontFeePercentage: {
         type: Number,
-        default: () => config.get('upfrontFeePercentage')
+        default: () => config.get('loanMetrics.upfrontFeePercentage')
     },
 
     fee: {
         type: Number,
-        default: config.get('fee')
+        default: config.get('loanMetrics.fee')
     },
     // End of the line where admin user can edit
 
@@ -106,15 +107,33 @@ const loanSchema = new mongoose.Schema({
 
     metrics: {
         ageValid: {
-            type: Boolean
+            result: {
+                type: Boolean
+            },
+            
+            value: {
+                type: Number
+            }
         },
         
         serviceLengthValid: {
-            type: Boolean
+            result: {
+                type: Boolean
+            },
+            
+            value: {
+                type: Number
+            }
         },
         
         netPayValid: {
-            type: Boolean
+            result: {
+                type: Boolean
+            },
+            
+            value: {
+                type: Number
+            }
         },
         
         netPayConsistency: {
@@ -135,6 +154,11 @@ const loanSchema = new mongoose.Schema({
         
     },
 
+    creditOfficer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+
     dateAppOrDec: {
         type: Date,
         default: (self=this) => {
@@ -143,17 +167,18 @@ const loanSchema = new mongoose.Schema({
             }
         }
     },
+
+    
       
 }, {
     timestamps: true
 });
 
-// loanSchema.post
-loanSchema.pre('save', function(next) {
-    this.fee = config.get('fee');
+// loanSchema.pre('save', function(next) {
+//     this.fee = config.get('loanMetrics.fee');
 
-    next();
-})
+//     next();
+// });
 
 const Loan = mongoose.model('Loan', loanSchema);
 

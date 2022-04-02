@@ -3,9 +3,10 @@ const mongoose = require('mongoose');
 const segmentSchema = new mongoose.Schema({
     code: {
         type: String,
-        required: true,
         uppercase: true,
-        trim: true
+        trim: true,
+        unique: true,
+        required: true
     },
 
     name: {

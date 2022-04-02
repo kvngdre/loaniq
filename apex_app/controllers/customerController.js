@@ -13,7 +13,7 @@ const customer = {
         };
 
         return await Customer.find( { 'loanAgents.id': user.id } )
-                                 .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] )
+                                 .select([ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ])
                                  .sort('_id');
     },
 
@@ -21,7 +21,8 @@ const customer = {
         try{
             if(user.role !== 'loanAgent') {
                 const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id } : { 'employmentInfo.ippis': id } )
-                                               .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] );
+                                               .select({'name': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'loanAgent': 1 } );
+
                 if(!customer) throw new Error('Customer not found.');
 
                 return customer; 
@@ -55,7 +56,7 @@ const customer = {
             let agent
             if(!request.body.loanAgent && request.user.role !== 'loanAgent' ) {
                 console.log('branch 1');
-                agent =  await pickRandomAgent(newCustomer.employmentInfo.segment);
+                agent =  await pickRandomAgent('loanAgent', newCustomer.employmentInfo.segment);
                 if(!agent) {
                     debug(agent);
                     throw new Error('Agent does not exist or is inactive.');
@@ -76,10 +77,10 @@ const customer = {
                 };
             };
             
-            newCustomer.loanAgent = {id: agent._id};
+            newCustomer.loanAgent.id = agent._id.toString();
             newCustomer.loanAgent.firstName = agent.name.firstName;
             newCustomer.loanAgent.lastName = agent.name.lastName;
-            newCustomer.loanAgent.phone = agent.name.phone;
+            newCustomer.loanAgent.phone = agent.phone;
             
             await newCustomer.save();                                                                                                                                                                                                                                                                                                                                                                    
 

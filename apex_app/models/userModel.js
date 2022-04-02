@@ -22,13 +22,14 @@ const userSchema = new mongoose.Schema({
             minLength: 3,
             maxLength: 50,
             trim:true,
-            required: true
+            required: true  
         },
     
         middleName: {
             type: String,
             minLength: 3,
             maxLength: 50,
+            lowercase: true,
             trim:true
         },
     }, 
@@ -37,7 +38,8 @@ const userSchema = new mongoose.Schema({
         // TODO: figure how to validate no letters in the phone number.
         type: String,
         unique: true,
-        trim: true
+        trim: true,
+        required: true
     },
 
     email: {
@@ -57,9 +59,9 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
-        required: true,
         minLength: 6,
-        maxLength: 1024
+        maxLength: 1024,
+        required: true
     },
 
     active: {
@@ -86,11 +88,13 @@ const userSchema = new mongoose.Schema({
     segments: {
         type: [ mongoose.Schema.Types.ObjectId ],
         ref: 'Segment',
+        required: true
     },
 
     // TODO: Duration of target
     target: {
         type: Number,
+        required: true
     },
 
     achieved: {
@@ -114,12 +118,14 @@ userSchema.methods.generateToken = function() {
     }, config.get('jwtPrivateKey'));
 }
 
-// if(userSchema.role === "loanAgent") {
-//     userSchema.methods.percentageAchieved = function() {
-//         const value = (this.achieved / this.target) * 100;
-//         return value.toFixed(2);
-//     }
-// };
+userSchema.pre('save', function (next) {
+    // capitalize names
+    this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
+    this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
+    if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
+
+    next();
+  });
 
 const User = mongoose.model('User', userSchema);
 

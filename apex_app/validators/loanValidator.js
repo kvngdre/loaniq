@@ -3,22 +3,29 @@ const config = require('config');
 Joi.objectId = require('joi-objectid')(Joi);
 
 
+const netPaySchema = Joi.number()
+                        .min(config.get('loanMetrics.minNetPay'))
+                        .required();
+
+const amountSchema = Joi.number()
+                        .min(config.get('loanMetrics.minLoanAmount'))
+                        .max(config.get('loanMetrics.maxLoanAmount'));
+
+const tenorSchema = Joi.number()
+                       .min(config.get('loanMetrics.minTenor'))
+                       .max(config.get('loanMetrics.maxTenor'));
+
 const validators = {
     validateCreation: {
         loanRequest: function(loan) {
             const schema = Joi.object({     
-                netPay: Joi.number()
-                           .required(),
+                netPay: netPaySchema,
     
-                amount: Joi.number()
-                           .min(config.get('minLoanAmount'))
-                           .max(config.get('maxLoanAmount')),
+                amount: amountSchema,
     
                 amountInWords: Joi.string(),
     
-                tenor: Joi.number()
-                          .min(config.get('minTenor'))
-                          .max(config.get('maxTenor')),
+                tenor: tenorSchema,
     
                 loanType: Joi.string(),
 
@@ -36,21 +43,14 @@ const validators = {
                 customer: Joi.objectId()
                              .required(),
 
-                netPay: Joi.number()
-                           .required(),
+                netPay: netPaySchema,
     
-                amount: Joi.number()
-                           .min(config.get('minLoanAmount'))
-                           .max(config.get('maxLoanAmount'))
-                           .required(),
+                amount: amountSchema,
     
                 amountInWords: Joi.string()
                                   .required(),
     
-                tenor: Joi.number()
-                          .min(config.get('minTenor'))
-                          .max(config.get('maxTenor'))
-                          .required(),
+                tenor: tenorSchema,
     
                 loanType: Joi.string()
                              .required()
@@ -63,18 +63,15 @@ const validators = {
 
     validateEdit: function(loan) {
         const schema = Joi.object({
-            netPay: Joi.number(),
-                    //    .min(config.get('minNetPay')),
+            netPay: Joi.number()
+                       .min(config.get('loanMetrics.minNetPay')),
 
             amount: Joi.number()
-                       .min(config.get('minLoanAmount'))
-                       .max(config.get('maxLoanAmount')),
+                       .min(config.get('loanMetrics.minLoanAmount')),
 
             amountInWords: Joi.string(),
 
-            tenor: Joi.number()
-                      .min(config.get('minTenor'))
-                      .max(config.get('maxTenor')),
+            tenor: tenorSchema,
 
             loanType: Joi.string(),
 

@@ -27,7 +27,7 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
         const loanObj = req.body.loan;
 
         // customer validation
-        var { error } = customerValidators.validateCxreation(customerObj);
+        var { error } = customerValidators.validateCreation(customerObj);
         if(error) throw error;
         
         // loan validation
@@ -61,7 +61,7 @@ router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), asy
     res.status(200).send(loan);
 });
 
-router.put('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+router.put('/:id', verifyToken, verifyRole(['credit']), async (req, res) => {
     const { error } = loanValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 

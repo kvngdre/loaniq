@@ -1,3 +1,5 @@
+const config = require("config");
+
 class Metrics {
     constructor() {
         this.netPay = netPay
@@ -28,12 +30,16 @@ class Metrics {
     };
 
     netPayValidator() {
-        return { result: this.netPay >= 50_000 };
+        return { result: this.netPay >= config.get('loanMetrics.minNetPay') };
     };
 
     dtiRatioCalculator(repayment) {
-        let result = repayment / this.netPay;
+        const value = repayment / this.netPay;
+
+        return { result: value < config.get('loanMetrics.dtiThreshold'), value }
 
     }
 
-}
+};
+
+module.exports = Metrics;
