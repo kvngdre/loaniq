@@ -6,7 +6,7 @@ function verifyToken(req, res, next) {
         const token = req.header('auth-token');
         if(!token) return res.status(403).send('Access Denied. No token provided.');
 
-        const isVerified = jwt.verify(token, config.get('jwtPrivateKey'));
+        const isVerified = jwt.verify(token, 'mySecureKey');
         req.user = isVerified;
 
         next();

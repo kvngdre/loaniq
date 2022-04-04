@@ -277,11 +277,20 @@ customerSchema.methods.validateSegment = async function() {
 
 
 // before a customer is deleted all loans
-customerSchema.pre(/(.+)?([dD]el)\w+/, {document: true}, async function(next) {
-    console.log('case was matched');
-    const result = await Loan.deleteMany( { customer: this._id } );
-    debug(result.deletedCount);
+customerSchema.pre('remove', async function(next) {
+      console.log('test')
+    //  const result = await Loan.deleteMany({customer_id: this._id}).exec();
     
+    next();
+});
+
+
+customerSchema.pre('remove', function(next) {
+    User.loans.updateMany(
+        { user_id : this._id}, 
+        { $pull: { user_ids: this._id } },
+        { multi: true })  //if reference exists in multiple documents 
+    .exec();
     next();
 });
 
