@@ -94,7 +94,7 @@ const userSchema = new mongoose.Schema({
     // TODO: Duration of target
     target: {
         type: Number,
-        required: true
+        // required: true
     },
 
     achieved: {
@@ -115,7 +115,7 @@ userSchema.methods.generateToken = function() {
         role: this.role,
         active: this.active,
         segments: this.segments
-    }, config.get('jwtPrivateKey'));
+    }, 'jwtPrivateKey');
 }
 
 userSchema.pre('save', function (next) {

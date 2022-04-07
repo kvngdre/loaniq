@@ -11,7 +11,7 @@ function verifyToken(req, res, next) {
             return next();
         };
     
-        const isVerified = jwt.verify(token, config.get('jwtPrivateKey'));
+        const isVerified = jwt.verify(token, 'jwtPrivateKey');
         req.user = isVerified;
 
         next();
