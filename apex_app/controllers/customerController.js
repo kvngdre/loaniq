@@ -21,7 +21,7 @@ const customer = {
         try{
             if(user.role !== 'loanAgent') {
                 const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id } : { 'employmentInfo.ippis': id } )
-                                               .select({'name': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'loanAgent': 1 } );
+                                               .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1, 'loanAgent': 1 } );
 
                 if(!customer) throw new Error('Customer not found.');
 
@@ -29,9 +29,9 @@ const customer = {
             };
 
             const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id, 'loanAgent.id': user.id } : { 'employmentInfo.ippis': id, 'loanAgent.id': user.id } )
-                                           .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] );
+                                           .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'netPay', 'loanAgent' ] );
             if(!customer) {
-                debug(customer);     
+                debug(customer.message, customer.stack);     
                 throw new Error('Customer not found.');
             };
             

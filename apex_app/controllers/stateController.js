@@ -1,21 +1,36 @@
-const _ = require('lodash');
 const State = require('../models/stateModel');
-const { admin } = require('googleapis/build/src/apis/admin');
-const res = require('express/lib/response');
+const debug = require('debug')('app:stateContr');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 const state = {  
     create: async function(requestBody) {
         try{
-            const stateExists = await State.findOne( { code: requestBody.code } );
-            if(stateExists) throw new Error('Code already exists');
+            const stateExists = await State.findOne( { name: requestBody.name } );
+            if(stateExists) throw new Error('State already exists.');
 
-            const newState = new State(requestBody);
-            await newState.save();
+            const newState = await State.create(requestBody);
 
-            return {newState: newState};
+            return newState;
 
         }catch(exception) {
+            return exception;
+        };
+    },
+
+    getAll: async function() {
+        return await State.find();
+    },
+
+    get: async function(id) {
+        try{
+            const state = await State.findById(id);
+            console.log(state);
+            if(!state) throw new Error('State not found.');
+
+            return state;
+
+        }catch(exception) {
+            debug(exception);
             return exception;
         };
     },
@@ -32,7 +47,7 @@ const state = {
             
         }catch(exception) {
             return exception;
-        }
+        };
     },
 
     delete: async function(id) {
@@ -47,7 +62,7 @@ const state = {
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     }
 
 }

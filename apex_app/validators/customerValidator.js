@@ -104,28 +104,28 @@ const accountInfoSchema = Joi.object({
 const validators = {
     validateCreation: function(customer) {
         const schema = Joi.object({
-            name: nameSchema,
+            name: nameSchema.required(),
                           
-            gender: genderSchema,
+            gender: genderSchema.required(),
 
-            dateOfBirth: dateOfBirthSchema,
+            dateOfBirth: dateOfBirthSchema.required(),
 
             // TODO: Add required to fields.
-            residentialAddress: residentialAddressSchema,
+            residentialAddress: residentialAddressSchema.required(),
 
-            contact: contactSchema,
+            contact: contactSchema.required(),
 
-            maritalStatus: Joi.string(),
+            maritalStatus: Joi.string().required(),
 
-            bvn: bvnSchema,
+            bvn: bvnSchema.required(),
 
-            idCardInfo: idSchema,
+            idCardInfo: idSchema.required(),
 
-            employmentInfo: employmentSchema,
+            employmentInfo: employmentSchema.required(),
 
-            nok: nokSchema,
+            nok: nokSchema.required(),
             
-            accountInfo: accountInfoSchema,
+            accountInfo: accountInfoSchema.required(),
 
             loanAgent: Joi.objectId(),
 

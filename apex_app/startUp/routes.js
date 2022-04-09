@@ -18,9 +18,9 @@ module.exports = function(app) {
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/banks', banksRoutes);
-    app.use('/api/state', stateRoutes);
+    app.use('/api/states', stateRoutes);
     app.use('/api/lenders', lenderRoutes);
-    app.use('/api/segment', segmentRoutes);
+    app.use('/api/segments', segmentRoutes);
     app.use('/api/customers', customerRoutes);
 
     // Error handling middleware

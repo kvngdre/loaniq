@@ -1,19 +1,32 @@
-const _ = require('lodash');
 const Segment = require('../models/segmentModel');
-const { admin } = require('googleapis/build/src/apis/admin');
-const res = require('express/lib/response');
+const debug = require('debug')('app:segmentContr');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 const segment = {  
     create: async function(requestBody) {
         try{
             const segmentExists = await Segment.findOne( { code: requestBody.code } );
-            if(segmentExists) throw new Error('Code already exists');
+            if(segmentExists) throw new Error('Segment already exists.');
 
-            const newSegment = new Segment(requestBody);
-            await newSegment.save();
+            const newSegment = await Segment.create(requestBody);
 
-            return {newSegment};
+            return newSegment;
+
+        }catch(exception) {
+            return exception;
+        };
+    },
+
+    getAll: async function() {
+        return await Segment.find();
+    },
+
+    get: async function(id) {
+        try{
+            const segment = await Segment.findById(id);
+            if(!segment) throw new Error('Segment not found.');
+
+            return segment;
 
         }catch(exception) {
             return exception;
@@ -22,32 +35,30 @@ const segment = {
 
     update: async function(id, requestBody) {
         try{
-            const segemnt = await Segment.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
-            if(!segemnt) {
-                debug(segemnt);
-                throw new Error('Segment not found.')
+            const segment = await Segment.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
+            if(!segment) {
+                debug(segment);
+                throw new Error('Segment not found.');
             };
 
-            return segemnt;
+            return segment;
             
         }catch(exception) {
             return exception;
-        }
+        };
     },
 
     delete: async function(id) {
         try{
-            const segment = await Segment.findById(id);
+            const segment = await Segment.findByIdAndDelete(id);
             if(!segment) throw new Error('User not found.');
-
-            await segment.deleteOne();
 
             return segment;
 
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     }
 
 }

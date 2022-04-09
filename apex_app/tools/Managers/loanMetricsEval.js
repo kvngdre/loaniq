@@ -1,13 +1,35 @@
 const config = require("config");
 
 class Metrics {
-    constructor() {
-        this.netPay = netPay
-    }
+    // constructor() {
+    //     this.netPay = netPay
+    // }
+
+    calcUpfrontFee(loanAmount, upfrontFeePercent) {
+        const upfrontFee = loanAmount * upfrontFeePercent;
+        return upfrontFee.toFixed(2);
+    };
+
+    calcRepayment(loanAmount, interestRate, loanTenor) {
+        const repayment =  (loanAmount * interestRate) + (loanAmount / loanTenor);
+        return repayment.toFixed(2);
+    };
+
+    calcTotalRepayment(repayment, loanTenor) {
+        const totalRepayment = repayment * loanTenor;
+        return totalRepayment;
+    };
+
+    calcNetValue(loanAmount, upfrontFee, transferFee) {
+        const netValue = (loanAmount - upfrontFee) - transferFee;
+        if(netValue >= loanAmount) throw new Error('Error in net value');
+
+        return netValue.toFixed(2);
+    };
 
     ageValidator(dob) {
-        const dobMilliSec = new Date(dob).getTime();
-        
+        const dobMilliSec = dob.getTime();
+
         const diff = Date.now() - dobMilliSec;
 
         const diff_year = new Date(diff).getUTCFullYear();
@@ -18,7 +40,7 @@ class Metrics {
     };
 
     serviceLengthValidator(doe) {
-        const doeMilliSec = new Date(doe).getTime();
+        const doeMilliSec = doe.getTime();
 
         const diff = Date.now() - doeMilliSec;
 
@@ -29,14 +51,14 @@ class Metrics {
         return { result: serviceLength <= 33, value: serviceLength };
     };
 
-    netPayValidator() {
-        return { result: this.netPay >= config.get('loanMetrics.minNetPay') };
+    netPayValidator(netPay) {
+        return { result: netPay >= config.get('loanMetrics.minNetPay') };
     };
 
-    dtiRatioCalculator(repayment) {
-        const value = repayment / this.netPay;
+    dtiRatioCalculator(repayment, netPay) {
+        const value = repayment / netPay;
 
-        return { result: value < config.get('loanMetrics.dtiThreshold'), value }
+        return { result: value < config.get('loanMetrics.dtiThreshold'), value: value.toFixed(4) }
 
     }
 

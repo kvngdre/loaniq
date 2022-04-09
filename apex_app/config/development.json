@@ -14,9 +14,9 @@
         "maxLoanAmount": 1000000, 
         "minTenor": 1,
         "maxTenor": 18,
-        "interestRate": 0.03,
-        "upfrontFeePercentage": 0.03,
-        "fee": 100,
+        "interestRate": 0.0275,
+        "upfrontFeePercentage": 0.025,
+        "transferFee": 100,
         "dtiThreshold": 0.45
     }
 }

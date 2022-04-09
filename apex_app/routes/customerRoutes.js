@@ -30,7 +30,7 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
 });
 
 // TODO: have front end ensure no empty obj is passed.
-router.put('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
     const { error } = customerValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 

@@ -2,7 +2,7 @@ const config = require('config');
 const mongoose = require('mongoose');
 const Customer = require('./customerModel');
 const User = require('../models/userModel');
-const Metrics = require('../tools/Managers/loanMetricsEval')
+
 
 
 const loanSchema = new mongoose.Schema({  
@@ -60,7 +60,7 @@ const loanSchema = new mongoose.Schema({
             'onHold',
             'liquidated',
             'discontinued',
-            'exceptionalApproval'
+            'completed'
         ],
         default: 'pending'
     },
@@ -85,14 +85,18 @@ const loanSchema = new mongoose.Schema({
         type: Number,
         default: () => config.get('loanMetrics.upfrontFeePercentage')
     },
-
-    fee: {
+    
+    transferFee: {
         type: Number,
-        default: config.get('loanMetrics.fee')
+        default: config.get('loanMetrics.transferFee')
     },
     // End of the line where admin user can edit
-
+    
     // Below are set programmatically, no user can edit.
+    upfrontFee: {
+        type: Number
+    }, 
+
     repayment: {
         type: Number,
     },
@@ -125,14 +129,10 @@ const loanSchema = new mongoose.Schema({
                 type: Number
             }
         },
-        
+        // TODO: should the net pay include the value
         netPayValid: {
             result: {
                 type: Boolean
-            },
-            
-            value: {
-                type: Number
             }
         },
         
@@ -149,7 +149,13 @@ const loanSchema = new mongoose.Schema({
         },
         
         debtToIncomeRatio: {
-            type: Number
+            result: {
+                type: Boolean
+            },
+
+            value: {
+                type: Number
+            }
         }
         
     },
@@ -160,25 +166,40 @@ const loanSchema = new mongoose.Schema({
     },
 
     dateAppOrDec: {
-        type: Date,
-        default: (self=this) => {
-            if(['approved', 'declined'].includes(this.status)) {
-                this.dateAppOrDec = Date.now();
-            }
-        }
+        type: Date
     },
 
-    
-      
+    expectedEndDate: {
+        type: Date
+    },
+
+    active: {
+        type: Boolean,
+        default: false
+    }
+     
 }, {
     timestamps: true
 });
 
-// loanSchema.pre('save', function(next) {
-//     this.fee = config.get('loanMetrics.fee');
 
-//     next();
-// });
+loanSchema.pre('save', function(next) {
+    if(this.status === 'approved') {
+        this.active = true;
+
+        const oneMonth = 2628000000;  // in milliseconds
+        const tenorMilliseconds = oneMonth * this.recommendedTenor - 1;
+        
+        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds);
+        const day = endDate.getDate().toString().padStart(2, '0');
+        const month = (endDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = endDate.getFullYear();
+        
+        this.expectedEndDate = `${year}-${month}-${day}`;
+    }
+
+    next();
+});
 
 const Loan = mongoose.model('Loan', loanSchema);
 

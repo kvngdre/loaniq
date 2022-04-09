@@ -97,7 +97,7 @@ router.post('/change-password/', async (req, res) => {
     res.status(200).send(user);
 });
 
-router.put('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const { error } = userValidator.validateEdit(req.body);
     if(error)  return res.status(400).send(error.details[0].message);
     

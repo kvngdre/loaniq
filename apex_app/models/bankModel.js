@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const bankSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
-        trim: true
+        trim: true,
+        required: true
     },
 
     code: {

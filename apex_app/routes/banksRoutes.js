@@ -1,36 +1,59 @@
-const _ = require('lodash');
 const router = require('express').Router();
-const debug = require('debug')('app:segmentRoutes');
-const { admin } = require('googleapis/build/src/apis/admin');
-const banksController = require('../controllers/banksController');
-const Banks  = require('../models/bankModel');
+const debug = require('debug')('app:bankRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const bankValidators = require('../validators/bankValidator')
+const bankController = require('../controllers/banksController');
 
 
+router.post('/', verifyToken, verifyRole('admin'), async (req, res) => {
+    const { error } = bankValidators.validateCreation(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
 
-router.post('/create-banks', verifyToken, verifyRole('admin'), async (req, res) => {
+    const newBank = await bankController.create(req.body);
+    if(newBank instanceof Error) {
+        debug(newBank);
+        return res.status(400).send(newBank.message); };
     
-    const result = await banksController.create(req.body);
-    if(result instanceof Error) { return res.status(400).send(result.message); };
-    
-    res.status(201).send(result.newBanks);
+    res.status(201).send(newBank);
 });
 
-router.put('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
-      const banks = await banksController.update(req.params.id, req.body); 
-    if(banks instanceof Error) return res.status(400).send(banks.message);
+router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
+    const banks = await bankController.getAll();
+    if(banks.length === 0) return res.status(404).send('No banks found.');
 
-    res.status(200).send({message: 'Update Successful', banks: banks})
+    res.status(200).send(banks);
+});
+
+router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+    const bank = await bankController.get(req.params.id);
+    if(bank instanceof Error) {
+        debug(bank);
+        return res.status(400).send('Bank not found.');
+    };
+
+    res.status(200).send(bank);
+});
+
+router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+    const { error } = bankValidators.validateEdit(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+    
+    const bank = await bankController.update(req.params.id, req.body); 
+    if(bank instanceof Error) {
+        debug(bank);
+        return res.status(400).send(banks.message);
+    };
+    
+    res.status(200).send(bank);
 });
 
 
 router.delete('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
-    const result = await banksController.delete(req.params.id);
-    if(result instanceof Error) return res.status(401).send(result.message);
+    const deletedBank = await bankController.delete(req.params.id);
+    if(deletedBank instanceof Error) return res.status(401).send(deletedBank.message);
 
-    res.status(200).send(result);
+    res.status(200).send(deletedBank);
 });
-
 
 module.exports = router;

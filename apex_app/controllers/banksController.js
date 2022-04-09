@@ -1,27 +1,34 @@
-const _ = require('lodash');
 const Bank = require('../models/bankModel');
-const { admin } = require('googleapis/build/src/apis/admin');
-const res = require('express/lib/response');
-const ObjectId = require('mongoose').Types.ObjectId;
+const debug = require('debug')('app:bankModel');
+
 
 const banksNew = {  
-/**
-     *  function creates a segment.
-     * @param {object} requestBody 
-     * @param {object} bank 
-     * @returns new bank
-     */
-
-create: async function(requestBody) {
+    create: async function(requestBody) {
         try{
             const bankExists = await Bank.findOne( { code: requestBody.code } );
-            if(bankExists) throw new Error('Bank already exists');
+            if(bankExists) throw new Error('Bank already exists.');
 
-            const newBank = new Segment(requestBody);
-            await newBank.save();
+            const newBank = await Bank.create(requestBody);
 
-            return {newBank: newBank};
+            return  newBank;
 
+        }catch(exception) {
+            debug(exception);
+            return exception;
+        };
+    },
+
+    getAll: async function() {
+        return await Bank.find()
+    },
+
+    get: async function(id) {
+        try{
+            const bank = Bank.findById(id);
+            if(!bank) throw new Error('Bank does not exist.');
+
+            return bank;
+            
         }catch(exception) {
             return exception;
         };
@@ -32,29 +39,28 @@ create: async function(requestBody) {
             const bank = await Bank.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
             if(!bank) {
                 debug(bank);
-                throw new Error('Segment not found.')
+                throw new Error('Bank not found.');
             };
 
             return bank;
             
         }catch(exception) {
+            debug(exception);
             return exception;
-        }
+        };
     },
 
     delete: async function(id) {
         try{
-            const bank = await Bank.findById(id);
-            if(!bank) throw new Error('User not found.');
-
-            await bank.deleteOne();
+            const bank = await Bank.findByIdAndRemove(id);
+            if(!bank) throw new Error('bank not found.');
 
             return bank;
 
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     }
 
 

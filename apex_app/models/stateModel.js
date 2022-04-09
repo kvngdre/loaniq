@@ -3,22 +3,21 @@ const mongoose = require('mongoose');
 const stateSchema = new mongoose.Schema({
     code: {
         type: String,
-        required: true,
-        length: 2,
         uppercase: true,
         trim: true,
+        required: true
     },
 
     name: {
         type: String,
-        required: true,
-        trim: true
+        trim: true,
+        required: true
     },
 
     lgas: {
-        type: [String], 
+        type: [ String ],
+        required: true 
     }
-
 });
 
 const State = mongoose.model('State', stateSchema);

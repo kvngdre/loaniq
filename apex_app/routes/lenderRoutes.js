@@ -24,7 +24,7 @@ router.post('/create-admin/:id', async (req, res) => {
     res.status(201).send(adminUser);
 });
 
-router.put('/:id', async (req, res) => {
+router.patch('/:id', async (req, res) => {
     const { error } = lenderValidators.update(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
