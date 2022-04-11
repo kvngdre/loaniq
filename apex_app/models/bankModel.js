@@ -7,7 +7,7 @@ const bankSchema = new mongoose.Schema({
         required: true
     },
 
-    code: {
+code: {
         type: String,
         required: true,
         minLength: 3,

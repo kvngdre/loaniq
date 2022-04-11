@@ -2,6 +2,7 @@ const config = require('config');
 const mongoose = require('mongoose');
 const Customer = require('./customerModel');
 const User = require('../models/userModel');
+const Lender = require('../models/lenderModel');
 
 
 
@@ -176,6 +177,11 @@ const loanSchema = new mongoose.Schema({
     active: {
         type: Boolean,
         default: false
+    },
+
+    lenderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lender'
     }
      
 }, {
@@ -196,7 +202,7 @@ loanSchema.pre('save', function(next) {
         const year = endDate.getFullYear();
         
         this.expectedEndDate = `${year}-${month}-${day}`;
-    }
+    };
 
     next();
 });

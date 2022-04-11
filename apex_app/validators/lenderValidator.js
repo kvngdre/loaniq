@@ -81,6 +81,24 @@ const validators = {
         return schema.validate(lender);  
     },
 
+    validateSettings: function(settings) {
+        const schema = Joi.object({
+            lenderId: Joi.objectId().required(),
+            loanMetrics: Joi.object({
+                interestRate: Joi.number().required(),
+                upfrontFeePercentage: Joi.number().required(),
+                transferFee: Joi.number().required(),
+                minLoanAmount: Joi.number().required(),
+                maxLoanAmount: Joi.number().required(),
+                minNetPay: Joi.number().required(),
+                minTenor: Joi.number().required(),
+                maxTenor: Joi.number().required(),
+                dtiThreshold: Joi.number().required()
+            }).required()
+        });
+        return schema.validate(settings);
+    },
+
     delete: function(lender) {
         const schema = Joi.object({
             id: Joi.objectId().required(),

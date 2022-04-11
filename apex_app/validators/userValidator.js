@@ -47,12 +47,12 @@ const validators = {
     validateRegistration: {
         admin: function (user) {
             const schema = Joi.object({
-                name: nameSchema,
-                phone: phoneSchema,
-                email: emailSchema,
+                name: nameSchema.required(),
+                phone: phoneSchema.required(),
+                email: emailSchema.required(),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
-                password: passwordSchema
+                password: passwordSchema.required()
             });
 
             return schema.validate(user);
@@ -60,19 +60,19 @@ const validators = {
     
         credit: function (user) {
             const schema = Joi.object({
-                name: nameSchema,
-                phone: phoneSchema,
-                email: emailSchema,
+                name: nameSchema.required(),
+                phone: phoneSchema.required(),
+                email: emailSchema.required(),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
-                segments: Joi.array().items(Joi.objectId),
-                password: passwordSchema
+                segments: Joi.array().items(Joi.objectId).required(),
+                password: passwordSchema.required()
         
             });
         
             return schema.validate(user);
         },
-    
+        
         operations: function (user) {
             const schema = Joi.object({
                 name: nameSchema,
@@ -89,9 +89,9 @@ const validators = {
     
         loanAgent: function (user) {
             const schema = Joi.object({
-                name: nameSchema,
-                phone: phoneSchema,
-                email: emailSchema,
+                name: nameSchema.required(),
+                phone: phoneSchema.required(),
+                email: emailSchema.required(),
                 active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.alternatives()
@@ -99,7 +99,7 @@ const validators = {
                              .required(),
                 target: Joi.number().required(),
                 achieved: Joi.number(),
-                password: passwordSchema
+                password: passwordSchema.required()
         
             });
         

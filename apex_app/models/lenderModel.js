@@ -39,6 +39,14 @@ const lenderSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+
+    password: {
+        type: String,
+        minLength: 6,
+        maxLength: 1024,
+        required: true
+    },
+
     // TODO: Work on auto generating url
     lenderURL: {
         type: String,
@@ -51,11 +59,21 @@ const lenderSchema = new mongoose.Schema({
         ref: 'User'
     },
 
+    
     // TODO: Add OTP verification
     
 }, {
     timestamps: true
 });
+
+lenderSchema.methods.generateToken = function() {
+    return jwt.sign( {
+        lenderId: this._id, 
+        companyName: this.companyName, 
+        lastName: this.name.lastName,
+        email: this.email,
+    }, 'jwtPrivateKey');
+}
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

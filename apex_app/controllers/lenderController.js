@@ -1,6 +1,6 @@
 const Lender = require('../models/lenderModel');
+const LenderConfig = require('../models/lenderConfigModel');
 const userViewController = require('../controllers/userController');
-const { admin } = require('googleapis/build/src/apis/admin');
 
 const lender = {
     createLender: async function(requestBody) {
@@ -42,6 +42,17 @@ const lender = {
             if(!lender) throw new Error('Lender not found.');
 
             return lender;
+
+        }catch(exception) {
+            return exception;
+        };
+    },
+
+    setConfig: async function(id, requestBody) {
+        try{
+            const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId: id }, requestBody, { new: true, upsert: true } );
+            
+            return lenderConfig;
 
         }catch(exception) {
             return exception;

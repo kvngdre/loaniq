@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const config = require('config');
 Joi.objectId = require('joi-objectid')(Joi);
+const LoanConfig = require('../models/lenderConfigModel');
 
 
 const netPaySchema = Joi.number()

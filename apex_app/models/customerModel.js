@@ -141,7 +141,7 @@ const customerSchema = new mongoose.Schema({
         },
     
         idCardUrl: {
-            type: String``
+            type: String
         },
     
         idNumber: {
@@ -255,24 +255,6 @@ const customerSchema = new mongoose.Schema({
             ref: 'Bank',
             required: true
         },
-    },
-
-    loanAgent: {
-        id: {
-            type: String
-        },
-
-        firstName: {
-            type: String
-        },
-
-        lastName: {
-            type: String
-        },
-
-        phone: {
-            type: String
-        }
     },
 
     netPay: {

@@ -7,7 +7,6 @@ const loanValidators = require('../validators/loanValidator');
 const loanViewController = require('../controllers/loanController');
 const customerValidators = require('../validators/customerValidator');
 
-
 router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent', 'guest']), async (req, res) => {
     try{
         const customerObj = _.omit(req.body, ['loan']);
