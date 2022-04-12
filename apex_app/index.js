@@ -5,13 +5,10 @@ const nodeCron = require('node-cron');
 const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
-const configurations = require('./startUp/config');
 const checkForExpiringLoans = require('./tools/netPayManager/updateNetPay');
 
 
 // Setup
-// TODO: Don't forget to uncomment this.
-// configurations();
 connectDB();
 appRoutes(app);
 
@@ -23,5 +20,6 @@ debug(`ENV: ${app.get('env')}`);
 // Listener
 const port = process.env.PORT;
 app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
+    debug(`Listening on port ${port}`);
+    // console.log(`Listening on port ${port}`);
 });

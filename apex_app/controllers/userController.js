@@ -11,17 +11,13 @@ const ObjectId = require('mongoose').Types.ObjectId;
 
 const user = {
     getAll: async function(queryParam={}) {
-        if(queryParam) return await User.find(queryParam)
-                                        .select('-password -otp')
-                                        .sort('name.firstName');
-
-        return await User.find()
+        return await User.find(queryParam)
                           .select('-password -otp')
                           .sort('name.firstName');
     },
 
-    get: async function(queryParam) {
-        const user = await User.findOne(ObjectId.isValid(queryParam) ? { _id: queryParam } : queryParam ).select('-password -otp');
+    get: async function(request) {
+        const user = await User.findOne( { _id: request.params.id, lenderId: request.user.lenderId } ).select('-password -otp');
         if(!user) userDebug(user);
 
         return user;
@@ -34,7 +30,6 @@ const user = {
      * @returns new user
      */
     create: async function(requestBody, user) {
-        console.log(user)
         try {
             let role = requestBody.role;
             const allSegments = await Segment.find().select('_id')

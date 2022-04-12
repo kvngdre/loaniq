@@ -1,5 +1,3 @@
-const config = require("config");
-
 class Metrics {
     // constructor() {
     //     this.netPay = netPay

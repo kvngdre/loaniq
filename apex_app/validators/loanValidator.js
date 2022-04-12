@@ -1,6 +1,5 @@
 const Joi = require('@hapi/joi');
 require('dotenv').config();
-const config = require('config');
 Joi.objectId = require('joi-objectid')(Joi);
 const LoanConfig = require('../models/lenderConfigModel');
 
@@ -9,11 +8,7 @@ const {
     minLoanAmount,
     maxLoanAmount,
     minTenor,
-    maxTenor,
-    interestRate,
-    upfrontFeePercentage,
-    transferFee,
-    dtiThreshold
+    maxTenor
 } = process.env
 
 const netPaySchema = Joi.number()
@@ -78,10 +73,10 @@ const validators = {
     validateEdit: function(loan) {
         const schema = Joi.object({
             netPay: Joi.number()
-                       .min(config.get('loanMetrics.minNetPay')),
+                       .min(minNetPay),
 
             amount: Joi.number()
-                       .min(config.get('loanMetrics.minLoanAmount')),
+                       .min(minLoanAmount),
 
             amountInWords: Joi.string(),
 
