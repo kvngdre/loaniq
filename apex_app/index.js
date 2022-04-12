@@ -1,3 +1,4 @@
+require('dotenv').config();
 require('express-async-errors');
 const app = require('express')();
 const nodeCron = require('node-cron');
@@ -10,7 +11,7 @@ const checkForExpiringLoans = require('./tools/netPayManager/updateNetPay');
 
 // Setup
 // TODO: Don't forget to uncomment this.
-configurations();
+// configurations();
 connectDB();
 appRoutes(app);
 
@@ -20,7 +21,7 @@ debug(`ENV: ${app.get('env')}`);
 // const job = nodeCron.schedule("50-59 * * * * *", checkForExpiringLoans);
 
 // Listener
-const port = process.env.PORT || 8480;
+const port = process.env.PORT;
 app.listen(port, () => {
-    debug(`Listening on port ${port}`);
+    console.log(`Listening on port ${port}`);
 });

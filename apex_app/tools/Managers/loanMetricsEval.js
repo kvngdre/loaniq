@@ -52,13 +52,13 @@ class Metrics {
     };
 
     netPayValidator(netPay) {
-        return { result: netPay >= config.get('loanMetrics.minNetPay') };
+        return { result: netPay >= ('loanMetrics.minNetPay') };
     };
 
     dtiRatioCalculator(repayment, netPay) {
         const value = repayment / netPay;
 
-        return { result: value < config.get('loanMetrics.dtiThreshold'), value: value.toFixed(4) }
+        return { result: value < ('dtiThreshold'), value: value.toFixed(4) }
 
     }
 

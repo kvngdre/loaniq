@@ -1,9 +1,20 @@
-const config = require('config');
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Customer = require('./customerModel');
 const User = require('../models/userModel');
 const Lender = require('../models/lenderModel');
 
+const {
+    minNetPay,
+    minLoanAmount,
+    maxLoanAmount,
+    minTenor,
+    maxTenor,
+    interestRate,
+    upfrontFeePercentage,
+    transferFee,
+    dtiThreshold
+} = process.env
 
 
 const loanSchema = new mongoose.Schema({  
@@ -16,7 +27,7 @@ const loanSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
-        min: config.get('loanMetrics.minLoanAmount')
+        min: minLoanAmount
     },
    
     amountInWords: {
@@ -27,8 +38,8 @@ const loanSchema = new mongoose.Schema({
     tenor: {
         type: Number,
         required: true,
-        min: config.get('loanMetrics.minTenor'),
-        max: config.get('loanMetrics.maxTenor')
+        min: minTenor,
+        max: maxTenor
     },
 
     loanType: {
@@ -74,17 +85,17 @@ const loanSchema = new mongoose.Schema({
     
     interestRate: {
         type: Number,
-        default: () =>  config.get('loanMetrics.interestRate')
+        default: () =>  interestRate
     },
     
     upfrontFeePercentage: {
         type: Number,
-        default: () => config.get('loanMetrics.upfrontFeePercentage')
+        default: () => upfrontFeePercentage
     },
     
     transferFee: {
         type: Number,
-        default: config.get('loanMetrics.transferFee')
+        default: transferFee
     },
     // End of the line where admin user can edit
     
