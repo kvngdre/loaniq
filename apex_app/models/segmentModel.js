@@ -13,7 +13,8 @@ const segmentSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true
-    }
+    },
+    
 });
 
 const Segment = mongoose.model('Segment', segmentSchema);

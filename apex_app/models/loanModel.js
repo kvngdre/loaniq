@@ -67,11 +67,6 @@ const loanSchema = new mongoose.Schema({
     },
     // End of the line where credit user can edit.
 
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer'
-    },
-
     loanAgent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -161,11 +156,6 @@ const loanSchema = new mongoose.Schema({
         
     },
 
-    creditOfficer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
-
     dateAppOrDec: {
         type: Date
     },
@@ -177,6 +167,16 @@ const loanSchema = new mongoose.Schema({
     active: {
         type: Boolean,
         default: false
+    },
+    
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
+    },
+
+    creditOfficer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
 
     lenderId: {
@@ -195,13 +195,9 @@ loanSchema.pre('save', function(next) {
 
         const oneMonth = 2628000000;  // in milliseconds
         const tenorMilliseconds = oneMonth * this.recommendedTenor - 1;
+        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toLocaleDateString();
         
-        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds);
-        const day = endDate.getDate().toString().padStart(2, '0');
-        const month = (endDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = endDate.getFullYear();
-        
-        this.expectedEndDate = `${year}-${month}-${day}`;
+        this.expectedEndDate = endDate;
     };
 
     next();

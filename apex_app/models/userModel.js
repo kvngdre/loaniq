@@ -35,7 +35,6 @@ const userSchema = new mongoose.Schema({
     }, 
     
     phone: {
-        // TODO: figure how to validate no letters in the phone number.
         type: String,
         unique: true,
         trim: true,

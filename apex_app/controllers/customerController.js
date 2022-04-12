@@ -5,23 +5,24 @@ const User = require('../models/userModel');
 const pickRandomAgent = require('../utils/pickRandomAgent');
 
 const customer = {
-    getAll: async function(user) {
+    getAll: async function(user, queryParam={}) {
         if(user.role !== 'loanAgent') {
-            return await Customer.find()
-                                 .select( [ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ] )
+            return await Customer.find(queryParam)
+                                 .select('-createdAt -updatedAt -__v')
+                                 .populate('employmentInfo.segment')
                                  .sort('_id');
         };
 
         return await Customer.find( { 'loanAgents.id': user.id } )
-                                 .select([ 'name.firstName', 'name.lastName', 'employmentInfo.ippis', 'employmentInfo.segment', 'loans', 'loanAgent' ])
+                                 .select('-createdAt -updatedAt -__v')
                                  .sort('_id');
     },
 
-    get: async function(id, user) {
+    get: async function(user, queryParam) {
         try{
             if(user.role !== 'loanAgent') {
-                const customer = await Customer.findOne( ObjectId.isValid(id) ? { _id: id } : { 'employmentInfo.ippis': id } )
-                                               .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1, 'loanAgent': 1 } );
+                const customer = await Customer.findOne( queryParam )
+                                               .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1 } );
 
                 if(!customer) throw new Error('Customer not found.');
 
@@ -53,34 +54,34 @@ const customer = {
             newCustomer.validateSegment();
 
             // assigning agent
-            let agent
-            if(!request.body.loanAgent && request.user.role !== 'loanAgent' ) {
-                console.log('branch 1');
-                agent =  await pickRandomAgent('loanAgent', newCustomer.employmentInfo.segment);
-                if(!agent) {
-                    debug(agent);
-                    throw new Error('Agent does not exist or is inactive.');
-                };
-            }else if (request.body.loanAgent && request.user.role !== 'loanAgent') {
-                console.log('branch 2');
-                agent = await User.findOne( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment } );
-                if(!agent) {
-                    debug(agent);
-                    throw new Error('Agent does not exist or is inactive.');
-                };
-            }else{
-                console.log('is loan agent');
-                agent = await User.findOne( { _id: request.user.id, active: true, segments: request.body.employmentInfo.segment  } );
-                if(!agent) {
-                    debug(agent);
-                    throw new Error('You are not allowed to create a customer in this segment.');
-                };
-            };
+            // let agent
+            // if(!request.body.loanAgent && request.user.role !== 'loanAgent' ) {
+            //     console.log('branch 1');
+            //     agent =  await pickRandomAgent('loanAgent', newCustomer.employmentInfo.segment);
+            //     if(!agent) {
+            //         debug(agent);
+            //         throw new Error('Agent does not exist or is inactive.');
+            //     };
+            // }else if (request.body.loanAgent && request.user.role !== 'loanAgent') {
+            //     console.log('branch 2');
+            //     agent = await User.findOne( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment } );
+            //     if(!agent) {
+            //         debug(agent);
+            //         throw new Error('Agent does not exist or is inactive.');
+            //     };
+            // }else{
+            //     console.log('is loan agent');
+            //     agent = await User.findOne( { _id: request.user.id, active: true, segments: request.body.employmentInfo.segment  } );
+            //     if(!agent) {
+            //         debug(agent);
+            //         throw new Error('You are not allowed to create a customer in this segment.');
+            //     };
+            // };
             
-            newCustomer.loanAgent.id = agent._id.toString();
-            newCustomer.loanAgent.firstName = agent.name.firstName;
-            newCustomer.loanAgent.lastName = agent.name.lastName;
-            newCustomer.loanAgent.phone = agent.phone;
+            // newCustomer.loanAgent.id = agent._id.toString();
+            // newCustomer.loanAgent.firstName = agent.name.firstName;
+            // newCustomer.loanAgent.lastName = agent.name.lastName;
+            // newCustomer.loanAgent.phone = agent.phone;
             
             await newCustomer.save();                                                                                                                                                                                                                                                                                                                                                                    
 

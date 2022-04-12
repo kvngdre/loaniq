@@ -2,6 +2,31 @@ const Joi = require('joi');
 const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
 
+const phoneSchema = Joi.string()
+                       .pattern(/^0([7-9])[0-9]{9}$/)
+                       .message({
+                            "string.pattern.base": "Invalid phone number."
+                            });
+
+const emailSchema = Joi.string()
+                 .email()
+                 .min(10)
+                 .max(255);
+
+const passwordSchema = joiPassword.string()
+                            .minOfUppercase(1)
+                            .minOfSpecialCharacters(2)
+                            .minOfNumeric(2)
+                            .noWhiteSpaces()
+                            .min(6)
+                            .max(255)
+                            .messages({
+                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                                });
+                            
 const validators = {
     creation: function(lender) {
         const schema = Joi.object({
@@ -17,14 +42,50 @@ const validators = {
 
             category: Joi.string(),
 
-            phone: Joi.string()
-                      .length(11),
+            phone: phoneSchema.required(),
 
-            email: Joi.string()
-                      .email()
-                      .required(),
+            email: emailSchema.required(),
+
+            password: passwordSchema.required(),
 
             lenderURL: Joi.string()
+        });
+        return schema.validate(lender);
+    },
+
+    validateRegVerification: function(lender) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            otp: Joi.string()
+                    .required()
+                    .pattern(/^[0-9]{6}$/)
+                    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
+            password: passwordSchema.required()
+
+        });
+        return schema.validate(lender);
+    },
+
+    validateLogin: function(lender) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            password: passwordSchema.required()
+        });
+        return schema.validate(lender);
+    },
+
+    validateForgotPassword: function(lender) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            newPassword: passwordSchema.required()
+        });
+        return schema.validate(lender);
+    },
+
+    validateChangePassword: function(lender) {
+        const schema = Joi.object({
+            email: emailSchema,
+            newPassword: passwordSchema
         });
         return schema.validate(lender);
     },
@@ -58,7 +119,6 @@ const validators = {
                         })
     
         });
-    
         return schema.validate(user);
     },
 

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('./userModel');
+const jwt = require('jsonwebtoken');
 
 const lenderSchema = new mongoose.Schema({
     companyName: {
@@ -37,6 +38,7 @@ const lenderSchema = new mongoose.Schema({
     email: {
         type: String,
         unique: true,
+        trim: true,
         required: true
     },
 
@@ -45,6 +47,18 @@ const lenderSchema = new mongoose.Schema({
         minLength: 6,
         maxLength: 1024,
         required: true
+    },
+
+    otp: {
+        type: String
+    },
+
+    active: {
+        type: Boolean
+    },
+
+    role: {
+        type: String
     },
 
     // TODO: Work on auto generating url
@@ -59,19 +73,17 @@ const lenderSchema = new mongoose.Schema({
         ref: 'User'
     },
 
-    
-    // TODO: Add OTP verification
-    
 }, {
     timestamps: true
-});
+}); 
 
 lenderSchema.methods.generateToken = function() {
     return jwt.sign( {
         lenderId: this._id, 
         companyName: this.companyName, 
-        lastName: this.name.lastName,
         email: this.email,
+        phone: this.phone,
+        role: this.role,
     }, 'jwtPrivateKey');
 }
 

@@ -9,7 +9,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 
 
 const user = {
-    getAll: async function(queryParam) {
+    getAll: async function(queryParam={}) {
         if(queryParam) return await User.find(queryParam)
                                         .select('-password -otp')
                                         .sort('name.firstName');
@@ -30,19 +30,19 @@ const user = {
      *  function creates a user.
      * @param {object} requestBody 
      * @param {object} user 
-     * @param {string} lenderID 
      * @returns new user
      */
-    create: async function(requestBody, user, lenderID) {
+    create: async function(requestBody, user) {
+        console.log(user)
         try {
             let role = requestBody.role;
             const allSegments = await Segment.find().select('_id')
 
             switch(role) {
                 case "admin":
-                    if(user && user.role === 'admin') throw new Error('Cannot create role.')
+                    if(user.role !== 'lender') throw new Error('Cannot create role.')
 
-                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
@@ -60,12 +60,12 @@ const user = {
                         otp: OTP,
                         role,
                         active: requestBody.active,
-                        lenderId: lenderID
+                        lenderId: user.lenderId
                     });
                     break;
 
                 case "credit":
-                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
@@ -89,7 +89,7 @@ const user = {
                     break;
 
                 case "operations":
-                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
@@ -112,8 +112,8 @@ const user = {
                     break;
                 
                 case "loanAgent":
-                        // Check if admin email has been registered.
-                    var doesExist = await User.findOne( {email: requestBody.email} );
+                    // Check if admin email has been registered.
+                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
@@ -137,6 +137,8 @@ const user = {
                     });
                     break;
             };
+
+            await newUser.save();
                        
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
@@ -147,8 +149,6 @@ const user = {
             };
             userDebug('Email sent successfully');
             
-            await newUser.save();
-
             // OTP will expire after two minutes
             // TODO: Implement OTP in user model.
             setTimeout(() => {
@@ -173,7 +173,7 @@ const user = {
 
             // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(isValidPassword instanceof Error) throw new Error(isValidPassword.message);
+            if(!isValidPassword) throw new Error('Incorrect email or password.');
 
             // Check if user already verified.
             if(user.emailVerify) throw new Error('Email already verified.');
@@ -197,7 +197,7 @@ const user = {
             if(!user) throw new Error('Invalid email or password.');
             
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(isValidPassword instanceof Error)  throw new Error(isValidPassword.message);
+            if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
             const token = user.generateToken();
 

@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const ObjectId = require('mongoose').Types.ObjectId;
 const debug = require('debug')('app:customerRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
@@ -13,7 +14,7 @@ router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async
 });
 
 router.get('/:id', verifyToken, async (req, res) => {
-    const customer = await customerViewController.get(req.params.id, req.user);
+    const customer = await customerViewController.get( req.user, ObjectId.isValid(req.params.id) ? { _id: req.params.id } : { 'employmentInfo.ippis': req.params.id } );
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
     res.status(200).send(customer);

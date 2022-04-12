@@ -102,7 +102,6 @@ const validators = {
                 password: passwordSchema.required()
         
             });
-        
             return schema.validate(user);
         },
     },
@@ -118,38 +117,34 @@ const validators = {
             target: Joi.number(),
             active: Joi.boolean()
         });
-
         return schema.validate(user);
     },
 
     validateRegVerification: function(user) {
         const schema = Joi.object({
-            email: emailSchema,
+            email: emailSchema.required(),
             otp: Joi.string()
                     .required()
                     .pattern(/^[0-9]{6}$/)
                     .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-            password: passwordSchema
+            password: passwordSchema.required()
         });
-
         return schema.validate(user);
     },
 
     validateLogin: function(user) {
         const schema = Joi.object({
-            email: emailSchema,
-            password: passwordSchema
+            email: emailSchema.required(),
+            password: passwordSchema.required()
         });
-
         return schema.validate(user);
     },
     
     validateForgotPassword: function(user) {
         const schema = Joi.object({
-            email: emailSchema,
-            newPassword: passwordSchema
+            email: emailSchema.required(),
+            newPassword: passwordSchema.required()
         });
-
         return schema.validate(user);
     },
 
@@ -158,7 +153,6 @@ const validators = {
             email: emailSchema,
             newPassword: passwordSchema
         });
-
         return schema.validate(user);
     }
 }
