@@ -19,7 +19,9 @@ const tenorSchema = Joi.number()
 const validators = {
     validateCreation: {
         loanRequest: function(loan) {
-            const schema = Joi.object({     
+            const schema = Joi.object({  
+                slug: Joi.string(),
+                
                 netPay: netPaySchema,
     
                 amount: amountSchema,
@@ -54,7 +56,6 @@ const validators = {
                 tenor: tenorSchema,
     
                 loanType: Joi.string()
-                             .required()
             });
     
         return schema.validate(loan);

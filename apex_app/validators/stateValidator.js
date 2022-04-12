@@ -17,7 +17,7 @@ const validators = {
         return schema.validate(state);
     },
 
-    validateEdi(state) {
+    validateEdit(state) {
         const schema = Joi.object({
             code: stateCodeSchema,
             name: stateNameSchema,

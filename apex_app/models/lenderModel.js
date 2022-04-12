@@ -9,6 +9,12 @@ const lenderSchema = new mongoose.Schema({
         trim: true,
     },
 
+    slug: {
+        type: String,
+        unique: true,
+        required: true
+    },
+
     companyAddress: {
         type: String,
         required: true,

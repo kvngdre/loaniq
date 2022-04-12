@@ -9,30 +9,33 @@ const phoneSchema = Joi.string()
                             });
 
 const emailSchema = Joi.string()
-                 .email()
-                 .min(10)
-                 .max(255);
+                       .email()
+                       .min(10)
+                       .max(255);
 
 const passwordSchema = joiPassword.string()
-                            .minOfUppercase(1)
-                            .minOfSpecialCharacters(2)
-                            .minOfNumeric(2)
-                            .noWhiteSpaces()
-                            .min(6)
-                            .max(255)
-                            .messages({
-                                'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                                });
-                            
+                                  .minOfUppercase(1)
+                                  .minOfSpecialCharacters(2)
+                                  .minOfNumeric(2)
+                                  .noWhiteSpaces()
+                                  .min(6)
+                                  .max(255)
+                                  .messages({
+                                    'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
+                                    'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
+                                    'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
+                                    'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                                    });
+                                
 const validators = {
     creation: function(lender) {
         const schema = Joi.object({
             // TODO: change values to required.
             companyName: Joi.string()
                             .required(),
+            
+            slug: Joi.string()
+                     .required(),
 
             companyAddress: Joi.string()
                                .required(),

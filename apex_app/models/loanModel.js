@@ -155,7 +155,8 @@ const loanSchema = new mongoose.Schema({
         }
         
     },
-
+    
+    // TODO: remember to correct mongodb time
     dateAppOrDec: {
         type: Date
     },

@@ -286,6 +286,9 @@ customerSchema.methods.validateSegment = async function() {
         case 'NC':
             this.employmentInfo.segment = segments.find(segment => segment.code === "NCS")._id;
             break;
+            
+        default:
+
     };
 }
 

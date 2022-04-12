@@ -24,27 +24,7 @@ const configSchema = new mongoose.Schema({
             required: true
         },
 
-        minLoanAmount: {
-            type: Number,
-            required: true
-        },
-
-        maxLoanAmount: {
-            type: Number,
-            required: true
-        },
-
         minNetPay: {
-            type: Number,
-            required: true
-        },
-
-        minTenor: {
-            type: Number,
-            required: true
-        },
-
-        maxTenor: {
             type: Number,
             required: true
         },

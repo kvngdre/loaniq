@@ -10,12 +10,12 @@ const loans = {
         return await loanManager.createLoan(request);
     },
 
-    getAll: async function(user, queryParam) {
-        return await loanManager.getAllLoans(user);
+    getAll: async function(user) {
+        return await loanManager.getAll(user);
     },
 
-    get: async function(id, user) {
-        return await loanManager.get(id, user)
+    getOne: async function(id, user) {
+        return await loanManager.getOne(id, user)
     },
 
     edit: async function(request) {

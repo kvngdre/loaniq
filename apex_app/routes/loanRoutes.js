@@ -34,15 +34,16 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
     res.status(200).send(loanRequest);
 });
 
-router.get('/', verifyToken, async (req, res) => {
-    const loans = await loanViewController.getAll(req.user, req.body);
-    if(loans.length === 0) return res.status(404).send('No loans found.');
+router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+    const loans = await loanViewController.getAll(req.user);
+    console.log(loans);
+    // if(loans.length === 0) return res.status(404).send('No loans found.');
 
     res.status(200).send(loans);
 });
 
-router.get('/:id', verifyToken, async (req, res) => {
-    const loan = await loanViewController.get(req.params.id, req.user);
+router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+    const loan = await loanViewController.getOne(req.params.id, req.user);
     if(!loan) return res.status(404).send('Loan not found.');
 
     res.status(200).send(loan);

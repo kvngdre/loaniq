@@ -52,36 +52,6 @@ const customer = {
             if(newCustomer instanceof Error) throw(newCustomer.message);
             
             newCustomer.validateSegment();
-
-            // assigning agent
-            // let agent
-            // if(!request.body.loanAgent && request.user.role !== 'loanAgent' ) {
-            //     console.log('branch 1');
-            //     agent =  await pickRandomAgent('loanAgent', newCustomer.employmentInfo.segment);
-            //     if(!agent) {
-            //         debug(agent);
-            //         throw new Error('Agent does not exist or is inactive.');
-            //     };
-            // }else if (request.body.loanAgent && request.user.role !== 'loanAgent') {
-            //     console.log('branch 2');
-            //     agent = await User.findOne( { _id: request.body.loanAgent, active: true, segments: request.body.employmentInfo.segment } );
-            //     if(!agent) {
-            //         debug(agent);
-            //         throw new Error('Agent does not exist or is inactive.');
-            //     };
-            // }else{
-            //     console.log('is loan agent');
-            //     agent = await User.findOne( { _id: request.user.id, active: true, segments: request.body.employmentInfo.segment  } );
-            //     if(!agent) {
-            //         debug(agent);
-            //         throw new Error('You are not allowed to create a customer in this segment.');
-            //     };
-            // };
-            
-            // newCustomer.loanAgent.id = agent._id.toString();
-            // newCustomer.loanAgent.firstName = agent.name.firstName;
-            // newCustomer.loanAgent.lastName = agent.name.lastName;
-            // newCustomer.loanAgent.phone = agent.phone;
             
             await newCustomer.save();                                                                                                                                                                                                                                                                                                                                                                    
 
