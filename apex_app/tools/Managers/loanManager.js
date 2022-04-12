@@ -1,3 +1,4 @@
+require('dotenv').config();
 const _ = require('lodash');
 const debug = require('debug')('app:loanMgr')
 const Loan = require('../../models/loanModel');

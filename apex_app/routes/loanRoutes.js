@@ -1,3 +1,4 @@
+require('dotenv').config();
 const _ = require('lodash');
 const router = require('express').Router();
 const debug = require('debug')('app:loanRoute');

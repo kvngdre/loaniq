@@ -1,17 +1,25 @@
+require('dotenv').config();
 const config = require('config');
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 
+// Importing dotenv
+const {
+    clientID,
+    clientSecret,
+    refreshToken,
+    senderEmailAddress,
+    oauthPlayground
+} = process.env
+
 // Setting up oauth2Client
 const oauth2Client = new google.auth.OAuth2(
-    config.get('mail.clientID'),
-    config.get('mail.clientSecret'),
-    config.get('mail.refreshToken'),
-    config.get('mail.oauthPlayground')
+    clientID,
+    clientSecret,
+    refreshToken,
+    oauthPlayground
 );
-oauth2Client.setCredentials( {refresh_token: config.get('mail.refreshToken')} );
-const senderEmailAddress = config.get('mail.senderEmailAddress');
-
+oauth2Client.setCredentials({ refreshToken })
 
 /**
  * Create a nodeMail transporter
@@ -27,10 +35,10 @@ async function getTransporter() {
             auth: {
                 type: 'OAuth2',
                 user: senderEmailAddress,
-                clientId: config.get('mail.clientID'),
-                clientSecret: config.get('mail.clientSecret'),
-                refreshToken: config.get('mail.refreshToken'),
-                accessToken
+                clientId: clientID,
+                clientSecret: clientSecret,
+                refreshToken: refreshToken,
+                accessToken: accessToken
             }
         });
         return transporter;
