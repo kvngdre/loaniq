@@ -14,12 +14,12 @@ const lender = {
             if(doesExist) throw new Error('Email has already been taken.');
 
             // Encrypting password
-            var saltRounds = 10;
-            var salt = await bcrypt.genSalt(saltRounds);
-            var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+            const saltRounds = 10;
+            const salt = await bcrypt.genSalt(saltRounds);
+            const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
             requestBody.password = encryptedPassword;
 
-            var OTP = generateOTP();
+            const OTP = generateOTP();
             requestBody.otp = OTP;
 
             requestBody.role = "lender";

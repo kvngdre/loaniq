@@ -1,4 +1,5 @@
 require('dotenv').config();
+const debug = require('debug')('mailJs');
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 
@@ -18,7 +19,8 @@ const oauth2Client = new google.auth.OAuth2(
     refreshToken,
     oauthPlayground
 );
-oauth2Client.setCredentials({ refreshToken })
+
+oauth2Client.setCredentials({ refresh_token: refreshToken });
 
 /**
  * Create a nodeMail transporter
@@ -43,6 +45,7 @@ async function getTransporter() {
         return transporter;
 
     }catch(exception) {
+        debug(exception);
         return exception;
     };
 }

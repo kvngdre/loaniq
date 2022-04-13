@@ -101,7 +101,7 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const { error } = userValidator.validateEdit(req.body);
     if(error)  return res.status(400).send(error.details[0].message);
     
-    const user = await userViewController.update(req.params.id, req.body);
+    const user = await userViewController.update(req.params.id, req.user, req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
     res.status(200).send({message: 'Update Successful', user})

@@ -246,9 +246,9 @@ const user = {
     },
 
     
-    update: async function(id, requestBody) {
+    update: async function(id, requestUser, requestBody) {
         try{
-            const user = await User.findByIdAndUpdate( { _id: id }, requestBody, {new: true});
+            const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true});
             if(!user) {
                 userDebug(user);
                 throw new Error('User not found.');
