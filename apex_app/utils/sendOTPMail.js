@@ -54,11 +54,11 @@ async function getTransporter() {
 /**
  * Sends OTP to user email
  * @param {string} userEmailAddress 
- * @param {string} firstName 
+ * @param {string} name 
  * @param {number} generatedOTP 
  * @returns {Promise}
  */
-const sendOTP = async function(userEmailAddress, firstName, generatedOTP) {
+const sendOTP = async function(userEmailAddress, name, generatedOTP) {
     const transporter = await getTransporter();
 
     // Defining the mailing options
@@ -69,7 +69,7 @@ const sendOTP = async function(userEmailAddress, firstName, generatedOTP) {
         html: 
         `<div style="max-width: 700px; margin:auto; border: 10px solid #dd; padding: 50px 20px; font-size: 110%;">
         <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to the Apex Email Verification.</h2>
-        <p> Hi ${firstName || "User"},
+        <p> Hi ${name},
         </p>
         <p>Congratulations! You're almost set. Your verification code is <b>${generatedOTP}</b>.
         </p>
