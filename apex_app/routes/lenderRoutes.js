@@ -5,8 +5,6 @@ const verifyToken = require('../middleware/verifyToken');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderViewController = require('../controllers/lenderController');
 
-
-
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.creation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
@@ -25,11 +23,17 @@ router.get('/', async (req, res) => {
     res.status(200).send(lenders);
 });
 
+router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
+    const settings = await lenderViewController.getSettings( { lenderId: req.user.lenderId } );
+
+    res.status(200).send(settings);
+});
+
 router.get('/:id', async (req, res) => {
     const lender = await lenderViewController.get(req.params.id);
     if(!lender) return res.status(404).send('Lender not found.');
 
-    res.status(200).send(lender);
+    res.status(200).send(lender);   
 });
 
 router.post('/verify-lender', async (req, res) => {
@@ -96,11 +100,19 @@ router.patch('/:id', verifyToken, verifyRole('lender'), async (req, res) => {
 router.put('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
     const { error } = lenderValidators.validateSettings(req.body);
     if(error) return res.status(400).send(error.details[0].message);
-
-    const settings = await lenderViewController.setConfig("622b84182dda2a2a7dac756d", req.body);
+    
+    const settings = await lenderViewController.setConfig(req.user.lenderId, req.body);
     if(settings instanceof Error) return res.status(400).send(settings.message);
 
     res.status(201).send(settings);
+});
+
+router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
+    console.log(req.user.lenderId);
+    return
+    const settings = await lenderViewController.getSettings({lenderId: req.user.lenderId});
+
+    res.status(200).send(settings);
 });
 
 router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {

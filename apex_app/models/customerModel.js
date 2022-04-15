@@ -250,7 +250,7 @@ const customerSchema = new mongoose.Schema({
             required: true
         },
     
-        bankName: {
+        bank: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Bank',
             required: true
@@ -262,7 +262,6 @@ const customerSchema = new mongoose.Schema({
     }
 
 }, {
-    
     timestamps: true
 });
 
@@ -286,9 +285,8 @@ customerSchema.methods.validateSegment = async function() {
         case 'NC':
             this.employmentInfo.segment = segments.find(segment => segment.code === "NCS")._id;
             break;
-            
         default:
-
+            
     };
 }
 

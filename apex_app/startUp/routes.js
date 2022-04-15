@@ -24,5 +24,5 @@ module.exports = function(app) {
     app.use('/api/customers', customerRoutes);
 
     // Error handling middleware
-    app.use(errorHandler);
+    // app.use(errorHandler);
 }

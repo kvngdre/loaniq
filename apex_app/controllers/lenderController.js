@@ -22,8 +22,6 @@ const lender = {
             const OTP = generateOTP();
             requestBody.otp = OTP;
 
-            requestBody.role = "lender";
-
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, OTP);
             debug(mailResponse);
@@ -59,6 +57,18 @@ const lender = {
         return lender;
     },
 
+    getSettings: async function(queryParam) {
+        console.log()
+        try{
+            const lenderSettings = LenderConfig.findOne( queryParam );
+            if(!lenderSettings) throw new Error('No settings for lender.');
+        
+            return lenderSettings;
+        }catch(exception) {
+            return exception;
+        };
+    },
+
     createAdmin: async function(request){
         try{
             const adminUsers = await userViewController.getAll( { lenderId: request.user.id, role: 'admin' } );
@@ -85,7 +95,6 @@ const lender = {
 
             // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
-            console.log(isValidPassword);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
             // Check if lender already verified.
@@ -107,7 +116,10 @@ const lender = {
     login: async function(requestBody) {
         try{
             let lender = await Lender.findOne( { email: requestBody.email } );
-            if(!lender) throw new Error('Invalid email or password.');
+            if(!lender) {
+                debug(lender);
+                throw new Error('Invalid email or password.');
+            };
             
             const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
@@ -176,6 +188,7 @@ const lender = {
 
     setConfig: async function(id, requestBody) {
         try{
+            requestBody.lenderId = id;
             const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId: id }, requestBody, { new: true, upsert: true } );
             
             return lenderConfig;

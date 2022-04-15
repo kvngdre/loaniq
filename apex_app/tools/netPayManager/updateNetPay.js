@@ -4,7 +4,6 @@ async function checkForExpiringLoans() {
     const today = new Date().toLocaleDateString();
 
     const loans = await Loan.find( { active: true, expectedEndDate: today } );
-    console.log(loans);
 
     if(loans.length > 0) {
         loans.forEach(async (loan) => {

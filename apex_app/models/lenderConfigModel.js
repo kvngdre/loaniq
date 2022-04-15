@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Lender = require('../models/lenderModel');
+const Segment = require('../models/segmentModel');
+
 
 const configSchema = new mongoose.Schema({
     lenderId: {
@@ -7,6 +9,30 @@ const configSchema = new mongoose.Schema({
         ref: 'Lender',
         required: true
     },
+
+    slug: {
+        type: String
+    },
+
+    segments: [{
+            segment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Segment'
+            },
+
+            minLoanAmount: {
+                type: Number,
+            },
+            maxLoanAmount: {
+                type: Number,
+            },
+            minTenor: {
+                type: Number,
+            },
+            maxTenor: {
+                type: Number,
+            }
+        }],
 
     loanMetrics: {
         interestRate: {

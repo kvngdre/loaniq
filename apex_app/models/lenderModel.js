@@ -64,7 +64,8 @@ const lenderSchema = new mongoose.Schema({
     },
 
     role: {
-        type: String
+        type: String,
+        default: 'lender'
     },
 
     // TODO: Work on auto generating url

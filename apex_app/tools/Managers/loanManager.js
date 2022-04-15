@@ -1,22 +1,20 @@
 require('dotenv').config();
 const _ = require('lodash');
 const debug = require('debug')('app:loanMgr')
+const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
-const ObjectId = require('mongoose').Types.ObjectId;
-const Metrics = require('../../tools/Managers/loanMetricsEval');
+const Customer = require('../../models/customerModel');
 const pickRandomUser = require('../../utils/pickRandomAgent');
+const Metrics = require('../../tools/Managers/loanMetricsEval');
 const userViewController = require('../../controllers/userController');
 const customerViewController = require('../../controllers/customerController');
+
 
 const metrics = new Metrics();
 
 const manager = {
-    createLoan: async function(request) {
+    createLoan: async function(customer, loanMetricsObj, request) {
         try{
-            const customer = await customerViewController.get( request.user, ObjectId.isValid(request.body.customer) ? { _id: request.body.customer } : {'employmentInfo.ippis': request.body.customer} );
-            if(customer instanceof Error) throw customer;
-
-            // Find the loan agent
             const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
                                    .sort( { createdAt: -1 } )
                                    .limit(1);
@@ -25,7 +23,7 @@ const manager = {
             if(loan.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment);
             }else{
-                agent = await userViewController.get(loan.loanAgent);
+                agent = await userViewController.get( { _id: loan[0].loanAgent } );
                 request.body.loanType = "topUp";
             };
             
@@ -43,6 +41,9 @@ const manager = {
             request.body.lenderId = request.user.lenderId;
             request.body.loanAgent = agent._id;
             request.body.creditOfficer = creditOfficer._id;
+            request.body.interestRate = loanMetricsObj.interestRate;
+            request.body.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
+            request.body.transferFee = loanMetricsObj.transferFee;
             const newLoan =  new Loan(request.body);
 
             // setting loan metrics
@@ -54,8 +55,8 @@ const manager = {
             // setting validation metics
             newLoan.metrics.ageValid = metrics.ageValidator(customer.dateOfBirth);
             newLoan.metrics.serviceLengthValid = metrics.serviceLengthValidator(customer.employmentInfo.dateOfEnlistment);
-            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay);
-            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay);
+            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay, loanMetricsObj.minNetPay);
+            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay, loanMetricsObj.dtiThreshold);
                         
             // await customer.save();
             await newLoan.save();
@@ -68,7 +69,7 @@ const manager = {
     },
 
     // TODO: write func for validating ippis 
-    createLoanRequest: async function(request) {
+    createLoanRequest: async function(loanMetricsObj, request) {
         try{
             if(request.user.role === 'guest') {
                 const lender = await Lender.findOne( {slug: request.body.slug} );
@@ -76,7 +77,7 @@ const manager = {
             };
 
             let customer;
-            customer = await customerViewController.get(request.user, { 'employmentInfo.ippis': request.body.employmentInfo.ippis, bvn: request.body.bvn } );   
+            customer = await customerViewController.get(request.user, { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
             if(customer.message && customer.stack) {
                 // if customer does not exist.
                 customer = await customerViewController.create( _.omit(request, ['body.loan']) );
@@ -91,7 +92,7 @@ const manager = {
             if(loan.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment)
             }else{
-                agent = await userViewController.get(loan.loanAgent);
+                agent = await userViewController.get( { _id: loan[0].loanAgent } );
                 request.body.loan.loanType = "topUp";
             };
             
@@ -112,6 +113,9 @@ const manager = {
             request.body.loan.customer = customer._id;
             request.body.loan.loanAgent = agent._id;
             request.body.loan.creditOfficer = creditOfficer._id;
+            request.body.loan.interestRate = loanMetricsObj.interestRate;
+            request.body.loan.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
+            request.body.loan.transferFee = loanMetricsObj.transferFee;
             const newLoan = new Loan(request.body.loan);
             
             // setting loan metrics
@@ -123,8 +127,8 @@ const manager = {
             // setting validation metics
             newLoan.metrics.ageValid = metrics.ageValidator(customer.dateOfBirth);
             newLoan.metrics.serviceLengthValid = metrics.serviceLengthValidator(customer.employmentInfo.dateOfEnlistment);
-            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay);
-            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay);
+            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay, loanMetricsObj.minNetPay);
+            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay, loanMetricsObj.dtiThreshold);
 
             await newLoan.save();
             
@@ -135,19 +139,39 @@ const manager = {
         };
     },
 
-    getAll: async function(user) {
+    getAll: async function(user, queryParam={}) {
+        queryParam.lenderId = user.lenderId;
+
         if(user.role !== 'loanAgent') {
-            const loans = await Loan.find( { lenderId: user.lenderId } )
-                                        // .populate('loanAgent')
-                                    .select( { _id: 1, amount: 1, customer: 1,  createdAt: 1, loanAgent: 1, lenderId: 1 } )
-                                    .sort( { createdAt: -1 } )
-                                    .count();
+            const loans = await Loan.find( queryParam )
+                                    .select('_id status amount recommendedAmount tenor recommendedTenor customer createdAt netPay dateAppOrDec lenderId')
+                                    .select('-lenderId')
+                                    .populate({path: 'customer', select: 'name employmentInfo.ippis'})
+                                    .sort( { createdAt: -1 } );
             
             return loans;
         };
 
-        const loans = await Loan.find( { loanAgent: user.id, lenderId: user.lenderId } )
-                                .populate('loanAgent')
+        queryParam.loanAgent = user.id
+        const loans = await Loan.find( queryParam )
+                                .sort('_id');
+            
+        return loans; 
+    },
+
+    getDisbursement: async function(user, queryParam={}) {
+        queryParam.lenderId = user.lenderId;
+
+        if(user.role !== 'loanAgent') {
+            const loans = await Loan.find( queryParam )
+                                    .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
+                                    .populate({path: 'customer', model: Customer, populate:[{path:'accountInfo.bank', model: Bank, select: '-_id name'}], select: '-_id bvn employmentInfo.ippis accountInfo'})                                    .sort( { createdAt: -1 } );
+            
+            return loans;
+        };
+
+        queryParam.loanAgent = user.id
+        const loans = await Loan.find( queryParam )
                                 .sort('_id');
             
         return loans; 

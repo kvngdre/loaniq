@@ -48,7 +48,7 @@ const employmentSchema = Joi.object({
     segment: Joi.objectId(),
     
     ippis: Joi.string()
-              .pattern(/([a-zA-z]{2,3})?[0-9]{3,7}/)
+              .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
               .messages({'string.pattern.base': '{#label} Invalid IPPIS number.'}),
 
     companyLocation: Joi.string().lowercase(),
@@ -98,7 +98,7 @@ const accountInfoSchema = Joi.object({
     salaryAccountNumber: Joi.string()
                             .pattern(/^[0-9]{10}$/),
 
-    bankName: Joi.objectId()
+    bank: Joi.objectId()
 });
 
 const validators = {
@@ -126,8 +126,6 @@ const validators = {
             nok: nokSchema.required(),
             
             accountInfo: accountInfoSchema.required(),
-
-            loanAgent: Joi.objectId(),
 
             netPay: Joi.number()
         });
@@ -160,8 +158,6 @@ const validators = {
             
             accountInfo: accountInfoSchema,
             
-            loanAgent: Joi.objectId(),
-
             netPay: Joi.number()
         });
 

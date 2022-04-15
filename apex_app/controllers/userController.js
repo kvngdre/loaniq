@@ -16,8 +16,8 @@ const user = {
                           .sort('name.firstName');
     },
 
-    get: async function(request) {
-        const user = await User.findOne( { _id: request.params.id, lenderId: request.user.lenderId } ).select('-password -otp');
+    get: async function(queryParam) {
+        const user = await User.findOne( queryParam ).select('-password -otp');
         if(!user) userDebug(user);
 
         return user;

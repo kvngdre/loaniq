@@ -1,21 +1,8 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
+const Bank = require('../models/bankModel');
 const Customer = require('./customerModel');
 const User = require('../models/userModel');
 const Lender = require('../models/lenderModel');
-
-const {
-    minNetPay,
-    minLoanAmount,
-    maxLoanAmount,
-    minTenor,
-    maxTenor,
-    interestRate,
-    upfrontFeePercentage,
-    transferFee,
-    dtiThreshold
-} = process.env
-
 
 const loanSchema = new mongoose.Schema({  
     netPay: {
@@ -27,7 +14,6 @@ const loanSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
-        min: minLoanAmount
     },
    
     amountInWords: {
@@ -37,9 +23,7 @@ const loanSchema = new mongoose.Schema({
 
     tenor: {
         type: Number,
-        required: true,
-        min: minTenor,
-        max: maxTenor
+        required: true
     },
 
     loanType: {
@@ -85,17 +69,17 @@ const loanSchema = new mongoose.Schema({
     
     interestRate: {
         type: Number,
-        default: () =>  interestRate
+        required: true
     },
     
     upfrontFeePercentage: {
         type: Number,
-        default: () => upfrontFeePercentage
+        require: true
     },
     
     transferFee: {
         type: Number,
-        default: transferFee
+        required: true
     },
     // End of the line where admin user can edit
     
@@ -200,15 +184,14 @@ const loanSchema = new mongoose.Schema({
     timestamps: true
 });
 
-
 loanSchema.pre('save', function(next) {
     if(this.status === 'approved') {
         this.active = true;
 
         const oneMonth = 2628000000;  // in milliseconds
         const tenorMilliseconds = oneMonth * this.recommendedTenor - 1;
-        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toLocaleDateString();
-        
+        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toDateString();
+        // TODO: Rsearch this.
         this.expectedEndDate = endDate;
     };
 

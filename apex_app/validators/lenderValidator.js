@@ -146,7 +146,8 @@ const validators = {
 
     validateSettings: function(settings) {
         const schema = Joi.object({
-            lenderId: Joi.objectId().required(),
+            slug: Joi.string(),
+            segments: Joi.array().items(Joi.object({segment: Joi.objectId(), minLoanAmount: Joi.number(), maxLoanAmount: Joi.number(), minTenor: Joi.number(), maxTenor: Joi.number()})).required(),
             loanMetrics: Joi.object({
                 interestRate: Joi.number().required(),
                 upfrontFeePercentage: Joi.number().required(),

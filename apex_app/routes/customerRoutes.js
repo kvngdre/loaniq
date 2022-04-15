@@ -14,7 +14,7 @@ router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async
 });
 
 router.get('/:id', verifyToken, async (req, res) => {
-    const customer = await customerViewController.get( req.user, ObjectId.isValid(req.params.id) ? { _id: req.params.id } : { 'employmentInfo.ippis': req.params.id } );
+    const customer = await customerViewController.get( req.user, ObjectId.isValid(req.params.id) ? { _id: req.params.id } : { ippis: req.params.id } );
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
     res.status(200).send(customer);
@@ -25,7 +25,7 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     if(error) return res.status(400).send(error.details[0].message);
     
     const newCustomer = await customerViewController.create(req);
-    if(newCustomer instanceof Error) { return res.status(400).send(result.message); };
+    if(newCustomer instanceof Error) { return res.status(400).send(newCustomer.message); };
     
     res.status(201).send(newCustomer);
 });

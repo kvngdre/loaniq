@@ -24,7 +24,6 @@ const state = {
     get: async function(id) {
         try{
             const state = await State.findById(id);
-            console.log(state);
             if(!state) throw new Error('State not found.');
 
             return state;

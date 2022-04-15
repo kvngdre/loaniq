@@ -1,86 +1,73 @@
-const Joi = require('@hapi/joi');
-require('dotenv').config();
+const Joi = require('joi');
+const { ref } = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
-const LoanConfig = require('../models/lenderConfigModel');
+class LoanValidators {
+    #minNetPay;
+    #minLoanAmount;
+    #maxLoanAmount;
+    #minTenor;
+    #maxTenor;
+    #netPaySchema;
+    #amountSchema;
+    #tenorSchema;
+    constructor(minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor ) {
+        this.#minNetPay = minNetPay;
+        this.#minLoanAmount = minLoanAmount;
+        this.#maxLoanAmount = maxLoanAmount;
+        this.#minTenor = minTenor;
+        this.#maxTenor = maxTenor;
+        this.#netPaySchema = Joi.number().min(this.#minNetPay);
+        this.#amountSchema = Joi.number().min(this.#minLoanAmount).max(this.#maxLoanAmount);
+        this.#tenorSchema = Joi.number().min(this.#minTenor).max(this.#maxTenor);
+    }
 
-const {
-    minNetPay,
-    minLoanAmount,
-    maxLoanAmount,
-    minTenor,
-    maxTenor
-} = process.env
+    loanRequestCreation(loanRequest) {
+        const schema = Joi.object({  
+            slug: Joi.string(),
+            
+            netPay: this.#netPaySchema.required(),
 
-const netPaySchema = Joi.number()
-                        .min(minNetPay)
-                        .required();
-
-const amountSchema = Joi.number()
-                        .min(minLoanAmount)
-                        .max(maxLoanAmount)
-
-const tenorSchema = Joi.number()
-                       .min(minTenor)
-                       .max(maxTenor)
-
-const validators = {
-    validateCreation: {
-        loanRequest: function(loan) {
-            const schema = Joi.object({  
-                slug: Joi.string(),
-                
-                netPay: netPaySchema,
-    
-                amount: amountSchema,
-    
-                amountInWords: Joi.string(),
-    
-                tenor: tenorSchema,
-    
-                loanType: Joi.string(),
-
-                customer: Joi.objectId(),
-
-                loanAgent: Joi.objectId(),
-            });
-    
-        return schema.validate(loan);
-        
-        },
-
-        loan: function(loan) {
-            const schema = Joi.object({
-                customer: Joi.objectId()
-                             .required(),
-
-                netPay: netPaySchema,
-    
-                amount: amountSchema,
-    
-                amountInWords: Joi.string()
-                                  .required(),
-    
-                tenor: tenorSchema,
-    
-                loanType: Joi.string()
-            });
-    
-        return schema.validate(loan);
-        
-        }
-    },
-
-    validateEdit: function(loan) {
-        const schema = Joi.object({
-            netPay: Joi.number()
-                       .min(minNetPay),
-
-            amount: Joi.number()
-                       .min(minLoanAmount),
+            amount: this.#amountSchema.required(),
 
             amountInWords: Joi.string(),
 
-            tenor: tenorSchema,
+            tenor: this.#tenorSchema,
+
+            loanType: Joi.string(),
+
+            customer: Joi.objectId(),
+
+            loanAgent: Joi.objectId(),
+        });
+        return schema.validate(loanRequest);
+    };
+
+    loanCreation(newLoan) {
+        const schema = Joi.object({
+            customer: Joi.objectId().required(),
+
+            netPay: this.#netPaySchema,
+
+            amount: this.#amountSchema,
+
+            amountInWords: Joi.string().required(),
+
+            tenor: this.#tenorSchema,
+
+            loanType: Joi.string()
+        });
+        return schema.validate(newLoan);
+    };
+
+    validateEdit(loan) {
+        const schema = Joi.object({
+            netPay: this.#netPaySchema,
+
+            amount: this.#amountSchema,
+
+            amountInWords: Joi.string(),
+
+            tenor: this.#tenorSchema,
 
             loanType: Joi.string(),
 
@@ -100,10 +87,15 @@ const validators = {
 
             fee: Joi.number(),
         });
-
         return schema.validate(loan);
-    },
+    }
+
+    // validateDisbursement: function(dateTimeObj) {
+    //     const schema = Joi.object({
+    //         fromDate: Joi.strin
+    //     })
+    // }
 
 };
 
-module.exports = validators;
+module.exports = LoanValidators;
