@@ -86,6 +86,8 @@ class LoanValidators {
             upfrontFeePercentage: Joi.number(),
 
             fee: Joi.number(),
+
+            validationParams: Joi.object()
         });
         return schema.validate(loan);
     }

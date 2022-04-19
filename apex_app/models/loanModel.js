@@ -1,14 +1,16 @@
 const mongoose = require('mongoose');
 const Bank = require('../models/bankModel');
-const Customer = require('./customerModel');
 const User = require('../models/userModel');
 const Lender = require('../models/lenderModel');
+const Metrics = require('../tools/Managers/loanMetricsEval');
+
+const metrics = new Metrics();
 
 const loanSchema = new mongoose.Schema({  
     netPay: {
         type: Number,
         required: true
-        // Should read netPay from another db
+        // Should read netPay from origin collection
     },  
     
     amount: {
@@ -167,7 +169,6 @@ const loanSchema = new mongoose.Schema({
     
     customer: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer'
     },
 
     creditOfficer: {
@@ -178,20 +179,63 @@ const loanSchema = new mongoose.Schema({
     lenderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Lender'
+    },
+
+    validationParams: {
+        dob: {
+            type: Date
+        },
+
+        doe: {
+            type: Date
+        },
+
+        minNetPay: {
+            type: Number
+        },
+
+        dtiThreshold: {
+            type: Number
+        }
     }
      
 }, {
     timestamps: true
 });
 
+// loanSchema.pre('')
+
 loanSchema.pre('save', function(next) {
-    if(this.status === 'approved') {
+    const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
+
+    // setting loan metrics
+    if(this.modifiedPaths().some( path => loanMetricsTriggers.includes(path) )) {
+        console.log('yes')
+        this.upfrontFee = metrics.calcUpfrontFee(this.recommendedAmount, this.upfrontFeePercentage);
+        this.repayment = metrics.calcRepayment(this.recommendedAmount, this.interestRate, this.recommendedTenor);
+        this.totalRepayment = metrics.calcTotalRepayment(this.repayment, this.recommendedTenor);
+        this.netValue = metrics.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
+    };
+
+    const validationMetricTrigger = ['validationParams'];
+
+    // setting validation metics
+    if(this.modifiedPaths().some( path => validationMetricTrigger.includes(path) )) {
+        console.log('I dey here');
+        this.metrics.ageValid = metrics.ageValidator(this.validationParams.dob);
+        this.metrics.serviceLengthValid = metrics.serviceLengthValidator(this.validationParams.doe);
+        this.metrics.netPayValid = metrics.netPayValidator(this.netPay, this.validationParams.minNetPay);
+        this.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(this.repayment, this.netPay, this.validationParams.dtiThreshold);
+
+    };
+
+    if(this.status === 'approved' && this.status === false) {
         this.active = true;
 
         const oneMonth = 2628000000;  // in milliseconds
         const tenorMilliseconds = oneMonth * this.recommendedTenor - 1;
         const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toDateString();
-        // TODO: Rsearch this.
+        // TODO: Research this.
         this.expectedEndDate = endDate;
     };
 

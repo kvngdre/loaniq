@@ -9,14 +9,14 @@ router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
     const users = await userViewController.getAll( { lenderId: req.user.lenderId } );
     if(users.length === 0) return res.status(404).send('No users registered.');
 
-    res.status(200).send(users);
+    return res.status(200).send(users);
 });
 
 router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const user = await userViewController.get( {_id: req.params.id, lenderId: req.user.lenderId } );
     if(!user) return res.status(404).send('User not found.');
 
-    res.status(200).send(user);
+    return res.status(200).send(user);
 });
 
 router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) => {
@@ -53,7 +53,7 @@ router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) =
         return res.status(400).send(user.message);
     };
 
-    res.status(200).send(user);
+    return res.status(200).send(user);
 });
 
 router.post('/verify-user', async (req, res) => {
@@ -63,7 +63,7 @@ router.post('/verify-user', async (req, res) => {
     const isVerified = await userViewController.verifyRegister(req.body);
     if(isVerified instanceof Error) return res.status(400).send(isVerified.message);
 
-    res.status(200).send(isVerified);
+    return res.status(200).send(isVerified);
 });
 
 router.post('/login', async (req, res) => {
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).send(isLoggedIn.message);
     };
 
-    res.status(200).send({message: 'Login successful.', user: isLoggedIn});
+    return res.status(200).send({message: 'Login successful.', user: isLoggedIn});
 });
 
 router.post('/forgot-password', async (req, res) => {
@@ -87,14 +87,14 @@ router.post('/forgot-password', async (req, res) => {
     const user = await userViewController.forgotPassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+    return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
 });
 
 router.post('/change-password/', async (req, res) => {
     const user = await userViewController.changePassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    res.status(200).send(user);
+    return res.status(200).send(user);
 });
 
 router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
@@ -104,14 +104,14 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const user = await userViewController.update(req.params.id, req.user, req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    res.status(200).send({message: 'Update Successful', user})
+    return res.status(200).send({message: 'Update Successful', user})
 });
 
 router.delete('/:id', verifyToken, verifyRole('admin'),  async (req, res) => {
     const user = await userViewController.delete(req.params.id);
     if(user instanceof Error) return res.status(401).send(user.message);
 
-    res.status(200).send(user);
+    return res.status(200).send(user);
 });
 
 module.exports = router;

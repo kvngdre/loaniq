@@ -53,7 +53,7 @@ async function getTransporter() {
 
 /**
  * Sends OTP to user email
- * @param {string} userEmailAddress 
+ * @param {string} userEmailAddress
  * @param {string} name 
  * @param {number} generatedOTP 
  * @returns {Promise}

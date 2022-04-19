@@ -13,21 +13,21 @@ router.post('/', verifyToken, verifyRole('admin'), async (req, res) => {
     const newState = await stateController.create(req.body);
     if(newState instanceof Error) { return res.status(400).send(newState.message); };
     
-    res.status(201).send(newState);
+    return res.status(201).send(newState);
 });
 
 router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
     const states = await stateController.getAll();
     if(states.length === 0) return res.status(404).send('No states found.');
 
-    res.status(200).send(states);
+    return res.status(200).send(states);
 });
 
 router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const state = await stateController.get(req.params.id);
     if(!state) return res.status(404).send(state.message);
 
-    res.status(200).send(state);
+    return res.status(200).send(state);
 });
 
 router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
@@ -37,7 +37,7 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const state = await stateController.update(req.params.id, req.body); 
     if(state instanceof Error) return res.status(400).send(state.message);
 
-    res.status(200).send(state);
+    return res.status(200).send(state);
 });
 
 
@@ -45,7 +45,7 @@ router.delete('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     const deletedState = await stateController.delete(req.params.id);
     if(deletedState instanceof Error) return res.status(401).send(deletedState.message);
 
-    res.status(200).send(deletedState);
+    return res.status(200).send(deletedState);
 });
 
 

@@ -5,12 +5,10 @@ const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
 const Customer = require('../../models/customerModel');
 const pickRandomUser = require('../../utils/pickRandomAgent');
-const Metrics = require('../../tools/Managers/loanMetricsEval');
 const userViewController = require('../../controllers/userController');
+const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerViewController = require('../../controllers/customerController');
 
-
-const metrics = new Metrics();
 
 const manager = {
     createLoan: async function(customer, loanMetricsObj, request) {
@@ -26,7 +24,7 @@ const manager = {
                 agent = await userViewController.get( { _id: loan[0].loanAgent } );
                 request.body.loanType = "topUp";
             };
-            
+
             if(!agent) {
                 debug(agent);
                 throw new Error('Invalid loan agent.');
@@ -44,22 +42,12 @@ const manager = {
             request.body.interestRate = loanMetricsObj.interestRate;
             request.body.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.transferFee = loanMetricsObj.transferFee;
-            const newLoan =  new Loan(request.body);
-
-            // setting loan metrics
-            newLoan.upfrontFee = metrics.calcUpfrontFee(newLoan.recommendedAmount, newLoan.upfrontFeePercentage);
-            newLoan.repayment = metrics.calcRepayment(newLoan.recommendedAmount, newLoan.interestRate, newLoan.recommendedTenor);
-            newLoan.totalRepayment = metrics.calcTotalRepayment(newLoan.repayment, newLoan.recommendedTenor);
-            newLoan.netValue = metrics.calcNetValue(newLoan.recommendedAmount, newLoan.upfrontFee, newLoan.transferFee);
-
-            // setting validation metics
-            newLoan.metrics.ageValid = metrics.ageValidator(customer.dateOfBirth);
-            newLoan.metrics.serviceLengthValid = metrics.serviceLengthValidator(customer.employmentInfo.dateOfEnlistment);
-            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay, loanMetricsObj.minNetPay);
-            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay, loanMetricsObj.dtiThreshold);
-                        
-            // await customer.save();
-            await newLoan.save();
+            request.body.validationParams = {dob: customer.dateOfBirth};
+            request.body.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
+            request.body.validationParams.minNetPay = loanMetricsObj.minNetPay;
+            request.body.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;
+            
+            const newLoan = await Loan.create(request.body);
 
             return newLoan;
 
@@ -116,20 +104,13 @@ const manager = {
             request.body.loan.interestRate = loanMetricsObj.interestRate;
             request.body.loan.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.loan.transferFee = loanMetricsObj.transferFee;
-            const newLoan = new Loan(request.body.loan);
+            request.body.loan.validationParams = {dob: customer.dateOfBirth};
+            request.body.loan.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
+            request.body.loan.validationParams.minNetPay = loanMetricsObj.minNetPay;
+            request.body.loan.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;            
             
-            // setting loan metrics
-            newLoan.upfrontFee = metrics.calcUpfrontFee(newLoan.recommendedAmount, newLoan.upfrontFeePercentage);
-            newLoan.repayment = metrics.calcRepayment(newLoan.recommendedAmount, newLoan.interestRate, newLoan.recommendedTenor);
-            newLoan.totalRepayment = metrics.calcTotalRepayment(newLoan.repayment, newLoan.recommendedTenor);
-            newLoan.netValue = metrics.calcNetValue(newLoan.recommendedAmount, newLoan.upfrontFee, newLoan.transferFee);
-
-            // setting validation metics
-            newLoan.metrics.ageValid = metrics.ageValidator(customer.dateOfBirth);
-            newLoan.metrics.serviceLengthValid = metrics.serviceLengthValidator(customer.employmentInfo.dateOfEnlistment);
-            newLoan.metrics.netPayValid = metrics.netPayValidator(customer.netPay, loanMetricsObj.minNetPay);
-            newLoan.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(newLoan.repayment, customer.netPay, loanMetricsObj.dtiThreshold);
-
+            const newLoan = await Loan.create(request.body.loan);
+            
             await newLoan.save();
             
             return {customer, loan: newLoan};
@@ -140,13 +121,14 @@ const manager = {
     },
 
     getAll: async function(user, queryParam={}) {
+        console.log(user.lenderId)
         queryParam.lenderId = user.lenderId;
 
         if(user.role !== 'loanAgent') {
             const loans = await Loan.find( queryParam )
                                     .select('_id status amount recommendedAmount tenor recommendedTenor customer createdAt netPay dateAppOrDec lenderId')
                                     .select('-lenderId')
-                                    .populate({path: 'customer', select: 'name employmentInfo.ippis'})
+                                    .populate({path: 'customer', model: Customer, select: 'name employmentInfo.ippis'})
                                     .sort( { createdAt: -1 } );
             
             return loans;
@@ -165,7 +147,8 @@ const manager = {
         if(user.role !== 'loanAgent') {
             const loans = await Loan.find( queryParam )
                                     .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
-                                    .populate({path: 'customer', model: Customer, populate:[{path:'accountInfo.bank', model: Bank, select: '-_id name'}], select: '-_id bvn employmentInfo.ippis accountInfo'})                                    .sort( { createdAt: -1 } );
+                                    .populate({path: 'customer', model: Customer, populate:[{path:'accountInfo.bank', model: Bank, select: '-_id name'}], select: '-_id bvn employmentInfo.ippis accountInfo'})                                    
+                                    .sort({createdAt: -1});
             
             return loans;
         };
@@ -177,43 +160,60 @@ const manager = {
         return loans; 
     },
 
-    getOne: async function(id, user) {
+    getOne: async function(user, queryParam) {
+        queryParam.lenderId = user.lenderId;
+        console.log('manager=======', queryParam);
         if(user.role !== 'loanAgent') {
-            const loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } ).populate('customer');
+            const loan = await Loan.findOne( queryParam )
+                                   .populate({path: 'customer', model: Customer});
 
             return loan;
         };
 
-        const loan = await Loan.findOne( { _id: id, loanAgent: user.id, lenderId: user.lenderId })
-                               .populate('customer');
+        queryParam.loanAgent = user.id;
+        const loan = await Loan.findOne( queryParam )
+                               .populate({path: 'customer', model: Customer});
 
         return loan;
     },
 
     edit: async function(request) {
         try{ 
+            request.body = convertToDotNotation(request.body);
+
             let loan;
             if(request.user.role === 'loanAgent'){
-                loan = await Loan.findOneAndUpdate( { _id: request.params.id, loanAgent: request.user.id, lenderId: request.user.lenderId },
-                    request.body, {new: true});
+
+                loan = await Loan.findOne( { 
+                    _id: request.params.id, 
+                    loanAgent: request.user.id, 
+                    lenderId: request.user.lenderId 
+                } );
+
                 if(!loan) {
                     debug(loan);
                     throw new Error('loan not found.');
                 };
 
+                loan.set(request.body);
                 if('amount' in request.body) loan.set('recommendedAmount', request.body.amount);
                 if('tenor' in request.body) loan.set('recommendedTenor', request.body.tenor);
                 
                 await loan.save();
 
             } else {
-                loan = await Loan.findOneAndUpdate( 
-                { _id: request.params.id, lenderId: request.user.lenderId }, request.body, {new: true} );
+
+                loan = await Loan.findOne( { 
+                    _id: request.params.id, 
+                    lenderId: request.user.lenderId 
+                } );
+
                 if(!loan) {
                     debug(loan);
                     throw new Error('loan not found.');
                 };
 
+                loan.set(request.body);
                 if('amount' in request.body) loan.set('recommendedAmount', request.body.amount);
                 if('tenor' in request.body) loan.set('recommendedTenor', request.body.tenor);
                 
@@ -223,14 +223,13 @@ const manager = {
                 
                 await loan.save();
             };
-            
             return loan;
 
         }catch(exception) {
+            debug(exception);
             return exception;
         };
     }
-
 };
 
 module.exports = manager;

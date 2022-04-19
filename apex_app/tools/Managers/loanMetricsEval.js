@@ -46,7 +46,6 @@ class Metrics {
     }
 
     netPayValidator(netPay, minNetPay) {
-        console.log(minNetPay)
         return { result: netPay >= minNetPay };
     }
 

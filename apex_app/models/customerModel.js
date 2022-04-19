@@ -1,8 +1,10 @@
 const Bank = require('./bankModel');
+const Loan = require('./loanModel');
 const mongoose = require('mongoose');
 const State = require('./stateModel');
 const Segment = require('./segmentModel');
 const debug = require('debug')('app:customerModel');
+
 
 
 const customerSchema = new mongoose.Schema({
@@ -49,26 +51,18 @@ const customerSchema = new mongoose.Schema({
             validator: (dob) => {
                 try{
                     const dob_ = new Date(dob);
-    
-                    // Get the milliseconds between dates.
-                    const month_diff = Date.now() - dob_.getTime();
-    
-                    // Convert to date format
-                    const ageDate = new Date(month_diff);
-    
-                    // Get age year
+                    const ageDate = new Date( Date.now() - dob_.getTime() );
                     const ageYear = ageDate.getUTCFullYear();
-    
                     const age = ageYear - 1970;
 
-                    return age >= 18 && age <= 60;
+                    return age >= 18;
 
                 }catch(exception) {
-                    debug(exception.message);
+                    debug('ageCustomerSchema==', exception.message);
                     return false;
                 };
             },
-            // TODO: research how to get to the age constant in the validator.
+            // TODO: why use UTCFullYear instead of FullYear? 
             message: "Age should be minimum 18."
         },
     },
@@ -259,6 +253,7 @@ const customerSchema = new mongoose.Schema({
 
     netPay: {
         type: Number
+        // TODO: read from origin collection.
     }
 
 }, {
@@ -290,14 +285,39 @@ customerSchema.methods.validateSegment = async function() {
     };
 }
 
-customerSchema.pre('save', function (next) {
+
+customerSchema.pre('save', async function (next) {
+    const loanEditTrigger = ['dateOfBirth', 'employmentInfo.dateOfEnlistment'];
+  
+    if(this.modifiedPaths().some( path => loanEditTrigger.includes(path) )){
+        console.log('triggered')
+
+        const loans = await Loan.find( { customer: this._id, status: 'pending' } )
+        loans.forEach( async loan => {
+            loan.set({'validationParams.dob': this.dateOfBirth})
+            await loan.save();
+        });
+    };
+
     // capitalize names
-    this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
-    this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
-    if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
+    // TODO: can front end handle this. 
+    // this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
+    // this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
+    // if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
     
     next();
   });
+
+// customerSchema.post(/.+Update$/, function() {
+//     console.log('I was called.')
+//     // const chan = this.getChanges();
+//     // console.log('ijh', this.getChanges().$set);
+//     // console.log(Object.keys(chan));
+
+//     console.log('I was called.')
+//     // const modifiedFields = this.getUpdate().$set;
+//     console.log(this.modifiedPaths());
+// });
 
 const Customer = mongoose.model('Customer', customerSchema);
 

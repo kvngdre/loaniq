@@ -13,21 +13,21 @@ router.post('/', verifyToken, verifyRole(['lender', 'admin']), async (req, res) 
     const newSegment = await segmentController.create(req.body);
     if(newSegment instanceof Error) return res.status(400).send(newSegment.message);
     
-    res.status(201).send(newSegment);
+    return res.status(201).send(newSegment);
 });
 
 router.get('/', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
     const segments = await segmentController.getAll();
     if(segments.length === 0) return res.status(404).send('No segments.');
 
-    res.status(200).send(segments);
+    return res.status(200).send(segments);
 });
 
 router.get('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
     const segment = await segmentController.get(req.params.id);
     if(segment instanceof Error) return res.status(400).send(segment.message);
 
-    res.status(200).send(segment);
+    return res.status(200).send(segment);
 });
 
 router.patch('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
@@ -37,14 +37,14 @@ router.patch('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, r
     const segment = await segmentController.update(req.params.id, req.body);     
     if(segment instanceof Error) return res.status(400).send(segment.message);
 
-    res.status(200).send(segment);
+    return res.status(200).send(segment);
 });
 
 router.delete('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
     const deletedSegment = await segmentController.delete(req.params.id);
     if(deletedSegment instanceof Error) return res.status(401).send(deletedSegment.message);
 
-    res.status(200).send(deletedSegment);
+    return res.status(200).send(deletedSegment);
 });
 
 

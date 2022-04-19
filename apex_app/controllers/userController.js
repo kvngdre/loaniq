@@ -36,7 +36,7 @@ const user = {
 
             switch(role) {
                 case "admin":
-                    if(user.role !== 'lender') throw new Error('Cannot create role.')
+                    if(user.role !== 'lender') return 401;
 
                     var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');

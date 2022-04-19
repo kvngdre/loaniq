@@ -76,8 +76,9 @@ const userSchema = new mongoose.Schema({
         enum: [
             'admin',
             'credit',
+            'loanAgent',
             'operations',
-            'loanAgent'
+            'origin-master'
         ],
         required: true
     },
@@ -112,7 +113,7 @@ userSchema.methods.generateToken = function() {
         email: this.email,
         role: this.role,
         active: this.active,
-        segments: this.segments
+        segments: (this.segments ? this.segments : null)
     }, 'jwtPrivateKey');
 }
 

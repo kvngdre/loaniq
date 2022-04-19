@@ -7,33 +7,34 @@ const lenderViewController = require('../controllers/lenderController');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.creation(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+    if(error) return res.status(404).send(error.details[0].message);
 
     const lender = await lenderViewController.createLender(req.body);
+    console.log(lender.message);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
     //TODO: generate lender url.
-    res.status(201).send(lender);
+    return res.status(201).send(lender);
 });
 
 router.get('/', async (req, res) => {
     const lenders = await lenderViewController.getAll();
     if(lenders.length === 0) return res.status(404).send('No lenders found.');
 
-    res.status(200).send(lenders);
+    return res.status(200).send(lenders);
 });
 
 router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
     const settings = await lenderViewController.getSettings( { lenderId: req.user.lenderId } );
 
-    res.status(200).send(settings);
+    return res.status(200).send(settings);
 });
 
 router.get('/:id', async (req, res) => {
     const lender = await lenderViewController.get(req.params.id);
     if(!lender) return res.status(404).send('Lender not found.');
 
-    res.status(200).send(lender);   
+    return res.status(200).send(lender);   
 });
 
 router.post('/verify-lender', async (req, res) => {
@@ -43,7 +44,7 @@ router.post('/verify-lender', async (req, res) => {
     const isVerified = await lenderViewController.verifyRegister(req.body);
     if(isVerified instanceof Error) return res.status(400).send(isVerified.message);
 
-    res.status(200).send(isVerified);
+    return res.status(200).send(isVerified);
 });
 
 router.post('/login', async (req, res) => {
@@ -57,7 +58,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).send(isLoggedIn.message);
     };
 
-    res.status(200).send({message: 'Login successful.', lender: isLoggedIn});
+    return res.status(200).send({message: 'Login successful.', lender: isLoggedIn});
 });
 
 router.post('/forgot-password', async (req, res) => {
@@ -74,7 +75,7 @@ router.post('/change-password/', async (req, res) => {
     const lender = await lenderViewController.changePassword(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    res.status(200).send(lender);
+    return res.status(200).send(lender);
 });
 
 router.post('/create-admin', verifyToken, verifyRole('lender'), async (req, res) => {
@@ -84,7 +85,7 @@ router.post('/create-admin', verifyToken, verifyRole('lender'), async (req, res)
     const adminUser = await lenderViewController.createAdmin(req);
     if(adminUser instanceof Error) return res.status(400).send(adminUser.message);
 
-    res.status(201).send(adminUser);
+    return res.status(201).send(adminUser);
 });
 
 router.patch('/:id', verifyToken, verifyRole('lender'), async (req, res) => {
@@ -94,7 +95,7 @@ router.patch('/:id', verifyToken, verifyRole('lender'), async (req, res) => {
     const lender = await lenderViewController.update(req.params.id, req.body);
     if(lender instanceof Error) return res.status(404).send(lender.message);
     
-    res.status(200).send(lender);
+    return res.status(200).send(lender);
 });
 
 router.put('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
@@ -104,7 +105,7 @@ router.put('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
     const settings = await lenderViewController.setConfig(req.user.lenderId, req.body);
     if(settings instanceof Error) return res.status(400).send(settings.message);
 
-    res.status(201).send(settings);
+    return res.status(201).send(settings);
 });
 
 router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
@@ -112,7 +113,7 @@ router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
     return
     const settings = await lenderViewController.getSettings({lenderId: req.user.lenderId});
 
-    res.status(200).send(settings);
+    return res.status(200).send(settings);
 });
 
 router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
@@ -120,7 +121,7 @@ router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
 
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    res.status(200).send(lender);
+    return res.status(200).send(lender);
 });
 
 module.exports = router;

@@ -10,14 +10,14 @@ router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async
     const customers = await customerViewController.getAll(req.user);
     if(customers.length === 0) return res.status(404).send('No customers found.');
 
-    res.status(200).send(customers);
+    return res.status(200).send(customers);
 });
 
 router.get('/:id', verifyToken, async (req, res) => {
     const customer = await customerViewController.get( req.user, ObjectId.isValid(req.params.id) ? { _id: req.params.id } : { ippis: req.params.id } );
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
-    res.status(200).send(customer);
+    return res.status(200).send(customer);
 });
 
 router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
@@ -27,7 +27,7 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     const newCustomer = await customerViewController.create(req);
     if(newCustomer instanceof Error) { return res.status(400).send(newCustomer.message); };
     
-    res.status(201).send(newCustomer);
+    return res.status(201).send(newCustomer);
 });
 
 // TODO: have front end ensure no empty obj is passed.
@@ -38,7 +38,7 @@ router.patch('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, r
     const customer = await customerViewController.update(req.params.id, req.body);
     if(customer instanceof Error) return res.status(400).send(customer.message);
 
-    res.status(200).send({message: 'Update Successful', customer})
+    return res.status(200).send({message: 'Update Successful', customer})
 });
 
 module.exports = router;

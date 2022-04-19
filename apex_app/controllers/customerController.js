@@ -1,8 +1,7 @@
 const debug = require('debug')('app:customerContr');
 const ObjectId = require('mongoose').Types.ObjectId;
 const Customer = require('../models/customerModel');
-const User = require('../models/userModel');
-const pickRandomAgent = require('../utils/pickRandomAgent');
+const convertToDotNotation = require('../utils/convertToDotNotation');
 
 const customer = {
     getAll: async function(user, queryParam={}) {
@@ -65,11 +64,16 @@ const customer = {
 
     update: async function(id, requestBody) {
         try{
-            const customer = await Customer.findByIdAndUpdate( { _id: id }, requestBody, { new: true } );
+            requestBody = convertToDotNotation(requestBody);
+            
+            const customer = await Customer.findById(id);
             if(!customer) {
-                    debug(customer);
-                throw new Error('Customer not found.')
-            };
+                debug(customer);
+                throw new Error('Customer not found.');
+            };        
+            
+            customer.set(requestBody);
+            await customer.save();
 
             return customer;
             

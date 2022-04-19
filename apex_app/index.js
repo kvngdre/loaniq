@@ -1,5 +1,6 @@
-require('dotenv').config();
 require('express-async-errors');
+const cors = require('cors');
+require('dotenv').config();
 const app = require('express')();
 const nodeCron = require('node-cron');
 const connectDB = require('./startUp/db');
@@ -7,6 +8,7 @@ const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
 const checkForExpiringLoans = require('./tools/netPayManager/updateNetPay');
 
+app.use(cors());
 
 // Setup
 connectDB();

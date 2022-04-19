@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     const users = await userViewController.getAll();
     if(users.length === 0) return res.status(400).send('No users registered.');
 
-    res.status(200).send(users);
+    return res.status(200).send(users);
 });
 
 

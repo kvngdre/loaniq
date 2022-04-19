@@ -66,7 +66,7 @@ const employmentSchema = Joi.object({
 
 const bvnSchema = Joi.string()
                      .pattern(/^22[0-9]{9}$/)
-                     .message( {'string.pattern.base': '{#label} Invalid BVN.'} )
+                     .message({'string.pattern.base': '{#label} Invalid BVN.'})
 
 const idSchema = Joi.object({
     idType: Joi.string(),

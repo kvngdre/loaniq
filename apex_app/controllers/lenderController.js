@@ -58,7 +58,6 @@ const lender = {
     },
 
     getSettings: async function(queryParam) {
-        console.log()
         try{
             const lenderSettings = LenderConfig.findOne( queryParam );
             if(!lenderSettings) throw new Error('No settings for lender.');
