@@ -30,9 +30,12 @@ const lenderSchema = new mongoose.Schema({
 
     category: {
         type: String,
+        enum: [
+            'mfb', 
+            'finance house', 
+            'money lender'
+        ],
         required: true,
-        enum: ['MFB', 'MFI', 'Money lender'],
-        default: 'MFB'
     },
 
     phone: {

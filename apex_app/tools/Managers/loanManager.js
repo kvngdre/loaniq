@@ -5,9 +5,9 @@ const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
 const Customer = require('../../models/customerModel');
 const pickRandomUser = require('../../utils/pickRandomAgent');
-const userViewController = require('../../controllers/userController');
+const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
-const customerViewController = require('../../controllers/customerController');
+const customerController = require('../../controllers/customerController');
 
 
 const manager = {
@@ -21,7 +21,7 @@ const manager = {
             if(loan.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment);
             }else{
-                agent = await userViewController.get( { _id: loan[0].loanAgent } );
+                agent = await userController.get( { _id: loan[0].loanAgent } );
                 request.body.loanType = "topUp";
             };
 
@@ -65,10 +65,10 @@ const manager = {
             };
 
             let customer;
-            customer = await customerViewController.get(request.user, { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
+            customer = await customerController.get(request.user, { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
             if(customer.message && customer.stack) {
                 // if customer does not exist.
-                customer = await customerViewController.create( _.omit(request, ['body.loan']) );
+                customer = await customerController.create( _.omit(request, ['body.loan']) );
                 if(customer instanceof Error) throw customer;
             };
 
@@ -80,7 +80,7 @@ const manager = {
             if(loan.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment)
             }else{
-                agent = await userViewController.get( { _id: loan[0].loanAgent } );
+                agent = await userController.get( { _id: loan[0].loanAgent } );
                 request.body.loan.loanType = "topUp";
             };
             
@@ -229,7 +229,26 @@ const manager = {
             debug(exception);
             return exception;
         };
+    },
+
+    checkExpiringLoans: async function() {
+    
+        const today = new Date().toLocaleDateString();
+    
+        const loans = await Loan.find( { active: true, expectedEndDate: today } );
+    
+        if(loans.length > 0) {
+            loans.forEach(async (loan) => {
+                loan.status = 'completed';
+                loan.active = false;
+    
+                await loan.save();
+            });
+    
+            
+        }
     }
+    
 };
 
 module.exports = manager;

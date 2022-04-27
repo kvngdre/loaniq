@@ -7,6 +7,7 @@ const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 const userDebug = require('debug')('app:userContr');
 const ObjectId = require('mongoose').Types.ObjectId;
+const generateRandomPassword = require('../utils/generatePassword');
 
 
 const user = {
@@ -38,15 +39,17 @@ const user = {
                 case "admin":
                     if(user.role !== 'lender') return 401;
 
-                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
-                    if(doesExist) throw new Error('Email has already been taken.');
+                    var adminDoesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
+                    if(adminDoesExist) throw new Error('Admin user has been created.');
                     
                     // Encrypting password
+                    var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
                     
                     var OTP = generateOTP();
+                    // TODO: gen random password.
 
                     var newUser = new User({
                         name: requestBody.name,
@@ -65,9 +68,10 @@ const user = {
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
+                    var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
 
@@ -134,16 +138,17 @@ const user = {
                     break;
             };
 
-            await newUser.save();
+            // await newUser.save();
+            newUser.password = temporaryPassword;
                        
             // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
-            userDebug(mailResponse);
-            if(mailResponse instanceof Error) {
-                userDebug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            userDebug('Email sent successfully');
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
+            // userDebug(mailResponse);
+            // if(mailResponse instanceof Error) {
+            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
+            // userDebug('Email sent successfully');
             
             // OTP will expire after two minutes
             // TODO: Implement OTP in user model.
@@ -154,7 +159,7 @@ const user = {
 
             return {
                 message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'email', 'role']) 
+                user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'password', 'email', 'role']) 
                 };
 
         }catch(exception) {
@@ -189,18 +194,22 @@ const user = {
 
     login: async function(requestBody) {
         try{
-            let user = await User.findOne( {email: requestBody.email} );
+            const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
             
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
+            if(!user.lastLoginTime) console.log(user.lastLoginTime)
+
             const token = user.generateToken();
 
             user.token = token;
-            user = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'token']);
+            authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
-            return user;
+            await user.update({lastLoginTime: Date.now()});
+
+            return authUser;
 
         }catch(exception) {
             return exception;
@@ -212,6 +221,17 @@ const user = {
             // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Account does not exist.');
+
+            // const OTP = generateOTP();
+
+            // Sending OTP to user mail
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
+            // userDebug(mailResponse);
+            // if(mailResponse instanceof Error) {
+            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
+            // userDebug('Email sent successfully');
 
             return user;
             
@@ -236,7 +256,7 @@ const user = {
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
             // Updating password
-            await user.updateOne( {password: encryptedPassword} );
+            await user.updateOne({password: encryptedPassword});
 
             return 'Password updated.';
             

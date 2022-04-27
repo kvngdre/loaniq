@@ -6,7 +6,6 @@ function convertToDotNotation(obj, newObj={}, prefix="") {
             newObj[prefix + key] = obj[key];
         }
     }
-  
     return newObj;
 }
 

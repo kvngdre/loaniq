@@ -261,6 +261,7 @@ const customerSchema = new mongoose.Schema({
 });
 
 customerSchema.methods.validateSegment = async function() {
+    // TODO: redo this function.
     const segments = await Segment.find().select('code');
     const ippisPrefix = this.employmentInfo.ippis.slice(0, 2);
 
@@ -292,7 +293,7 @@ customerSchema.pre('save', async function (next) {
     if(this.modifiedPaths().some( path => loanEditTrigger.includes(path) )){
         console.log('triggered')
 
-        const loans = await Loan.find( { customer: this._id, status: 'pending' } )
+        const loans = await Loan.find( { customer: this._id, status: 'pending' } );
         loans.forEach( async loan => {
             loan.set({'validationParams.dob': this.dateOfBirth})
             await loan.save();
@@ -306,18 +307,10 @@ customerSchema.pre('save', async function (next) {
     // if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
     
     next();
+
   });
 
-// customerSchema.post(/.+Update$/, function() {
-//     console.log('I was called.')
-//     // const chan = this.getChanges();
-//     // console.log('ijh', this.getChanges().$set);
-//     // console.log(Object.keys(chan));
 
-//     console.log('I was called.')
-//     // const modifiedFields = this.getUpdate().$set;
-//     console.log(this.modifiedPaths());
-// });
 
 const Customer = mongoose.model('Customer', customerSchema);
 

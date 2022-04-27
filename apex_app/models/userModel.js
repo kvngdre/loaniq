@@ -37,7 +37,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         unique: true,
         trim: true,
-        required: true
     },
 
     email: {
@@ -57,7 +56,6 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
-        minLength: 6,
         maxLength: 1024,
         required: true
     },
@@ -98,6 +96,11 @@ const userSchema = new mongoose.Schema({
 
     achieved: {
         type: Number,
+    },
+
+    lastLoginTime: {
+        type: Date,
+        default: null
     }
 
 }, {

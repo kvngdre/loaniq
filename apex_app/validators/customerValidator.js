@@ -84,7 +84,7 @@ const nokSchema = Joi.object({
     }),
 
     phone: Joi.string()
-              .pattern(/^0([7-9])[0-9]{9}$/)
+              .pattern(/^0([7-9])([0,1])[0-9]{8}$/)
               .message({
                 "string.pattern.base": "{#label} Invalid phone number."
               }),

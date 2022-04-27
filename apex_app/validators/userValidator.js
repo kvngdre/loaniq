@@ -66,7 +66,7 @@ const validators = {
                 active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.array().items(Joi.objectId).required(),
-                password: passwordSchema.required()
+                // password: passwordSchema.required()
         
             });
         
@@ -122,12 +122,12 @@ const validators = {
 
     validateRegVerification: function(user) {
         const schema = Joi.object({
-            email: emailSchema.required(),
+            // email: emailSchema.required(),
             otp: Joi.string()
                     .required()
                     .pattern(/^[0-9]{6}$/)
                     .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-            password: passwordSchema.required()
+            // password: passwordSchema.required()
         });
         return schema.validate(user);
     },
@@ -135,7 +135,7 @@ const validators = {
     validateLogin: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: passwordSchema.required()
+            password: Joi.string().required()
         });
         return schema.validate(user);
     },

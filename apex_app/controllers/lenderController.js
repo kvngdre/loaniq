@@ -5,7 +5,7 @@ const debug = require('debug')('app:lenderModel');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
 const LenderConfig = require('../models/lenderConfigModel');
-const userViewController = require('../controllers/userController');
+const userController = require('../controllers/userController');
 
 const lender = {
     createLender: async function(requestBody) {
@@ -70,11 +70,11 @@ const lender = {
 
     createAdmin: async function(request){
         try{
-            const adminUsers = await userViewController.getAll( { lenderId: request.user.id, role: 'admin' } );
+            const adminUsers = await userController.getAll( { lenderId: request.user.id, role: 'admin' } );
             if(adminUsers.length > 0) throw new Error('Admin user already created.')
 
             request.body.role = 'admin';
-            const adminUser = await userViewController.create(request.body, request.user);
+            const adminUser = await userController.create(request.body, request.user);
             if(!adminUser || adminUser instanceof Error) {
                 debug(adminUser);
                 throw new Error(adminUser.message);

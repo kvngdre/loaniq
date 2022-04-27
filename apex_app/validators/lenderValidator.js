@@ -96,15 +96,27 @@ const validators = {
     adminCreation: function (user) {
         const schema = Joi.object({
             name: Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
+                firstName: Joi.string()
+                              .required()
+                              .min(3)
+                              .max(50),
+
                 lastName: Joi.string().required().min(3).max(50),
                 middleName: Joi.string().min(3).max(50),
             }),
-            phone: Joi.string().length(11),            
-            email: Joi.string().required().email().min(10).max(255),
+            phone: Joi.string().pattern(/^0([7-9])([0,1])[0-9]{8}$/),            
+            email: Joi.string()
+                      .email()
+                      .min(10)
+                      .max(255)
+                      .required(),
+
             role: Joi.string().equal('admin'),
+
             active: Joi.boolean().equal(true),
+
             lenderId: Joi.objectId(),
+
             password: joiPassword
                         .string()
                         .required()

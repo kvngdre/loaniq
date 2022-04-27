@@ -17,7 +17,7 @@ const customer = {
                                  .sort('_id');
     },
 
-    get: async function(user, queryParam) {
+    get: async function(user, queryParam={}) {
         try{
             if(user.role !== 'loanAgent') {
                 const customer = await Customer.findOne( queryParam )
