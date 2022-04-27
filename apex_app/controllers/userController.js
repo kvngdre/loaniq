@@ -30,9 +30,9 @@ const user = {
      * @param {object} user 
      * @returns new user
      */
-    create: async function(requestBody, user) {
+    create: async function(role, requestBody, user) {
         try {
-            let role = requestBody.role;
+            // let role = requestBody.role;
             const allSegments = await Segment.find().select('_id')
 
             switch(role) {
@@ -93,6 +93,7 @@ const user = {
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
+                    var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
@@ -117,6 +118,7 @@ const user = {
                     if(doesExist) throw new Error('Email has already been taken.');
                     
                     // Encrypting password
+                    var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
@@ -159,7 +161,8 @@ const user = {
 
             return {
                 message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'password', 'email', 'role']) 
+                // user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'password', 'email', 'role']) 
+                user: newUser
                 };
 
         }catch(exception) {
@@ -221,17 +224,6 @@ const user = {
             // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Account does not exist.');
-
-            // const OTP = generateOTP();
-
-            // Sending OTP to user mail
-            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
-            // userDebug(mailResponse);
-            // if(mailResponse instanceof Error) {
-            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
-            //     throw new Error('Error sending OTP. Try again.');
-            // };
-            // userDebug('Email sent successfully');
 
             return user;
             

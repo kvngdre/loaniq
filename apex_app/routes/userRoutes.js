@@ -47,7 +47,7 @@ router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) =
     };
     
 
-    const user = await userController.create(req.body, req.user);
+    const user = await userController.create(role, req.body, req.user);
     if(user instanceof Error) {
         debug(user);
         return res.status(400).send(user.message);
