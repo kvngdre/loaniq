@@ -33,7 +33,8 @@ router.patch('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, r
     const { error } = pendingEditValidators.edit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body)
+    const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body);
+    if(result instanceof Error) return res.status(400).send(result.message);
     return res.status(200).send(result);
 
 });

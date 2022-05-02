@@ -267,7 +267,7 @@ customerSchema.methods.validateSegment = async function() {
     !foundMatch ? foundMatch = '' : foundMatch = foundMatch[0]
 
     const segmentObj = segments.find(segment => segment.ippisPrefix === foundMatch);
-    
+
     this.employmentInfo.segment = segmentObj._id.toString()  
 }
 

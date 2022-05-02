@@ -11,7 +11,7 @@ function print2() {
 }
 
 function jobs_() {
-    // Every sunday between 23:00 to 23:20
+    // Every sunday between 23:00 and 23:20
     nodeCron.schedule("* 0-20 23 * * 0", deleteApprovedPendingDocs);
 
     // Every 

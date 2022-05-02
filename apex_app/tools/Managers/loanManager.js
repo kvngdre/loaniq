@@ -8,6 +8,7 @@ const pickRandomUser = require('../../utils/pickRandomAgent');
 const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerController = require('../../controllers/customerController');
+const PendingEditController = require('../../controllers/pendingEditController');
 
 
 const manager = {
@@ -180,49 +181,40 @@ const manager = {
     edit: async function(request) {
         try{ 
             request.body = convertToDotNotation(request.body);
-
-            let loan;
+            
             if(request.user.role === 'loanAgent'){
-
-                loan = await Loan.findOne( { 
+                const result = await Loan.findOne({ 
                     _id: request.params.id, 
                     loanAgent: request.user.id, 
                     lenderId: request.user.lenderId 
-                } );
+                });
+                if(!result) throw new Error('loan not found.');
 
-                if(!loan) {
-                    debug(loan);
-                    throw new Error('loan not found.');
+                const newPendingEdit = await PendingEditController.create(request.user, request.params.id, 'loan', request.body);
+                if(!newPendingEdit || newPendingEdit instanceof Error) {
+                    debug(newPendingEdit);
+                    throw newPendingEdit;
                 };
 
-                loan.set(request.body);
-                if('amount' in request.body) loan.set('recommendedAmount', request.body.amount);
-                if('tenor' in request.body) loan.set('recommendedTenor', request.body.tenor);
-                
-                await loan.save();
+                return {
+                    message: 'Submitted. Awaiting Review.',
+                    alteration: newPendingEdit
+                }
+            }
 
-            } else {
+            const loan = await Loan.findOne({ 
+                _id: request.params.id, 
+                lenderId: request.user.lenderId 
+            });
+            if(!loan) throw new Error('loan not found.');
 
-                loan = await Loan.findOne( { 
-                    _id: request.params.id, 
-                    lenderId: request.user.lenderId 
-                } );
-
-                if(!loan) {
-                    debug(loan);
-                    throw new Error('loan not found.');
-                };
-
-                loan.set(request.body);
-                if('amount' in request.body) loan.set('recommendedAmount', request.body.amount);
-                if('tenor' in request.body) loan.set('recommendedTenor', request.body.tenor);
-                
-                if(request.body.status && ['approved', 'declined'].includes(request.body.status)) {
-                    loan.set('dateAppOrDec', Date.now());
-                };
-                
-                await loan.save();
+            if(['approved', 'declined'].includes(request.body?.status)) {
+                loan.set('dateAppOrDec', Date.now());
             };
+
+            loan.set(request.body);
+            await loan.save();
+        
             return loan;
 
         }catch(exception) {
@@ -233,15 +225,15 @@ const manager = {
 
     closeExpiringLoans: async function() {
         const today = new Date().toLocaleDateString();
-        const loans = Loan.find({ active: true, expectedEndDate: today })
+        console.log(today)
+        // const loans = await Loan.find( { active: true, expectedEndDate: {$gt: today} } );
+        const loans = await Loan.updateMany(
+            { active: true, expectedEndDate: {$gte: today} },
+            {status: 'completed', active: false}
+        );
+
+        console.log(loans)
         return loans
-
-        // const loans = await Loan.find( { active: true, expectedEndDate: today } );
-
-        // const loans = await Loan.updateMany(
-        //     { active: true, expectedEndDate: today },
-        //     {status: 'completed', active: false}
-        // )
     
         // if(loans.length > 0) {
         //     loans.forEach(async (loan) => {

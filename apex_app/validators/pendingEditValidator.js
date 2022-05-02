@@ -5,8 +5,10 @@ const validators = {
     create: function(obj) {
         const schema = Joi.object({
             documentId: Joi.objectId().required(),
-            type: Joi.string().valid(['customer', 'loan']).required(),
-            alteration: Joi.object()
+            type: Joi.string()
+                     .valid('customer', 'loan')
+                     .required(),
+            alteration: Joi.object().required()
         });
 
         return schema.validate(obj);
@@ -15,7 +17,10 @@ const validators = {
     edit: function(obj) {
         const schema = Joi.object({
             status: Joi.string()
+                       .valid('approved', 'declined')
+                       .required()
         });
+
         return schema.validate(obj);
     }
 }

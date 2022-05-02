@@ -1,8 +1,8 @@
-const res = require('express/lib/response');
 const mongoose = require('mongoose');
+const Loan = require('../models/loanModel');
 const debug = require('debug')('pendingEditCtrl');
+const Customer = require('../models/customerModel');
 const PendingEdit = require('../models/pendingEditModel');
-const convertToDotNotation = require('../utils/convertToDotNotation');
 
 const pendingEdit = {
     create: async function(user, documentId, type, alteration) {
@@ -36,14 +36,14 @@ const pendingEdit = {
                         as: 'customerData'
                     }
                 },
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'userId',
-                        foreignField: '_id',
-                        as: 'userData'
-                    }
-                },
+                // {
+                //     $lookup: {
+                //         from: 'users',
+                //         localField: 'userId',
+                //         foreignField: '_id',
+                //         as: 'userData'
+                //     }
+                // },
                 {
                     $match: {
                         lenderId: user.lenderId,
@@ -60,8 +60,8 @@ const pendingEdit = {
                         documentId: 1,
                         status: 1,
                         userId: 1,
-                        customerData: 1,
-                        userData: {name: 1}
+                        // customerData: 1,
+                        // userData: {name: 1}
                     }
                 },
                 {
@@ -84,14 +84,14 @@ const pendingEdit = {
                             as: 'loanData'
                         }
                     },
-                    {
-                        $lookup: {
-                            from: 'users',
-                            localField: 'userId',
-                            foreignField: '_id',
-                            as: 'userData'
-                        }
-                    },
+                    // {
+                    //     $lookup: {
+                    //         from: 'users',
+                    //         localField: 'userId',
+                    //         foreignField: '_id',
+                    //         as: 'userData'
+                    //     }
+                    // },
                     {
                         $match: {
                             lenderId: user.lenderId, 
@@ -109,8 +109,9 @@ const pendingEdit = {
                             documentId: 1,
                             status: 1,
                             userId: 1,
-                            loanData: 1, 
-                            userData: {name: 1}}
+                            // loanData: 1, 
+                            // userData: {name: 1}
+                        }
                     },
                     {
                         $project: {
@@ -135,22 +136,22 @@ const pendingEdit = {
     getOne: async function(id, user) {
         try{
             let result = await PendingEdit.aggregate([
-                {
-                    $lookup: {
-                        from: 'customers',
-                        localField: 'documentId',
-                        foreignField: '_id',
-                        as: 'customerData'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'userId',
-                        foreignField: '_id',
-                        as: 'userData'
-                    }
-                },
+                // {
+                //     $lookup: {
+                //         from: 'customers',
+                //         localField: 'documentId',
+                //         foreignField: '_id',
+                //         as: 'customerData'
+                //     }
+                // },
+                // {
+                //     $lookup: {
+                //         from: 'users',
+                //         localField: 'userId',
+                //         foreignField: '_id',
+                //         as: 'userData'
+                //     }
+                // },
                 {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
@@ -168,8 +169,8 @@ const pendingEdit = {
                         documentId: 1,
                         status: 1,
                         userId: 1,
-                        customerData: 1,
-                        userData: {name: 1}
+                        // customerData: 1,
+                        // userData: {name: 1}
                     }
                 },
                 {
@@ -192,14 +193,14 @@ const pendingEdit = {
                             as: 'loanData'
                         }
                     },
-                    {
-                        $lookup: {
-                            from: 'users',
-                            localField: 'userId',
-                            foreignField: '_id',
-                            as: 'userData'
-                        }
-                    },
+                    // {
+                    //     $lookup: {
+                    //         from: 'users',
+                    //         localField: 'userId',
+                    //         foreignField: '_id',
+                    //         as: 'userData'
+                    //     }
+                    // },
                     {
                         $match: {
                             _id: mongoose.Types.ObjectId(id),
@@ -218,8 +219,9 @@ const pendingEdit = {
                             documentId: 1,
                             status: 1,
                             userId: 1,
-                            loanData: 1, 
-                            userData: {name: 1}}
+                            // loanData: 1, 
+                            // userData: {name: 1}
+                        }
                     },
                     {
                         $project: {
@@ -241,8 +243,21 @@ const pendingEdit = {
 
     updateStatus: async function(id, user, requestBody) {
         try{
-            const editedDoc = await PendingEdit.findByOneAndUpdate({ _id: id, lenderId: user.lenderId }, requestBody, {new: true});
+            const editedDoc = await PendingEdit.findOneAndUpdate({ _id: id, lenderId: user.lenderId, status: 'pending' }, requestBody, {new: true});
+            console.log(!editedDoc)
             if(!editedDoc) throw new Error('Document not found.');
+            
+            if(editedDoc.status === "approved") {
+                if(editedDoc.type === 'customer') {
+                    const customer = await Customer.findById(editedDoc.documentId);
+                    
+                    customer.set( editedDoc.alteration );
+                    customer.save();
+                }
+                else {
+                    await Loan.updateOne({ _id: editedDoc.documentId }, editedDoc.alteration );
+                };
+            }
 
             return editedDoc;
 
@@ -254,13 +269,11 @@ const pendingEdit = {
 
     deleteApproved: async function() {
         try{
-            console.log('delete running');
-            return 'jk'
-            // const count = await PendingEdit.deleteMany({status: 'approved'});
+                const count = await PendingEdit.deleteMany({status: 'approved'});
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     }
 }
 

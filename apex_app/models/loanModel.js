@@ -159,7 +159,7 @@ const loanSchema = new mongoose.Schema({
     },
 
     expectedEndDate: {
-        type: Date
+        type: String
     },
 
     active: {
@@ -206,6 +206,11 @@ const loanSchema = new mongoose.Schema({
 // loanSchema.pre('')
 
 loanSchema.pre('save', function(next) {
+    if(this.modifiedPaths().some( path => ['amount', 'tenor'].includes(path) )) {
+        this.recommendedAmount = this.amount;
+        this.recommendedTenor = this.tenor
+    };
+
     const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
 
     // setting loan metrics
@@ -217,7 +222,7 @@ loanSchema.pre('save', function(next) {
         this.netValue = metrics.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
     };
 
-    
+
     const validationMetricTrigger = ['validationParams'];
 
     // setting validation metics
@@ -230,13 +235,12 @@ loanSchema.pre('save', function(next) {
 
     };
 
-    if(this.status === 'approved' && this.status === false) {
+    if(this.status === 'approved' && this.active === false) {
         this.active = true;
 
-        const oneMonth = 2628000000;  // in milliseconds
-        const tenorMilliseconds = oneMonth * this.recommendedTenor - 1;
-        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toDateString();
-        // TODO: Research this.
+        const oneMonth = 2628000000;
+        const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
+        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toLocaleDateString();
         this.expectedEndDate = endDate;
     };
 

@@ -54,6 +54,11 @@ router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async
 
     return res.status(200).send(loans);
 });
+router.get('/expiring', async(req, res) => {
+    const loans = await loanController.expire();
+
+    return res.status(200).send(loans);
+})
 
 router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
@@ -114,10 +119,6 @@ router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (re
     return res.status(200).send(loans);
 });
 
-router.get('/expiring', async(req, res) => {
-    const loans = await loanController.expire();
 
-    return res.status(200).send(loans);
-})
 
 module.exports = router;

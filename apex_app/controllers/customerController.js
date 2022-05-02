@@ -76,29 +76,29 @@ const customer = {
         };
     },
 
-    update: async function(documentId, user, requestBody) {
+    update: async function(customerId, user, requestBody) {
         try{
             requestBody = convertToDotNotation(requestBody);
+
+            const customer = await Customer.findById(customerId);
+            if(!customer) {
+                debug(customer);
+                throw new Error('Customer not found.');
+            }; 
             
             if(user.role === 'loanAgent') {
-                const newPendingEdit = await PendingEditController.create(user, documentId, 'customer', requestBody);
+                const newPendingEdit = await PendingEditController.create(user, customerId, 'customer', requestBody);
                 if(!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);
                     throw newPendingEdit;
                 }
 
                 return {
-                    message: 'edit submitted awaiting approval.',
-                    requestedEdit: newPendingEdit
+                    message: 'Submitted. Awaiting Review.',
+                    alteration: newPendingEdit
                 }
 
             };            
-            
-            const customer = await Customer.findById(id);
-            if(!customer) {
-                debug(customer);
-                throw new Error('Customer not found.');
-            };        
             
             customer.set(requestBody);
             await customer.save();
