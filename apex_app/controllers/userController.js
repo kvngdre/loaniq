@@ -142,28 +142,28 @@ const user = {
 
             // await newUser.save();
             newUser.password = temporaryPassword;
-                       
+
             // Sending OTP to user mail
-            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
-            // userDebug(mailResponse);
-            // if(mailResponse instanceof Error) {
-            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
-            //     throw new Error('Error sending OTP. Try again.');
-            // };
-            // userDebug('Email sent successfully');
+            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
+            userDebug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            userDebug('Email sent successfully');
             
-            // OTP will expire after two minutes
             // TODO: Implement OTP in user model.
             setTimeout(() => {
+                // OTP will expire after two minutes
                 newUser.otp = null;
                 newUser.save();
             }, 120_000);
 
             return {
                 message: 'User created and OTP sent to email.', 
-                // user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'password', 'email', 'role']) 
-                user: newUser
-                };
+                user: _.pick(newUser,['_id', 'fullName', 'password', 'email', 'role', 'segments']) 
+                // user: newUser
+            };
 
         }catch(exception) {
             return exception;
@@ -188,7 +188,10 @@ const user = {
 
             await user.updateOne( {emailVerify: true, otp: null, active: true} );
 
-            return user.generateToken();
+            return {
+                message: "Email has been verified and account activated.",
+                token: user.generateToken()
+            }
 
         }catch(exception) {
             return exception;
@@ -210,7 +213,7 @@ const user = {
             user.token = token;
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
-            await user.update({lastLoginTime: Date.now()});
+            await user.updateOne({lastLoginTime: Date.now()});
 
             return authUser;
 
@@ -296,6 +299,34 @@ const user = {
             return exception;
         }
     },
+
+    sendOTP: async function(email, template) {
+        const OTP = generateOTP();
+        try {
+            const user = await User.findOne( { email: email } );
+            if(!user) throw new Error('User not found.');
+            
+            await user.updateOne( { otp: OTP } );
+
+            const mailResponse = await sendOTPMail(email, user.name.firstName, OTP);
+                userDebug(mailResponse);
+                if(mailResponse instanceof Error) {
+                    userDebug(`Error sending OTP: ${mailResponse.message}`);
+                    throw new Error('Error sending OTP. Try again.');
+                };
+                userDebug('Email sent successfully');
+            
+            return {
+                message: 'OTP sent successfully',
+                otp: OTP
+            }
+
+        }catch(exception) {
+            userDebug(exception)
+            return exception;
+        }
+
+    }
 }
 
 module.exports = user;

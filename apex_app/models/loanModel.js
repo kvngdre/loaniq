@@ -217,6 +217,7 @@ loanSchema.pre('save', function(next) {
         this.netValue = metrics.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
     };
 
+    
     const validationMetricTrigger = ['validationParams'];
 
     // setting validation metics

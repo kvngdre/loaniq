@@ -261,29 +261,14 @@ const customerSchema = new mongoose.Schema({
 });
 
 customerSchema.methods.validateSegment = async function() {
-    // TODO: redo this function.
-    const segments = await Segment.find().select('code');
-    const ippisPrefix = this.employmentInfo.ippis.slice(0, 2);
+    const segments = await Segment.find().select('ippisPrefix');
 
-    switch(ippisPrefix) {
-        case 'PF': 
-            this.employmentInfo.segment = segments.find(segment => segment.code === "NPF")._id;
-            break;
+    let foundMatch = this.employmentInfo.ippis.match(/[A-Z]{2,3}/)
+    !foundMatch ? foundMatch = '' : foundMatch = foundMatch[0]
 
-        case 'PR':
-            this.employmentInfo.segment = segments.find(segment => segment.code === "NCOS")._id;
-            break;
-
-        case 'FC':
-            this.employmentInfo.segment = segments.find(segment => segment.code === "FCTA")._id;
-            break;
-
-        case 'NC':
-            this.employmentInfo.segment = segments.find(segment => segment.code === "NCS")._id;
-            break;
-        default:
-            
-    };
+    const segmentObj = segments.find(segment => segment.ippisPrefix === foundMatch);
+    
+    this.employmentInfo.segment = segmentObj._id.toString()  
 }
 
 

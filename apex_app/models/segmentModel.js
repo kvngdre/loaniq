@@ -9,9 +9,10 @@ const segmentSchema = new mongoose.Schema({
         required: true
     },
     
-    prefix: {
+    ippisPrefix: {
         type: String,
-        trim: true
+        trim: true,
+        required: true
     },
 
     name: {

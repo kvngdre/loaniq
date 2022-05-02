@@ -50,7 +50,6 @@ const validators = {
                 name: nameSchema.required(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
-                active: Joi.boolean(),
                 role: Joi.string().required(),
                 password: passwordSchema.required()
             });
@@ -63,7 +62,6 @@ const validators = {
                 name: nameSchema.required(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
-                active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.array().items(Joi.objectId).required(),
                 // password: passwordSchema.required()
@@ -78,7 +76,6 @@ const validators = {
                 name: nameSchema,
                 phone: phoneSchema,
                 email: emailSchema,
-                active: Joi.boolean(),
                 role: Joi.string().required(),
                 password: passwordSchema
         
@@ -92,7 +89,6 @@ const validators = {
                 name: nameSchema.required(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
-                active: Joi.boolean(),
                 role: Joi.string().required(),
                 segments: Joi.alternatives()
                              .try(Joi.array().items(Joi.objectId), Joi.string().valid('all'))
@@ -126,7 +122,7 @@ const validators = {
             otp: Joi.string()
                     .required()
                     .pattern(/^[0-9]{6}$/)
-                    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
+                    .messages({'string.pattern.base': '{#label} must be 6 digits.'}),
             // password: passwordSchema.required()
         });
         return schema.validate(user);
@@ -154,6 +150,15 @@ const validators = {
             newPassword: passwordSchema
         });
         return schema.validate(user);
+    },
+
+    validateOTP: function(otp) {
+        const schema = Joi.string()
+                          .pattern(/^[0-9]{6}$/)
+                          .messages({'string.pattern.base': '{#label} must be 6 digits.'})
+                          .required()
+
+        return schema.validate(otp);
     }
 }
 

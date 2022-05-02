@@ -112,6 +112,12 @@ router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (re
     const loans = await loanController.getDisbursement(req.user, req.body.fromDate);
     
     return res.status(200).send(loans);
+});
+
+router.get('/expiring', async(req, res) => {
+    const loans = await loanController.expire();
+
+    return res.status(200).send(loans);
 })
 
 module.exports = router;

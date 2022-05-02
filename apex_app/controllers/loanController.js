@@ -25,6 +25,10 @@ const loans = {
 
     getDisbursement: async function(user, dateTime) {
         return await loanManager.getDisbursement(user, { status: 'approved', active: true, createdAt: { $gte: new Date(dateTime) } } );
+    },
+
+    expire: async function() {
+        return await loanManager.closeExpiringLoans();
     }
     
 };

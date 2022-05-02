@@ -47,7 +47,7 @@ const manager = {
             request.body.validationParams.minNetPay = loanMetricsObj.minNetPay;
             request.body.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;
             
-            const newLoan = await Loan.create(request.body);
+            const newLoan = await Loan.create( request.body );
 
             return newLoan;
 
@@ -60,7 +60,7 @@ const manager = {
     createLoanRequest: async function(loanMetricsObj, request) {
         try{
             if(request.user.role === 'guest') {
-                const lender = await Lender.findOne( {slug: request.body.slug} );
+                const lender = await Lender.findOne( { slug: request.body.slug } );
                 request.user.lenderId = lender._id;
             };
 
@@ -231,24 +231,27 @@ const manager = {
         };
     },
 
-    checkExpiringLoans: async function() {
-    
+    closeExpiringLoans: async function() {
         const today = new Date().toLocaleDateString();
+        const loans = Loan.find({ active: true, expectedEndDate: today })
+        return loans
+
+        // const loans = await Loan.find( { active: true, expectedEndDate: today } );
+
+        // const loans = await Loan.updateMany(
+        //     { active: true, expectedEndDate: today },
+        //     {status: 'completed', active: false}
+        // )
     
-        const loans = await Loan.find( { active: true, expectedEndDate: today } );
+        // if(loans.length > 0) {
+        //     loans.forEach(async (loan) => {
+        //         loan.status = 'completed';
+        //         loan.active = false;
     
-        if(loans.length > 0) {
-            loans.forEach(async (loan) => {
-                loan.status = 'completed';
-                loan.active = false;
-    
-                await loan.save();
-            });
-    
-            
-        }
+        //         await loan.save();
+        //     });
+        // }
     }
-    
 };
 
 module.exports = manager;

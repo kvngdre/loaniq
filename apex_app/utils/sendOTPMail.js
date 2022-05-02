@@ -50,7 +50,6 @@ async function getTransporter() {
     };
 }
 
-
 /**
  * Sends OTP to user email
  * @param {string} userEmailAddress
@@ -71,12 +70,13 @@ const sendOTP = async function(userEmailAddress, name, generatedOTP) {
         <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to the Apex Email Verification.</h2>
         <p> Hi ${name},
         </p>
-        <p>Congratulations! You're almost set. Your verification code is <b>${generatedOTP}</b>.
+        <p>Congratulations! You're almost set. Enter the sign up OTP to get started.
+        <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${generatedOTP}</h1>
         </p>
         <p>If you have any questions, send an email to ${senderEmailAddress} and our team will provide technical support.:</p>
 
-        <div>Regards <br>
-        Apex Team</div>
+        <div>Regards, <br>
+        Apexxia Team</div>
         </div>
         `
     }; 
