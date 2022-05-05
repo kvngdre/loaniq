@@ -124,9 +124,9 @@ const validators = {
 
     validateRegVerification: function(user) {
         const schema = Joi.object({
-            // email: emailSchema.required(),
+            email: emailSchema.required(),
             otp: otpSchema.required(),
-            // password: passwordSchema.required()
+            password: passwordSchema.required()
         });
 
         return schema.validate(user);
@@ -144,7 +144,6 @@ const validators = {
     validateForgotPassword: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            // newPassword: passwordSchema.required()
         });
 
         return schema.validate(user);

@@ -176,18 +176,15 @@ const user = {
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
 
-            // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-            // Check if user already verified.
             if(user.emailVerify) throw new Error('Email already verified.');
 
-            // confirm OTP
             const isOTPValid = requestBody.otp === user.otp
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await user.updateOne( {emailVerify: true, otp: null, active: true} );
+            await user.updateOne( { emailVerify: true, otp: null, active: true } );
 
             return {
                 message: "Email has been verified and account activated.",
@@ -235,7 +232,7 @@ const user = {
             };
             userDebug('Email sent successfully');
 
-            await user.update({otp: OTP});
+            await user.update({ otp: OTP });
 
             return user;
             
@@ -243,18 +240,19 @@ const user = {
             return exception;
         };
     },
+
     // TODO: Ensure this has been completed.
-    changePassword: async function(requestBody, otp='') {
+    changePassword: async function(requestBody) {
         try{
             const user = await User.findOne( { email: requestBody.email } );
             if(!user) throw new Error('User not found.');
 
-            if(otp && user.otp !== otp) throw new Error('Invalid OTP.');
+            if(requestBody.otp && user.otp !== requestBody.otp) throw new Error('Invalid OTP.');
 
-            if('currentPassword' in requestBody) {
+            if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
                 if(!validPassword)  throw new Error('Password is incorrect.');
-            }
+            };
             
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isSimilar)  throw new Error('Password is too similar to old password.');
