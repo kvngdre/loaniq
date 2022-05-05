@@ -84,6 +84,7 @@ const userSchema = new mongoose.Schema({
     segments: {
         type: [ mongoose.Schema.Types.ObjectId ],
         ref: 'Segment',
+        default: null,
         required: true
     },
 

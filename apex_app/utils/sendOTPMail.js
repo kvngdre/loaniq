@@ -57,7 +57,7 @@ async function getTransporter() {
  * @param {number} generatedOTP 
  * @returns {Promise}
  */
-const sendOTP = async function(userEmailAddress, name, generatedOTP) {
+const sendOTP = async function(userEmailAddress, name, generatedOTP, tempPassword='') {
     const transporter = await getTransporter();
 
     // Defining the mailing options
@@ -71,7 +71,7 @@ const sendOTP = async function(userEmailAddress, name, generatedOTP) {
         <p> Hi ${name},
         </p>
         <p>Congratulations! You're almost set. Enter the sign up OTP to get started.
-        <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${generatedOTP}</h1>
+        <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${generatedOTP}<br>${tempPassword}</b></h1>
         </p>
         <p>If you have any questions, send an email to ${senderEmailAddress} and our team will provide technical support.:</p>
 

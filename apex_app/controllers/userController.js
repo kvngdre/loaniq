@@ -46,7 +46,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
                     // TODO: gen random password.
@@ -96,7 +96,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
 
@@ -121,7 +121,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
 
@@ -140,11 +140,12 @@ const user = {
                     break;
             };
 
+            // TODO: uncomment this
             // await newUser.save();
-            newUser.password = temporaryPassword;
+            // newUser.password = temporaryPassword;
 
             // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
+            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP, temporaryPassword);
             userDebug(mailResponse);
             if(mailResponse instanceof Error) {
                 userDebug(`Error sending OTP: ${mailResponse.message}`);
@@ -206,8 +207,6 @@ const user = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
-            if(!user.lastLoginTime) console.log(user.lastLoginTime)
-
             const token = user.generateToken();
 
             user.token = token;
@@ -224,9 +223,19 @@ const user = {
 
     forgotPassword: async function(requestBody) {
         try{
-            // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Account does not exist.');
+            if(!user) throw new Error('User not found.');
+
+            const OTP = generateOTP();
+            const mailResponse = await sendOTPMail(user.email, user.name.firstName, OTP);
+            userDebug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            userDebug('Email sent successfully');
+
+            await user.update({otp: OTP});
 
             return user;
             
@@ -235,23 +244,21 @@ const user = {
         };
     },
     // TODO: Ensure this has been completed.
-    changePassword: async function(requestBody) {
+    changePassword: async function(requestBody, otp='') {
         try{
-            // Check if user exists
-            const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Account does not exist.');
+            const user = await User.findOne( { email: requestBody.email } );
+            if(!user) throw new Error('User not found.');
+
+            if(otp && user.otp !== otp) throw new Error('Invalid OTP.');
             
-            // 
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isSimilar)  throw new Error('Password is too similar to old password.');
 
-            // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            // Updating password
-            await user.updateOne({password: encryptedPassword});
+            await user.update( { otp: null, password: encryptedPassword } );
 
             return 'Password updated.';
             

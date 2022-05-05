@@ -122,7 +122,6 @@ const manager = {
     },
 
     getAll: async function(user, queryParam={}) {
-        console.log(user.lenderId)
         queryParam.lenderId = user.lenderId;
 
         if(user.role !== 'loanAgent') {

@@ -62,7 +62,7 @@ router.get('/expiring', async(req, res) => {
 
 router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
-    const loan = await loanController.getOne(req.user, { _id: req.params.id } );
+    const loan = await loanController.getOne(req.user, req.params.id);
     if(!loan) return res.status(404).send('Loan not found.');
 
     return res.status(200).send(loan);

@@ -87,7 +87,8 @@ router.post('/forgot-password', async (req, res) => {
     const user = await userController.forgotPassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+    // return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+    return res.status(200).send('Password reset OTP sent to email.');
 });
 
 router.post('/change-password', async (req, res) => {

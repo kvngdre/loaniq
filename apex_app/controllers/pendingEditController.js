@@ -123,8 +123,6 @@ const pendingEdit = {
                     ]).exec()
 
                 result.push(...output)
-                // console.log(output1, mongoose.Types.ObjectId(user.id))
-                // return output1
             }
             return result;
         }catch(exception) {
@@ -244,7 +242,6 @@ const pendingEdit = {
     updateStatus: async function(id, user, requestBody) {
         try{
             const editedDoc = await PendingEdit.findOneAndUpdate({ _id: id, lenderId: user.lenderId, status: 'pending' }, requestBody, {new: true});
-            console.log(!editedDoc)
             if(!editedDoc) throw new Error('Document not found.');
             
             if(editedDoc.status === "approved") {

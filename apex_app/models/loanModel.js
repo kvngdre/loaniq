@@ -203,8 +203,6 @@ const loanSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// loanSchema.pre('')
-
 loanSchema.pre('save', function(next) {
     if(this.modifiedPaths().some( path => ['amount', 'tenor'].includes(path) )) {
         this.recommendedAmount = this.amount;
