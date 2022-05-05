@@ -152,10 +152,14 @@ const validators = {
 
     validateChangePassword: function(user) {
         const schema = Joi.object({
-            otp: otpSchema,
             email: emailSchema.required(),
-            currentPassword: Joi.string(),
-            newPassword: passwordSchema.required()
+            newPassword: passwordSchema.required(),
+            otp: otpSchema,
+            currentPassword: Joi.string().when('otp', {
+                is: Joi.exist(),
+                then: Joi.forbidden(),
+                otherwise: Joi.required()
+            }),
         });
 
         return schema.validate(user);

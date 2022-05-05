@@ -250,6 +250,11 @@ const user = {
             if(!user) throw new Error('User not found.');
 
             if(otp && user.otp !== otp) throw new Error('Invalid OTP.');
+
+            if('currentPassword' in requestBody) {
+                const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
+                if(!validPassword)  throw new Error('Password is incorrect.');
+            }
             
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isSimilar)  throw new Error('Password is too similar to old password.');
