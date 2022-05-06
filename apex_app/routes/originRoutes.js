@@ -2,7 +2,7 @@ const router = require('express').Router();
 const debug = require('debug')('app:originRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const originValidators = require('../validators/originValidators');
+const originValidators = require('../validators/originValidator');
 const originController = require('../controllers/originController');
 
 

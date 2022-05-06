@@ -13,7 +13,7 @@ router.get('/', verifyToken, verifyRole(['lender', 'admin']), async (req, res) =
 });
 
 router.get('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
-    const user = await userController.get( {_id: req.params.id, lenderId: req.user.lenderId } );
+    const user = await userController.get( { _id: req.params.id, lenderId: req.user.lenderId } );
     if(!user) return res.status(404).send('User not found.');
 
     return res.status(200).send(user);
@@ -87,10 +87,14 @@ router.post('/forgot-password', async (req, res) => {
     const user = await userController.forgotPassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
-    return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+    // return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+    return res.status(200).send('Password reset OTP sent to email.');
 });
 
-router.post('/change-password/', async (req, res) => {
+router.post('/change-password', async (req, res) => {
+    const { error } = userValidator.validateChangePassword(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
     const user = await userController.changePassword(req.body);
     if(user instanceof Error) return res.status(400).send(user.message);
 
@@ -105,6 +109,16 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
     if(user instanceof Error) return res.status(400).send(user.message);
 
     return res.status(200).send({message: 'Update Successful', user})
+});
+
+router.post('/send-otp', async (req, res) => {
+    const { error } = userValidator.validateOTP(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const response = await userController.sendOTP(req.body.email, req.body.name);
+    if(response instanceof Error) return res.status(400).send(response.message);
+
+    return res.status(200).send(response);
 });
 
 router.delete('/:id', verifyToken, verifyRole('admin'),  async (req, res) => {

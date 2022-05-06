@@ -15,7 +15,7 @@ router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent
 
 router.get('/:id', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
-    const customer = await customerController.get( req.user, ObjectId.isValid(req.params.id) ? { _id: req.params.id } : { ippis: req.params.id } );
+    const customer = await customerController.get(req.user, req.params.id);
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
     return res.status(200).send(customer);
@@ -32,15 +32,22 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     return res.status(201).send(newCustomer);
 });
 
+router.post('/gemini',verifyToken, verifyRole(['loanAgent']), async (req, res) => {
+    const result = await customerController.fetchCustomerCreation(req.user, req.body.fromDate);
+    if(result instanceof Error) return res.status(400).send(result.message);
+
+    return res.status(200).send(result);
+});
+
 // TODO: have front end ensure no empty obj is passed.
-router.patch('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     const { error } = customerValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const customer = await customerController.update(req.params.id, req.body);
+    const customer = await customerController.update(req.params.id, req.user, req.body);
     if(customer instanceof Error) return res.status(400).send(customer.message);
 
-    return res.status(200).send({message: 'Update Successful', customer})
+    return res.status(200).send(customer);
 });
 
 module.exports = router;

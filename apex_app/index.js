@@ -7,12 +7,14 @@ const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
 const { checkExpiringLoans } = require('./tools/Managers/loanManager');
+const jobs = require('./jobs/jobs');
 
 app.use(cors());
 
 // Setup
 connectDB();
 appRoutes(app);
+// jobs(); 
 
 
 // Get Node Environment

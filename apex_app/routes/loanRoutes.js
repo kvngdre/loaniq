@@ -54,10 +54,15 @@ router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async
 
     return res.status(200).send(loans);
 });
+router.get('/expiring', async(req, res) => {
+    const loans = await loanController.expire();
+
+    return res.status(200).send(loans);
+})
 
 router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
-    const loan = await loanController.getOne(req.user, { _id: req.params.id } );
+    const loan = await loanController.getOne(req.user, req.params.id);
     if(!loan) return res.status(404).send('Loan not found.');
 
     return res.status(200).send(loan);
@@ -112,6 +117,8 @@ router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (re
     const loans = await loanController.getDisbursement(req.user, req.body.fromDate);
     
     return res.status(200).send(loans);
-})
+});
+
+
 
 module.exports = router;

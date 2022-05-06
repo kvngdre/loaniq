@@ -87,12 +87,13 @@ class LoanValidators {
 
             fee: Joi.number(),
 
-            validationParams: Joi.object()
+            // validationParams: Joi.object()
         });
         return schema.validate(loan);
     }
 
     // validateDisbursement: function(dateTimeObj) {
+        // TODO: finish disbursement
     //     const schema = Joi.object({
     //         fromDate: Joi.strin
     //     })

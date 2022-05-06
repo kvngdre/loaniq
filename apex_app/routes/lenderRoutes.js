@@ -10,7 +10,6 @@ router.post('/', async (req, res) => {
     if(error) return res.status(404).send(error.details[0].message);
 
     const lender = await lenderController.createLender(req.body);
-    console.log(lender.message);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
     //TODO: generate lender url.

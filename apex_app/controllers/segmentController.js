@@ -18,12 +18,12 @@ const segment = {
     },
 
     getAll: async function() {
-        return await Segment.find();
+        return await Segment.find().select('-ippisPrefix');
     },
 
     get: async function(id) {
         try{
-            const segment = await Segment.findById(id);
+            const segment = await Segment.findById(id).select('-ippisPrefix');
             if(!segment) throw new Error('Segment not found.');
 
             return segment;
@@ -35,7 +35,7 @@ const segment = {
 
     update: async function(id, requestBody) {
         try{
-            const segment = await Segment.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
+            const segment = await Segment.findByIdAndUpdate( {_id: id }, requestBody, {new: true} ).select('-ippisPrefix');
             if(!segment) {
                 debug(segment);
                 throw new Error('Segment not found.');

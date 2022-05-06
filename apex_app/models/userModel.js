@@ -28,7 +28,6 @@ const userSchema = new mongoose.Schema({
             type: String,
             minLength: 3,
             maxLength: 50,
-            lowercase: true,
             trim:true
         },
     }, 
@@ -41,11 +40,11 @@ const userSchema = new mongoose.Schema({
 
     email: {
         type: String,
-        unique: true,
-        lowercase: true,
-        trim: true,
         minLength: 10,
         maxLength: 255,
+        lowercase: true,
+        trim: true,
+        unique: true,
         required: true
     },
     
@@ -88,17 +87,17 @@ const userSchema = new mongoose.Schema({
     segments: {
         type: [ mongoose.Schema.Types.ObjectId ],
         ref: 'Segment',
+        default: null,
         required: true
     },
 
     // TODO: Duration of target
     target: {
         type: Number,
-        // required: true
     },
 
     achieved: {
-        type: Number,
+        type: Number
     },
 
     lastLoginTime: {
@@ -109,6 +108,10 @@ const userSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+userSchema.virtual('fullName').get(function() {
+    return this.name.firstName.concat(this.name?.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
+})
 
 userSchema.methods.generateToken = function() {
     return jwt.sign( {
@@ -127,7 +130,7 @@ userSchema.pre('save', function (next) {
     // capitalize names
     this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
     this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
-    if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
+    if(this.name?.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
 
     next();
   });

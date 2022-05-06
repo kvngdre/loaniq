@@ -47,7 +47,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
                     var expiry = expireOTP();
@@ -105,7 +105,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
                     var expiry = expireOTP();
@@ -132,7 +132,7 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(requestBody.password, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
                     var OTP = generateOTP();
                     var expiry = expireOTP();
@@ -153,30 +153,31 @@ const user = {
                     break;
             };
 
-            await newUser.save();
-            newUser.password = temporaryPassword;
-                       
+            // TODO: uncomment this
+            // await newUser.save();
+            // newUser.password = temporaryPassword;
+
             // Sending OTP to user mail
-            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP);
-            // userDebug(mailResponse);
-            // if(mailResponse instanceof Error) {
-            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
-            //     throw new Error('Error sending OTP. Try again.');
-            // };
-            // userDebug('Email sent successfully');
+            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP, temporaryPassword);
+            userDebug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            userDebug('Email sent successfully');
             
-            // OTP will expire after two minutes
             // TODO: Implement OTP in user model.
-            // setTimeout(() => {
-            //     newUser.otp = null;
-            //     newUser.save();
-            // }, 120_000);
+            setTimeout(() => {
+                // OTP will expire after two minutes
+                newUser.otp = null;
+                newUser.save();
+            }, 120_000);
 
             return {
                 message: 'User created and OTP sent to email.', 
-                // user: _.pick(newUser,['_id', 'name.firstName', 'name.lastName', 'password', 'email', 'role']) 
-                user: newUser
-                };
+                user: _.pick(newUser,['_id', 'fullName', 'password', 'email', 'role', 'segments']) 
+                // user: newUser
+            };
 
         }catch(exception) {
             return exception;
@@ -188,11 +189,9 @@ const user = {
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
 
-            // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-            // Check if user already verified.
             if(user.emailVerify) throw new Error('Email already verified.');
 
              //check if otp has expired
@@ -205,9 +204,12 @@ const user = {
             const isOTPValid = requestBody.otp === user.otp
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await user.updateOne( {emailVerify: true, otp: null, active: true} );
+            await user.updateOne( { emailVerify: true, otp: null, active: true } );
 
-            return user.generateToken();
+            return {
+                message: "Email has been verified and account activated.",
+                token: user.generateToken()
+            }
 
         }catch(exception) {
             return exception;
@@ -222,14 +224,12 @@ const user = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
-            if(!user.lastLoginTime) console.log(user.lastLoginTime)
-
             const token = user.generateToken();
 
             user.token = token;
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
-            await user.update({lastLoginTime: Date.now()});
+            await user.updateOne( { lastLoginTime: Date.now() } );
 
             return authUser;
 
@@ -240,9 +240,19 @@ const user = {
 
     forgotPassword: async function(requestBody) {
         try{
-            // Check if user exists
             const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Account does not exist.');
+            if(!user) throw new Error('User not found.');
+
+            const OTP = generateOTP();
+            const mailResponse = await sendOTPMail(user.email, user.name.firstName, OTP);
+            userDebug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            userDebug('Email sent successfully');
+
+            await user.update({ otp: OTP });
 
             return user;
             
@@ -250,24 +260,28 @@ const user = {
             return exception;
         };
     },
+
     // TODO: Ensure this has been completed.
     changePassword: async function(requestBody) {
         try{
-            // Check if user exists
-            const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Account does not exist.');
+            const user = await User.findOne( { email: requestBody.email } );
+            if(!user) throw new Error('User not found.');
+
+            if(requestBody.otp && user.otp !== requestBody.otp) throw new Error('Invalid OTP.');
+
+            if(requestBody.currentPassword) {
+                const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
+                if(!validPassword)  throw new Error('Password is incorrect.');
+            };
             
-            // 
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isSimilar)  throw new Error('Password is too similar to old password.');
 
-            // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            // Updating password
-            await user.updateOne({password: encryptedPassword});
+            await user.update( { otp: null, password: encryptedPassword } );
 
             return 'Password updated.';
             
@@ -276,7 +290,6 @@ const user = {
         };
     },
 
-    
     update: async function(id, requestUser, requestBody) {
         try{
             const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true});
@@ -315,6 +328,34 @@ const user = {
             return exception;
         }
     },
+
+    sendOTP: async function(email, template) {
+        const OTP = generateOTP();
+        try {
+            const user = await User.findOne( { email: email } );
+            if(!user) throw new Error('User not found.');
+            
+            await user.updateOne( { otp: OTP } );
+
+            const mailResponse = await sendOTPMail(email, user.name.firstName, OTP);
+                userDebug(mailResponse);
+                if(mailResponse instanceof Error) {
+                    userDebug(`Error sending OTP: ${mailResponse.message}`);
+                    throw new Error('Error sending OTP. Try again.');
+                };
+                userDebug('Email sent successfully');
+            
+            return {
+                message: 'OTP sent successfully',
+                otp: OTP
+            }
+
+        }catch(exception) {
+            userDebug(exception)
+            return exception;
+        }
+
+    }
 }
 
 module.exports = user;

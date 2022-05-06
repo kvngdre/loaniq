@@ -118,25 +118,9 @@ const validators = {
 
             active: Joi.boolean().equal(true),
 
-            lenderId: Joi.objectId(),
-
-            password: joiPassword
-                        .string()
-                        .required()
-                        .minOfUppercase(1)
-                        .minOfSpecialCharacters(2)
-                        .minOfNumeric(2)
-                        .noWhiteSpaces()
-                        .min(6)
-                        .max(255)
-                        .messages({
-                            'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                            'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                            'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                            'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                        })
-    
+            lenderId: Joi.objectId()
         });
+        
         return schema.validate(user);
     },
 
