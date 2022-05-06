@@ -209,7 +209,7 @@ const user = {
             user.token = token;
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
-            await user.updateOne({lastLoginTime: Date.now()});
+            await user.updateOne( { lastLoginTime: Date.now() } );
 
             return authUser;
 
@@ -270,7 +270,6 @@ const user = {
         };
     },
 
-    
     update: async function(id, requestUser, requestBody) {
         try{
             const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true});

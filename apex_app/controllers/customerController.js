@@ -164,6 +164,7 @@ const customer = {
             const result = await Loan.aggregate([
                 {
                     $match: {
+                        // TODO: Change status to approved
                         lenderId: mongoose.Types.ObjectId(user.lenderId),
                         status: 'pending',
                         createdAt: { $gte: new Date(fromDate) }

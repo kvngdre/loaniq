@@ -166,6 +166,11 @@ const loanSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+
+    booked: {
+        type: Boolean,
+        default: false
+    },
     
     customer: {
         type: mongoose.Schema.Types.ObjectId,

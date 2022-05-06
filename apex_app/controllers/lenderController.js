@@ -73,8 +73,7 @@ const lender = {
             const adminUsers = await userController.getAll( { lenderId: request.user.id, role: 'admin' } );
             if(adminUsers.length > 0) throw new Error('Admin user already created.')
 
-            request.body.role = 'admin';
-            const adminUser = await userController.create(request.body, request.user);
+            const adminUser = await userController.create('admin', request.body, request.user);
             if(!adminUser || adminUser instanceof Error) {
                 debug(adminUser);
                 throw new Error(adminUser.message);

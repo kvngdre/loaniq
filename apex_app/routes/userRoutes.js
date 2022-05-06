@@ -13,7 +13,7 @@ router.get('/', verifyToken, verifyRole(['lender', 'admin']), async (req, res) =
 });
 
 router.get('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
-    const user = await userController.get( {_id: req.params.id, lenderId: req.user.lenderId } );
+    const user = await userController.get( { _id: req.params.id, lenderId: req.user.lenderId } );
     if(!user) return res.status(404).send('User not found.');
 
     return res.status(200).send(user);
