@@ -22,6 +22,6 @@ debug(`ENV: ${app.get('env')}`);
 // Listener
 const port = process.env.PORT;
 app.listen(port, () => {
-    debug(`Listening on port ${port}`);
-    // console.log(`Listening on port ${port}`);
+    // debug(`Listening on port ${port}`);
+     console.log(`Listening on port ${port}`);
 });

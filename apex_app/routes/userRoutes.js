@@ -19,7 +19,7 @@ router.get('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res
     return res.status(200).send(user);
 });
 
-router.post('/create-user', verifyToken, verifyRole('admin'), async (req, res) => {
+router.post('/create-user', verifyToken,verifyRole(['lender', 'admin']), async (req, res) => {
     const role = req.body.role;
 
     if (!role) return res.status(400).send('Role is required.');

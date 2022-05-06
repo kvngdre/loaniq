@@ -4,10 +4,13 @@ const Lender = require('../models/lenderModel');
 const debug = require('debug')('app:lenderModel');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
+const expireOTP = require('../utils/expireOTP');
 const LenderConfig = require('../models/lenderConfigModel');
 const userController = require('../controllers/userController');
 
+
 const lender = {
+    
     createLender: async function(requestBody) {
         try{
             const doesExist = await Lender.findOne( { email: requestBody.email } );
@@ -18,24 +21,27 @@ const lender = {
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
             requestBody.password = encryptedPassword;
-
+            
             const OTP = generateOTP();
-            requestBody.otp = OTP;
-
-            // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, OTP);
-            debug(mailResponse);
-            if(mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            debug('Email sent successfully');
+            const expiry = expireOTP();
+           
+            requestBody.otpValidTime.otp = OTP; 
+            requestBody.otp.expiration_time = expiry;
+                     
+            // // Sending OTP to user mail
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, OTP);
+            // debug(mailResponse);
+            // if(mailResponse instanceof Error) {
+            //     debug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
+            // debug('Email sent successfully');
 
             const newLender = await Lender.create(requestBody);
-
+            
             return {
                 message: 'Lender created and OTP sent to email.', 
-                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp', 'lenderURL']) 
+                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp', 'lenderURL','expireIn']) 
             };
 
         }catch(exception) {
@@ -89,7 +95,8 @@ const lender = {
 
     verifyRegister: async function (requestBody) {
         try{
-            const lender = await Lender.findOne( { email: requestBody.email } );
+            const lender = await Lender.findOne( { email: requestBody.email,} );
+            console.log(lender)
             if(!lender) throw new Error('Invalid email or password.');
 
             // Confirm password
@@ -99,7 +106,13 @@ const lender = {
             // Check if lender already verified.
             if(lender.emailVerify) throw new Error('Email already verified.');
 
-            // confirm OTP
+            //check if otp has expired
+            const expiry = lender.expiration_time
+            console.log(expiry)
+            let currentTime = Date.now();
+            const diff = expiry - currentTime;
+            if(expiry < currentTime) throw new Error ('token expire');
+            
             const isOTPValid = requestBody.otp === lender.otp
             if(!isOTPValid) throw new Error('Invalid OTP.');
 

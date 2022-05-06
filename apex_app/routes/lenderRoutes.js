@@ -82,7 +82,7 @@ router.post('/create-admin', verifyToken, verifyRole('lender'), async (req, res)
     const { error } = lenderValidators.adminCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const adminUser = await lenderController.createAdmin(req);
+    const adminUser = await lenderController.createAdmin(req.body);
     if(adminUser instanceof Error) return res.status(400).send(adminUser.message);
 
     return res.status(201).send(adminUser);

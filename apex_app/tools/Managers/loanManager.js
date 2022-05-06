@@ -4,6 +4,7 @@ const debug = require('debug')('app:loanMgr')
 const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
 const Customer = require('../../models/customerModel');
+const Origin = require('../../models/originModel');
 const pickRandomUser = require('../../utils/pickRandomAgent');
 const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
@@ -232,6 +233,17 @@ const manager = {
     },
 
     checkExpiringLoans: async function() {
+       
+        Customer.bulkWrite( 
+            [ 
+            { updateMany :
+               {
+                  "filter" : {ippis: ippis },
+                  "update" : { $pop: { netPay }},
+                  "update" : { $unshit: { netPay}}
+               },
+            }
+         ] );  
     
         const today = new Date().toLocaleDateString();
     
@@ -248,6 +260,10 @@ const manager = {
             
         }
     }
+
+   
+
+
     
 };
 

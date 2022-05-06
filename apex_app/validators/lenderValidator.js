@@ -31,25 +31,28 @@ const validators = {
     creation: function(lender) {
         const schema = Joi.object({
             // TODO: change values to required.
-            companyName: Joi.string()
-                            .required(),
+            companyName: Joi.string(),
+                            // .required(),
             
-            slug: Joi.string()
-                     .required(),
+            slug: Joi.string(),
+                    //  .required(),
 
-            companyAddress: Joi.string()
-                               .required(),
+            companyAddress: Joi.string(),
+                            //    .required(),
 
-            cacNumber: Joi.string()
-                          .required(),
+            cacNumber: Joi.string(),
+                        //   .required(),
 
             category: Joi.string(),
 
-            phone: phoneSchema.required(),
+            phone: phoneSchema,
+            // .required(),
 
-            email: emailSchema.required(),
+            email: emailSchema,
+            // .required(),
 
-            password: passwordSchema.required(),
+            password: passwordSchema,
+            // .required(),
 
             lenderURL: Joi.string()
         });

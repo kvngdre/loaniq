@@ -15,6 +15,14 @@ const nameSchema = Joi.object({
                    .min(3)
                    .max(50)
 });
+const otpValidTimeSchema = Joi.object({
+    otp: Joi.string()
+    .required()
+    .pattern(/^[0-9]{6}$/)
+    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
+                 
+    expiration_time: Joi.date()
+});
 
 const phoneSchema = Joi.string()
                        .pattern(/^0([7-9])[0-9]{9}$/)
@@ -122,12 +130,13 @@ const validators = {
 
     validateRegVerification: function(user) {
         const schema = Joi.object({
-            // email: emailSchema.required(),
+            email: emailSchema.required(),
             otp: Joi.string()
-                    .required()
-                    .pattern(/^[0-9]{6}$/)
-                    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-            // password: passwordSchema.required()
+            .required()
+            .pattern(/^[0-9]{6}$/)
+            .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
+                    
+            password: passwordSchema.required()
         });
         return schema.validate(user);
     },

@@ -1,23 +1,24 @@
 const mongoose = require('mongoose');
 const User = require('./userModel');
 const jwt = require('jsonwebtoken');
+const { number } = require('joi');
 
 const lenderSchema = new mongoose.Schema({
     companyName: {
         type: String,
-        required: true,
+        // required: true,
         trim: true,
     },
 
     slug: {
         type: String,
         unique: true,
-        required: true
+        // required: true
     },
 
     companyAddress: {
         type: String,
-        required: true,
+        // required: true,
         minLength: 10,
         maxLength: 255,
         trim: true
@@ -25,7 +26,7 @@ const lenderSchema = new mongoose.Schema({
 
     cacNumber: {
         type: String,
-        required: true
+        // required: true
     },
 
     category: {
@@ -35,7 +36,7 @@ const lenderSchema = new mongoose.Schema({
             'finance house', 
             'money lender'
         ],
-        required: true,
+        // required: true,
     },
 
     phone: {
@@ -48,20 +49,22 @@ const lenderSchema = new mongoose.Schema({
         type: String,
         unique: true,
         trim: true,
-        required: true
+        // required: true
     },
 
     password: {
         type: String,
         minLength: 6,
         maxLength: 1024,
-        required: true
+        // required: true
     },
 
     otp: {
         type: String
     },
-
+    expiration_time: {
+            type: Date,
+    },
     active: {
         type: Boolean
     },
@@ -84,7 +87,7 @@ const lenderSchema = new mongoose.Schema({
     },
 
 }, {
-    timestamps: true
+    timestamps: true,
 }); 
 
 lenderSchema.methods.generateToken = function() {
