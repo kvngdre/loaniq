@@ -22,11 +22,10 @@ const lender = {
             const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
             requestBody.password = encryptedPassword;
             
-            const OTP = generateOTP();
-            const expiry = expireOTP();
+            const { OTP, expirationTime } = generateOTP();
            
             requestBody.otpValidTime.otp = OTP; 
-            requestBody.otp.expiration_time = expiry;
+            requestBody.expiration_time = expirationTime;
                      
             // // Sending OTP to user mail
             // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, OTP);
@@ -41,7 +40,7 @@ const lender = {
             
             return {
                 message: 'Lender created and OTP sent to email.', 
-                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp', 'lenderURL','expireIn']) 
+                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp', 'lenderURL']) 
             };
 
         }catch(exception) {

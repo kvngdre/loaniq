@@ -60,11 +60,15 @@ const lenderSchema = new mongoose.Schema({
     },
 
     otp: {
-        type: String
+        value: {
+            type: String
+        },
+        
+        expirationDate:{
+            type: Number
+        }
     },
-    expiration_time: {
-            type: Date,
-    },
+
     active: {
         type: Boolean
     },

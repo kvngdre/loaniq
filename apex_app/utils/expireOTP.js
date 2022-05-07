@@ -5,7 +5,7 @@ const validTime = 5;
 * Multiple by 60000 to convert to milliseconds
 */
 function expireOTP() {
-    const expiration_time = Date.now() + validTime *60000;
+    const expiration_time = Date.now() + validTime * 60000;
     return  expiration_time;
     }
 
