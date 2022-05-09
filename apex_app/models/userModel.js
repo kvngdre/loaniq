@@ -65,12 +65,15 @@ const userSchema = new mongoose.Schema({
     },
 
     otp: {
-        type: String
+        value: {
+            type: String,
+        },
+        
+        expirationTime: {
+            type: Number,
+        }
     },
-    expiration_time: {
-            type: Date,
-    },
-
+    
     role: {
         type: String,
         enum: [

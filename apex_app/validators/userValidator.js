@@ -133,15 +133,11 @@ const validators = {
     validateRegVerification: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-<<<<<<< HEAD
             otp: Joi.string()
             .required()
             .pattern(/^[0-9]{6}$/)
             .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
                     
-=======
-            otp: otpSchema.required(),
->>>>>>> 346694aa49d26fdccd50c1b09d2382bc9f55d3e9
             password: passwordSchema.required()
         });
 
