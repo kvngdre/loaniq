@@ -81,7 +81,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/forgot-password', async (req, res) => {
-    const { error } = userValidator.validateForgotPassword(req.body);
+    const { error } = userValidator.validateEmail(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const user = await userController.forgotPassword(req.body);
@@ -112,13 +112,13 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
 });
 
 router.post('/send-otp', async (req, res) => {
-    const { error } = userValidator.validateOTP(req.body);
+    const { error } = userValidator.validateEmail(req.body);
     if(error) return res.status(400).send(error.details[0].message);
-
-    const response = await userController.sendOTP(req.body.email, req.body.name);
-    if(response instanceof Error) return res.status(400).send(response.message);
-
-    return res.status(200).send(response);
+    
+    const otp = await userController.sendOTP(req.body.email, req.body.name);
+    if(otp instanceof Error) return res.status(400).send(response.message);
+    
+    return res.status(200).send(otp);
 });
 
 router.delete('/:id', verifyToken, verifyRole('admin'),  async (req, res) => {

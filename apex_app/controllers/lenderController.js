@@ -1,10 +1,9 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const Lender = require('../models/lenderModel');
+const sendOTPMail = require('../utils/sendMail');
 const debug = require('debug')('app:lenderModel');
-const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
-const expireOTP = require('../utils/expireOTP');
 const LenderConfig = require('../models/lenderConfigModel');
 const userController = require('../controllers/userController');
 
@@ -22,13 +21,10 @@ const lender = {
             const encryptedPassword = await bcrypt.hash(requestBody.password, salt);
             requestBody.password = encryptedPassword;
             
-            const { OTP, expirationTime } = generateOTP();
-           
-            requestBody.otpValidTime.otp = OTP; 
-            requestBody.expiration_time = expirationTime;
+            requestBody.otp = generateOTP(); 
                      
             // // Sending OTP to user mail
-            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, OTP);
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, otpObj.OTP);
             // debug(mailResponse);
             // if(mailResponse instanceof Error) {
             //     debug(`Error sending OTP: ${mailResponse.message}`);
@@ -39,8 +35,9 @@ const lender = {
             const newLender = await Lender.create(requestBody);
             
             return {
+                // TODO: remove otp from response
                 message: 'Lender created and OTP sent to email.', 
-                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp', 'lenderURL']) 
+                user: _.pick(newLender,['_id', 'companyName', 'phone', 'email', 'otp.OTP', 'lenderURL']) 
             };
 
         }catch(exception) {
@@ -55,19 +52,16 @@ const lender = {
     },
 
     get: async function(id) {
-        const lender = await Lender.findById(id)
-                                   .select('-password -otp');
-        if(!lender) debug(lender);
-
-        return lender;
+        return await Lender.findById(id).select('-password -otp');
     },
 
     getSettings: async function(queryParam) {
         try{
             const lenderSettings = LenderConfig.findOne( queryParam );
-            if(!lenderSettings) throw new Error('No settings for lender.');
+            if(!lenderSettings) throw new Error('No settings for lender');
         
             return lenderSettings;
+
         }catch(exception) {
             return exception;
         };
@@ -75,7 +69,7 @@ const lender = {
 
     createAdmin: async function(request){
         try{
-            const adminUsers = await userController.getAll( { lenderId: request.user.id, role: 'admin' } );
+            const adminUsers = await userController.getAll( { lenderId: request.user.lenderId, role: 'admin' } );
             if(adminUsers.length > 0) throw new Error('Admin user already created.')
 
             const adminUser = await userController.create('admin', request.body, request.user);
@@ -94,26 +88,16 @@ const lender = {
     verifyRegister: async function (requestBody) {
         try{
             const lender = await Lender.findOne( { email: requestBody.email,} );
-            console.log(lender)
             if(!lender) throw new Error('Invalid email or password.');
 
-            // Confirm password
             const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-            // Check if lender already verified.
             if(lender.emailVerify) throw new Error('Email already verified.');
 
-            //check if otp has expired
-            const expiry = lender.otp.expirationTime
-            let currentTime = Date.now();
-            const diff = expiry - currentTime;
-            if(expiry < currentTime) throw new Error ('token expire');
+            if(requestBody?.otp !== lender.otp.OTP || Date.now() > lender.otp.expirationTime) throw new Error('Invalid OTP.');
             
-            const isOTPValid = requestBody.otp === lender.otp.value
-            if(!isOTPValid) throw new Error('Invalid OTP.');
-
-            await lender.updateOne( {emailVerify: true, otp:{value:null} , active: true} );
+            await lender.updateOne( { emailVerify: true, 'otp.OTP': null, active: true } );
 
             return lender.generateToken();
 
@@ -147,20 +131,16 @@ const lender = {
 
     forgotPassword: async function(requestBody) {
         try{
-            const lender = await Lender.findOne( {email: requestBody.email} );
-            if(!lender) throw new Error('User not found.');
+            const lender = await Lender.findOneAndUpdate( {email: requestBody.email}, {otp: generateOTP()}, {new: true} ).select('password');
+            if(!lender) throw new Error('Lender not found.');
 
-            const OTP = generateOTP();
-
-            const mailResponse = await sendOTPMail(user.email, user.name.firstName, OTP);
+            const mailResponse = await sendOTPMail(lender.email, lender.companyName, lender.otp.OTP);
             debug(mailResponse);
             if(mailResponse instanceof Error) {
                 userDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
             debug('Email sent successfully');
-
-            await lender.update( { 'otp.OTP': OTP } );
 
             return lender;
             
@@ -172,9 +152,9 @@ const lender = {
     changePassword: async function(requestBody) {
         try{
             const lender = await Lender.findOne( { email: requestBody.email } );
-            if(!lender) throw new Error('User not found.');
+            if(!lender) throw new Error('Lender not found.');
 
-            if(requestBody.otp && lender.otp !== requestBody.otp) throw new Error('Invalid OTP.');
+            if(requestBody?.otp !== lender.otp.OTP || Date.now() > lender.otp.expirationTime) throw new Error('Invalid OTP.');
 
             if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, lender.password);
@@ -188,7 +168,7 @@ const lender = {
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            await user.update( { otp: null, password: encryptedPassword } );
+            await lender.updateOne( { 'otp.OTP': null, password: encryptedPassword } );
 
             return 'Password updated.';
             
@@ -199,7 +179,7 @@ const lender = {
 
     update: async function(id, requestBody) {
         try{
-            const lender = await Lender.findOneAndUpdate( {_id: id}, requestBody, options={new: true} );
+            const lender = await Lender.findOneAndUpdate( {_id: id}, requestBody, {new: true} );
             if(!lender) throw new Error('Lender not found.');
 
             return lender;

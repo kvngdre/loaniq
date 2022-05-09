@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { number } = require('joi');
 
 const lenderSchema = new mongoose.Schema({
+    // TODO: turn on required
     companyName: {
         type: String,
         // required: true,
@@ -65,7 +66,7 @@ const lenderSchema = new mongoose.Schema({
         },
         
         expirationTime: {
-                type: Number,
+            type: Number,
         }
     },
 

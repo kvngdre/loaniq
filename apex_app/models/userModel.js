@@ -65,7 +65,7 @@ const userSchema = new mongoose.Schema({
     },
 
     otp: {
-        value: {
+        OTP: {
             type: String,
         },
         
@@ -129,14 +129,14 @@ userSchema.methods.generateToken = function() {
     }, 'jwtPrivateKey');
 }
 
-userSchema.pre('save', function (next) {
-    // capitalize names
-    this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
-    this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
-    if(this.name?.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
+// userSchema.pre('save', function (next) {
+//     // capitalize names
+//     this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
+//     this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
+//     if(this.name?.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
 
-    next();
-  });
+//     next();
+//   });
 
 const User = mongoose.model('User', userSchema);
 

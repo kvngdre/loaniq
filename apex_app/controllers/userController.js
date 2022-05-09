@@ -2,11 +2,10 @@ require('dotenv').config();
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
+const sendOTPMail = require('../utils/sendMail');
 const Segment = require('../models/segmentModel');
-const sendOTPMail = require('../utils/sendOTPMail');
+const userDebug = require('debug')('app:userCtrl');
 const generateOTP = require('../utils/generateOTP');
-const userDebug = require('debug')('app:userContr');
-const ObjectId = require('mongoose').Types.ObjectId;
 const generateRandomPassword = require('../utils/generatePassword');
 
 
@@ -32,7 +31,6 @@ const user = {
      */
     create: async function(role, requestBody, user) {
         try {
-            // let role = requestBody.role;
             const allSegments = await Segment.find().select('_id')
 
             switch(role) {
@@ -46,20 +44,14 @@ const user = {
                     var temporaryPassword = generateRandomPassword();
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
-                    
-                    var otpResult = generateOTP();
-           
-                    requestBody.otp = otpResult; 
-                    // TODO: gen random password.
+                    var encryptedTempPassword = await bcrypt.hash(temporaryPassword, salt);
 
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
-                        password: encryptedPassword,
-                        otp: otpResult,
-                        expirationTime:otpResult,
+                        password: encryptedTempPassword,
+                        otp: generateOTP(),
                         role,
                         active: requestBody.active,
                         lenderId: user.lenderId
@@ -75,18 +67,13 @@ const user = {
                     var saltRounds = 10;
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
-                    
-                    var otpResult = generateOTP();
-           
-                    requestBody.otp = otpResult; 
 
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: otpResult,
-                        expirationTime:otpResult,
+                        otp: generateOTP(),
                         role,
                         active: requestBody.active,
                         segments: !requestBody.segments ? allSegments : requestBody.segments,
@@ -104,17 +91,12 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var otpResult = generateOTP();
-           
-                    requestBody.otp = otpResult; 
-
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: otpResult,
-                        expirationTime:otpResult,
+                        otp: generateOTP(),
                         role,
                         active: requestBody.active,
                         lenderId: user.lenderId
@@ -122,7 +104,6 @@ const user = {
                     break;
                 
                 case "loanAgent":
-                    // Check if admin email has been registered.
                     var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
@@ -132,17 +113,12 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var otpResult = generateOTP();
-           
-                    requestBody.otp = otpResult; 
-                   
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: otpResult,
-                        expirationTime:otpResult,
+                        otp: generateOTP(),
                         role,
                         active: requestBody.active,
                         segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
@@ -152,31 +128,21 @@ const user = {
                     break;
             };
 
-            // TODO: uncomment this
-            // await newUser.save();
-            // newUser.password = temporaryPassword;
+            await newUser.save();
+            newUser.password = temporaryPassword;
 
             // Sending OTP to user mail
-            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, otpResult, temporaryPassword);
-            // userDebug(mailResponse);
-            // if(mailResponse instanceof Error) {
-            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
-            //     throw new Error('Error sending OTP. Try again.');
-            // };
-            // userDebug('Email sent successfully');
+            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, newUser.otp.OTP, temporaryPassword);
+            userDebug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            userDebug('Email sent successfully');
             
-            // TODO: Implement OTP in user model.
-            // setTimeout(() => {
-            //     // OTP will expire after two minutes
-            //     newUser.otp = null;
-            //     newUser.save();
-            // }, 120_000);
-
             return {
                 message: 'User created and OTP sent to email.', 
-                //TODO: Remove otp from pick list
-                user: _.pick(newUser,['_id', 'fullName', 'password', 'email','otp','role', 'segments']) 
-                // user: newUser
+                user: _.pick(newUser,['_id', 'fullName', 'password', 'email', 'otp.OTP', 'role', 'segments']) 
             };
 
         }catch(exception) {
@@ -186,26 +152,18 @@ const user = {
 
     verifyRegister: async function (requestBody) {
         try{
+            // TODO: Ask victor if I should implement change password func directly?
             const user = await User.findOne( {email: requestBody.email} );
-            console.log(user, 'user')
             if(!user) throw new Error('Invalid email or password.');
 
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-            if(user.emailVerify) throw new Error('Email already verified.');
-
-             //check if otp has expired
-             const expiry = user.otp.expirationTime
-             let currentTime = Date.now();
-             const diff = expiry - currentTime;
-             if(expiry < currentTime) throw new Error ('token expire');
+            if(user.emailVerify) throw new Error('User already verified.');
+            
+            if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP');
              
-            // confirm OTP
-            const isOTPValid = requestBody.otp === user.otp.value
-            if(!isOTPValid) throw new Error('Invalid OTP.');
-
-            await user.updateOne( { emailVerify: true, otp:{value:null}, active: true } );
+            await user.updateOne( { emailVerify: true, 'otp.OTP': null, active: true } );
 
             return {
                 message: "Email has been verified and account activated.",
@@ -218,6 +176,8 @@ const user = {
     },
 
     login: async function(requestBody) {
+        // TODO: implement lock after a number of unsuccessful login attempts.
+        // TODO: inform victor that the new user password rest would be done same time as verify email.
         try{
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
@@ -241,20 +201,17 @@ const user = {
 
     forgotPassword: async function(requestBody) {
         try{
-            const user = await User.findOne( {email: requestBody.email} );
+            let user = await User.findOneAndUpdate( { email: requestBody.email }, { otp: generateOTP() }, {new: true}  ).select('-password');
             if(!user) throw new Error('User not found.');
 
-            const OTP = generateOTP();
-            const mailResponse = await sendOTPMail(user.email, user.name.firstName, OTP);
+            const mailResponse = await sendOTPMail(user.email, user.name.firstName, user.otp.OTP);
             userDebug(mailResponse);
             if(mailResponse instanceof Error) {
                 userDebug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
             userDebug('Email sent successfully');
-
-            await user.update({ otp: OTP });
-
+            
             return user;
             
         }catch(exception) {
@@ -268,7 +225,7 @@ const user = {
             const user = await User.findOne( { email: requestBody.email } );
             if(!user) throw new Error('User not found.');
 
-            if(requestBody.otp && user.otp !== requestBody.otp) throw new Error('Invalid OTP.');
+            if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP.');
 
             if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
@@ -282,7 +239,7 @@ const user = {
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            await user.update( { otp: null, password: encryptedPassword } );
+            await user.update( { 'otp.OTP': null, password: encryptedPassword } );
 
             return 'Password updated.';
             
@@ -293,16 +250,14 @@ const user = {
 
     update: async function(id, requestUser, requestBody) {
         try{
-            const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true});
+            const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true}).select('-password');
             if(!user) {
                 userDebug(user);
                 throw new Error('User not found.');
             };
 
             // TODO: how to specify if it's a delete or ADD??
-            // if(requestBody.segments || requestBody.customers) {
-            //     segments
-            // }
+            // TODO: ask front end if the can build the array.
             
             return user;
             
@@ -331,14 +286,11 @@ const user = {
     },
 
     sendOTP: async function(email, template) {
-        const OTP = generateOTP();
         try {
-            const user = await User.findOne( { email: email } );
+            const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true}  ).select('otp');
             if(!user) throw new Error('User not found.');
-            
-            await user.updateOne( { otp: OTP } );
 
-            const mailResponse = await sendOTPMail(email, user.name.firstName, OTP);
+            const mailResponse = await sendOTPMail(email, user.name.firstName, user.otp.OTP);
                 userDebug(mailResponse);
                 if(mailResponse instanceof Error) {
                     userDebug(`Error sending OTP: ${mailResponse.message}`);
@@ -348,7 +300,7 @@ const user = {
             
             return {
                 message: 'OTP sent successfully',
-                otp: OTP
+                otp: user.otp.OTP
             }
 
         }catch(exception) {

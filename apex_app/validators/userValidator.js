@@ -1,6 +1,6 @@
 const Joi = require('joi');
-const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
+const { joiPassword } = require('joi-password');
 
 const nameSchema = Joi.object({
     firstName: Joi.string()
@@ -14,14 +14,6 @@ const nameSchema = Joi.object({
     middleName: Joi.string()
                    .min(3)
                    .max(50)
-});
-const otpValidTimeSchema = Joi.object({
-    otp: Joi.string()
-    .required()
-    .pattern(/^[0-9]{6}$/)
-    .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-                 
-    expiration_time: Joi.date()
 });
 
 const phoneSchema = Joi.string()
@@ -47,7 +39,7 @@ const passwordSchema = joiPassword.string()
                                     'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
                                     'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
                                     'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                                    });
+                                    })
 
 const segmentSchema = Joi.alternatives()
                          .try(Joi.array().items(Joi.objectId), Joi.string().valid('all'))
@@ -66,7 +58,6 @@ const validators = {
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
                 role: Joi.string().required(),
-                // password: passwordSchema.required()
             });
 
             return schema.validate(user);
@@ -79,7 +70,6 @@ const validators = {
                 email: emailSchema.required(),
                 role: Joi.string().required(),
                 segments: segmentSchema.required(),
-                // password: passwordSchema.required()
         
             });
         
@@ -92,7 +82,6 @@ const validators = {
                 phone: phoneSchema,
                 email: emailSchema,
                 role: Joi.string().required(),
-                // password: passwordSchema
             });
         
             return schema.validate(user);
@@ -107,8 +96,6 @@ const validators = {
                 segments: segmentSchema.required(),
                 target: Joi.number().required(),
                 achieved: Joi.number(),
-                // password: passwordSchema.required()
-        
             });
 
             return schema.validate(user);
@@ -133,12 +120,8 @@ const validators = {
     validateRegVerification: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            otp: Joi.string()
-            .required()
-            .pattern(/^[0-9]{6}$/)
-            .messages( {'string.pattern.base': '{#label} must be 6 digits.'} ),
-                    
-            password: passwordSchema.required()
+            otp: otpSchema.required(),
+            password: Joi.string().required()
         });
 
         return schema.validate(user);
@@ -147,13 +130,13 @@ const validators = {
     validateLogin: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: Joi.string().required()
+            password: passwordSchema.required()
         });
 
         return schema.validate(user);
     },
     
-    validateForgotPassword: function(user) {
+    validateEmail: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
         });
@@ -162,24 +145,20 @@ const validators = {
     },
 
     validateChangePassword: function(user) {
+        // TODO: discuss this with Victor. 
         const schema = Joi.object({
             email: emailSchema.required(),
             newPassword: passwordSchema.required(),
             otp: otpSchema,
-            currentPassword: Joi.string().when('otp', {
-                is: Joi.exist(),
-                then: Joi.required(),
-                otherwise: Joi.forbidden()
-            }),
+            currentPassword: Joi.string(),
+            // currentPassword: Joi.string().when('otp', {
+            //     is: Joi.exist(),
+            //     then: Joi.required(),
+            //     otherwise: Joi.forbidden()
+            // }),
         });
 
         return schema.validate(user);
-    },
-
-    validateOTP: function(otp) {
-        const schema = otpSchema.required()
-
-        return schema.validate(otp);
     }
 }
 

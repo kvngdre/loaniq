@@ -6,17 +6,6 @@ const userValidators = require('../validators/userValidator');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderController = require('../controllers/lenderController');
 
-router.post('/', async (req, res) => {
-    const { error } = lenderValidators.creation(req.body);
-    if(error) return res.status(404).send(error.details[0].message);
-
-    const lender = await lenderController.createLender(req.body);
-    if(lender instanceof Error) return res.status(400).send(lender.message);
-
-    //TODO: generate lender url.
-    return res.status(201).send(lender);
-});
-
 router.get('/', async (req, res) => {
     const lenders = await lenderController.getAll();
     if(lenders.length === 0) return res.status(404).send('No lenders found.');
@@ -35,6 +24,17 @@ router.get('/:id', async (req, res) => {
     if(!lender) return res.status(404).send('Lender not found.');
 
     return res.status(200).send(lender);   
+});
+
+router.post('/', async (req, res) => {
+    const { error } = lenderValidators.creation(req.body);
+    if(error) return res.status(404).send(error.details[0].message);
+
+    const lender = await lenderController.createLender(req.body);
+    if(lender instanceof Error) return res.status(400).send(lender.message);
+
+    //TODO: generate lender url.
+    return res.status(201).send(lender);
 });
 
 router.post('/verify-lender', async (req, res) => {
@@ -110,14 +110,6 @@ router.put('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
     if(settings instanceof Error) return res.status(400).send(settings.message);
 
     return res.status(201).send(settings);
-});
-
-router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
-    console.log(req.user.lenderId);
-    return
-    const settings = await lenderController.getSettings({lenderId: req.user.lenderId});
-
-    return res.status(200).send(settings);
 });
 
 router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {

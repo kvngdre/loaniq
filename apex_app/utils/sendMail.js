@@ -1,9 +1,10 @@
 require('dotenv').config();
-const debug = require('debug')('mailJs');
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
+const debug = require('debug')('sendMail');
 
-// Importing dotenv
+// TODO: clean up sendMail with domain name
+
 const {
     clientID,
     clientSecret,
@@ -57,7 +58,7 @@ async function getTransporter() {
  * @param {number} generatedOTP 
  * @returns {Promise}
  */
-const sendOTP = async function(userEmailAddress, name, generatedOTP, tempPassword='') {
+const sendMail = async function(userEmailAddress, name, generatedOTP, tempPassword='') {
     const transporter = await getTransporter();
 
     // Defining the mailing options
@@ -81,13 +82,13 @@ const sendOTP = async function(userEmailAddress, name, generatedOTP, tempPasswor
         `
     }; 
 
-    // Sending mail with transporter object
     try{
         await transporter.sendMail(mailOptions);
     }catch(exception) {
+        debug(exception);
         return exception;
     };
 };
 
 
-module.exports = sendOTP;
+module.exports = sendMail;
