@@ -168,8 +168,8 @@ const validators = {
             otp: otpSchema,
             currentPassword: Joi.string().when('otp', {
                 is: Joi.exist(),
-                then: Joi.forbidden(),
-                otherwise: Joi.required()
+                then: Joi.required(),
+                otherwise: Joi.forbidden()
             }),
         });
 

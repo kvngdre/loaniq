@@ -2,6 +2,7 @@ const router = require('express').Router();
 const debug = require('debug')('app:lenderRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const userValidators = require('../validators/userValidator');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderController = require('../controllers/lenderController');
 
@@ -61,16 +62,20 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/forgot-password', async (req, res) => {
-    const { error } = lenderValidators.validateForgotPassword(req.body);
+    const { error } = userValidators.validateForgotPassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const lender = await lenderController.forgotPassword(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    res.redirect(307, `http://localhost:8480/api/lenders/change-password/`);
+    // res.redirect(307, `http://localhost:8480/api/lenders/change-password/`);
+    return res.status(200).send('Password reset OTP sent to email.');
 });
 
-router.post('/change-password/', async (req, res) => {
+router.post('/change-password', async (req, res) => {
+    const { error } = userValidator.validateChangePassword(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+    
     const lender = await lenderController.changePassword(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 

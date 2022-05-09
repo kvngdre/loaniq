@@ -149,7 +149,19 @@ const lender = {
     forgotPassword: async function(requestBody) {
         try{
             const lender = await Lender.findOne( {email: requestBody.email} );
-            if(!lender) throw new Error('Account does not exist.');
+            if(!lender) throw new Error('User not found.');
+
+            const OTP = generateOTP();
+
+            const mailResponse = await sendOTPMail(user.email, user.name.firstName, OTP);
+            debug(mailResponse);
+            if(mailResponse instanceof Error) {
+                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
+            debug('Email sent successfully');
+
+            await lender.update( { 'otp.OTP': OTP } );
 
             return lender;
             
@@ -160,20 +172,24 @@ const lender = {
     // TODO: Ensure this has been completed.
     changePassword: async function(requestBody) {
         try{
-            const lender = await Lender.findOne( {email: requestBody.email} );
-            if(!lender) throw new Error('Account does not exist.');
+            const lender = await Lender.findOne( { email: requestBody.email } );
+            if(!lender) throw new Error('User not found.');
+
+            if(requestBody.otp && lender.otp !== requestBody.otp) throw new Error('Invalid OTP.');
+
+            if(requestBody.currentPassword) {
+                const validPassword = await bcrypt.compare(requestBody.currentPassword, lender.password);
+                if(!validPassword)  throw new Error('Password is incorrect.');
+            };
             
-            // 
             const isSimilar = await bcrypt.compare(requestBody.newPassword, lender.password);
             if(isSimilar)  throw new Error('Password is too similar to old password.');
 
-            // Encrypting password
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            // Updating password
-            await lender.updateOne( {password: encryptedPassword} );
+            await user.update( { otp: null, password: encryptedPassword } );
 
             return 'Password updated.';
             
@@ -184,9 +200,7 @@ const lender = {
 
     update: async function(id, requestBody) {
         try{
-            const lender = await Lender.findOneAndUpdate(
-                 {_id: id}, requestBody, options={new: true}
-                );
+            const lender = await Lender.findOneAndUpdate( {_id: id}, requestBody, options={new: true} );
             if(!lender) throw new Error('Lender not found.');
 
             return lender;

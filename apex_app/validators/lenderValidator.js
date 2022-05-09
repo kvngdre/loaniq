@@ -82,8 +82,7 @@ const validators = {
 
     validateForgotPassword: function(lender) {
         const schema = Joi.object({
-            email: emailSchema.required(),
-            newPassword: passwordSchema.required()
+            email: emailSchema.required()
         });
         return schema.validate(lender);
     },
@@ -120,7 +119,7 @@ const validators = {
 
             lenderId: Joi.objectId()
         });
-        
+
         return schema.validate(user);
     },
 

@@ -232,17 +232,8 @@ const manager = {
             {status: 'completed', active: false}
         );
 
-        console.log(loans)
         return loans
     
-        // if(loans.length > 0) {
-        //     loans.forEach(async (loan) => {
-        //         loan.status = 'completed';
-        //         loan.active = false;
-    
-        //         await loan.save();
-        //     });
-        // }
     }
 };
 

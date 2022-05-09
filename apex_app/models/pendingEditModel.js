@@ -35,6 +35,10 @@ const pendingSchema = new mongoose.Schema({
         default: 'pending'
     },
 
+    reason: {
+        type: String
+    }
+
 }, {
     strict: false,
     timestamps: true
