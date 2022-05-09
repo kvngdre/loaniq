@@ -5,7 +5,6 @@ const User = require('../models/userModel');
 const Segment = require('../models/segmentModel');
 const sendOTPMail = require('../utils/sendOTPMail');
 const generateOTP = require('../utils/generateOTP');
-const expireOTP = require('../utils/expireOTP');
 const userDebug = require('debug')('app:userContr');
 const ObjectId = require('mongoose').Types.ObjectId;
 const generateRandomPassword = require('../utils/generatePassword');
@@ -49,10 +48,9 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var OTP = generateOTP();
-                    var expiry = expireOTP();
+                    var otpResult = generateOTP();
            
-                   requestBody.expiration_time = expireUser
+                    requestBody.otp = otpResult; 
                     // TODO: gen random password.
 
                     var newUser = new User({
@@ -60,8 +58,8 @@ const user = {
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: OTP,
-                        expiration_time:expiry,
+                        otp: otpResult,
+                        expirationTime:otpResult,
                         role,
                         active: requestBody.active,
                         lenderId: user.lenderId
@@ -78,18 +76,17 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var OTP = generateOTP();
-                    var expiry = expireOTP();
+                    var otpResult = generateOTP();
            
-                    requestBody.expiration_time = expireUser
+                    requestBody.otp = otpResult; 
 
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: OTP,
-                        expiration_time:expiry,
+                        otp: otpResult,
+                        expirationTime:otpResult,
                         role,
                         active: requestBody.active,
                         segments: !requestBody.segments ? allSegments : requestBody.segments,
@@ -107,16 +104,17 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var OTP = generateOTP();
-                    var expiry = expireOTP();
+                    var otpResult = generateOTP();
+           
+                    requestBody.otp = otpResult; 
 
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: OTP,
-                        expiration_time:expiry,
+                        otp: otpResult,
+                        expirationTime:otpResult,
                         role,
                         active: requestBody.active,
                         lenderId: user.lenderId
@@ -134,16 +132,17 @@ const user = {
                     var salt = await bcrypt.genSalt(saltRounds);
                     var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
                     
-                    var OTP = generateOTP();
-                    var expiry = expireOTP();
+                    var otpResult = generateOTP();
+           
+                    requestBody.otp = otpResult; 
                    
                     var newUser = new User({
                         name: requestBody.name,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
-                        otp: OTP,
-                        expiration_time:expiry,
+                        otp: otpResult,
+                        expirationTime:otpResult,
                         role,
                         active: requestBody.active,
                         segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
@@ -158,24 +157,25 @@ const user = {
             // newUser.password = temporaryPassword;
 
             // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, OTP, temporaryPassword);
-            userDebug(mailResponse);
-            if(mailResponse instanceof Error) {
-                userDebug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            userDebug('Email sent successfully');
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, otpResult, temporaryPassword);
+            // userDebug(mailResponse);
+            // if(mailResponse instanceof Error) {
+            //     userDebug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
+            // userDebug('Email sent successfully');
             
             // TODO: Implement OTP in user model.
-            setTimeout(() => {
-                // OTP will expire after two minutes
-                newUser.otp = null;
-                newUser.save();
-            }, 120_000);
+            // setTimeout(() => {
+            //     // OTP will expire after two minutes
+            //     newUser.otp = null;
+            //     newUser.save();
+            // }, 120_000);
 
             return {
                 message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'fullName', 'password', 'email', 'role', 'segments']) 
+                //TODO: Remove otp from pick list
+                user: _.pick(newUser,['_id', 'fullName', 'password', 'email','otp','role', 'segments']) 
                 // user: newUser
             };
 
@@ -187,6 +187,7 @@ const user = {
     verifyRegister: async function (requestBody) {
         try{
             const user = await User.findOne( {email: requestBody.email} );
+            console.log(user, 'user')
             if(!user) throw new Error('Invalid email or password.');
 
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
@@ -195,16 +196,16 @@ const user = {
             if(user.emailVerify) throw new Error('Email already verified.');
 
              //check if otp has expired
-             const expiry = user.expiration_time
+             const expiry = user.otp.expirationTime
              let currentTime = Date.now();
              const diff = expiry - currentTime;
              if(expiry < currentTime) throw new Error ('token expire');
              
             // confirm OTP
-            const isOTPValid = requestBody.otp === user.otp
+            const isOTPValid = requestBody.otp === user.otp.value
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await user.updateOne( { emailVerify: true, otp: null, active: true } );
+            await user.updateOne( { emailVerify: true, otp:{value:null}, active: true } );
 
             return {
                 message: "Email has been verified and account activated.",

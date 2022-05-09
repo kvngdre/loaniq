@@ -105,16 +105,15 @@ const lender = {
             if(lender.emailVerify) throw new Error('Email already verified.');
 
             //check if otp has expired
-            const expiry = lender.expiration_time
-            console.log(expiry)
+            const expiry = lender.otp.expirationTime
             let currentTime = Date.now();
             const diff = expiry - currentTime;
             if(expiry < currentTime) throw new Error ('token expire');
             
-            const isOTPValid = requestBody.otp === lender.otp
+            const isOTPValid = requestBody.otp === lender.otp.value
             if(!isOTPValid) throw new Error('Invalid OTP.');
 
-            await lender.updateOne( {emailVerify: true, otp: null, active: true} );
+            await lender.updateOne( {emailVerify: true, otp:{value:null} , active: true} );
 
             return lender.generateToken();
 

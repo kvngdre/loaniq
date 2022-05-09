@@ -60,12 +60,12 @@ const lenderSchema = new mongoose.Schema({
     },
 
     otp: {
-        value: {
-            type: String
+        OTP: {
+            type: String,
         },
         
-        expirationDate:{
-            type: Number
+        expirationTime: {
+                type: Number,
         }
     },
 
