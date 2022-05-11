@@ -1,7 +1,6 @@
-const mongoose = require('mongoose');
-const User = require('./userModel');
 const jwt = require('jsonwebtoken');
-const { number } = require('joi');
+const User = require('./userModel');
+const mongoose = require('mongoose');
 
 const lenderSchema = new mongoose.Schema({
     // TODO: turn on required
@@ -102,7 +101,7 @@ lenderSchema.methods.generateToken = function() {
         email: this.email,
         phone: this.phone,
         role: this.role,
-    }, 'jwtPrivateKey');
+    }, process.env.JWT_PRIVATE_KEY);
 }
 
 const Lender = mongoose.model('Lender', lenderSchema);

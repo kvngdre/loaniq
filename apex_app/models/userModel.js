@@ -126,7 +126,7 @@ userSchema.methods.generateToken = function() {
         role: this.role,
         active: this.active,
         segments: (this.segments ? this.segments : null)
-    }, 'jwtPrivateKey');
+    }, process.env.JWT_PRIVATE_KEY);
 }
 
 // userSchema.pre('save', function (next) {

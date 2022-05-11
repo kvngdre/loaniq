@@ -132,11 +132,7 @@ const loanSchema = new mongoose.Schema({
         netPayConsistency: {
             type: Boolean
         },
-        
-        bvnValid: {
-            type: Boolean
-        },
-        
+                
         salaryAccountValid: {
             type: Boolean
         },
@@ -168,8 +164,15 @@ const loanSchema = new mongoose.Schema({
     },
 
     booked: {
-        type: Boolean,
-        default: false
+        customer: {
+            type: Boolean,
+            default: false
+        },
+
+        loan: {
+            type: Boolean,
+            default: false
+        }
     },
     
     customer: {

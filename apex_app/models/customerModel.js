@@ -6,7 +6,6 @@ const Segment = require('./segmentModel');
 const debug = require('debug')('app:customerModel');
 
 
-
 const customerSchema = new mongoose.Schema({
     name: {
         firstName: {
@@ -119,6 +118,11 @@ const customerSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         required: true
+    },
+
+    bvnValid: {
+        type: Boolean,
+        default: false
     },
 
     idCardInfo: {
@@ -284,6 +288,8 @@ customerSchema.pre('save', async function (next) {
             await loan.save();
         });
     };
+
+    
 
     // capitalize names
     // TODO: can front end handle this. 

@@ -1,3 +1,4 @@
+const cors = require('cors');
 const express = require('express');
 const authRoute = require('../routes/authRoute');
 const loanRoutes = require('../routes/loanRoutes');
@@ -8,11 +9,12 @@ const lenderRoutes = require('../routes/lenderRoutes');
 const originRoutes = require('../routes/originRoutes');
 const segmentRoutes = require('../routes/segmentRoutes');
 const customerRoutes = require('../routes/customerRoutes');
-const pendingEditRoutes = require('../routes/pendingEditRoutes');
 const errorHandler = require('../middleware/errorHandler');
+const pendingEditRoutes = require('../routes/pendingEditRoutes');
 
 module.exports = function(app) {
     // middleware
+    app.use(cors());
     app.use(express.json());
 
     // Route handlers

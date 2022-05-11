@@ -15,6 +15,7 @@ const PendingEditController = require('../../controllers/pendingEditController')
 const manager = {
     createLoan: async function(customer, loanMetricsObj, request) {
         try{
+            // const customerOrigin = await Origin.find()
             const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
                                    .sort( { createdAt: -1 } )
                                    .limit(1);

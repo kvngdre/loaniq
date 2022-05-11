@@ -3,25 +3,25 @@ const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 const debug = require('debug')('sendMail');
 
-// TODO: clean up sendMail with domain name
+// TODO: clean up sendMail with domain name for sending mails
 
 const {
-    clientID,
-    clientSecret,
-    refreshToken,
-    senderEmailAddress,
-    oauthPlayground
+    CLIENT_ID,
+    CLIENT_SECRET,
+    REFRESH_TOKEN,
+    SENDER_EMAIL_ADDRESS,
+    OAUTH_PLAYGROUND
 } = process.env
 
 // Setting up oauth2Client
 const oauth2Client = new google.auth.OAuth2(
-    clientID,
-    clientSecret,
-    refreshToken,
-    oauthPlayground
+    CLIENT_ID,
+    CLIENT_SECRET,
+    REFRESH_TOKEN,
+    OAUTH_PLAYGROUND
 );
 
-oauth2Client.setCredentials({ refresh_token: refreshToken });
+oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
 /**
  * Create a nodeMail transporter
@@ -36,10 +36,10 @@ async function getTransporter() {
             service: 'gmail',
             auth: {
                 type: 'OAuth2',
-                user: senderEmailAddress,
-                clientId: clientID,
-                clientSecret: clientSecret,
-                refreshToken: refreshToken,
+                user: SENDER_EMAIL_ADDRESS,
+                clientId: CLIENT_ID,
+                clientSecret: CLIENT_SECRET,
+                refreshToken: REFRESH_TOKEN,
                 accessToken: accessToken
             }
         });
@@ -63,7 +63,7 @@ const sendMail = async function(userEmailAddress, name, generatedOTP, tempPasswo
 
     // Defining the mailing options
     const mailOptions = {
-        from: senderEmailAddress,
+        from: SENDER_EMAIL_ADDRESS,
         to: userEmailAddress,
         subject: "Apex Email Verification",
         html: 
@@ -74,7 +74,7 @@ const sendMail = async function(userEmailAddress, name, generatedOTP, tempPasswo
         <p>Congratulations! You're almost set. Enter the sign up OTP to get started.
         <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${generatedOTP}<br>${tempPassword}</b></h1>
         </p>
-        <p>If you have any questions, send an email to ${senderEmailAddress} and our team will provide technical support.:</p>
+        <p>If you have any questions, send an email to ${SENDER_EMAIL_ADDRESS} and our team will provide technical support.:</p>
 
         <div>Regards, <br>
         Apexxia Team</div>
