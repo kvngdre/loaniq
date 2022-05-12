@@ -1,7 +1,8 @@
 const Joi = require('joi');
 const { ref } = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
-class LoanValidators {
+
+class LoanRequestValidators {
     #minNetPay;
     #minLoanAmount;
     #maxLoanAmount;
@@ -85,20 +86,24 @@ class LoanValidators {
 
             upfrontFeePercentage: Joi.number(),
 
-            fee: Joi.number(),
-
-            // validationParams: Joi.object()
+            fee: Joi.number()
         });
         return schema.validate(loan);
     }
 
-    // validateDisbursement: function(dateTimeObj) {
-        // TODO: finish disbursement
-    //     const schema = Joi.object({
-    //         fromDate: Joi.strin
-    //     })
-    // }
-
 };
 
-module.exports = LoanValidators;
+const loanValidators ={
+    validateDateTimeObj: function (dateTimeObj) {
+        // TODO: finish disbursement
+        const schema = Joi.object({
+            fromDate: Joi.string()
+        });
+
+        return schema.validate(dateTimeObj);
+    }
+}
+module.exports = {
+    LoanRequestValidators,
+    loanValidators
+};

@@ -219,16 +219,17 @@ const customerSchema = new mongoose.Schema({
     
         relationship: {
             type: String,
-            enum: [ 'Father',
-                    'Mother',
-                    'Brother',
-                    'Sister',
-                    'Nephew',
-                    'Niece',
-                    'Cousin',
-                    'Spouse',
-                    'Son',
-                    'Daughter'
+            enum: [ 
+                'Brother',
+                'Cousin',
+                'Daughter',
+                'Father',
+                'Mother',
+                'Nephew',
+                'Niece',
+                'Sister',
+                'Son',
+                'Spouse',
                 ],
             required: true
         },
@@ -256,13 +257,21 @@ const customerSchema = new mongoose.Schema({
     },
 
     netPay: {
-        type: Number
+        value:{
+            type: Number
+        },
+
+        updatedAt: {
+            type: Date,
+            default: null
+        }
         // TODO: read from origin collection.
     }
 
 }, {
     timestamps: true
 });
+
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('ippisPrefix');
@@ -289,8 +298,6 @@ customerSchema.pre('save', async function (next) {
         });
     };
 
-    
-
     // capitalize names
     // TODO: can front end handle this. 
     // this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
@@ -300,8 +307,6 @@ customerSchema.pre('save', async function (next) {
     next();
 
   });
-
-
 
 const Customer = mongoose.model('Customer', customerSchema);
 

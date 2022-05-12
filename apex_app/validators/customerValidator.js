@@ -101,6 +101,10 @@ const accountInfoSchema = Joi.object({
     bank: Joi.objectId()
 });
 
+const netPaySchema = Joi.object({
+    value: Joi.number()
+});
+
 const validators = {
     validateCreation: function(customer) {
         const schema = Joi.object({
@@ -127,7 +131,7 @@ const validators = {
             
             accountInfo: accountInfoSchema.required(),
 
-            netPay: Joi.number()
+            netPay: netPaySchema().required()
         });
 
     return schema.validate(customer);
@@ -158,7 +162,7 @@ const validators = {
             
             accountInfo: accountInfoSchema,
             
-            netPay: Joi.number()
+            netPay: netPaySchema
         });
 
     return schema.validate(customer);

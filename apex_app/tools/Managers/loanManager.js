@@ -1,21 +1,22 @@
 require('dotenv').config();
 const _ = require('lodash');
-const debug = require('debug')('app:loanMgr')
+const debug = require('debug')('app:loanMgr');
 const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
+const Origin = require('../../models/originModel'); 
 const Customer = require('../../models/customerModel');
-const Origin = require('../../models/originModel');
 const pickRandomUser = require('../../utils/pickRandomAgent');
 const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEditController');
 
-
 const manager = {
     createLoan: async function(customer, loanMetricsObj, request) {
         try{
-            // const customerOrigin = await Origin.find()
+            const customerOrigin = await Origin.findOne( { ippis: customer.employmentInfo.ippis } );
+            if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+
             const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
                                    .sort( { createdAt: -1 } )
                                    .limit(1);
@@ -39,18 +40,20 @@ const manager = {
                 throw new Error('Could not assign credit officer.');
             };
 
-            request.body.lenderId = request.user.lenderId;
             request.body.loanAgent = agent._id;
+            request.body.netPay = customer.netPay.value;
+            request.body.lenderId = request.user.lenderId;
             request.body.creditOfficer = creditOfficer._id;
-            request.body.interestRate = loanMetricsObj.interestRate;
-            request.body.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.transferFee = loanMetricsObj.transferFee;
+            request.body.interestRate = loanMetricsObj.interestRate;
             request.body.validationParams = {dob: customer.dateOfBirth};
-            request.body.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             request.body.validationParams.minNetPay = loanMetricsObj.minNetPay;
+            request.body.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;
+            request.body.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             
             const newLoan = await Loan.create( request.body );
+            await customer.save();
 
             return newLoan;
 
@@ -59,11 +62,12 @@ const manager = {
         };
     },
 
-    // TODO: write func for validating ippis 
     createLoanRequest: async function(loanMetricsObj, request) {
         try{
             if(request.user.role === 'guest') {
                 const lender = await Lender.findOne( { slug: request.body.slug } );
+                if(!lender) throw new Error('Error retrieving lender information');
+
                 request.user.lenderId = lender._id;
             };
 
@@ -74,6 +78,10 @@ const manager = {
                 customer = await customerController.create( _.omit(request, ['body.loan']) );
                 if(customer instanceof Error) throw customer;
             };
+            
+            const customerOrigin = Origin.findOne( { ippis: request.body.employmentInfo.ippis } );
+            if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+
 
             const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId } )
                                     .sort( { createdAt: -1 } )
@@ -100,22 +108,23 @@ const manager = {
             };
 
             // TODO: Make this a transaction
-            request.body.loan.lenderId = request.user.lenderId;
-            request.body.loan.customer = customer._id;
             request.body.loan.loanAgent = agent._id;
+            request.body.loan.customer = customer._id;
+            request.body.netPay = customer.netPay.value;
+            request.body.loan.lenderId = request.user.lenderId;
             request.body.loan.creditOfficer = creditOfficer._id;
-            request.body.loan.interestRate = loanMetricsObj.interestRate;
-            request.body.loan.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.loan.transferFee = loanMetricsObj.transferFee;
+            request.body.loan.interestRate = loanMetricsObj.interestRate;
             request.body.loan.validationParams = {dob: customer.dateOfBirth};
-            request.body.loan.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             request.body.loan.validationParams.minNetPay = loanMetricsObj.minNetPay;
+            request.body.loan.upfrontFeePercentage = loanMetricsObj.upfrontFeePercentage;
             request.body.loan.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;            
+            request.body.loan.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             
             const newLoan = await Loan.create(request.body.loan);
             
-            await newLoan.save();
-            
+            await customer.save();
+
             return {customer, loan: newLoan};
 
         }catch(exception) {
@@ -143,6 +152,23 @@ const manager = {
         return loans; 
     },
 
+    getOne: async function(user, queryParam) {
+        queryParam.lenderId = user.lenderId;
+        console.log('manager=======', queryParam);
+        if(user.role !== 'loanAgent') {
+            const loan = await Loan.findOne( queryParam )
+                                   .populate({path: 'customer', model: Customer});
+
+            return loan;
+        };
+
+        queryParam.loanAgent = user.id;
+        const loan = await Loan.findOne( queryParam )
+                               .populate({path: 'customer', model: Customer});
+
+        return loan;
+    },
+
     getDisbursement: async function(user, queryParam={}) {
         queryParam.lenderId = user.lenderId;
 
@@ -162,21 +188,26 @@ const manager = {
         return loans; 
     },
 
-    getOne: async function(user, queryParam) {
-        queryParam.lenderId = user.lenderId;
-        console.log('manager=======', queryParam);
-        if(user.role !== 'loanAgent') {
-            const loan = await Loan.findOne( queryParam )
-                                   .populate({path: 'customer', model: Customer});
+    getLoanBooking: async function(queryParam) {
+        try{
+            const loans = await Loans.find(queryParam)
+                                     .select([
+                                         'dateAppOrDec',
+                                         'status',
+                                         'loanType',
+                                         'recommendedAmount',
+                                         'recommendedTenor',
+                                         'interestRate',
+                                         'loanAgent',
+                                        //  'bank', 'account number'
+                                        ])
+            if(loans.length === 0) throw new Error('No loans found');
 
-            return loan;
-        };
+            return loans;
+        }catch(exception) {
+            return exception;
+        }
 
-        queryParam.loanAgent = user.id;
-        const loan = await Loan.findOne( queryParam )
-                               .populate({path: 'customer', model: Customer});
-
-        return loan;
     },
 
     edit: async function(request) {
@@ -226,7 +257,6 @@ const manager = {
 
     closeExpiringLoans: async function() {
         const today = new Date().toLocaleDateString();
-        console.log(today)
         // const loans = await Loan.find( { active: true, expectedEndDate: {$gt: today} } );
         const loans = await Loan.updateMany(
             { active: true, expectedEndDate: {$gte: today} },
@@ -235,7 +265,7 @@ const manager = {
 
         return loans
     
-    }
+    },
 };
 
 module.exports = manager;

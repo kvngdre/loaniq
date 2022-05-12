@@ -4,11 +4,11 @@ const router = require('express').Router();
 const debug = require('debug')('app:loanRoute');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const LoanValidators = require('../validators/loanValidator');
-const lenderController = require('../controllers/lenderController');
 const loanController = require('../controllers/loanController');
+const lenderController = require('../controllers/lenderController');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
+const { LoanRequestValidators, loanValidators} = require('../validators/loanValidator');
 
 async function getValidator(req_, customerSegment=null) {
     const { loanMetrics, segments } = await lenderController.getSettings(req_.body.slug ? { slug: req_.body.slug } : { lenderId: req_.user.lenderId } );
@@ -18,9 +18,30 @@ async function getValidator(req_, customerSegment=null) {
             minTenor,
             maxTenor
         } = segments.find(settings => settings.segment.toString() === (customerSegment ? customerSegment.toString() : req_.body.employmentInfo.segment) );
-        const requestValidator = new LoanValidators(loanMetrics.minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor);
+        const requestValidator = new LoanRequestValidators(loanMetrics.minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor);
         return { loanMetrics, requestValidator };
 }
+
+
+router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+    const loans = await loanController.getAll(req.user);
+    if(loans.length === 0) return res.status(404).send('No loans found.');
+
+    return res.status(200).send(loans);
+});
+router.get('/expiring', async(req, res) => {
+    const loans = await loanController.expiring();
+
+    return res.status(200).send(loans);
+})
+
+router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+    // TODO: add all
+    const loan = await loanController.getOne(req.user, req.params.id);
+    if(!loan) return res.status(404).send('Loan not found.');
+
+    return res.status(200).send(loan);
+});
 
 router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent', 'guest']), async (req, res) => {
     const { loanMetrics, requestValidator } = await getValidator(req);
@@ -46,26 +67,6 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
     };
 
     return res.status(200).send(loanRequest);
-});
-
-router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
-    const loans = await loanController.getAll(req.user);
-    if(loans.length === 0) return res.status(404).send('No loans found.');
-
-    return res.status(200).send(loans);
-});
-router.get('/expiring', async(req, res) => {
-    const loans = await loanController.expire();
-
-    return res.status(200).send(loans);
-})
-
-router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
-    // TODO: add all
-    const loan = await loanController.getOne(req.user, req.params.id);
-    if(!loan) return res.status(404).send('Loan not found.');
-
-    return res.status(200).send(loan);
 });
 
 router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), async (req, res) => {
@@ -114,10 +115,21 @@ router.patch('/:id', verifyToken, verifyRole(['credit', 'loanAgent']), async (re
 });
 
 router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+    const { error } = loanValidators.validateDateTimeObj(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
     const loans = await loanController.getDisbursement(req.user, req.body.fromDate);
     
     return res.status(200).send(loans);
 });
+
+router.post('/loan-booking', async (req, res) => {
+    const { error } = loanValidators.validateDateTimeObj(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const loans = await loanController.getLoanBooking(req);
+    
+})
 
 
 

@@ -32,7 +32,7 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     return res.status(201).send(newCustomer);
 });
 
-router.post('/gemini',verifyToken, verifyRole(['loanAgent']), async (req, res) => {
+router.post('/customer-booking',verifyToken, verifyRole(['loanAgent']), async (req, res) => {
     const result = await customerController.fetchCustomerCreation(req.user, req.body.fromDate);
     if(result instanceof Error) return res.status(400).send(result.message);
 

@@ -113,7 +113,6 @@ const customer = {
                                                'netPay', 
                                                'loanAgent' ] );
                                       //    .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1 } );
-            console.log(customer)
             if(!customer) {
                 debug(customer?.message, customer?.stack);     
                 throw new Error('Customer not found.');

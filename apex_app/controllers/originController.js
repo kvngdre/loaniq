@@ -1,15 +1,18 @@
+const mongoose = require('mongoose');
 const Origin = require('../models/originModel');
 const debug = require('debug')('app:OriginCtrl');
+
 
 const origin = {
     create: async function(requestBody) {
         try{
             const customer = await Origin.findOne( { ippis: requestBody.ippis } );
-            if(!customer) throw new Error('Customer already exists in origin.');
+            if(customer) throw new Error('Customer already exists in origin.');
 
             const newCustomer = await Origin.create(requestBody);
 
             return newCustomer;
+
         }catch(exception) {
             return exception;
         };
@@ -17,13 +20,16 @@ const origin = {
 
     edit: async function(id, requestBody) {
         try{
-            const updatedCustomer = await findByOneAndUpdate( { ippis: requestBody.ippis }, requestBody, {new: true} );
+            const filter = mongoose.isValidObjectId(id) ? {_id: id} : {ippis: id}
+
+            const updatedCustomer = await Origin.findOneAndUpdate( filter, requestBody, {new: true} );
             if(!updatedCustomer) {
                 debug(updatedCustomer);
                 throw new Error('Customer does not exist in origin.');
             };
 
             return updatedCustomer;
+
         }catch(exception) {
             return exception;
         };
@@ -43,13 +49,16 @@ const origin = {
 
     delete: async function(id) {
         try{
-            const deletedCustomer = await Origin.findOneAndDelete( { ippis: id } );
+            const filter = mongoose.isValidObjectId(id) ? { _id: id } : { ippis: id }
+
+            const deletedCustomer = await Origin.findOneAndDelete( filter );
             if(!deletedCustomer) {
                 debug(deletedCustomer);
                 throw new Error('Customer not found in origin.');
             };
             
             return deletedCustomer;
+
         }catch(exception) {
             return exception;
         };

@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const debug = require('debug')('app:originRoutes');
+const debug = require('debug')('app:originRoute');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const originValidators = require('../validators/originValidator');
