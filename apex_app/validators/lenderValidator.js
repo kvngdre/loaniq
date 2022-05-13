@@ -40,7 +40,7 @@ const validators = {
             companyAddress: Joi.string(),
                             //    .required(),
 
-            cacNumber: Joi.string(),
+            cacNumber: Joi.string().pattern(/^RC[0-9]+/),
                         //   .required(),
 
             category: Joi.string(),
