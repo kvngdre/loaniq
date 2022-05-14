@@ -82,45 +82,25 @@ const customer = {
                              .sort('_id');
     },
 
-    get: async function(user, id) {
+    get: async function(queryParam) {
         try{
-            if(user.role === 'loanAgent') {
-                const customer = await Loan.findOne( { loanAgent: user.id, customer: id } )
-                                           .populate({path: 'customer', model: Customer, populate:[{path: 'employmentInfo.segment', model: Segment, select: '-_id code'}], select: [
-                                               'name', 
-                                               'dateOfBirth',
-                                               'netPay',
-                                               'employmentInfo.ippis',
-                                               'employmentInfo.segment',
-                                               'employmentInfo.dateOfEnlistment'
-                                            ]})
-                                           .select('-_id customer')
-                                        //    .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1 } );
-
-                if(!customer) throw new Error('Customer not found.');
-
-                return customer; 
-            };
-
-            const customer = await Customer.findById( id )
-                                           .select([
-                                               'name.firstName', 
-                                               'name.lastName', 
-                                               'dateOfBirth', 
-                                               'employmentInfo.ippis', 
-                                               'employmentInfo.segment', 
-                                               'employmentInfo.dateOfEnlistment', 
-                                               'netPay', 
-                                               'loanAgent' ] );
+            const customer = await Customer.findOne(queryParam)
+                                        //    .select([
+                                        //        'name.firstName', 
+                                        //        'name.lastName', 
+                                        //        'dateOfBirth', 
+                                        //        'employmentInfo.ippis', 
+                                        //        'employmentInfo.segment', 
+                                        //        'employmentInfo.dateOfEnlistment', 
+                                        //        'netPay' ] );
                                       //    .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1 } );
-            if(!customer) {
-                debug(customer?.message, customer?.stack);     
-                throw new Error('Customer not found.');
-            };
+            
+            if(!customer) throw new Error('Customer not found.');
             
             return customer;
 
         }catch(exception) {
+            debug(exception.stack, exception.message);
             return exception;
         };
     },

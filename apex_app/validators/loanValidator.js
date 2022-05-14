@@ -1,5 +1,4 @@
 const Joi = require('joi');
-const { ref } = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
 class LoanRequestValidators {
@@ -24,21 +23,15 @@ class LoanRequestValidators {
 
     loanRequestCreation(loanRequest) {
         const schema = Joi.object({  
-            slug: Joi.string(),
-            
             netPay: this.#netPaySchema.required(),
 
             amount: this.#amountSchema.required(),
 
-            amountInWords: Joi.string(),
+            amountInWords: Joi.string().required(),
 
-            tenor: this.#tenorSchema,
+            tenor: this.#tenorSchema.required(),
 
             loanType: Joi.string(),
-
-            customer: Joi.objectId(),
-
-            loanAgent: Joi.objectId(),
         });
         return schema.validate(loanRequest);
     };
@@ -47,13 +40,13 @@ class LoanRequestValidators {
         const schema = Joi.object({
             customer: Joi.objectId().required(),
 
-            netPay: this.#netPaySchema,
+            netPay: this.#netPaySchema.required(),
 
-            amount: this.#amountSchema,
+            amount: this.#amountSchema.required(),
 
             amountInWords: Joi.string().required(),
 
-            tenor: this.#tenorSchema,
+            tenor: this.#tenorSchema.required(),
 
             loanType: Joi.string()
         });
@@ -102,7 +95,8 @@ const loanValidators ={
 
         return schema.validate(dateTimeObj);
     }
-}
+};
+
 module.exports = {
     LoanRequestValidators,
     loanValidators

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const router = require('express').Router();
 const ObjectId = require('mongoose').Types.ObjectId;
 const debug = require('debug')('app:customerRoutes');
@@ -14,8 +15,9 @@ router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent
 });
 
 router.get('/:id', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
-    // TODO: add all
-    const customer = await customerController.get(req.user, req.params.id);
+    const queryParam = mongoose.isValidObjectId(req.params.id) ? { _id: req.params.id } : { 'employmentInfo.ippis': req.params.id };
+    
+    const customer = await customerController.get(queryParam);
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
     return res.status(200).send(customer);

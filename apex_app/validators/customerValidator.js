@@ -131,7 +131,7 @@ const validators = {
             
             accountInfo: accountInfoSchema.required(),
 
-            netPay: netPaySchema().required()
+            netPay: netPaySchema.required()
         });
 
     return schema.validate(customer);

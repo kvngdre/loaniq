@@ -1,4 +1,3 @@
-require('dotenv').config();
 const _ = require('lodash');
 const router = require('express').Router();
 const debug = require('debug')('app:loanRoute');
@@ -9,6 +8,7 @@ const lenderController = require('../controllers/lenderController');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 const { LoanRequestValidators, loanValidators} = require('../validators/loanValidator');
+
 
 async function getValidator(req_, customerSegment=null) {
     const { loanMetrics, segments } = await lenderController.getSettings(req_.body.slug ? { slug: req_.body.slug } : { lenderId: req_.user.lenderId } );
@@ -22,13 +22,13 @@ async function getValidator(req_, customerSegment=null) {
         return { loanMetrics, requestValidator };
 }
 
-
-router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
     const loans = await loanController.getAll(req.user);
     if(loans.length === 0) return res.status(404).send('No loans found.');
 
     return res.status(200).send(loans);
 });
+
 router.get('/expiring', async(req, res) => {
     const loans = await loanController.expiring();
 
@@ -70,7 +70,7 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
 });
 
 router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), async (req, res) => {
-    const customer = await customerController.get(req.user, { _id: req.body.customer } );
+    const customer = await customerController.get({ _id: req.body.customer } );
     if(customer instanceof Error) {
         debug(customer.message, customer.stack);
         return res.status(400).send(customer.message);

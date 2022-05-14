@@ -29,7 +29,6 @@ const loanSchema = new mongoose.Schema({
     },
 
     loanType: {
-        // Look to automate this.
         type: String,
         enum: [
             'new',

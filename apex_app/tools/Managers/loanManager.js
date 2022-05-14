@@ -1,4 +1,3 @@
-require('dotenv').config();
 const _ = require('lodash');
 const debug = require('debug')('app:loanMgr');
 const Bank = require('../../models/bankModel');
@@ -11,33 +10,37 @@ const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEditController');
 
+
 const manager = {
     createLoan: async function(customer, loanMetricsObj, request) {
         try{
             const customerOrigin = await Origin.findOne( { ippis: customer.employmentInfo.ippis } );
             if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
 
-            const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
+            const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
                                    .sort( { createdAt: -1 } )
                                    .limit(1);
+
+            if(loans.length > 0) request.body.loanType = "topUp";
             
-            let agent
-            if(loan.length === 0) {
+            let agent;
+            if(request.user.role === 'loanAgent') {
+                agent = await userController.get({ _id: request.user.id, lenderId: request.user.lenderId, segments: customer.employmentInfo.segment });
+            }else if(loans.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment);
             }else{
-                agent = await userController.get( { _id: loan[0].loanAgent } );
-                request.body.loanType = "topUp";
+                agent = await userController.get( { _id: loans[0].loanAgent } );
             };
 
             if(!agent) {
                 debug(agent);
-                throw new Error('Invalid loan agent.');
+                throw new Error('Invalid loan agent');
             };
 
             const creditOfficer = await pickRandomUser(request.user.lenderId, 'credit', customer.employmentInfo.segment);
             if(!creditOfficer){
                 debug(creditOfficer);
-                throw new Error('Could not assign credit officer.');
+                throw new Error('Could not assign credit officer');
             };
 
             request.body.loanAgent = agent._id;
@@ -72,39 +75,40 @@ const manager = {
             };
 
             let customer;
-            customer = await customerController.get(request.user, { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
+            customer = await customerController.get({ 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
             if(customer.message && customer.stack) {
-                // if customer does not exist.
                 customer = await customerController.create( _.omit(request, ['body.loan']) );
                 if(customer instanceof Error) throw customer;
             };
             
-            const customerOrigin = Origin.findOne( { ippis: request.body.employmentInfo.ippis } );
+            const customerOrigin = await Origin.findOne( { ippis: customer.employmentInfo.ippis } );
             if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
 
 
-            const loan = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId } )
+            const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId } )
                                     .sort( { createdAt: -1 } )
                                     .limit(1);
+
+            if(loan.length > 0) request.body.loanType = "topUp";
             
             let agent;
-            if(loan.length === 0) {
+            if(request.user.role === 'loanAgent') {
+                agent = await userController.get({ _id: request.user.id, lenderId: request.user.lenderId, segments: customer.employmentInfo.segment });
+            }else if(loans.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment)
             }else{
-                agent = await userController.get( { _id: loan[0].loanAgent } );
-                request.body.loan.loanType = "topUp";
-            };
-            
-            if(!agent) {
-                debug(agent);
-                throw new Error('Invalid loan agent.');
+                agent = await userController.get( { _id: loans[0].loanAgent } );
             };
 
-            // Picking credit officer
+            if(!agent) {
+                debug(agent);
+                throw new Error('Invalid loan agent');
+            };
+
             let creditOfficer = await pickRandomUser(request.user.lenderId, 'credit', customer.employmentInfo.segment);
             if(!creditOfficer){
                 debug(creditOfficer);
-                throw new Error('Could not assign credit officer.');
+                throw new Error('Could not assign credit officer');
             };
 
             // TODO: Make this a transaction
@@ -122,7 +126,6 @@ const manager = {
             request.body.loan.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             
             const newLoan = await Loan.create(request.body.loan);
-            
             await customer.save();
 
             return {customer, loan: newLoan};

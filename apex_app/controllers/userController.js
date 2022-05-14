@@ -1,4 +1,3 @@
-require('dotenv').config();
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
@@ -25,6 +24,7 @@ const user = {
 
     /**
      *  function creates a user.
+     * @param {string} role
      * @param {object} requestBody 
      * @param {object} user 
      * @returns new user
@@ -128,9 +128,6 @@ const user = {
                     break;
             };
 
-            await newUser.save();
-            newUser.password = temporaryPassword;
-
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, newUser.otp.OTP, temporaryPassword);
             userDebug(mailResponse);
@@ -139,6 +136,9 @@ const user = {
                 throw new Error('Error sending OTP. Try again.');
             };
             userDebug('Email sent successfully');
+
+            await newUser.save();
+            newUser.password = temporaryPassword;
             
             return {
                 message: 'User created and OTP sent to email.', 

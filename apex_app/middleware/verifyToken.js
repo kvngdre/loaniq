@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 
 function verifyToken(req, res, next) {
     try{
-        
         // const token = req.header('auth-token');
         const token = req.header("auth-token") || req.header("authorization");
 
@@ -13,7 +12,7 @@ function verifyToken(req, res, next) {
             return next();
         };
     
-        const isVerified = jwt.verify(token, 'jwtPrivateKey');
+        const isVerified = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
         req.user = isVerified;
 
         next();
