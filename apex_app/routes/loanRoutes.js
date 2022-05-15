@@ -47,6 +47,7 @@ router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent
     const { loanMetrics, requestValidator } = await getValidator(req);
     try{
         const customerObj = _.omit(req.body, ['loan']);
+        req.body.loan.netPay = req.body.netPay.value;
         const loanObj = req.body.loan;
 
         var { error } = customerValidators.validateCreation(customerObj);

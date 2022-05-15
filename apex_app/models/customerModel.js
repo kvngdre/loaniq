@@ -275,7 +275,7 @@ const customerSchema = new mongoose.Schema({
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('ippisPrefix');
-console.log(this)
+    // console.log(this)
     let foundMatch = this.employmentInfo.ippis.match(/[A-Z]{2,3}/)
     !foundMatch ? foundMatch = '' : foundMatch = foundMatch[0]
 

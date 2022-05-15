@@ -15,18 +15,22 @@ const manager = {
     createLoan: async function(customer, loanMetricsObj, request) {
         try{
             const customerOrigin = await Origin.findOne( { ippis: customer.employmentInfo.ippis } );
-            if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+            if(customerOrigin) {
+                customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+                request.body.netPay = customer.netPay.value;
+            }
 
             const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
                                    .sort( { createdAt: -1 } )
                                    .limit(1);
-
             if(loans.length > 0) request.body.loanType = "topUp";
             
             let agent;
             if(request.user.role === 'loanAgent') {
                 agent = await userController.get({ _id: request.user.id, lenderId: request.user.lenderId, segments: customer.employmentInfo.segment });
-            }else if(loans.length === 0) {
+            }; 
+            
+            if(loans.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment);
             }else{
                 agent = await userController.get( { _id: loans[0].loanAgent } );
@@ -56,7 +60,7 @@ const manager = {
             request.body.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
             
             const newLoan = await Loan.create( request.body );
-            await customer.save();
+            await customer.save(); 
 
             return newLoan;
 
@@ -67,6 +71,7 @@ const manager = {
 
     createLoanRequest: async function(loanMetricsObj, request) {
         try{
+            // TODO: speak to victor about slug and guest user
             if(request.user.role === 'guest') {
                 const lender = await Lender.findOne( { slug: request.body.slug } );
                 if(!lender) throw new Error('Error retrieving lender information');
@@ -77,24 +82,29 @@ const manager = {
             let customer;
             customer = await customerController.get({ 'employmentInfo.ippis': request.body.employmentInfo.ippis } );   
             if(customer.message && customer.stack) {
-                customer = await customerController.create( _.omit(request, ['body.loan']) );
-                if(customer instanceof Error) throw customer;
+                customer = new Customer( _.omit(request.body, ['loan']));
+                customer.validateSegment();
             };
             
             const customerOrigin = await Origin.findOne( { ippis: customer.employmentInfo.ippis } );
-            if(customerOrigin) customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+            if(customerOrigin) {
+                customer.set( { 'netPay.value': customerOrigin.netPays[0] || request.body.netPay, 'netPay.updatedAt': new Date().toISOString() } );
+                request.body.loan.netPay = customer.netPay.value;
+            }
 
 
             const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId } )
                                     .sort( { createdAt: -1 } )
                                     .limit(1);
 
-            if(loan.length > 0) request.body.loanType = "topUp";
+            if(loans.length > 0) request.body.loanType = "topUp";
             
             let agent;
             if(request.user.role === 'loanAgent') {
                 agent = await userController.get({ _id: request.user.id, lenderId: request.user.lenderId, segments: customer.employmentInfo.segment });
-            }else if(loans.length === 0) {
+            }
+            
+            if(!agent && loans.length === 0) {
                 agent = await pickRandomUser(request.user.lenderId, 'loanAgent', customer.employmentInfo.segment)
             }else{
                 agent = await userController.get( { _id: loans[0].loanAgent } );
@@ -114,7 +124,6 @@ const manager = {
             // TODO: Make this a transaction
             request.body.loan.loanAgent = agent._id;
             request.body.loan.customer = customer._id;
-            request.body.netPay = customer.netPay.value;
             request.body.loan.lenderId = request.user.lenderId;
             request.body.loan.creditOfficer = creditOfficer._id;
             request.body.loan.transferFee = loanMetricsObj.transferFee;

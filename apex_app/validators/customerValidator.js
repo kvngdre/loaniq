@@ -114,7 +114,6 @@ const validators = {
 
             dateOfBirth: dateOfBirthSchema.required(),
 
-            // TODO: Add required to fields.
             residentialAddress: residentialAddressSchema.required(),
 
             contact: contactSchema.required(),
@@ -131,6 +130,7 @@ const validators = {
             
             accountInfo: accountInfoSchema.required(),
 
+            // not required because validator is used in loan creation
             netPay: netPaySchema.required()
         });
 
