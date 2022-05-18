@@ -22,7 +22,8 @@ const lender = {
             requestBody.password = encryptedPassword;
             
             requestBody.otp = generateOTP(); 
-                     
+            
+            // TODO: Uncomment this
             // // Sending OTP to user mail
             // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, otpObj.OTP);
             // debug(mailResponse);

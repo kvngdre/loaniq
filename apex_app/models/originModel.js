@@ -13,6 +13,11 @@ const originSchema = new mongoose.Schema({
         type: String
     },
 
+    bvnValid: {
+        type: Boolean,
+        default: false
+    },
+
     ippis: {
         type: String
     },

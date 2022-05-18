@@ -7,7 +7,7 @@ const loanController = require('../controllers/loanController');
 const lenderController = require('../controllers/lenderController');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
-const { LoanRequestValidators, loanValidators} = require('../validators/loanValidator');
+const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
 
 
 async function getValidator(req_, customerSegment=null) {
@@ -20,7 +20,7 @@ async function getValidator(req_, customerSegment=null) {
         } = segments.find(settings => settings.segment.toString() === (customerSegment ? customerSegment.toString() : req_.body.employmentInfo.segment) );
         const requestValidator = new LoanRequestValidators(loanMetrics.minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor);
         return { loanMetrics, requestValidator };
-}
+}   
 
 router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
     const loans = await loanController.getAll(req.user);
@@ -130,8 +130,6 @@ router.post('/loan-booking', async (req, res) => {
 
     const loans = await loanController.getLoanBooking(req);
     
-})
-
-
+});
 
 module.exports = router;
