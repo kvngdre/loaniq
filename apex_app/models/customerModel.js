@@ -7,6 +7,16 @@ const debug = require('debug')('app:customerModel');
 
 
 const customerSchema = new mongoose.Schema({
+    passport: {
+        image: {
+            type: Buffer
+        },
+
+        imageExt: {
+            type: String
+        }
+    },
+
     name: {
         firstName: {
             type: String,
@@ -123,6 +133,17 @@ const customerSchema = new mongoose.Schema({
     bvnValid: {
         type: Boolean,
         default: false
+    },
+
+    idCard: {
+        image: {
+            type: Buffer
+        },
+
+        imageExt: {
+            type: Buffer
+        }
+
     },
 
     idCardInfo: {

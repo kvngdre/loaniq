@@ -2,9 +2,9 @@ require('express-async-errors');
 require('dotenv').config();
 
 const app = require('express')();
-const jobs = require('./jobs/jobs');
-const connectDB = require('./startUp/db');
-const appRoutes = require('./startUp/routes');
+const jobs = require('./apex_app/jobs/jobs');
+const connectDB = require('./apex_app/startUp/db');
+const appRoutes = require('./apex_app/startUp/routes');
 const debug = require('debug')('app:startUp');
 
 // Setup
