@@ -106,12 +106,8 @@ const validators = {
                 lastName: Joi.string().required().min(3).max(50),
                 middleName: Joi.string().min(3).max(50),
             }),
-            phone: Joi.string().pattern(/^0([7-9])([0,1])[0-9]{8}$/),            
-            email: Joi.string()
-                      .email()
-                      .min(10)
-                      .max(255)
-                      .required(),
+            phone: phoneSchema.required(),            
+            email: emailSchema.required(),
 
             role: Joi.string().equal('admin'),
 
@@ -136,16 +132,21 @@ const validators = {
 
             category: Joi.string(),
 
-            phone: Joi.string()
-                      .length(11)
+            phone: phoneSchema
         });
         return schema.validate(lender);  
     },
 
     validateSettings: function(settings) {
         const schema = Joi.object({
-            slug: Joi.string(),
-            segments: Joi.array().items(Joi.object({segment: Joi.objectId(), minLoanAmount: Joi.number(), maxLoanAmount: Joi.number(), minTenor: Joi.number(), maxTenor: Joi.number()})).required(),
+            segments: Joi.array().items(Joi.object({
+                segment: Joi.objectId(), 
+                minLoanAmount: Joi.number(), 
+                maxLoanAmount: Joi.number(), 
+                minTenor: Joi.number(), 
+                maxTenor: Joi.number()
+            })).required(),
+
             loanMetrics: Joi.object({
                 interestRate: Joi.number().required(),
                 upfrontFeePercentage: Joi.number().required(),
@@ -160,7 +161,7 @@ const validators = {
     delete: function(lender) {
         const schema = Joi.object({
             id: Joi.objectId().required(),
-            email: Joi.string().email().required()
+            email: emailSchema.required()
         });
         return schema.validate(lender);
     }

@@ -8,20 +8,11 @@ const ONE_MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
     destination: (request, file, callback) => {
-        if(file.fieldname === 'passport') {
-            callback(
-                new FileUploadError('500', 'passport upload destination not found'), 
-                `../uploads/customers/passports`
-            )
-        }
-        else if(file.fieldname === 'idCard') {
-            callback(null, 
-                `../uploads/customers/idCards`
-            )
-        }
-    },
+        console.log(request)
+        if(file.fieldname === 'passport') callback(null, `./uploads/customers/passports`)
 
-    destination: './uploads',
+        else if(file.fieldname === 'idCard') callback(null, `./uploads/customers/idCards`)
+    },
 
     filename: (request, file, callback) => {
         callback(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`)

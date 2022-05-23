@@ -1,4 +1,5 @@
 const debug = require('debug')('app:errorHandler');
+const { MulterError } = require('multer');
 const { FileUploadError } = require('../Errors/fileUploadError');
 
 function errorHandler(err, req, res, next) {

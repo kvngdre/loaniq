@@ -11,15 +11,21 @@ const { LoanRequestValidators, loanValidators } = require('../validators/loanVal
 
 
 async function getValidator(req_, customerSegment=null) {
-    const { loanMetrics, segments } = await lenderController.getSettings(req_.body.slug ? { slug: req_.body.slug } : { lenderId: req_.user.lenderId } );
-    const {
-            minLoanAmount,
-            maxLoanAmount,
-            minTenor,
-            maxTenor
-        } = segments.find(settings => settings.segment.toString() === (customerSegment ? customerSegment.toString() : req_.body.employmentInfo.segment) );
-        const requestValidator = new LoanRequestValidators(loanMetrics.minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor);
-        return { loanMetrics, requestValidator };
+    try{
+        const { loanMetrics, segments } = await lenderController.getSettings(req_.body.slug ? { slug: req_.body.slug } : { lenderId: req_.user.lenderId } );
+        const {
+                minLoanAmount,
+                maxLoanAmount,
+                minTenor,
+                maxTenor
+            } = segments.find(settings => settings.segment.toString() === (customerSegment ? customerSegment.toString() : req_.body.employmentInfo.segment) );
+            const requestValidator = new LoanRequestValidators(loanMetrics.minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor);
+            return { loanMetrics, requestValidator };
+
+    }catch(exception) {
+        debug(exception);
+        return exception;
+    };
 }   
 
 router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
@@ -33,7 +39,7 @@ router.get('/expiring', async(req, res) => {
     const loans = await loanController.expiring();
 
     return res.status(200).send(loans);
-})
+});
 
 router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
@@ -44,22 +50,21 @@ router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), as
 });
 
 router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent', 'guest']), async (req, res) => {
-    const { loanMetrics, requestValidator } = await getValidator(req);
-    try{
-        const customerObj = _.omit(req.body, ['loan']);
-        req.body.loan.netPay = req.body.netPay.value;
-        const loanObj = req.body.loan;
+    const validatorObj = await getValidator(req);
+    if(validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
+    
+    const { loanMetrics, requestValidator } = validatorObj;
 
-        var { error } = customerValidators.validateCreation(customerObj);
-        if(error) throw error;
-        
-        var { error }= requestValidator.loanRequestCreation(loanObj);
-        if(error) throw error;
+    const customerObj = _.omit(req.body, ['loan']);
 
-    }catch(exception) {
-        debug(exception);
-        return res.status(400).send(exception.message);
-    };
+    req.body.loan.netPay = req.body.netPay.value;
+    const loanObj = req.body.loan;
+
+    var { error } = customerValidators.validateCreation(customerObj);
+    if(error) throw error;
+    
+    var { error }= requestValidator.loanRequestCreation(loanObj);
+    if(error) throw error;
 
     const loanRequest = await loanController.createLoanRequest(loanMetrics, req);
     if (loanRequest instanceof Error) {
@@ -77,8 +82,10 @@ router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), asy
         return res.status(400).send(customer.message);
     };
 
-    const { loanMetrics, requestValidator } = await getValidator(req, customer.employmentInfo.segment);
-    // TODO: Customer will send the segment in body.
+    const validatorObj = await getValidator(req, customer.employmentInfo.segment);
+    if(validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
+
+    const { loanMetrics, requestValidator } = validatorObj;
 
     const { error }= requestValidator.loanCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);

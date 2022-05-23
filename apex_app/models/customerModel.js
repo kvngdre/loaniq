@@ -8,13 +8,7 @@ const debug = require('debug')('app:customerModel');
 
 const customerSchema = new mongoose.Schema({
     passport: {
-        image: {
-            type: Buffer
-        },
-
-        imageExt: {
-            type: String
-        }
+        type: String
     },
 
     name: {
@@ -136,14 +130,7 @@ const customerSchema = new mongoose.Schema({
     },
 
     idCard: {
-        image: {
-            type: Buffer
-        },
-
-        imageExt: {
-            type: Buffer
-        }
-
+        type: String
     },
 
     idCardInfo: {
