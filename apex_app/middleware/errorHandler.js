@@ -1,4 +1,5 @@
 const debug = require('debug')('app:errorHandler');
+const { MulterError } = require('multer');
 const { FileUploadError } = require('../Errors/fileUploadError');
 
 
@@ -9,9 +10,9 @@ function errorHandler(err, req, res, next) {
         return res.status(400).send(`Error in JSON object: ${err.message}`);
     };
     
-    if(err instanceof FileUploadError) {
-        debug(err.message, err.stack);
-        return res.status(err.statusCode).send(`Error: ${err.message}`);
+    if(err instanceof FileUploadError || err instanceof MulterError) {
+        debug(err.message, err?.stack);
+        return res.status(err?.statusCode || 400).send(`Error: ${err?.message || err.code}`);
     };
 
     debug(err.message, err.stack);

@@ -10,10 +10,6 @@ const configSchema = new mongoose.Schema({
         required: true
     },
 
-    slug: {
-        type: String
-    },
-
     segments: [{
             segment: {
             type: mongoose.Schema.Types.ObjectId,
