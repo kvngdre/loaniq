@@ -150,11 +150,7 @@ const validators = {
                 interestRate: Joi.number().required(),
                 upfrontFeePercentage: Joi.number().required(),
                 transferFee: Joi.number().required(),
-                minLoanAmount: Joi.number().required(),
-                maxLoanAmount: Joi.number().required(),
                 minNetPay: Joi.number().required(),
-                minTenor: Joi.number().required(),
-                maxTenor: Joi.number().required(),
                 dtiThreshold: Joi.number().required()
             }).required()
         });

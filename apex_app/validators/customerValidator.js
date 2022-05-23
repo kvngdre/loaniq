@@ -49,6 +49,7 @@ const employmentSchema = Joi.object({
     
     ippis: Joi.string()
               .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
+              .uppercase()
               .messages({'string.pattern.base': '{#label} Invalid IPPIS number.'}),
 
     companyLocation: Joi.string().lowercase(),

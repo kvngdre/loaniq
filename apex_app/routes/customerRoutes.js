@@ -4,6 +4,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const debug = require('debug')('app:customerRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const uploadMultipleFiles = require('../middleware/fileUpload');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 
@@ -23,8 +24,10 @@ router.get('/:id', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAg
     return res.status(200).send(customer);
 });
 
-router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), uploadMultipleFiles, async (req, res) => {
     // TODO: add to pending for agent
+    return res.send('Files upload success');
+
     const { error } = customerValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     

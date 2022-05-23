@@ -1,4 +1,5 @@
 const debug = require('debug')('app:errorHandler');
+const { FileUploadError } = require('../Errors/fileUploadError');
 
 function errorHandler(err, req, res, next) {
   // Catch errors for bad json format.
