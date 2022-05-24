@@ -145,7 +145,7 @@ const validators = {
                 maxLoanAmount: Joi.number(), 
                 minTenor: Joi.number(), 
                 maxTenor: Joi.number()
-            })).required(),
+            })),
 
             loanMetrics: Joi.object({
                 interestRate: Joi.number().required(),
@@ -153,7 +153,7 @@ const validators = {
                 transferFee: Joi.number().required(),
                 minNetPay: Joi.number().required(),
                 dtiThreshold: Joi.number().required()
-            }).required()
+            })
         });
         return schema.validate(settings);
     },
