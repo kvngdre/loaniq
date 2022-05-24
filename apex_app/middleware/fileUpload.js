@@ -8,14 +8,21 @@ const ONE_MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
     destination: (request, file, callback) => {
-        console.log(request)
-        if(file.fieldname === 'passport') callback(null, `./uploads/customers/passports`)
+        if(file.fieldname === 'passport') callback(null, `./uploads/customers/passportss`)
 
         else if(file.fieldname === 'idCard') callback(null, `./uploads/customers/idCards`)
+
+        else if(file.fieldname === 'profile picture') callback(null, `./uploads/users`)
     },
 
     filename: (request, file, callback) => {
+        //TODO: uncomment actual change
+        // if(file.fieldname === 'profile picture'){
+        //     return callback(null, `${request.body.phone}-${request.body.name.firstName}-${Date.now()}${path.extname(file.originalname)}`)
+        // }
+
         callback(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`)
+        // callback(null, `${request.body.name.firstName + ' ' + request.body.name.lastName}-${request.body.employmentInfo.ippis}-${Date.now()}${path.extname(file.originalname)}`);
     }
 })
 

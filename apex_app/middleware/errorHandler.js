@@ -5,6 +5,7 @@ const { FileUploadError } = require('../Errors/fileUploadError');
 
 function errorHandler(err, req, res, next) {
     // Catch errors for bad json format.
+    console.log('knkfl[======', err.stack);
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         debug(err.message);
         return res.status(400).send(`Error in JSON object: ${err.message}`);

@@ -17,7 +17,6 @@ const customerSchema = new mongoose.Schema({
             minLength: 3,
             maxLength: 50,
             trim:true,
-            lowercase: true,
             required: true
         },
     
@@ -26,7 +25,6 @@ const customerSchema = new mongoose.Schema({
             minLength: 3,
             maxLength: 50,
             trim:true,
-            lowercase: true,
             required: true
         },
     
@@ -34,7 +32,6 @@ const customerSchema = new mongoose.Schema({
             type: String,
             minLength: 3,
             maxLength: 50,
-            lowercase: true,
             trim:true
         }
     },
@@ -280,10 +277,13 @@ const customerSchema = new mongoose.Schema({
     timestamps: true
 });
 
+customerSchema.virtual('fullName').get(function() {
+    return this.name.firstName.concat(this.name?.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
+})
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('ippisPrefix');
-    // console.log(this)
+
     let foundMatch = this.employmentInfo.ippis.match(/[A-Z]{2,3}/)
     !foundMatch ? foundMatch = '' : foundMatch = foundMatch[0]
 
@@ -313,7 +313,6 @@ customerSchema.pre('save', async function (next) {
     // if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
     
     next();
-
   });
 
 const Customer = mongoose.model('Customer', customerSchema);
