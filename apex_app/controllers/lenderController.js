@@ -195,7 +195,10 @@ const lender = {
             requestBody.lenderId = id;
             const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId: id }, requestBody, { new: true, upsert: true } );
             
-            return lenderConfig;
+            return {
+                message: 'Settings have been updated',
+                configuration: lenderConfig
+            };
 
         }catch(exception) {
             return exception;
