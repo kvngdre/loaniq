@@ -4,13 +4,13 @@ const User = require('../models/userModel');
 const Lender = require('../models/lenderModel');
 const Metrics = require('../tools/Managers/loanMetricsEval');
 
+
 const metrics = new Metrics();
 
 const loanSchema = new mongoose.Schema({  
     netPay: {
         type: Number,
         required: true
-        // Should read netPay from origin collection
     },  
     
     amount: {
@@ -52,7 +52,7 @@ const loanSchema = new mongoose.Schema({
         type: String,
         enum: [
             'approved',
-            'declined',
+            'denied',
             'pending',
             'onHold',
             'liquidated',
@@ -145,7 +145,6 @@ const loanSchema = new mongoose.Schema({
                 type: Number
             }
         }
-        
     },
     
     // TODO: remember to correct mongodb time
@@ -245,7 +244,8 @@ loanSchema.pre('save', function(next) {
 
         const oneMonth = 2628000000;
         const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
-        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toLocaleDateString();
+        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toISOString().split('T');
+        console.log(endDate)
         this.expectedEndDate = endDate;
     };
 

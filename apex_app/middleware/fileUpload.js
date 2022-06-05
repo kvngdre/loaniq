@@ -1,6 +1,6 @@
 const path = require('path');
 const multer = require('multer');
-const { FileUploadError } = require('../Errors/fileUploadError');
+const { FileUploadError } = require('../errors/fileUploadError');
 
 
 const multiplier = 5;

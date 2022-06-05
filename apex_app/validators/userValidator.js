@@ -42,7 +42,7 @@ const passwordSchema = joiPassword.string()
                                     })
 
 const segmentSchema = Joi.alternatives()
-                         .try(Joi.array().items(Joi.objectId), Joi.string().valid('all'))
+                         .try(Joi.array().items(Joi.objectId).min(1), Joi.string().valid('all'))
 
 const otpSchema = Joi.string()
                      .pattern(/^[0-9]{6}$/)

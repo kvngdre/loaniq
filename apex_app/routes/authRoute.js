@@ -9,4 +9,8 @@ router.post('/', async (req, res) => {
     return res.status(200).send(token);
 });
 
+router.get('/', async (req, res) => {
+    return res.sendFile(__dirname + '/index.html')
+})
+
 module.exports = router;
