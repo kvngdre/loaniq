@@ -7,11 +7,11 @@ const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
 
+
 // Setup
 connectDB();
 appRoutes(app);
-// jobs(); 
-
+// jobs();
 
 // Get Node Environment
 debug(`ENV: ${app.get('env')}`);

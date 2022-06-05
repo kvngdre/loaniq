@@ -99,7 +99,7 @@ router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), asy
     return res.status(200).send(loan);
 });
 
-router.patch('/:id', verifyToken, verifyRole(['credit', 'loanAgent']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     try{
         const { customer: { employmentInfo: { segment } } } = await loanController.getOne(req.user, {_id: req.params.id } );
 
