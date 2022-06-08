@@ -159,6 +159,7 @@ const manager = {
 
         queryParam.loanAgent = user.id
         const loans = await Loan.find( queryParam )
+                                .populate({path: 'customer', model: Customer, select: 'name employmentInfo.ippis'})
                                 .sort('_id');
             
         return loans; 

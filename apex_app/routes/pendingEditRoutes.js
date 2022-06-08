@@ -19,7 +19,7 @@ router.get('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res
     return res.status(200).send(pendingEdit);
 });
 
-router.post('/', verifyToken, verifyRole('loanAgent'), async (req, res) => {
+router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     const { error } = pendingEditValidators.create(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 

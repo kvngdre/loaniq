@@ -7,6 +7,7 @@ const PendingEdit = require('../models/pendingEditModel');
 const pendingEdit = {
     create: async function(user, documentId, type, alteration) {
         try{
+            // consider if admins should be allowed to create pending edits.
             const newPendingEdit = new PendingEdit({
                 lenderId: user.lenderId,
                 userId: user.id,
@@ -28,6 +29,7 @@ const pendingEdit = {
     getAll: async function(user) {
         try{
             let result = await PendingEdit.aggregate([
+                // TODO: switch places
                 {
                     $lookup: {
                         from: 'customers',
@@ -249,24 +251,24 @@ const pendingEdit = {
                     const customer = await Customer.findById(editedDoc.documentId);
                     
                     customer.set( editedDoc.alteration );
-                    customer.save();
+                    await customer.save();
                 }
                 else {
                     await Loan.updateOne({ _id: editedDoc.documentId }, editedDoc.alteration );
                 };
-            }
+            };
 
             return editedDoc;
 
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     },
 
     deleteApproved: async function() {
         try{
-                const count = await PendingEdit.deleteMany({status: 'approved'});
+            const count = await PendingEdit.deleteMany({status: 'approved'});
         }catch(exception) {
             debug(exception);
             return exception;
