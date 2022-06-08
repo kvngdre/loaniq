@@ -8,7 +8,7 @@ const ONE_MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
     destination: (request, file, callback) => {
-        if(file.fieldname === 'passport') callback(null, `./uploads/customers/passportss`)
+        if(file.fieldname === 'passport') callback(null, `./uploads/customers/passports`)
 
         else if(file.fieldname === 'idCard') callback(null, `./uploads/customers/idCards`)
 
