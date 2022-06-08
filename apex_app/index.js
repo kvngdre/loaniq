@@ -16,9 +16,9 @@ appRoutes(app);
 // Get Node Environment
 debug(`ENV: ${app.get('env')}`);
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 9000;
 app.listen(port, () => {
-    // TODO: uncomment this
-    // debug(`Listening on port ${port}`);
-     console.log(`Listening on port ${port}`);
+  // TODO: uncomment this
+  // debug(`Listening on port ${port}`);
+  console.log(`Listening on port ${port}`);
 });
