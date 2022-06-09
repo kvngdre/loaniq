@@ -193,16 +193,12 @@ const manager = {
 
     if (user.role !== 'loanAgent') {
       const loans = await Loan.find(queryParam)
-        .select(
-          '_id status amount recommendedAmount tenor recommendedTenor customer createdAt netPay dateAppOrDec lenderId'
-        )
-        .select('-lenderId')
-        .populate({
-          path: 'customer',
-          model: Customer,
-          select: 'name employmentInfo.ippis'
-        })
-        .sort({ createdAt: -1 });
+                            //   .select(
+                            //     '_id status amount recommendedAmount tenor recommendedTenor customer createdAt netPay dateAppOrDec lenderId'
+                            //   )
+                            //   .select('-lenderId')
+                              .populate({ path: 'customer',model: Customer, select: 'name employmentInfo.ippis' })
+                              .sort({ createdAt: -1 });
 
       return loans;
     }
