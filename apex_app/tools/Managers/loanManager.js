@@ -211,7 +211,6 @@ const manager = {
 
   getOne: async function (user, queryParam) {
     queryParam.lenderId = user.lenderId;
-    console.log('manager=======', queryParam);
     if (user.role !== 'loanAgent') {
       const loan = await Loan.findOne(queryParam).populate({
         path: 'customer',

@@ -7,10 +7,7 @@ const loanController = require('../controllers/loanController');
 const lenderController = require('../controllers/lenderController');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
-const {
-  LoanRequestValidators,
-  loanValidators
-} = require('../validators/loanValidator');
+const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
 
 async function getValidator(req_, customerSegment = null) {
   try {
@@ -40,11 +37,7 @@ async function getValidator(req_, customerSegment = null) {
   }
 }
 
-router.get(
-  '/',
-  verifyToken,
-  verifyRole(['lender', 'admin', 'credit', 'loanAgent']),
-  async (req, res) => {
+router.get('/', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAgent']), async (req, res) => {
     const loans = await loanController.getAll(req.user);
     if (loans.length === 0) return res.status(404).send('No loans found.');
 
@@ -58,24 +51,16 @@ router.get('/expiring', async (req, res) => {
   return res.status(200).send(loans);
 });
 
-router.get(
-  '/:id',
-  verifyToken,
-  verifyRole(['admin', 'credit', 'loanAgent']),
-  async (req, res) => {
+router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     // TODO: add all
-    const loan = await loanController.getOne(req.user, req.params.id);
+    const loan = await loanController.getOne(req.user, {_id: req.params.id});
     if (!loan) return res.status(404).send('Loan not found.');
 
     return res.status(200).send(loan);
   }
 );
 
-router.post(
-  '/create-loan-request',
-  verifyToken,
-  verifyRole(['admin', 'loanAgent', 'guest']),
-  async (req, res) => {
+router.post('/create-loan-request', verifyToken, verifyRole(['admin', 'loanAgent', 'guest']), async (req, res) => {
     const validatorObj = await getValidator(req);
     if (validatorObj instanceof Error)
       return res
@@ -108,11 +93,7 @@ router.post(
   }
 );
 
-router.post(
-  '/create-loan',
-  verifyToken,
-  verifyRole(['admin', 'loanAgent']),
-  async (req, res) => {
+router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), async (req, res) => {
     const customer = await customerController.get({ _id: req.body.customer });
     if (customer instanceof Error) {
       debug(customer.message, customer.stack);
@@ -143,11 +124,7 @@ router.post(
   }
 );
 
-router.patch(
-  '/:id',
-  verifyToken,
-  verifyRole(['credit', 'loanAgent']),
-  async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['credit', 'loanAgent']), async (req, res) => {
     try {
       const {
         customer: {
@@ -174,11 +151,7 @@ router.patch(
   }
 );
 
-router.post(
-  '/disburse',
-  verifyToken,
-  verifyRole(['admin', 'credit']),
-  async (req, res) => {
+router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
     const { error } = loanValidators.validateDateTimeObj(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
