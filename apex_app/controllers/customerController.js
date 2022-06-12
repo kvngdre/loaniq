@@ -9,6 +9,7 @@ const PendingEditController = require('../controllers/pendingEditController');
 const customer = {
     create: async function(request) {
         try{
+            // TODO: should the net pay be read at time of creation?
             const customerExists = await Customer.findOne( { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );
             if(customerExists) throw new Error('Duplicate IPPIS NO. Customer already exists');
 
@@ -115,7 +116,7 @@ const customer = {
                 throw new Error('Customer not found.');
             }; 
             
-            if(user.role === 'loanAgent') {
+            if(user.role !== 'admin') {
                 const newPendingEdit = await PendingEditController.create(user, customerId, 'customer', requestBody);
                 if(!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);
@@ -131,7 +132,10 @@ const customer = {
             customer.set(requestBody);
             await customer.save();
 
-            return customer;
+            return {
+                message: 'updated successfully',
+                editedDoc: customer
+            };
             
         }catch(exception) {
             return exception;

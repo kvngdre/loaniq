@@ -29,7 +29,7 @@ const pendingSchema = new mongoose.Schema({
         type: String,
         enum: [
             'approved',
-            'declined',
+            'denied',
             'pending',
         ],
         default: 'pending'

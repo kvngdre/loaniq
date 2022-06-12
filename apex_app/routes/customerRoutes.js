@@ -49,10 +49,10 @@ router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), 
     const { error } = customerValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const customer = await customerController.update(req.params.id, req.user, req.body);
-    if(customer instanceof Error) return res.status(400).send(customer.message);
+    const customerEditObject = await customerController.update(req.params.id, req.user, req.body);
+    if(customerEditObject instanceof Error) return res.status(400).send(customerEditObject.message);
 
-    return res.status(200).send(customer);
+    return res.status(200).send(customerEditObject);
 });
 
 module.exports = router;

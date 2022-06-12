@@ -17,8 +17,14 @@ const validators = {
     edit: function(obj) {
         const schema = Joi.object({
             status: Joi.string()
-                       .valid('approved', 'declined')
-                       .required()
+                       .valid('approved', 'denied')
+                       .required(),
+
+            reason: Joi.string().when('status', {
+                is: 'denied',
+                then: Joi.required(),
+                otherwise: Joi.forbidden()
+            })
         });
 
         return schema.validate(obj);

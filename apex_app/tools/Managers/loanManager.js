@@ -198,13 +198,13 @@ const manager = {
                             //   )
                             //   .select('-lenderId')
                               .populate({ path: 'customer',model: Customer, select: 'name employmentInfo.ippis' })
-                              .sort({ createdAt: -1 });
+                              .sort('-_id');
 
       return loans;
     }
 
     queryParam.loanAgent = user.id;
-    const loans = await Loan.find(queryParam).sort('_id');
+    const loans = await Loan.find(queryParam).sort('-_id');
 
     return loans;
   },
@@ -229,23 +229,14 @@ const manager = {
     return loan;
   },
 
-  getDisbursement: async function (user, queryParam = {}) {
+  getDisbursement: async function (user, queryParam={}) {
     queryParam.lenderId = user.lenderId;
 
     if (user.role !== 'loanAgent') {
       const loans = await Loan.find(queryParam)
-        .select(
-          '_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId'
-        )
-        .populate({
-          path: 'customer',
-          model: Customer,
-          populate: [
-            { path: 'accountInfo.bank', model: Bank, select: '-_id name' }
-          ],
-          select: '-_id bvn employmentInfo.ippis accountInfo'
-        })
-        .sort({ createdAt: -1 });
+                              .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
+                              .populate({path: 'customer', model: Customer, populate: [{ path: 'accountInfo.bank', model: Bank, select: '-_id name' }], select: '-_id bvn employmentInfo.ippis accountInfo'})
+                              .sort({ createdAt: -1 });
 
       return loans;
     }
@@ -280,39 +271,31 @@ const manager = {
     try {
       request.body = convertToDotNotation(request.body);
 
-      if (request.user.role === 'loanAgent') {
+      if (request.user.role !== 'credit') {
         const result = await Loan.findOne({
-          _id: request.params.id,
-          loanAgent: request.user.id,
-          lenderId: request.user.lenderId
+            _id: request.params.id, 
+            lenderId: request.user.lenderId, 
         });
-        if (!result) throw new Error('loan not found.');
+        if (!result) throw new Error('Cannot edit loan that is not pending');
 
-        const newPendingEdit = await PendingEditController.create(
-          request.user,
-          request.params.id,
-          'loan',
-          request.body
-        );
+        const newPendingEdit = await PendingEditController.create(request.user, request.params.id, 'loan', request.body);
         if (!newPendingEdit || newPendingEdit instanceof Error) {
-          debug(newPendingEdit);
-          throw newPendingEdit;
-        }
+            debug(newPendingEdit);
+            throw newPendingEdit;
+        };
 
         return {
-          message: 'Submitted. Awaiting Review.',
-          alteration: newPendingEdit
+            message: 'Submitted. Awaiting Review.',
+            body: newPendingEdit
         };
       }
 
-      const loan = await Loan.findOne({
-        _id: request.params.id,
-        lenderId: request.user.lenderId
-      });
+    //   TODO: Should the credit user be able to edit every type of loan.
+      const loan = await Loan.findOne({_id: request.params.id, lenderId: request.user.lenderId});
       if (!loan) throw new Error('loan not found.');
 
       if (['approved', 'declined'].includes(request.body?.status)) {
-        loan.set('dateAppOrDec', Date.now());
+          loan.set('dateAppOrDec', Date.now());
       }
 
       loan.set(request.body);
@@ -320,8 +303,8 @@ const manager = {
 
       return loan;
     } catch (exception) {
-      debug(exception);
-      return exception;
+        debug(exception);
+        return exception;
     }
   },
 

@@ -124,13 +124,9 @@ router.post('/create-loan', verifyToken, verifyRole(['admin', 'loanAgent']), asy
   }
 );
 
-router.patch('/:id', verifyToken, verifyRole(['credit', 'loanAgent']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     try {
-      const {
-        customer: {
-          employmentInfo: { segment }
-        }
-      } = await loanController.getOne(req.user, { _id: req.params.id });
+      const {customer: {employmentInfo: { segment }}} = await loanController.getOne(req.user, { _id: req.params.id });
 
       const { requestValidator } = await getValidator(req, segment);
 
@@ -141,9 +137,10 @@ router.patch('/:id', verifyToken, verifyRole(['credit', 'loanAgent']), async (re
       if (loan instanceof Error) {
         debug(loan);
         return res.status(400).send(loan.message);
-      }
+      };
 
       return res.status(200).send(loan);
+      
     } catch (exception) {
       debug(exception);
       return res.status(404).send('Loan not found.');
@@ -155,10 +152,7 @@ router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (re
     const { error } = loanValidators.validateDateTimeObj(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const loans = await loanController.getDisbursement(
-      req.user,
-      req.body.fromDate
-    );
+    const loans = await loanController.getDisbursement(req.user, {createdAt: req.body.fromDate});
 
     return res.status(200).send(loans);
   }

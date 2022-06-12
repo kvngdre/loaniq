@@ -26,18 +26,30 @@ const pendingEdit = {
         };
     },
 
+    getAllEdits: async function() {
+        try{
+            const allPendingEdits = await PendingEdit.find({});
+            if(allPendingEdits.length === 0) throw new Error('No pending edits');
+
+            return allPendingEdits;
+
+        }catch(exception) {
+            debug(exception);
+            return exception;
+        }
+    },
+
     getAll: async function(user) {
         try{
-            let result = await PendingEdit.aggregate([
-                // TODO: switch places
-                {
-                    $lookup: {
-                        from: 'customers',
-                        localField: 'documentId',
-                        foreignField: '_id',
-                        as: 'customerData'
-                    }
-                },
+            const pendingCustomerEdits = await PendingEdit.aggregate([
+                // {
+                //     $lookup: {
+                //         from: 'customers',
+                //         localField: 'documentId',
+                //         foreignField: '_id',
+                //         as: 'customerData'
+                //     }
+                // },
                 // {
                 //     $lookup: {
                 //         from: 'users',
@@ -49,7 +61,7 @@ const pendingEdit = {
                 {
                     $match: {
                         lenderId: user.lenderId,
-                        status: 'pending',
+                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                         type: 'customer'
                     }
                 },
@@ -73,60 +85,87 @@ const pendingEdit = {
                         'customerData.updatedAt': 0
                     }
                 },
-                ]).exec()
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+            ]).exec()
 
             
+            let pipeline$MatchObject;
             if(user.role === 'credit') {
-                const output = await PendingEdit.aggregate([
-                    {
-                        $lookup: {
-                            from: 'loans',
-                            localField: 'documentId',
-                            foreignField: '_id',
-                            as: 'loanData'
-                        }
-                    },
-                    // {
-                    //     $lookup: {
-                    //         from: 'users',
-                    //         localField: 'userId',
-                    //         foreignField: '_id',
-                    //         as: 'userData'
-                    //     }
-                    // },
-                    {
-                        $match: {
-                            lenderId: user.lenderId, 
-                            status: 'pending',
-                            type: 'loan',
-                            loanData: {$elemMatch: {creditOfficer: mongoose.Types.ObjectId(user.id)}}
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            lenderId: 1,
-                            type: 1,
-                            alteration: 1,
-                            documentId: 1,
-                            status: 1,
-                            userId: 1,
-                            // loanData: 1, 
-                            // userData: {name: 1}
-                        }
-                    },
-                    {
-                        $project: {
-                            __v: 0, 
-                            'loanData.createdAt': 0, 
-                            'loanData.updatedAt': 0
-                        }
-                    },
-                    ]).exec()
+                pipeline$MatchObject = {
+                    $match: {
+                        lenderId: user.lenderId,
+                        type: 'loan',
+                        loanData: {$elemMatch: {creditOfficer: mongoose.Types.ObjectId(user.id)}}
+                    }
+                }
 
-                result.push(...output)
-            }
-            return result;
+            }else{
+                pipeline$MatchObject = {
+                    $match: {
+                        lenderId: user.lenderId,
+                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                        type: 'loan',
+                    }
+                }
+            };
+
+            // Aggregation pipeline for fetching pending loan edits.
+            const PendingLoanEdits = await PendingEdit.aggregate([
+                {
+                    $lookup: {
+                        from: 'loans',
+                        localField: 'documentId',
+                        foreignField: '_id',
+                        as: 'loanData'
+                    }
+                },
+                // {
+                //     $lookup: {
+                //         from: 'users',
+                //         localField: 'userId',
+                //         foreignField: '_id',
+                //         as: 'userData'
+                //     }
+                // },
+                pipeline$MatchObject,
+                {
+                    $project: {
+                        _id: 1,
+                        lenderId: 1,
+                        type: 1,
+                        alteration: 1,
+                        documentId: 1,
+                        status: 1,
+                        userId: 1,
+                        createdAt: 1
+                        // loanData: 1, 
+                        // userData: {name: 1}
+                    }
+                },
+                {
+                    $project: {
+                        __v: 0, 
+                        'loanData.createdAt': 0, 
+                        'loanData.updatedAt': 0
+                    }
+                },
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+            ]).exec()
+
+            console.log(PendingLoanEdits)
+
+            const pendingEdits = [...pendingCustomerEdits, ...PendingLoanEdits];
+
+        return pendingEdits;
+
         }catch(exception) {
             debug(exception);
             return exception;
@@ -135,7 +174,7 @@ const pendingEdit = {
 
     getOne: async function(id, user) {
         try{
-            let result = await PendingEdit.aggregate([
+            const pendingCustomerEdit = await PendingEdit.aggregate([
                 // {
                 //     $lookup: {
                 //         from: 'customers',
@@ -156,7 +195,7 @@ const pendingEdit = {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
                         lenderId: user.lenderId,
-                        status: 'pending',
+                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                         type: 'customer'
                     }
                 },
@@ -180,11 +219,35 @@ const pendingEdit = {
                         'customerData.updatedAt': 0
                     }
                 },
-                ]).exec()
+            ]).exec()
 
-            
-            if(user.role === 'credit') {
-                const output = await PendingEdit.aggregate([
+
+            if(pendingCustomerEdit.length === 0) {
+
+                let Pipeline$MatchObject;
+                if(user.role === 'credit') {
+                    Pipeline$MatchObject = {
+                        $match: {
+                            _id: mongoose.Types.ObjectId(id),
+                            lenderId: user.lenderId, 
+                            status: 'pending',
+                            type: 'loan',
+                            loanData: {$elemMatch: {creditOfficer: mongoose.Types.ObjectId(user.id)}}
+                        }
+                    }
+                }else{
+                    Pipeline$MatchObject = {
+                        $match: {
+                            _id: mongoose.Types.ObjectId(id),
+                            lenderId: user.lenderId,
+                            userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                            status: 'pending',
+                            type: 'loan',
+                        }
+                    }
+                };
+                
+                const pendingLoanEdit = await PendingEdit.aggregate([
                     {
                         $lookup: {
                             from: 'loans',
@@ -201,15 +264,7 @@ const pendingEdit = {
                     //         as: 'userData'
                     //     }
                     // },
-                    {
-                        $match: {
-                            _id: mongoose.Types.ObjectId(id),
-                            lenderId: user.lenderId, 
-                            status: 'pending',
-                            type: 'loan',
-                            loanData: {$elemMatch: {creditOfficer: mongoose.Types.ObjectId(user.id)}}
-                        }
-                    },
+                    Pipeline$MatchObject,
                     {
                         $project: {
                             _id: 1,
@@ -230,11 +285,13 @@ const pendingEdit = {
                             'loanData.updatedAt': 0
                         }
                     },
-                    ]).exec()
+                ]).exec()
 
-                result.push(...output)
+                return pendingLoanEdit;
             }
-            return result;
+
+            return pendingCustomerEdit;
+
         }catch(exception) {
             debug(exception);
             return exception;
@@ -243,8 +300,12 @@ const pendingEdit = {
 
     updateStatus: async function(id, user, requestBody) {
         try{
-            const editedDoc = await PendingEdit.findOneAndUpdate({ _id: id, lenderId: user.lenderId, status: 'pending' }, requestBody, {new: true});
-            if(!editedDoc) throw new Error('Document not found.');
+            const editedDoc = await PendingEdit.findOneAndUpdate(
+                { _id: id, lenderId: user.lenderId, status: 'pending' }, 
+                requestBody, 
+                { new: true }
+            );
+            if(!editedDoc) throw new Error('Document not found');
             
             if(editedDoc.status === "approved") {
                 if(editedDoc.type === 'customer') {

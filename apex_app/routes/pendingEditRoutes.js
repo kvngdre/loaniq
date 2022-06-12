@@ -4,15 +4,14 @@ const verifyToken = require('../middleware/verifyToken');
 const pendingEditValidators = require('../validators/pendingEditValidator');
 const pendingEditController = require('../controllers/pendingEditController');
 
-router.get('/', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
-    // TODO: should a loanAgent be able to call these endpoints?
+router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     const pendingEdits = await pendingEditController.getAll(req.user);
     if(pendingEdits.length === 0) return res.status(404).send('No pending edits.');
 
     return res.status(200).send(pendingEdits);
 });
 
-router.get('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
     const pendingEdit = await pendingEditController.getOne(req.params.id, req.user);
     if(pendingEdit.length === 0) return res.status(404).send('document not found.');
 

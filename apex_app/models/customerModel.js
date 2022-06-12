@@ -121,10 +121,7 @@ const customerSchema = new mongoose.Schema({
         required: true
     },
 
-    bvnValid: {
-        type: Boolean,
-        default: false
-    },
+    
 
     idCard: {
         type: String
@@ -261,6 +258,7 @@ const customerSchema = new mongoose.Schema({
         },
     },
 
+    // below are set programmatically. No user can edit.
     netPay: {
         value:{
             type: Number
@@ -268,10 +266,15 @@ const customerSchema = new mongoose.Schema({
 
         updatedAt: {
             type: Date,
-            default: null
+            default: new Date().toISOString()
         }
         // TODO: read from origin collection.
-    }
+    },
+
+    bvnValid: {
+        type: Boolean,
+        default: false
+    },
 
 }, {
     timestamps: true
