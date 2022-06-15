@@ -163,7 +163,7 @@ const validators = {
             
             accountInfo: accountInfoSchema,
             
-            netPay: netPaySchema
+            // netPay: netPaySchema
         });
 
     return schema.validate(customer);
