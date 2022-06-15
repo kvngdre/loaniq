@@ -61,6 +61,10 @@ const loanSchema = new mongoose.Schema({
         ],
         default: 'pending'
     },
+
+    comment: {
+        type: String
+    },
     // End of the line where credit user can edit.
 
     loanAgent: {

@@ -300,11 +300,12 @@ customerSchema.pre('save', async function (next) {
     const loanEditTrigger = ['dateOfBirth', 'employmentInfo.dateOfEnlistment'];
   
     if(this.modifiedPaths().some( path => loanEditTrigger.includes(path) )){
-        console.log('triggered')
+        console.log('triggered');
 
         const loans = await Loan.find( { customer: this._id, status: 'pending' } );
         loans.forEach( async loan => {
             loan.set({'validationParams.dob': this.dateOfBirth})
+            loan.set({'validationParams.doe': this.employmentInfo.dateOfEnlistment})
             await loan.save();
         });
     };

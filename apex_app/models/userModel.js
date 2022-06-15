@@ -30,7 +30,12 @@ const userSchema = new mongoose.Schema({
             maxLength: 50,
             trim:true
         },
-    }, 
+    },
+    
+    displayName: {
+        type: String,
+        required: true
+    },
     
     phone: {
         type: String,
