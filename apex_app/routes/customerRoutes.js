@@ -26,11 +26,10 @@ router.get('/:id', verifyToken, verifyRole(['lender', 'admin', 'credit', 'loanAg
 
 router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), uploadMultipleFiles, async (req, res) => {
     // TODO: add to pending for agent
-    return res.send('Files upload success');
 
     const { error } = customerValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
-    
+    console.log('kk')
     const newCustomer = await customerController.create(req);
     if(newCustomer instanceof Error) { return res.status(400).send(newCustomer.message); };
     

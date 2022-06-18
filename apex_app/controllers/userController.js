@@ -48,6 +48,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedTempPassword,
@@ -70,6 +71,7 @@ const user = {
 
                     var newUser = new User({
                         name: requestBody.name,
+                        displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
@@ -93,6 +95,7 @@ const user = {
                     
                     var newUser = new User({
                         name: requestBody.name,
+                        displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
@@ -115,6 +118,7 @@ const user = {
                     
                     var newUser = new User({
                         name: requestBody.name,
+                        displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
@@ -138,11 +142,12 @@ const user = {
             userDebug('Email sent successfully');
 
             await newUser.save();
+
             newUser.password = temporaryPassword;
             
             return {
                 message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'fullName', 'password', 'email', 'otp.OTP', 'role', 'segments']) 
+                user: _.pick(newUser,['_id', 'fullName', 'displayName', 'password', 'email', 'otp.OTP', 'role', 'segments']) 
             };
 
         }catch(exception) {
@@ -176,8 +181,6 @@ const user = {
     },
 
     login: async function(requestBody) {
-        // TODO: implement lock after a number of unsuccessful login attempts.
-        // TODO: inform victor that the new user password rest would be done same time as verify email.
         try{
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
@@ -301,13 +304,12 @@ const user = {
             return {
                 message: 'OTP sent successfully',
                 otp: user.otp.OTP
-            }
+            };
 
         }catch(exception) {
             userDebug(exception)
             return exception;
-        }
-
+        };
     }
 }
 

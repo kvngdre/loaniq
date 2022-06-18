@@ -55,6 +55,7 @@ const validators = {
         admin: function (user) {
             const schema = Joi.object({
                 name: nameSchema.required(),
+                displayName: Joi.string(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
                 role: Joi.string().required(),
@@ -66,6 +67,7 @@ const validators = {
         credit: function (user) {
             const schema = Joi.object({
                 name: nameSchema.required(),
+                displayName: Joi.string(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
                 role: Joi.string().required(),
@@ -79,6 +81,7 @@ const validators = {
         operations: function (user) {
             const schema = Joi.object({
                 name: nameSchema,
+                displayName: Joi.string(),
                 phone: phoneSchema,
                 email: emailSchema,
                 role: Joi.string().required(),
@@ -90,6 +93,7 @@ const validators = {
         loanAgent: function (user) {
             const schema = Joi.object({
                 name: nameSchema.required(),
+                displayName: Joi.string(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
                 role: Joi.string().required(),
@@ -106,6 +110,7 @@ const validators = {
     validateEdit: function(user) {
         const schema = Joi.object({
             name: nameSchema,
+            displayName: Joi.string(),
             phone: phoneSchema,
             email: emailSchema,
             role: Joi.string(),
