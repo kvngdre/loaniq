@@ -90,7 +90,8 @@ const loanValidators ={
     validateDateTimeObj: function (dateTimeObj) {
         // TODO: finish disbursement
         const schema = Joi.object({
-            fromDate: Joi.string()
+            start: Joi.string().required(),
+            end: Joi.date()
         });
 
         return schema.validate(dateTimeObj);

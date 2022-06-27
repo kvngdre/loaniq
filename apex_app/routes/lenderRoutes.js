@@ -41,7 +41,7 @@ router.post('/verify-lender', async (req, res) => {
     const { error } = lenderValidators.validateRegVerification(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const isVerified = await lenderController.verifyRegister(req.body);
+    const isVerified = await lenderController.verifyLender(req.body);
     if(isVerified instanceof Error) return res.status(400).send(isVerified.message);
 
     return res.status(200).send(isVerified);

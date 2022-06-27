@@ -131,10 +131,10 @@ router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), 
       const { requestValidator } = await getValidator(req, segment);
 
       const { error } = requestValidator.validateEdit(req.body);
-      if (error) return res.status(400).send(error.details[0].message);
+      if(error) return res.status(400).send(error.details[0].message);
 
       const loan = await loanController.edit(req);
-      if (loan instanceof Error) {
+      if(loan instanceof Error) {
         debug(loan);
         return res.status(400).send(loan.message);
       };
@@ -150,9 +150,10 @@ router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), 
 
 router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
     const { error } = loanValidators.validateDateTimeObj(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if(error) return res.status(400).send(error.details[0].message);
 
-    const loans = await loanController.getDisbursement(req.user, {createdAt: req.body.fromDate});
+    const loans = await loanController.getDisbursement(req.user, req.body.start, req.body?.end);
+    if(loans instanceof Error) return res.status(404).send(loans.message);
 
     return res.status(200).send(loans);
   }
@@ -160,7 +161,7 @@ router.post('/disburse', verifyToken, verifyRole(['admin', 'credit']), async (re
 
 router.post('/loan-booking', async (req, res) => {
   const { error } = loanValidators.validateDateTimeObj(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if(error) return res.status(400).send(error.details[0].message);
 
   const loans = await loanController.getLoanBooking(req);
 });

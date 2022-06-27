@@ -93,18 +93,17 @@ const pendingEdit = {
             ]).exec()
 
             
-            let pipeline$MatchObject;
+            let pipeline$Match;
             if(user.role === 'credit') {
-                pipeline$MatchObject = {
+                pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
                         type: 'loan',
                         loanData: {$elemMatch: {creditOfficer: mongoose.Types.ObjectId(user.id)}}
                     }
                 }
-
             }else{
-                pipeline$MatchObject = {
+                pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
                         userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
@@ -131,7 +130,7 @@ const pendingEdit = {
                 //         as: 'userData'
                 //     }
                 // },
-                pipeline$MatchObject,
+                pipeline$Match,
                 {
                     $project: {
                         _id: 1,

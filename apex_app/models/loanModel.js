@@ -51,13 +51,13 @@ const loanSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: [
-            'approved',
-            'denied',
-            'pending',
-            'onHold',
-            'liquidated',
-            'discontinued',
-            'completed'
+            'Approved',
+            'Denied',
+            'Pending',
+            'On Hold',
+            'Liquidated',
+            'Discontinued',
+            'Completed'
         ],
         default: 'pending'
     },
@@ -150,9 +150,9 @@ const loanSchema = new mongoose.Schema({
             }
         }
     },
-    
-    // TODO: remember to correct mongodb time
-    dateAppOrDec: {
+
+     // TODO: remember to correct mongodb time
+     dateAppOrDec: {
         type: Date
     },
 
@@ -160,6 +160,20 @@ const loanSchema = new mongoose.Schema({
         type: String
     },
 
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+    },
+
+    creditOfficer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+
+    lenderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lender'
+    },
+    
     active: {
         type: Boolean,
         default: false
@@ -176,20 +190,11 @@ const loanSchema = new mongoose.Schema({
             default: false
         }
     },
-    
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-    },
 
-    creditOfficer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
-
-    lenderId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Lender'
-    },
+    disbursed: {
+        type: Boolean,
+        default: true
+    },        
 
     validationParams: {
         dob: {

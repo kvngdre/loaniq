@@ -133,7 +133,9 @@ userSchema.methods.generateToken = function() {
         email: this.email,
         role: this.role,
         active: this.active,
-        segments: (this.segments ? this.segments : null)
+        emailVerify: this.emailVerify,
+        segments: (this.segments ? this.segments : null),
+        lastLoginTime: this.lastLoginTime
     }, process.env.JWT_PRIVATE_KEY);
 }
 

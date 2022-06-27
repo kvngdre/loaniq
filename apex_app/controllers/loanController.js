@@ -23,8 +23,15 @@ const loans = {
         return await loanManager.edit(request);
     },
 
-    getDisbursement: async function(user, dateTime) {
-        return await loanManager.getDisbursement(user, { status: 'approved', active: true, createdAt: { $gte: new Date(dateTime) } } );
+    getDisbursement: async function(user, startDateTime, endDateTime="2050-01-01") {
+        return await loanManager.getDisbursement(user, 
+            {
+                active: true,
+                disbursed: false,
+                status: "Approved",
+                lenderId: user.lenderId,
+                createdAt: { $gte: new Date(startDateTime).toISOString(), $lt: new Date(endDateTime).toISOString() } 
+            } );
     },
 
     getLoanBooking: async function(request) {

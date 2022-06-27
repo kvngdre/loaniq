@@ -44,7 +44,7 @@ router.post('/create-user', verifyToken,verifyRole(['lender', 'admin']), async (
             var { error } = userValidator.validateRegistration.loanAgent(req.body);
             if (error) return res.status(400).send(error.details[0].message);
             break;
-    };
+    };  
     
 
     const user = await userController.create(role, req.body, req.user);

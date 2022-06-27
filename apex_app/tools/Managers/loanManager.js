@@ -10,6 +10,7 @@ const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEditController');
 
+
 const manager = {
   createLoan: async function (customer, loanMetricsObj, request) {
     try {
@@ -209,42 +210,63 @@ const manager = {
     return loans;
   },
 
-  getOne: async function (user, queryParam) {
-    queryParam.lenderId = user.lenderId;
-    if (user.role !== 'loanAgent') {
-      const loan = await Loan.findOne(queryParam).populate({
-        path: 'customer',
-        model: Customer
-      });
+  getOne: async function (user, queryParam={}) {
+    try{
+        queryParam.lenderId = user.lenderId;
 
-      return loan;
-    }
+        let loan;
+        if (user.role !== 'loanAgent') {
+            loan = await Loan.findOne(queryParam).populate({
+                path: 'customer',
+                model: Customer
+            });
 
-    queryParam.loanAgent = user.id;
-    const loan = await Loan.findOne(queryParam).populate({
-      path: 'customer',
-      model: Customer
-    });
+        }else{
+            queryParam.loanAgent = user.id;
+            loan = await Loan.findOne(queryParam).populate({
+                path: 'customer',
+                model: Customer
+            });
+        }
 
-    return loan;
+        return loan;
+
+    }catch(exception) {
+        debug(exception);
+        return exception;
+    };
   },
 
   getDisbursement: async function (user, queryParam={}) {
-    queryParam.lenderId = user.lenderId;
-
-    if (user.role !== 'loanAgent') {
-      const loans = await Loan.find(queryParam)
+    try{
+        let loans = [];
+        if(user.role !== 'loanAgent') {
+            loans = await Loan.find(queryParam)
                               .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
-                              .populate({path: 'customer', model: Customer, populate: [{ path: 'accountInfo.bank', model: Bank, select: '-_id name' }], select: '-_id bvn employmentInfo.ippis accountInfo'})
+                              .populate({
+                                path: 'customer',
+                                 model: Customer, 
+                                 populate: [{ 
+                                    path: 'accountInfo.bank', 
+                                    model: Bank, 
+                                    select: '-_id name' 
+                                }], 
+                                select: '-_id bvn employmentInfo.ippis accountInfo'
+                            })
                               .sort({ createdAt: -1 });
+        }else{
+            queryParam.loanAgent = user.id;
+            loans = await Loan.find(queryParam).sort('_id');
+        };
 
-      return loans;
-    }
+        if(loans.length === 0) throw new Error("You have no pending disbursements");
+    
+        return loans;
 
-    queryParam.loanAgent = user.id;
-    const loans = await Loan.find(queryParam).sort('_id');
-
-    return loans;
+    }catch(exception) {
+        debug(exception);
+        return exception;
+    };
   },
 
   getLoanBooking: async function (queryParam) {

@@ -6,7 +6,7 @@ const lenderSchema = new mongoose.Schema({
     // TODO: turn on required
     companyName: {
         type: String,
-        // required: true,
+        required: true,
         trim: true,
     },
 
@@ -18,7 +18,7 @@ const lenderSchema = new mongoose.Schema({
 
     companyAddress: {
         type: String,
-        // required: true,
+        required: true,
         minLength: 10,
         maxLength: 255,
         trim: true
@@ -26,7 +26,7 @@ const lenderSchema = new mongoose.Schema({
 
     cacNumber: {
         type: String,
-        // required: true
+        required: true
     },
 
     category: {
@@ -36,7 +36,7 @@ const lenderSchema = new mongoose.Schema({
             'finance house', 
             'money lender'
         ],
-        // required: true,
+        required: true,
     },
 
     phone: {
@@ -49,14 +49,14 @@ const lenderSchema = new mongoose.Schema({
         type: String,
         unique: true,
         trim: true,
-        // required: true
+        required: true
     },
 
     password: {
         type: String,
         minLength: 6,
         maxLength: 1024,
-        // required: true
+        required: true
     },
 
     otp: {
@@ -95,13 +95,14 @@ const lenderSchema = new mongoose.Schema({
 }); 
 
 lenderSchema.methods.generateToken = function() {
-    return jwt.sign( {
+    return jwt.sign({
         lenderId: this._id, 
         companyName: this.companyName, 
         email: this.email,
         phone: this.phone,
         role: this.role,
-    }, process.env.JWT_PRIVATE_KEY);
+    }, 
+    process.env.JWT_PRIVATE_KEY);
 }
 
 const Lender = mongoose.model('Lender', lenderSchema);

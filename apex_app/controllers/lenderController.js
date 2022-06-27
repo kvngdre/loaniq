@@ -88,64 +88,54 @@ const lender = {
       }
 
       return adminUser;
-    } catch (exception) {
+    }catch (exception) {
       return exception;
     }
   },
 
-  verifyRegister: async function (requestBody) {
+  verifyLender: async function (requestBody) {
     try {
       const lender = await Lender.findOne({ email: requestBody.email });
-      if (!lender) throw new Error('Invalid email or password.');
+      if(!lender) throw new Error('Invalid email or password.');
 
-      const isValidPassword = await bcrypt.compare(
-        requestBody.password,
-        lender.password
-      );
-      if (!isValidPassword) throw new Error('Incorrect email or password.');
+      const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
+      if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-      if (lender.emailVerify) throw new Error('Email already verified.');
+      if(lender.emailVerify) throw new Error('Email already verified.');
 
-      if (
-        requestBody?.otp !== lender.otp.OTP ||
-        Date.now() > lender.otp.expirationTime
-      )
-        throw new Error('Invalid OTP.');
+      if(requestBody?.otp !== lender.otp.OTP || Date.now() > lender.otp.expirationTime) throw new Error('Invalid OTP.');
 
-      await lender.updateOne({
-        emailVerify: true,
-        'otp.OTP': null,
-        active: true
-      });
+      await lender.updateOne({ emailVerify: true, 'otp.OTP': null, active: true });
 
       return lender.generateToken();
+
     } catch (exception) {
-      return exception;
+        debug(exception);
+        return exception;
     }
   },
 
   login: async function (requestBody) {
     try {
-      let lender = await Lender.findOne({ email: requestBody.email });
-      if (!lender) {
+        let lender = await Lender.findOne({ email: requestBody.email });
+        if(!lender) {
         debug(lender);
         throw new Error('Invalid email or password.');
-      }
+        };
 
-      const isValidPassword = await bcrypt.compare(
-        requestBody.password,
-        lender.password
-      );
-      if (!isValidPassword) throw new Error('Incorrect email or password.');
+        const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
+        if (!isValidPassword) throw new Error('Incorrect email or password.');
 
-      const token = lender.generateToken();
+        const token = lender.generateToken();
 
-      lender.token = token;
-      lender = _.pick(lender, ['_id', 'companyName', 'email', 'role', 'token']);
+        lender.token = token;
+        lender = _.pick(lender, ['_id', 'companyName', 'email', 'role', 'token']);
 
-      return lender;
+        return lender;
+
     } catch (exception) {
-      return exception;
+        debug(exception);
+        return exception;
     }
   },
 

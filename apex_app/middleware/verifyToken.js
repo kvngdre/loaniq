@@ -13,6 +13,7 @@ function verifyToken(req, res, next) {
         };
     
         const isVerified = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
+        // if(!isVerified.active) 
         req.user = isVerified;
 
         next();

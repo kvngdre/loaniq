@@ -2,6 +2,7 @@ const Joi = require('joi');
 const { joiPassword } = require('joi-password');
 Joi.objectId = require('joi-objectid')(Joi);
 
+
 const phoneSchema = Joi.string()
   .pattern(/^0([7-9])[0-9]{9}$/)
   .message({
@@ -40,8 +41,12 @@ const validators = {
       companyAddress: Joi.string(),
       //    .required(),
 
-      cacNumber: Joi.string().pattern(/^RC[0-9]+/),
-      //   .required(),
+      cacNumber: Joi.string()
+                    .pattern(/^RC[0-9]+/)
+                    .required()
+                    .message({
+                        "string.pattern.base": "Invalid CAC Number. Please ensure the number begins with 'RC'."
+                    }),
 
       category: Joi.string(),
 
@@ -65,7 +70,9 @@ const validators = {
       otp: Joi.string()
         .required()
         .pattern(/^[0-9]{6}$/)
-        .messages({ 'string.pattern.base': '{#label} must be 6 digits.' }),
+        .messages({ 
+            'string.pattern.base': '{#label} must be 6 digits.' 
+        }),
       password: passwordSchema.required()
     });
     return schema.validate(lender);

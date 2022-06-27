@@ -168,7 +168,7 @@ const user = {
             
             if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP');
              
-            await user.updateOne( { emailVerify: true, 'otp.OTP': null, active: true } );
+            await user.updateOne( { emailVerify: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
 
             return {
                 message: "Email has been verified and account activated.",
@@ -227,8 +227,6 @@ const user = {
         try{
             const user = await User.findOne( { email: requestBody.email } );
             if(!user) throw new Error('User not found.');
-
-            if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP.');
 
             if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
@@ -291,7 +289,7 @@ const user = {
     sendOTP: async function(email, template) {
         try {
             const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true}  ).select('otp');
-            if(!user) throw new Error('User not found.');
+            if(!user) throw new Error('User not found');
 
             const mailResponse = await sendOTPMail(email, user.name.firstName, user.otp.OTP);
                 userDebug(mailResponse);
