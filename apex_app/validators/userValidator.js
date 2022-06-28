@@ -135,7 +135,8 @@ const validators = {
     validateLogin: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: passwordSchema.required()
+            password: Joi.string(),
+            // password: passwordSchema.required()
         });
 
         return schema.validate(user);

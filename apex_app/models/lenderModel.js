@@ -84,11 +84,17 @@ const lenderSchema = new mongoose.Schema({
         lowercase: true,
         trim: true
     },
-    // Should there be more than one admin?
+    // TODO: Should there be more than one admin?
     adminUser: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        default: null
     },
+
+    lastLoginTime: {
+        type: Date,
+        default: null
+    }
 
 }, {
     timestamps: true,
@@ -101,6 +107,8 @@ lenderSchema.methods.generateToken = function() {
         email: this.email,
         phone: this.phone,
         role: this.role,
+        adminUser: !!this.adminUser,
+        lastLoginTime: this.lastLoginTime
     }, 
     process.env.JWT_PRIVATE_KEY);
 }

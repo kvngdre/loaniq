@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).send(isLoggedIn.message);
     };
 
-    return res.status(200).send({message: 'Login successful.', user: isLoggedIn});
+    return res.status(200).send(isLoggedIn);
 });
 
 router.post('/forgot-password', async (req, res) => {
@@ -101,7 +101,7 @@ router.post('/change-password', async (req, res) => {
     return res.status(200).send(user);
 });
 
-router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'operations', 'loanAgent']), async (req, res) => {
     const { error } = userValidator.validateEdit(req.body);
     if(error)  return res.status(400).send(error.details[0].message);
     
@@ -116,7 +116,7 @@ router.post('/send-otp', async (req, res) => {
     if(error) return res.status(400).send(error.details[0].message);
     
     const otp = await userController.sendOTP(req.body.email, req.body.name);
-    if(otp instanceof Error) return res.status(400).send(response.message);
+    if(otp instanceof Error) return res.status(400).send(otp.message);
     
     return res.status(200).send(otp);
 });

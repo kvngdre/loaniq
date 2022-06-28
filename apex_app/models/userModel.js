@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
             minLength: 3,
             maxLength: 50,
             trim:true
-        },
+          },
     },
     
     displayName: {
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     
-    emailVerify: {
+    emailVerified: {
         type: Boolean,
         default: false
     },
@@ -133,7 +133,7 @@ userSchema.methods.generateToken = function() {
         email: this.email,
         role: this.role,
         active: this.active,
-        emailVerify: this.emailVerify,
+        emailVerified: this.emailVerified,
         segments: (this.segments ? this.segments : null),
         lastLoginTime: this.lastLoginTime
     }, process.env.JWT_PRIVATE_KEY);

@@ -164,11 +164,11 @@ const user = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword) throw new Error('Incorrect email or password.');
 
-            if(user.emailVerify) throw new Error('User already verified.');
+            if(user.emailVerified) throw new Error('User already verified.');
             
             if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP');
              
-            await user.updateOne( { emailVerify: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
+            await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
 
             return {
                 message: "Email has been verified and account activated.",
@@ -188,6 +188,15 @@ const user = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
+            if(user.lastLoginTime === null, !user.emailVerified, !user.active) {
+                return {
+                    message: 'New User',
+                    user: _.omit(user._doc, ['password', 'otp', 'displayName'])
+                }
+            }
+
+            if(user.lastLoginTime !== null, user.emailVerified, !user.active) throw new Error('Account inactive. Contact administrator');
+
             const token = user.generateToken();
 
             user.token = token;
@@ -195,7 +204,10 @@ const user = {
 
             await user.updateOne( { lastLoginTime: Date.now() } );
 
-            return authUser;
+            return {
+                message: 'Login Successful',
+                user: authUser
+            }
 
         }catch(exception) {
             return exception;
@@ -222,7 +234,6 @@ const user = {
         };
     },
 
-    // TODO: Ensure this has been completed.
     changePassword: async function(requestBody) {
         try{
             const user = await User.findOne( { email: requestBody.email } );
