@@ -27,8 +27,8 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const { error } = lenderValidators.creation(req.body);
-    if(error) return res.status(404).send(error.details[0].message);
+    // const { error } = lenderValidators.creation(req.body);
+    // if(error) return res.status(404).send(error.details[0].message);
 
     const lender = await lenderController.createLender(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);

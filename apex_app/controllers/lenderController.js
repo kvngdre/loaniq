@@ -7,6 +7,7 @@ const generateOTP = require('../utils/generateOTP');
 const LenderConfig = require('../models/lenderConfigModel');
 const userController = require('../controllers/userController');
 
+
 const lender = {
   createLender: async function (requestBody) {
     try {

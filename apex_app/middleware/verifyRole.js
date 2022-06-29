@@ -6,11 +6,17 @@
 function verifyRole(role) {
     if(Array.isArray(role)) {
         return (req, res, next) => {
-            if(!role.includes(req.user.role)) {
-                return res.status(401).send('Access Denied.');
-            }
+            if(!role.includes(req.user.role)) return res.status(401).send('Access Denied.');
+
             next();
         };
+    };
+
+    if(role='allUsers') {
+        return (req, res, next) => {
+          
+            next();  
+        }
     };
 
     return (req, res, next) => {

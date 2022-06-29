@@ -32,9 +32,9 @@ const lenderSchema = new mongoose.Schema({
     category: {
         type: String,
         enum: [
-            'mfb', 
-            'finance house', 
-            'money lender'
+            'MFB', 
+            'Finance House', 
+            'Money Lender'
         ],
         required: true,
     },

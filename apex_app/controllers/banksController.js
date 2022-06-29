@@ -2,7 +2,7 @@ const Bank = require('../models/bankModel');
 const debug = require('debug')('app:bankModel');
 
 
-const banksNew = {  
+const bankFuncs = {  
     create: async function(requestBody) {
         try{
             const bankExists = await Bank.findOne( { code: requestBody.code } );
@@ -18,11 +18,7 @@ const banksNew = {
         };
     },
 
-    getAll: async function() {
-        return await Bank.find()
-    },
-
-    get: async function(id) {
+    getOne: async function(id) {
         try{
             const bank = Bank.findById(id);
             if(!bank) throw new Error('Bank does not exist.');
@@ -30,6 +26,20 @@ const banksNew = {
             return bank;
             
         }catch(exception) {
+            debug(exception);
+            return exception;
+        };
+    },
+
+    getAll: async function(queryParams={}) {
+        try{
+            const banks =  await Bank.find( queryParams );
+            if(banks.length === 0) throw new Error('no banks');
+
+            return banks;
+
+        }catch(exception) {
+            debug(exception);
             return exception;
         };
     },
@@ -66,4 +76,4 @@ const banksNew = {
 
  }        
 
-module.exports = banksNew;
+module.exports = bankFuncs;

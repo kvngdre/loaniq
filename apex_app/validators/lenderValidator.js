@@ -4,17 +4,16 @@ Joi.objectId = require('joi-objectid')(Joi);
 
 
 const phoneSchema = Joi.string()
-  .pattern(/^0([7-9])[0-9]{9}$/)
-  .message({
+                       .pattern(/^0([7-9])[0-9]{9}$/)
+                       .message({
     'string.pattern.base': 'Invalid phone number.'
   });
 
 const emailSchema = Joi.string().email().min(10).max(255);
 
-const passwordSchema = joiPassword
-  .string()
-  .minOfUppercase(1)
-  .minOfSpecialCharacters(2)
+const passwordSchema = joiPassword.string()
+                                  .minOfUppercase(1)
+                                  .minOfSpecialCharacters(2)
   .minOfNumeric(2)
   .noWhiteSpaces()
   .min(6)
@@ -32,14 +31,12 @@ const validators = {
   creation: function (lender) {
     const schema = Joi.object({
       // TODO: change values to required.
-      companyName: Joi.string(),
-      // .required(),
+      companyName: Joi.string().required(),
 
       slug: Joi.string(),
       //  .required(),
 
-      companyAddress: Joi.string(),
-      //    .required(),
+      companyAddress: Joi.string().required(),
 
       cacNumber: Joi.string()
                     .pattern(/^RC[0-9]+/)
@@ -50,14 +47,11 @@ const validators = {
 
       category: Joi.string(),
 
-      phone: phoneSchema,
-      // .required(),
+      phone: phoneSchema.required(),
 
-      email: emailSchema,
-      // .required(),
+      email: emailSchema.required(),
 
-      password: passwordSchema,
-      // .required(),
+      password: passwordSchema.required(),
 
       lenderURL: Joi.string()
     });
@@ -68,11 +62,11 @@ const validators = {
     const schema = Joi.object({
       email: emailSchema.required(),
       otp: Joi.string()
-        .required()
-        .pattern(/^[0-9]{6}$/)
-        .messages({ 
-            'string.pattern.base': '{#label} must be 6 digits.' 
-        }),
+              .required()
+              .pattern(/^[0-9]{6}$/)
+              .messages({ 
+                  'string.pattern.base': '{#label} must be 6 digits.' 
+              }),
       password: passwordSchema.required()
     });
     return schema.validate(lender);
@@ -104,9 +98,16 @@ const validators = {
   adminCreation: function (user) {
     const schema = Joi.object({
       name: Joi.object({
-        firstName: Joi.string().required().min(3).max(50),
+        firstName: Joi.string()
+                      .required()
+                      .min(3)
+                      .max(50),
 
-        lastName: Joi.string().required().min(3).max(50),
+        lastName: Joi.string()
+                     .required()
+                     .min(3)
+                     .max(50),
+
         middleName: Joi.string().min(3).max(50)
       }),
       phone: phoneSchema.required(),
