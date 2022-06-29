@@ -87,6 +87,7 @@ const customerSchema = new mongoose.Schema({
     contact: {
         phone: {
             type: String,
+            unique: true,
             trim: true,
             required: true
         },
@@ -120,8 +121,6 @@ const customerSchema = new mongoose.Schema({
         trim: true,
         required: true
     },
-
-    
 
     idCard: {
         type: String

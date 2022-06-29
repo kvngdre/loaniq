@@ -30,7 +30,7 @@ router.get('/:id', verifyToken, verifyRole('allUsers'), async (req, res) => {
     return res.status(200).send(bank);
 });
 
-router.patch('/:id', verifyToken, verifyRole(['admin', 'origin-master']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['Admin', 'origin-master']), async (req, res) => {
     const { error } = bankValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     

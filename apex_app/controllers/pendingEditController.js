@@ -4,10 +4,9 @@ const debug = require('debug')('pendingEditCtrl');
 const Customer = require('../models/customerModel');
 const PendingEdit = require('../models/pendingEditModel');
 
-const pendingEdit = {
+const pendingEditFuncs = {
     create: async function(user, documentId, type, alteration) {
         try{
-            // consider if admins should be allowed to create pending edits.
             const newPendingEdit = new PendingEdit({
                 lenderId: user.lenderId,
                 userId: user.id,
@@ -26,7 +25,7 @@ const pendingEdit = {
         };
     },
 
-    getAllEdits: async function() {
+    getAllAdmin: async function() {
         try{
             const allPendingEdits = await PendingEdit.find({});
             if(allPendingEdits.length === 0) throw new Error('No pending edits');
@@ -61,7 +60,7 @@ const pendingEdit = {
                 {
                     $match: {
                         lenderId: user.lenderId,
-                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                        userId: user.role === 'Admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                         type: 'customer'
                     }
                 },
@@ -94,7 +93,7 @@ const pendingEdit = {
 
             
             let pipeline$Match;
-            if(user.role === 'credit') {
+            if(user.role === 'Credit') {
                 pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
@@ -106,7 +105,7 @@ const pendingEdit = {
                 pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
-                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                        userId: user.role === 'Admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                         type: 'loan',
                     }
                 }
@@ -162,8 +161,9 @@ const pendingEdit = {
             console.log(PendingLoanEdits)
 
             const pendingEdits = [...pendingCustomerEdits, ...PendingLoanEdits];
+            if(pendingEdits.length === 0) throw new Error('No pending edits');
 
-        return pendingEdits;
+            return pendingEdits;
 
         }catch(exception) {
             debug(exception);
@@ -194,7 +194,7 @@ const pendingEdit = {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
                         lenderId: user.lenderId,
-                        userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                        userId: user.role === 'Admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                         type: 'customer'
                     }
                 },
@@ -224,7 +224,7 @@ const pendingEdit = {
             if(pendingCustomerEdit.length === 0) {
 
                 let Pipeline$MatchObject;
-                if(user.role === 'credit') {
+                if(user.role === 'Credit') {
                     Pipeline$MatchObject = {
                         $match: {
                             _id: mongoose.Types.ObjectId(id),
@@ -239,7 +239,7 @@ const pendingEdit = {
                         $match: {
                             _id: mongoose.Types.ObjectId(id),
                             lenderId: user.lenderId,
-                            userId: user.role === 'admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
+                            userId: user.role === 'Admin' ? { $ne: null } : mongoose.Types.ObjectId(user.id),
                             status: 'pending',
                             type: 'loan',
                         }
@@ -336,4 +336,4 @@ const pendingEdit = {
     }
 }
 
-module.exports = pendingEdit;
+module.exports = pendingEditFuncs;

@@ -85,10 +85,10 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: [
-            'admin',
-            'credit',
-            'loanAgent',
-            'operations',
+            'Admin',
+            'Credit',
+            'Loan Agent',
+            'Operations',
             'origin-master'
         ],
         required: true

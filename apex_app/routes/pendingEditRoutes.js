@@ -4,21 +4,29 @@ const verifyToken = require('../middleware/verifyToken');
 const pendingEditValidators = require('../validators/pendingEditValidator');
 const pendingEditController = require('../controllers/pendingEditController');
 
-router.get('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+
+router.get('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const pendingEdits = await pendingEditController.getAll(req.user);
-    if(pendingEdits.length === 0) return res.status(404).send('No pending edits.');
+    if(pendingEdits instanceof Error) return res.status(404).send(pendingEdits.message);
 
     return res.status(200).send(pendingEdits);
 });
 
-router.get('/:id', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+router.get('/admin', verifyToken, verifyRole('Admin'), async (req, res) => {
+    const pendingEdits = await pendingEditController.getAllAdmin();
+    if(pendingEdits instanceof Error) return res.status(404).send(pendingEdits.message);
+
+    return res.status(200).send(pendingEdits);
+});
+
+router.get('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const pendingEdit = await pendingEditController.getOne(req.params.id, req.user);
     if(pendingEdit.length === 0) return res.status(404).send('document not found.');
 
     return res.status(200).send(pendingEdit);
 });
 
-router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), async (req, res) => {
+router.post('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const { error } = pendingEditValidators.create(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
@@ -28,12 +36,13 @@ router.post('/', verifyToken, verifyRole(['admin', 'credit', 'loanAgent']), asyn
     return res.status(201).send(newEdit);
 });
 
-router.patch('/:id', verifyToken, verifyRole(['admin', 'credit']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit']), async (req, res) => {
     const { error } = pendingEditValidators.edit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body);
     if(result instanceof Error) return res.status(400).send(result.message);
+    
     return res.status(200).send(result);
 
 });

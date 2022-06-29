@@ -150,13 +150,13 @@ const validators = {
         return schema.validate(user);
     },
 
-    validateChangePassword: function(user) {
+    validateChangePassword: function(passwordObj) {
         // TODO: discuss this with Victor. 
         const schema = Joi.object({
-            email: emailSchema.required(),
-            newPassword: passwordSchema.required(),
             otp: otpSchema,
+            email: emailSchema.required(),
             currentPassword: Joi.string(),
+            newPassword: passwordSchema.required(),
             // currentPassword: Joi.string().when('otp', {
             //     is: Joi.exist(),
             //     then: Joi.required(),
@@ -164,8 +164,8 @@ const validators = {
             // }),
         });
 
-        return schema.validate(user);
-    }
+        return schema.validate(passwordObj);
+    },
 }
 
 module.exports = validators;

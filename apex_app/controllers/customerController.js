@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Loan = require('../models/loanModel');
 const Segment = require('../models/segmentModel');
-const debug = require('debug')('app:customerContr');
+const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customerModel');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
@@ -29,7 +29,7 @@ const customer = {
     },
     
     getAll: async function(user, queryParam={}) {
-        if(user.role === 'loanAgent') {
+        if(user.role === 'Loan Agent') {
             // return await Loan.find( { loanAgent: user.id } )
             //                  .populate({path: 'customer', model: Customer, populate:[{path: 'employmentInfo.segment', model: Segment, select: '-_id code'}], select: [
             //                      'name', 
@@ -83,7 +83,7 @@ const customer = {
                              .sort('_id');
     },
 
-    get: async function(queryParam) {
+    getOne: async function(queryParam) {
         try{
             const customer = await Customer.findOne(queryParam)
                                         //    .select([
@@ -94,14 +94,13 @@ const customer = {
                                         //        'employmentInfo.segment', 
                                         //        'employmentInfo.dateOfEnlistment', 
                                         //        'netPay' ] );
-                                      //    .select({'name': 1, 'dateOfBirth': 1, 'employmentInfo.ippis': 1, 'employmentInfo.segment': 1, 'employmentInfo.dateOfEnlistment': 1, 'netPay': 1 } );
             
             if(!customer) throw new Error('Customer not found.');
             
             return customer;
 
         }catch(exception) {
-            debug(exception.stack, exception.message);
+            debug(exception);
             return exception;
         };
     },
@@ -116,7 +115,7 @@ const customer = {
                 throw new Error('Customer not found.');
             }; 
             
-            if(user.role !== 'admin') {
+            if(user.role !== 'Admin') {
                 const newPendingEdit = await PendingEditController.create(user, customerId, 'customer', requestBody);
                 if(!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);

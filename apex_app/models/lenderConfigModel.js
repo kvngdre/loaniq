@@ -7,13 +7,15 @@ const configSchema = new mongoose.Schema({
     lenderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Lender',
+        unique: true,
         required: true
     },
 
     segments: [{
             segment: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Segment'
+            ref: 'Segment',
+            unique: true
             },
 
             minLoanAmount: {
@@ -33,27 +35,27 @@ const configSchema = new mongoose.Schema({
     loanMetrics: {
         interestRate: {
             type: Number,
-            required: true
+            // required: true
         },
 
         upfrontFeePercentage: {
             type: Number,
-            required: true
+            // required: true
         },
 
         transferFee: {
             type: Number,
-            required: true
+            // required: true
         },
 
         minNetPay: {
             type: Number,
-            required: true
+            // required: true
         },
 
         dtiThreshold: {
             type: Number,
-            required: true
+            // required: true
         }
     }
 });
@@ -61,5 +63,3 @@ const configSchema = new mongoose.Schema({
 const LenderConfig = mongoose.model('LenderConfig', configSchema);
 
 module.exports = LenderConfig;
-
-// TODO: Min max loan amount

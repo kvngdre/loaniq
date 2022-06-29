@@ -73,11 +73,11 @@ const lender = {
   createAdmin: async function (request) {
     try {
         const lender = await Lender.findById({_id: request.user.lenderId});
-        const adminUsers = await userController.getAll({lenderId: request.user.lenderId, role: 'admin'});
+        const adminUsers = await userController.getAll({lenderId: request.user.lenderId, role: 'Admin'});
 
         if (adminUsers.length > 0) throw new Error('Admin user already created.');
 
-        const adminUser = await userController.create('admin', request.body, request.user);
+        const adminUser = await userController.create('Admin', request.body, request.user);
         if (!adminUser || adminUser instanceof Error) {
             debug(adminUser);
             throw new Error(adminUser.message);
@@ -209,34 +209,30 @@ const lender = {
   },
 
   setConfig: async function (id, requestBody) {
-    try {
+    try{
       requestBody.lenderId = id;
 
-      const lenderConfig = await LenderConfig.findOneAndUpdate(
-        { lenderId: id },
-        requestBody,
-        { new: true, upsert: true }
-      );
-
+      const lenderConfig = await LenderConfig.findOneAndUpdate({ lenderId: id }, requestBody, { new: true, upsert: true });
       return {
         message: 'Settings have been updated',
         configuration: lenderConfig
       };
-    } catch (exception) {
-      return exception;
+
+    }catch(exception) {
+        debug(exception);
+        return exception;
     }
   },
 
   delete: async function (requestBody) {
-    try {
-      const lender = await Lender.findOneAndDelete({
-        email: requestBody.email
-      });
-      if (!lender) throw new Error('Lender does not exist.');
+    try{
+      const lender = await Lender.findOneAndDelete({email: requestBody.email});
+      if (!lender) throw new Error('Lender does not exist');
 
       return lender;
-    } catch (exception) {
-      return exception;
+
+    }catch(exception) {
+        return exception;
     }
   }
 };

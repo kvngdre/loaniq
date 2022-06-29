@@ -5,42 +5,42 @@ const verifyToken = require('../middleware/verifyToken');
 const userValidator = require('../validators/userValidator');
 const userController  = require('../controllers/userController');
 
-router.get('/', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
+router.get('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
     const users = await userController.getAll( { lenderId: req.user.lenderId } );
     if(users.length === 0) return res.status(404).send('No users registered.');
 
     return res.status(200).send(users);
 });
 
-router.get('/:id', verifyToken, verifyRole(['lender', 'admin']), async (req, res) => {
+router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
     const user = await userController.get( { _id: req.params.id, lenderId: req.user.lenderId } );
     if(!user) return res.status(404).send('User not found.');
 
     return res.status(200).send(user);
 });
 
-router.post('/create-user', verifyToken,verifyRole(['lender', 'admin']), async (req, res) => {
+router.post('/create-user', verifyToken,verifyRole(['Lender', 'Admin']), async (req, res) => {
     const role = req.body.role;
 
     if (!role) return res.status(400).send('Role is required.');
 
     switch(role) {
-        case "admin":
+        case "Admin":
             var { error } = userValidator.validateRegistration.admin(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
         
-        case "credit":
+        case "Credit":
             var { error } = userValidator.validateRegistration.credit(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
         
-        case "operations":
+        case "Operations":
             var { error } = userValidator.validateRegistration.operations(req.body);
             if(error) return res.status(400).send(error.details[0].message);
             break;
 
-        case "loanAgent":
+        case "Loan Agent":
             var { error } = userValidator.validateRegistration.loanAgent(req.body);
             if (error) return res.status(400).send(error.details[0].message);
             break;
@@ -80,16 +80,16 @@ router.post('/login', async (req, res) => {
     return res.status(200).send(isLoggedIn);
 });
 
-router.post('/forgot-password', async (req, res) => {
-    const { error } = userValidator.validateEmail(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+// router.post('/forgot-password', async (req, res) => {
+//     const { error } = userValidator.validateEmail(req.body);
+//     if(error) return res.status(400).send(error.details[0].message);
 
-    const user = await userController.forgotPassword(req.body);
-    if(user instanceof Error) return res.status(400).send(user.message);
+//     const user = await userController.forgotPassword(req.body);
+//     if(user instanceof Error) return res.status(400).send(user.message);
 
-    // return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
-    return res.status(200).send('Password reset OTP sent to email.');
-});
+//     // return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
+//     return res.status(200).send('Password reset OTP sent to email.');
+// });
 
 router.post('/change-password', async (req, res) => {
     const { error } = userValidator.validateChangePassword(req.body);
@@ -101,7 +101,7 @@ router.post('/change-password', async (req, res) => {
     return res.status(200).send(user);
 });
 
-router.patch('/:id', verifyToken, verifyRole(['admin', 'credit', 'operations', 'loanAgent']), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent']), async (req, res) => {
     const { error } = userValidator.validateEdit(req.body);
     if(error)  return res.status(400).send(error.details[0].message);
     
@@ -121,7 +121,7 @@ router.post('/send-otp', async (req, res) => {
     return res.status(200).send(otp);
 });
 
-router.delete('/:id', verifyToken, verifyRole('admin'),  async (req, res) => {
+router.delete('/:id', verifyToken, verifyRole('Admin'),  async (req, res) => {
     const user = await userController.delete(req.params.id);
     if(user instanceof Error) return res.status(401).send(user.message);
 

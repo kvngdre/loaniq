@@ -75,7 +75,16 @@ const lenderSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        default: 'lender'
+        default: 'Lender'
+    },
+
+    balance: {
+        type: Number,
+        default: 0
+    },
+
+    lastReferenceCode: {
+        type: String
     },
 
     // TODO: Work on auto generating url
@@ -107,6 +116,7 @@ lenderSchema.methods.generateToken = function() {
         email: this.email,
         phone: this.phone,
         role: this.role,
+        balance: this.balance,
         adminUser: !!this.adminUser,
         lastLoginTime: this.lastLoginTime
     }, 

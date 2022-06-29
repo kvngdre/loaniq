@@ -59,7 +59,7 @@ const loanSchema = new mongoose.Schema({
             'Discontinued',
             'Completed'
         ],
-        default: 'pending'
+        default: 'Pending'
     },
 
     comment: {

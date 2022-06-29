@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     return res.status(200).send(lenders);
 });
 
-router.get('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
+router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     const settings = await lenderController.getSettings( { lenderId: req.user.lenderId } );
 
     return res.status(200).send(settings);
@@ -27,8 +27,8 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    // const { error } = lenderValidators.creation(req.body);
-    // if(error) return res.status(404).send(error.details[0].message);
+    const { error } = lenderValidators.creation(req.body);
+    if(error) return res.status(404).send(error.details[0].message);
 
     const lender = await lenderController.createLender(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
@@ -82,7 +82,7 @@ router.post('/change-password', async (req, res) => {
     return res.status(200).send(lender);
 });
 
-router.post('/create-admin', verifyToken, verifyRole('lender'), async (req, res) => {
+router.post('/create-admin', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.adminCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
@@ -92,7 +92,7 @@ router.post('/create-admin', verifyToken, verifyRole('lender'), async (req, res)
     return res.status(201).send(adminUser);
 });
 
-router.patch('/:id', verifyToken, verifyRole('lender'), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.update(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
@@ -102,7 +102,7 @@ router.patch('/:id', verifyToken, verifyRole('lender'), async (req, res) => {
     return res.status(200).send(lender);
 });
 
-router.put('/settings', verifyToken, verifyRole('lender'), async (req, res) => {
+router.put('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.validateSettings(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     

@@ -15,7 +15,7 @@ const transactionSchema = new mongoose.Schema({
     type: {
         enum: [
             'debit',
-            'credit'
+            'Credit'
         ],
         required: true
     },
@@ -34,7 +34,7 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true
     }
-    
+
 }, {
     timestamps: true
 })

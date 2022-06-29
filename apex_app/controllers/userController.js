@@ -1,25 +1,37 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
+const debug = require('debug')('app:userCtrl');
 const sendOTPMail = require('../utils/sendMail');
 const Segment = require('../models/segmentModel');
-const userDebug = require('debug')('app:userCtrl');
 const generateOTP = require('../utils/generateOTP');
 const generateRandomPassword = require('../utils/generatePassword');
 
 
-const user = {
+const userFuncs = {
     getAll: async function(queryParam={}) {
-        return await User.find(queryParam)
-                          .select('-password -otp')
-                          .sort('name.firstName');
+        try{
+            return await User.find(queryParam)
+                              .select('-password -otp')
+                              .sort('name.firstName');
+        }catch(exception) {
+            debug(exception);
+            return exception;
+        }
     },
 
     get: async function(queryParam) {
-        const user = await User.findOne( queryParam ).select('-password -otp');
-        if(!user) userDebug(user);
+        try{
+            const user = await User.findOne( queryParam )
+                                   .select('-password -otp');
+            if(!user) throw new Error('User not found')
+    
+            return user;
 
-        return user;
+        }catch(exception) {
+            debug(exception);
+            return exception;
+        }
     },
 
     /**
@@ -34,8 +46,8 @@ const user = {
             const allSegments = await Segment.find().select('_id')
 
             switch(role) {
-                case "admin":
-                    if(user.role !== 'lender') return 401;
+                case 'Admin':
+                    if(user.role !== 'Lender') return 401;
 
                     var adminDoesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(adminDoesExist) throw new Error('Admin user has been created.');
@@ -59,7 +71,7 @@ const user = {
                     });
                     break;
 
-                case "credit":
+                case 'Credit':
                     var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
@@ -83,7 +95,7 @@ const user = {
                     });
                     break;
 
-                case "operations":
+                case 'Operations':
                     var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
@@ -106,7 +118,7 @@ const user = {
                     });
                     break;
                 
-                case "loanAgent":
+                case 'Loan Agent':
                     var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
                     if(doesExist) throw new Error('Email has already been taken.');
                     
@@ -134,12 +146,12 @@ const user = {
 
             // Sending OTP to user mail
             const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, newUser.otp.OTP, temporaryPassword);
-            userDebug(mailResponse);
+            debug(mailResponse);
             if(mailResponse instanceof Error) {
-                userDebug(`Error sending OTP: ${mailResponse.message}`);
+                debug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
-            userDebug('Email sent successfully');
+            debug('Email sent successfully');
 
             await newUser.save();
 
@@ -214,38 +226,23 @@ const user = {
         };
     },
 
-    forgotPassword: async function(requestBody) {
-        try{
-            let user = await User.findOneAndUpdate( { email: requestBody.email }, { otp: generateOTP() }, {new: true}  ).select('-password');
-            if(!user) throw new Error('User not found.');
-
-            const mailResponse = await sendOTPMail(user.email, user.name.firstName, user.otp.OTP);
-            userDebug(mailResponse);
-            if(mailResponse instanceof Error) {
-                userDebug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            userDebug('Email sent successfully');
-            
-            return user;
-            
-        }catch(exception) {
-            return exception;
-        };
-    },
-
     changePassword: async function(requestBody) {
         try{
             const user = await User.findOne( { email: requestBody.email } );
-            if(!user) throw new Error('User not found.');
+            if(!user) throw new Error('User not found');
+
+            if(requestBody?.otp) {
+                const isValid = user.otp.OTP === requestBody.otp;
+                if(!isValid) throw new Error('Invalid OTP');
+            }
 
             if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
-                if(!validPassword)  throw new Error('Password is incorrect.');
+                if(!validPassword) throw new Error('Password is incorrect');
             };
             
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
-            if(isSimilar)  throw new Error('Password is too similar to old password.');
+            if(isSimilar) throw new Error('Password is too similar to old password');
 
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
@@ -253,9 +250,10 @@ const user = {
 
             await user.update( { 'otp.OTP': null, password: encryptedPassword } );
 
-            return 'Password updated.';
+            return 'Password updated';
             
         }catch(exception) {
+            debug(exception);
             return exception;
         };
     },
@@ -264,7 +262,7 @@ const user = {
         try{
             const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true}).select('-password');
             if(!user) {
-                userDebug(user);
+                debug(user);
                 throw new Error('User not found.');
             };
 
@@ -299,16 +297,17 @@ const user = {
 
     sendOTP: async function(email, template) {
         try {
-            const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true}  ).select('otp');
+            const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
+                                   .select('otp');
             if(!user) throw new Error('User not found');
 
             const mailResponse = await sendOTPMail(email, user.name.firstName, user.otp.OTP);
-                userDebug(mailResponse);
+                debug(mailResponse);
                 if(mailResponse instanceof Error) {
-                    userDebug(`Error sending OTP: ${mailResponse.message}`);
+                    debug(`Error sending OTP: ${mailResponse.message}`);
                     throw new Error('Error sending OTP. Try again.');
                 };
-                userDebug('Email sent successfully');
+                debug('Email sent successfully');
             
             return {
                 message: 'OTP sent successfully',
@@ -316,10 +315,10 @@ const user = {
             };
 
         }catch(exception) {
-            userDebug(exception)
+            debug(exception);
             return exception;
         };
     }
 }
 
-module.exports = user;
+module.exports = userFuncs;

@@ -6,7 +6,7 @@ const stateValidators = require('../validators/stateValidator');
 const stateController = require('../controllers/stateController');
 
 
-router.post('/', verifyToken, verifyRole('admin'), async (req, res) => {
+router.post('/', verifyToken, verifyRole('Admin'), async (req, res) => {
     const { error } = stateValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
@@ -16,21 +16,21 @@ router.post('/', verifyToken, verifyRole('admin'), async (req, res) => {
     return res.status(201).send(newState);
 });
 
-router.get('/', verifyToken, verifyRole('admin'), async (req, res) => {
+router.get('/', verifyToken, verifyRole('Admin'), async (req, res) => {
     const states = await stateController.getAll();
     if(states.length === 0) return res.status(404).send('No states found.');
 
     return res.status(200).send(states);
 });
 
-router.get('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+router.get('/:id', verifyToken, verifyRole('Admin'), async (req, res) => {
     const state = await stateController.get(req.params.id);
     if(!state) return res.status(404).send(state.message);
 
     return res.status(200).send(state);
 });
 
-router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole('Admin'), async (req, res) => {
     const { error } = stateValidators.validateEdi(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
@@ -41,7 +41,7 @@ router.patch('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
 });
 
 
-router.delete('/:id', verifyToken, verifyRole('admin'), async (req, res) => {
+router.delete('/:id', verifyToken, verifyRole('Admin'), async (req, res) => {
     const deletedState = await stateController.delete(req.params.id);
     if(deletedState instanceof Error) return res.status(401).send(deletedState.message);
 

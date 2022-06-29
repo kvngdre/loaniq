@@ -71,7 +71,7 @@ let token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyNTNlOTZiMTM3ZjUxNG
             "phone": "09032737354",
             "email": "purchtechnologies@gmail.com",
             "password": "King!@12",
-            "role": "loanAgent",
+            "role": "Loan Agent",
             "active": true,
             "segments": ["6227c5926d70bb76b83fad9c", "6227c5926d70bb76b83fad9d"],
             "target": 35000000

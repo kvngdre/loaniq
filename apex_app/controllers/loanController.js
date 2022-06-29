@@ -11,16 +11,18 @@ const loans = {
         return await loanManager.createLoan(customer, loanMetricsObj, request);
     },
 
-    getAll: async function(user) {
-        return await loanManager.getAll(user);
+    getAll: async function(user, queryParams) {
+        return await loanManager.getAll(user, queryParams);
     },
 
-    getOne: async function(id, user) {
-        return await loanManager.getOne(id, user)
+    getOne: async function(user, id) {
+        const queryParams = { _id: id };
+
+        return await loanManager.getOne(user, queryParams);
     },
 
-    edit: async function(request) {
-        return await loanManager.edit(request);
+    edit: async function(user, id, requestBody) {
+        return await loanManager.edit(user, id, requestBody);
     },
 
     getDisbursement: async function(user, startDateTime, endDateTime="2050-01-01") {
