@@ -18,7 +18,7 @@ const transactionFuncs = {
             const queryParams = {lenderId: user.lenderId, _id: id};
 
             const transaction = await Transaction.findOne( queryParams );
-            if(!transaction) throw new Error('transaction not found');
+            if(!transaction) throw new Error('Transaction not found');
 
             return transaction;
 
@@ -33,7 +33,7 @@ const transactionFuncs = {
             queryParams.lenderId = user.lenderId;
 
             const transactions = await Transaction.find( queryParams );
-            if(transactions.length === 0) throw new Error('no transactions found');
+            if(transactions.length === 0) throw new Error('No transactions found');
 
             return transactions;
 

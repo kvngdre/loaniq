@@ -13,11 +13,11 @@ const transactionSchema = new mongoose.Schema({
     },
 
     type: {
+        type: String,
         enum: [
-            'debit',
+            'Debit',
             'Credit'
         ],
-        required: true
     },
 
     description: {

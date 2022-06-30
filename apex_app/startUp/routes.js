@@ -9,8 +9,11 @@ const lenderRoutes = require('../routes/lenderRoutes');
 const originRoutes = require('../routes/originRoutes');
 const segmentRoutes = require('../routes/segmentRoutes');
 const customerRoutes = require('../routes/customerRoutes');
-const errorHandler = require('../middleware/errorHandler');
 const pendingEditRoutes = require('../routes/pendingEditRoutes');
+const transactionRoutes = require('../routes/transactionRoutes');
+
+const errorHandler = require('../middleware/errorHandler');
+
 
 module.exports = function(app) {
     // middleware
@@ -28,6 +31,7 @@ module.exports = function(app) {
     app.use('/api/lenders', lenderRoutes);
     app.use('/api/segments', segmentRoutes);
     app.use('/api/customers', customerRoutes);
+    app.use('/api/transactions', transactionRoutes);
     app.use('/api/pending-edits', pendingEditRoutes);
 
     // Error handling middleware

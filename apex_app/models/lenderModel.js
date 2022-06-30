@@ -3,11 +3,10 @@ const User = require('./userModel');
 const mongoose = require('mongoose');
 
 const lenderSchema = new mongoose.Schema({
-    // TODO: turn on required
     companyName: {
         type: String,
-        required: true,
         trim: true,
+        required: true,
     },
 
     slug: {
@@ -18,10 +17,10 @@ const lenderSchema = new mongoose.Schema({
 
     companyAddress: {
         type: String,
-        required: true,
+        trim: true,
         minLength: 10,
         maxLength: 255,
-        trim: true
+        required: true
     },
 
     cacNumber: {
@@ -36,13 +35,13 @@ const lenderSchema = new mongoose.Schema({
             'Finance House', 
             'Money Lender'
         ],
-        required: true,
     },
 
     phone: {
         type: String,
         length: 11,
-        trim: true
+        trim: true,
+        required: true
     },
 
     email: {
@@ -90,8 +89,8 @@ const lenderSchema = new mongoose.Schema({
     // TODO: Work on auto generating url
     lenderURL: {
         type: String,
+        trim: true,
         lowercase: true,
-        trim: true
     },
     // TODO: Should there be more than one admin?
     adminUser: {

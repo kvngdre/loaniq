@@ -6,22 +6,23 @@ const userValidators = require('../validators/userValidator');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderController = require('../controllers/lenderController');
 
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
     const lenders = await lenderController.getAll();
-    if(lenders.length === 0) return res.status(404).send('No lenders found.');
+    if(lenders instanceof Error) return res.status(404).send(lenders.message);
 
     return res.status(200).send(lenders);
 });
 
 router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     const settings = await lenderController.getSettings( { lenderId: req.user.lenderId } );
+    if(settings instanceof Error) return res.status(404).send(settings.message);
 
     return res.status(200).send(settings);
 });
 
-router.get('/:id', async (req, res) => {
-    const lender = await lenderController.get(req.params.id);
-    if(!lender) return res.status(404).send('Lender not found.');
+router.get('/:id', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
+    const lender = await lenderController.getOne(req.user, req.params.id);
+    if(lender instanceof Error) return res.status(404).send(lender.message);
 
     return res.status(200).send(lender);   
 });

@@ -42,7 +42,7 @@ router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit']), async (req, r
 
     const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body);
     if(result instanceof Error) return res.status(400).send(result.message);
-    
+
     return res.status(200).send(result);
 
 });
