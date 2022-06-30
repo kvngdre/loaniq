@@ -3,10 +3,10 @@ require('dotenv').config();
 
 const app = require('express')();
 const jobs = require('./jobs/jobs');
-const { firebaseConfig, initializeApp, getMessaging } = require('./startUp/fcm');
+const { firebaseConfig, initializeApp, getMessaging } = require('./startUp/firebase-cm');
 const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
-const debug = require('debug')('app:startUp')
+const debug = require('debug')('app:startUp');
 
 
 // Setup

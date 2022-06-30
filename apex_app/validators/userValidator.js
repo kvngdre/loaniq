@@ -126,7 +126,7 @@ const validators = {
         const schema = Joi.object({
             email: emailSchema.required(),
             otp: otpSchema.required(),
-            password: Joi.string().required()
+            password: passwordSchema.required()
         });
 
         return schema.validate(user);
@@ -135,8 +135,7 @@ const validators = {
     validateLogin: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: Joi.string(),
-            // password: passwordSchema.required()
+            password: passwordSchema.required()
         });
 
         return schema.validate(user);
@@ -151,17 +150,11 @@ const validators = {
     },
 
     validateChangePassword: function(passwordObj) {
-        // TODO: discuss this with Victor. 
         const schema = Joi.object({
             otp: otpSchema,
             email: emailSchema.required(),
-            currentPassword: Joi.string(),
+            currentPassword: passwordSchema,
             newPassword: passwordSchema.required(),
-            // currentPassword: Joi.string().when('otp', {
-            //     is: Joi.exist(),
-            //     then: Joi.required(),
-            //     otherwise: Joi.forbidden()
-            // }),
         });
 
         return schema.validate(passwordObj);
