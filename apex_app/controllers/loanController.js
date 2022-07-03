@@ -4,6 +4,8 @@ const Loan = require('../models/loanModel');
 
 const loans = {
     createLoanRequest: async function(loanMetricsObj, request) {
+        if(request.user.role === 'guest') request.user.lenderId = request.params.id;
+
         return await loanManager.createLoanRequest(loanMetricsObj, request);
     },
 

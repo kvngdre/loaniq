@@ -8,7 +8,13 @@ const debug = require('debug')('app:customerModel');
 
 const customerSchema = new mongoose.Schema({
     passport: {
-        type: String
+        path: {
+            type: String
+        },
+
+        originalName: {
+            type: String
+        }
     },
 
     name: {
@@ -123,7 +129,13 @@ const customerSchema = new mongoose.Schema({
     },
 
     idCard: {
-        type: String
+        path: {
+            type: String
+        },
+
+        originalName: {
+            type: String
+        }
     },
 
     idCardInfo: {

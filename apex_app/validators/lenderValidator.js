@@ -25,16 +25,19 @@ const passwordSchema = joiPassword.string()
                                     'password.noWhiteSpaces': '{#label} should not contain white spaces.'
                                   });
 
+const otpSchema = Joi.string()
+                     .pattern(/^[0-9]{6}$/)
+                     .messages({'string.pattern.base': '{#label} must be 6 digits'})
+
 const validators = {
   creation: function (lender) {
     const schema = Joi.object({
       // TODO: change values to required.
-      companyName: Joi.string().required(),
+      companyName: Joi.string()
+                      .required(),
 
-      slug: Joi.string(),
-      //  .required(),
-
-      companyAddress: Joi.string().required(),
+      companyAddress: Joi.string()
+                         .required(),
 
       cacNumber: Joi.string()
                     .pattern(/^RC[0-9]+/)
@@ -81,21 +84,15 @@ const validators = {
     return schema.validate(lender);
   },
 
-  validateForgotPassword: function (lender) {
+  validateChangePassword: function (passwordObj) {
     const schema = Joi.object({
-        email: emailSchema.required()
+        otp: otpSchema,
+        email: emailSchema.required(),
+        currentPassword: passwordSchema,
+        newPassword: passwordSchema.required()
     });
 
-    return schema.validate(lender);
-  },
-
-  validateChangePassword: function (lender) {
-    const schema = Joi.object({
-        email: emailSchema,
-        newPassword: passwordSchema
-    });
-
-    return schema.validate(lender);
+    return schema.validate(passwordObj);
   },
 
   adminCreation: function (user) {
@@ -113,6 +110,7 @@ const validators = {
 
             middleName: Joi.string().min(3).max(50)
         }),
+        displayName: Joi.string(),
         phone: phoneSchema.required(),
         email: emailSchema.required(),
 
@@ -152,7 +150,7 @@ const validators = {
                 minTenor: Joi.number(),
                 maxTenor: Joi.number()
             })
-        ),
+        ).min(1),
 
         loanMetrics: Joi.object({
             interestRate: Joi.number().required(),

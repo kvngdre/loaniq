@@ -169,7 +169,6 @@ const userFuncs = {
 
     verifyRegister: async function (requestBody) {
         try{
-            // TODO: Ask victor if I should implement change password func directly?
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password.');
 

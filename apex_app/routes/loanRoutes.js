@@ -128,7 +128,7 @@ router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']),
       
     }catch(exception) {
       debug(exception);
-      return res.status(404).send('Loan not found.');
+      return res.status(404).send('Loan not found');
     }
   }
 );

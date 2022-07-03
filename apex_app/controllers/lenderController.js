@@ -162,58 +162,36 @@ const lender = {
         }
     },
 
-    forgotPassword: async function (requestBody) {
-        try{
-            const lender = await Lender.findOneAndUpdate(
-                { email: requestBody.email },
-                { otp: generateOTP() },
-                { new: true }
-            ).select('password');
-            if (!lender) throw new Error('Lender not found.');
-
-            const mailResponse = await sendOTPMail(lender.email, lender.companyName, lender.otp.OTP);
-            debug(mailResponse);
-            if (mailResponse instanceof Error) {
-                userDebug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            }
-            debug('Email sent successfully');
-
-            return lender;
-
-        }catch (exception) {
-            debug(exception);
-            return exception;
-        }
-    },
-
     changePassword: async function (requestBody) {
         try{
-            const lender = await Lender.findOne({ email: requestBody.email });
-            if (!lender) throw new Error('Lender not found.');
+            const lender = await Lender.findOne( { email: requestBody.email } );
+            if(!lender) throw new Error('Lender not found');
 
-            if(requestBody?.otp !== lender.otp.OTP || Date.now() > lender.otp.expirationTime) throw new Error('Invalid OTP.');
-
-            if (requestBody.currentPassword) {
-                const validPassword = await bcrypt.compare(requestBody.currentPassword, lender.password);
-                if (!validPassword) throw new Error('Password is incorrect.');
+            if(requestBody?.otp) {
+                const isValid = lender.otp.OTP === requestBody.otp;
+                if(!isValid) throw new Error('Invalid OTP');
             }
 
+            if(requestBody.currentPassword) {
+                const validPassword = await bcrypt.compare(requestBody.currentPassword, lender.password);
+                if(!validPassword) throw new Error('Password is incorrect');
+            };
+            
             const isSimilar = await bcrypt.compare(requestBody.newPassword, lender.password);
-            if(isSimilar) throw new Error('Password is too similar to old password.');
+            if(isSimilar) throw new Error('Password is too similar to old password');
 
             const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
 
-            await lender.updateOne({ 'otp.OTP': null, password: encryptedPassword });
+            await lender.update( { 'otp.OTP': null, password: encryptedPassword } );
 
-            return 'Password updated.';
-
+            return 'Password updated';
+            
         }catch(exception) {
             debug(exception);
             return exception;
-        }
+        };
     },
 
     update: async function (id, requestBody) {
@@ -233,7 +211,7 @@ const lender = {
         try{
             requestBody.lenderId = id;
 
-            const lenderConfig = await LenderConfig.findOneAndUpdate({ lenderId: id }, requestBody, { new: true, upsert: true });
+            const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId: id }, requestBody, { new: true, upsert: true });
             
             return {
                 message: 'Settings have been updated',
@@ -244,6 +222,31 @@ const lender = {
             debug(exception);
             return exception;
         }
+    },
+
+    sendOTP: async function(email, template) {
+        try {
+            const user = await Lender.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
+                                     .select('otp')
+            if(!user) throw new Error('Lender not found');
+
+            const mailResponse = await sendOTPMail(email, lender.companyName, lender.otp.OTP);
+                debug(mailResponse);
+                if(mailResponse instanceof Error) {
+                    debug(`Error sending OTP: ${mailResponse.message}`);
+                    throw new Error('Error sending OTP. Try again.');
+                };
+                debug('Email sent successfully');
+            
+            return {
+                message: 'OTP sent to email',
+                otp: lender.otp.OTP
+            };
+
+        }catch(exception) {
+            debug(exception);
+            return exception;
+        };
     },
 
     delete: async function (requestBody) {

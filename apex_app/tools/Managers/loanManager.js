@@ -71,14 +71,6 @@ const manager = {
 
   createLoanRequest: async function (loanMetricsObj, request) {
     try{
-        // TODO: speak to victor about slug and guest user
-        if(request.user.role === 'guest') {
-            const lender = await Lender.findOne( { slug: request.body.slug } );
-            if(!lender) throw new Error('Error retrieving lender information');
-            
-            request.user.lenderId = lender._id;
-        }
-
         let customer = await customerController.getOne( { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );
         if(customer instanceof Error) {
             // If customer is an error obj i.e. not found, create new customer

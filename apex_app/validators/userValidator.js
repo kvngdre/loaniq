@@ -2,6 +2,7 @@ const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 const { joiPassword } = require('joi-password');
 
+
 const nameSchema = Joi.object({
     firstName: Joi.string()
                   .min(3)
@@ -19,13 +20,10 @@ const nameSchema = Joi.object({
 const phoneSchema = Joi.string()
                        .pattern(/^0([7-9])[0-9]{9}$/)
                        .message({
-                          "string.pattern.base": "Invalid phone number."
+                          "string.pattern.base": "Invalid phone number"
                         })
 
-const emailSchema = Joi.string()
-                       .email()
-                       .min(10)
-                       .max(255)
+const emailSchema = Joi.string().email()
 
 const passwordSchema = joiPassword.string()
                                   .minOfUppercase(1)
@@ -35,10 +33,10 @@ const passwordSchema = joiPassword.string()
                                   .min(6)
                                   .max(255)
                                   .messages({
-                                    'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                    'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                    'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                    'password.noWhiteSpaces': '{#label} should not contain white spaces.'
+                                    'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character',
+                                    'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters',
+                                    'password.minOfNumeric': '{#label} should contain at least {#min} numbers',
+                                    'password.noWhiteSpaces': '{#label} should not contain white spaces'
                                     })
 
 const segmentSchema = Joi.alternatives()
@@ -46,10 +44,9 @@ const segmentSchema = Joi.alternatives()
 
 const otpSchema = Joi.string()
                      .pattern(/^[0-9]{6}$/)
-                     .messages({'string.pattern.base': '{#label} must be 6 digits.'})
+                     .messages({'string.pattern.base': '{#label} must be 6 digits'})
 
 
-// TODO: Reposition required and remove optional.
 const validators = {
     validateRegistration: {
         admin: function (user) {

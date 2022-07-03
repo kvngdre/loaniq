@@ -1,6 +1,7 @@
-const debug = require('debug')('app:errorHandler');
 const { MulterError } = require('multer');
+const debug = require('debug')('app:errorHandler');
 const { FileUploadError } = require('../errors/fileUploadError');
+
 
 function errorHandler(err, req, res, next) {
   // Catch errors for bad json format.
@@ -9,9 +10,14 @@ function errorHandler(err, req, res, next) {
     return res.status(400).send(`Error in JSON object: ${err.message}.`);
   }
 
+  if(err.name === 'FileUploadError') {
+    debug(err);
+    return res.status(err.statusCode).send(err.message);
+  }
+  
   console.log(err.message, err.stack);
   res.status(500).send('Internal Server Error');
-
+  
   next();
 }
 

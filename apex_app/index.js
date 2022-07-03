@@ -1,12 +1,16 @@
 require('express-async-errors');
-require('dotenv').config();
+require('dotenv').config({path: './apex_app/.env'});
 
 const app = require('express')();
 const jobs = require('./jobs/jobs');
-const { firebaseConfig, initializeApp, getMessaging } = require('./startUp/firebase-cm');
 const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
+const { 
+    firebaseConfig, 
+    initializeApp, 
+    getMessaging 
+} = require('./startUp/firebase-cm');
 
 
 // Setup
@@ -20,9 +24,9 @@ appRoutes(app);
 // Get Node Environment
 debug(`ENV: ${app.get('env')}`);
 
-const port = process.env.PORT || 9000;
+const port = process.env.PORT;
 app.listen(port, () => {
   // TODO: uncomment this
-  // debug(`Listening on port ${port}`);
+  debug(`Listening on port ${port}`);
   console.log(`Listening on port ${port}`);
 });

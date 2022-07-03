@@ -12,6 +12,12 @@ const customer = {
             // TODO: should the net pay be read at time of creation?
             const customerExists = await Customer.findOne( { 'employmentInfo.ippis': request.body.employmentInfo.ippis } );
             if(customerExists) throw new Error('Duplicate IPPIS NO. Customer already exists');
+            // TODO: uncomment this later
+            // request.body.passport.path = request.file.passport[0].path;
+            // request.body.passport.originalName = request.file.passport[0].originalname;
+
+            // request.body.idCard.path = request.file.idCard[0].path;
+            // request.body.passport.originalName = request.file.idCard[0].originalname;
 
             const newCustomer = new Customer(request.body);
             if(newCustomer instanceof Error) throw(newCustomer.message);

@@ -125,7 +125,7 @@ userSchema.virtual('fullName').get(function() {
 })
 
 userSchema.methods.generateToken = function() {
-    return jwt.sign( {
+    return jwt.sign({
         id: this._id, 
         lenderId: this.lenderId,
         firstName: this.name.firstName, 
@@ -136,7 +136,7 @@ userSchema.methods.generateToken = function() {
         emailVerified: this.emailVerified,
         segments: (this.segments ? this.segments : null),
         lastLoginTime: this.lastLoginTime
-    }, process.env.JWT_PRIVATE_KEY);
+    }, process.env.JWT_PRIVATE_KEY, {expiresIn: 5});
 }
 
 // userSchema.pre('save', function (next) {

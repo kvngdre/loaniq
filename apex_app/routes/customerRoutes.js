@@ -8,6 +8,7 @@ const uploadMultipleFiles = require('../middleware/fileUpload');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 
+
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const customers = await customerController.getAll(req.user);
     if(customers.length === 0) return res.status(404).send('No customers found.');
@@ -26,12 +27,11 @@ router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan A
 
 router.post('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), uploadMultipleFiles, async (req, res) => {
     // TODO: add to pending for agent
-
     const { error } = customerValidators.validateCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
-    console.log('kk')
+    
     const newCustomer = await customerController.create(req);
-    if(newCustomer instanceof Error) { return res.status(400).send(newCustomer.message); };
+    if(newCustomer instanceof Error) return res.status(400).send(newCustomer.message);
     
     return res.status(201).send(newCustomer);
 });
@@ -43,11 +43,12 @@ router.post('/customer-booking',verifyToken, verifyRole(['Loan Agent']), async (
     return res.status(200).send(result);
 });
 
-// TODO: have front end ensure no empty obj is passed.
 router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
+    if(Object.entries(req.body).length == 0) return res.sendStatus(400);
+
     const { error } = customerValidators.validateEdit(req.body);
     if(error) return res.status(400).send(error.details[0].message);
-
+    
     const customerEditObject = await customerController.update(req.params.id, req.user, req.body);
     if(customerEditObject instanceof Error) return res.status(400).send(customerEditObject.message);
 

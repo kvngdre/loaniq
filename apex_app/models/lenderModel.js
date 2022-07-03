@@ -9,12 +9,6 @@ const lenderSchema = new mongoose.Schema({
         required: true,
     },
 
-    slug: {
-        type: String,
-        unique: true,
-        // required: true
-    },
-
     companyAddress: {
         type: String,
         trim: true,
@@ -68,9 +62,7 @@ const lenderSchema = new mongoose.Schema({
         }
     },
 
-    active: {
-        type: Boolean
-    },
+    active: Boolean,
 
     role: {
         type: String,
@@ -82,9 +74,7 @@ const lenderSchema = new mongoose.Schema({
         default: 0
     },
 
-    lastReferenceCode: {
-        type: String
-    },
+    lastReferenceCode: String,
 
     // TODO: Work on auto generating url
     lenderURL: {
