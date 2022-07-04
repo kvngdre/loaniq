@@ -12,7 +12,7 @@ const lender = {
     createLender: async function (requestBody) {
         try{
             const doesExist = await Lender.findOne({ email: requestBody.email });
-            if (doesExist) throw new Error('Email has already been taken.');
+            if (doesExist) throw new Error('Email has already been taken');
 
             // Encrypting password
             const saltRounds = 10;

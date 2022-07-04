@@ -199,14 +199,14 @@ const userFuncs = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
-            if(user.lastLoginTime === null, !user.emailVerified, !user.active) {
+            if(user.lastLoginTime === null && !user.emailVerified && !user.active) {
                 return {
                     message: 'New User',
                     user: _.omit(user._doc, ['password', 'otp', 'displayName'])
                 }
             }
 
-            if(user.lastLoginTime !== null, user.emailVerified, !user.active) throw new Error('Account inactive. Contact administrator');
+            if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
             const token = user.generateToken();
 

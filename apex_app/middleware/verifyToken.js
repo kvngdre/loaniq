@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const debug = require('debug')('verifyToken');
 
 
 function verifyToken(req, res, next) {
@@ -19,8 +20,9 @@ function verifyToken(req, res, next) {
 
         next();
 
-    }catch (exception) {
-        return res.status(400).send('Invalid Token provided.');
+    }catch(exception) {
+        debug(exception.message);
+        return res.status(400).send('Invalid token provided');
     };
 }
 
