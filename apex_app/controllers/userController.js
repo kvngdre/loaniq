@@ -170,19 +170,19 @@ const userFuncs = {
     verifyRegister: async function (requestBody) {
         try{
             const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Invalid email or password.');
+            if(!user) throw new Error('Invalid email or password');
 
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(!isValidPassword) throw new Error('Incorrect email or password.');
+            if(!isValidPassword) throw new Error('Incorrect email or password');
 
-            if(user.emailVerified) throw new Error('User already verified.');
+            if(user.emailVerified) throw new Error('User already verified');
             
             if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP');
              
             await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
 
             return {
-                message: "Email has been verified and account activated.",
+                message: "Email has been verified and account activated",
                 token: user.generateToken()
             }
 
@@ -199,7 +199,7 @@ const userFuncs = {
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
             if(!isValidPassword)  throw new Error('Incorrect email or password.');
 
-            if(user.lastLoginTime === null && !user.emailVerified && !user.active) {
+            if((user.lastLoginTime === null || !user.emailVerified) && !user.active) {
                 return {
                     message: 'New User',
                     user: _.omit(user._doc, ['password', 'otp', 'displayName'])
@@ -208,9 +208,8 @@ const userFuncs = {
 
             if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
-            const token = user.generateToken();
-
-            user.token = token;
+            user.token = user.generateToken();
+            
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
             await user.updateOne( { lastLoginTime: Date.now() } );
