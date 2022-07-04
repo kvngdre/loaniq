@@ -136,7 +136,7 @@ userSchema.methods.generateToken = function() {
         emailVerified: this.emailVerified,
         segments: (this.segments ? this.segments : null),
         lastLoginTime: this.lastLoginTime
-    }, process.env.JWT_PRIVATE_KEY, {expiresIn: 5});
+    }, process.env.JWT_PRIVATE_KEY);
 }
 
 // userSchema.pre('save', function (next) {
