@@ -5,9 +5,9 @@ function randomPasswordGenerator() {
     const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
     const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    for(let i = 0; i < 4; i++) {
+    for(let i=0; i < 4; i++) {
 
-        for(let i = 0; i < 1; i++) {
+        for(let i=0; i < 1; i++) {
             password += numerals.charAt(Math.floor(Math.random() * numerals.length));
         }
 

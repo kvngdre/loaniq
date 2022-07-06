@@ -148,7 +148,11 @@ const validators = {
 
     validateChangePassword: function(passwordObj) {
         const schema = Joi.object({
-            otp: otpSchema,
+            otp: otpSchema.when('currentPassword', {
+                not: Joi.exist(),
+                then: Joi.required(),
+                otherwise: Joi.optional()
+            }),
             email: emailSchema.required(),
             currentPassword: passwordSchema,
             newPassword: passwordSchema.required(),

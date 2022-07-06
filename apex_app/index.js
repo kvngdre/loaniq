@@ -1,11 +1,12 @@
 require('express-async-errors');
-require('dotenv').config({path: './apex_app/.env'});
+require('dotenv').config();
 
 const app = require('express')();
 const jobs = require('./jobs/jobs');
 const connectDB = require('./startUp/db');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
+// const genpass = require('./utils/generatePassword');
 const { 
     firebaseConfig, 
     initializeApp, 

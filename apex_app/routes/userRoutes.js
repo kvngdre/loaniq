@@ -22,7 +22,7 @@ router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res
 router.post('/create-user', verifyToken,verifyRole(['Lender', 'Admin']), async (req, res) => {
     const role = req.body.role;
 
-    if (!role) return res.status(400).send('Role is required.');
+    if (!role) return res.status(400).send('Role is required');
 
     switch(role) {
         case "Admin":

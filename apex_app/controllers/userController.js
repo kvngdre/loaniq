@@ -209,7 +209,7 @@ const userFuncs = {
             if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
             user.token = user.generateToken();
-            
+
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
             await user.updateOne( { lastLoginTime: Date.now() } );
@@ -234,6 +234,7 @@ const userFuncs = {
                 if(!isValid) throw new Error('Invalid OTP');
             }
 
+            // TODO: should I change to invalid email or password?
             if(requestBody.currentPassword) {
                 const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
                 if(!validPassword) throw new Error('Password is incorrect');
