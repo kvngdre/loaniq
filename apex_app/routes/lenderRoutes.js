@@ -112,6 +112,16 @@ router.put('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     return res.status(201).send(settings);
 });
 
+router.post('/send-otp', async (req, res) => {
+    const { error } = lenderValidators.validateEmail(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+    
+    const otp = await lenderController.sendOTP(req.body.email);
+    if(otp instanceof Error) return res.status(400).send(otp.message);
+    
+    return res.status(200).send(otp);
+});
+
 router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
     const lender = await lenderController.delete(req.body);
 

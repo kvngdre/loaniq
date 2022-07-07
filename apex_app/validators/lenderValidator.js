@@ -168,7 +168,15 @@ const validators = {
     return schema.validate(settings);
   },
 
-  delete: function (lender) {
+  validateEmail: function(email) {
+    const schema = Joi.object({
+        email: emailSchema.required()
+    })
+
+    return schema.validate(email);
+  },
+
+  delete: function(lender) {
     const schema = Joi.object({
         id: Joi.objectId().required(),
         email: emailSchema.required()
