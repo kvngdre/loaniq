@@ -1,5 +1,6 @@
-const loanManager = require('../tools/Managers/loanManager');
+const _ = require('lodash');
 const Loan = require('../models/loanModel');
+const loanManager = require('../tools/Managers/loanManager');
 
 
 const loans = {
@@ -13,14 +14,33 @@ const loans = {
         return await loanManager.createLoan(customer, loanMetricsObj, request);
     },
 
-    getAll: async function(user, queryParams) {
+    getAll: async function(user, requestBody) {
+        let queryParams = { lenderId: user.lenderId };
+
+        if(user.role === 'Loan Agent') {
+            queryParams.loanAgent = user.id;
+            return await loanManager.getAll(user, queryParams);
+        };
+
+        queryParams = Object.assign(queryParams, _.omit(requestBody, ['start', 'end', 'loanAmount', 'tenor']))
+        if(requestBody.tenor) queryParams.recommendedTenor = { $gte: requestBody.tenor }
+        
+        if(requestBody.loanAmount) queryParams.recommendedAmount = { $gte: requestBody.loanAmount }
+        
+        if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
+
         return await loanManager.getAll(user, queryParams);
     },
 
     getOne: async function(user, id) {
-        const queryParams = { _id: id };
+        const queryParams = { _id: id, lenderId: user.lenderId };
+        
+        if(user.role === 'Loan Agent') {
+            queryParams.loanAgent = user.id
+            return await loanManager.getOne(queryParams);
+        }
 
-        return await loanManager.getOne(user, queryParams);
+        return await loanManager.getOne(queryParams);
     },
 
     edit: async function(user, id, requestBody) {

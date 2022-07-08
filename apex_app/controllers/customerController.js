@@ -7,6 +7,7 @@ const Customer = require('../models/customerModel');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
 
+
 const customer = {
     create: async function(request) {
         try{
@@ -84,24 +85,17 @@ const customer = {
                 ]).exec()
 
             }else{
-                let queryParams = _.omit(requestBody, ['start', 'end', 'segments', 'netPay']);
+                let queryParams = _.omit(requestBody, ['start', 'end', 'segments', 'netPay', 'name']);
                 
-                if(requestBody.start) {
-                    queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
-                }
+                if(requestBody.state) queryParams['residentialAddress.state'] = requestBody.state
+                
+                if(requestBody.netPay) queryParams['netPay.value'] = { $gte: requestBody.netPay }
+                
+                if(requestBody.segments) queryParams['employmentInfo.segment'] = { $in: requestBody.segments }
+                
+                if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
 
-                if(requestBody.segments) {
-                    queryParams['employmentInfo.segment'] = { $in: requestBody.segments }
-                }
-
-                if(requestBody.netPay) {
-                    queryParams['netPay.value'] = { $gte: requestBody.netPay }
-                }
-
-                if(requestBody.state) {
-                    queryParams['residentialAddress.state'] = requestBody.state
-                }
-
+                console.log(queryParams)
                 customers = await Customer.find( queryParams )
                                           .select('-__v')
                                         //   .populate('employmentInfo.segment')
@@ -230,7 +224,6 @@ const customer = {
             return exception;
         }
     }
-
 };
 
 module.exports = customer;

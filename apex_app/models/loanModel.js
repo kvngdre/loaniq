@@ -180,15 +180,8 @@ const loanSchema = new mongoose.Schema({
     },
 
     booked: {
-        customer: {
-            type: Boolean,
-            default: false
-        },
-
-        loan: {
-            type: Boolean,
-            default: false
-        }
+        type: Boolean,
+        default: false
     },
 
     disbursed: {

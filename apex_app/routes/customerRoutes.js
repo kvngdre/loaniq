@@ -1,7 +1,4 @@
-const mongoose = require('mongoose');
 const router = require('express').Router();
-const ObjectId = require('mongoose').Types.ObjectId;
-const debug = require('debug')('app:customerRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const uploadMultipleFiles = require('../middleware/fileUpload');

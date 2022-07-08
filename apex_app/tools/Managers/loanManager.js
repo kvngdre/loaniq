@@ -147,21 +147,10 @@ const manager = {
         return exception;
     }
   },
-  getAll: async function (user, queryParams={}) {
+  getAll: async function (user, queryParams) {
     try{
-        queryParams.lenderId = user.lenderId;
-        
-        let loans = [];
-        if (user.role !== 'Loan Agent') {
-            loans = await Loan.find( queryParams )
-                              .populate({ path: 'customer',model: Customer, select: 'name employmentInfo.ippis' })
-                              .sort('-_id');
-        }else{
-            queryParam.loanAgent = user.id;
-            loans = await Loan.find( queryParams ).sort('-_id');
-        };
-
-        if(loans.length === 0) throw new Error('No loans found');
+        const loans = await Loan.find( queryParams ).sort('-_id');
+        if(loans.length == 0) throw new Error('No loans found');
 
         return loans;
 
@@ -173,23 +162,11 @@ const manager = {
 
   getOne: async function (user, queryParams) {
     try{
-        queryParams.lenderId = user.lenderId;
-
-        let loan;
-        if (user.role !== 'Loan Agent') {
-            loan = await Loan.findOne( queryParams )
-                             .populate({
+        const loan = await Loan.findOne(queryParams)
+                               .populate({
                                 path: 'customer',
                                 model: Customer
                             });
-        }else{
-            queryParams.loanAgent = user.id;
-            loan = await Loan.findOne(queryParams).populate({
-                path: 'customer',
-                model: Customer
-            });
-        }
-
         if(!loan) throw new Error('Loan not found');
 
         return loan;
@@ -270,14 +247,14 @@ const manager = {
             };
 
             return {
-                message: 'Submitted. Awaiting Review.',
+                message: 'Submitted. Awaiting Review',
                 body: newPendingEdit
             };
         }
 
         //   TODO: Should the credit user be able to edit every type of loan?
         const loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
-        if(!loan) throw new Error('loan not found.');
+        if(!loan) throw new Error('loan not found');
 
         if(['approved', 'declined'].includes(requestBody?.status)) {
             loan.set('dateAppOrDec', Date.now());
