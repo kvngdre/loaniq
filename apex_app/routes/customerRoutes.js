@@ -10,16 +10,14 @@ const customerController = require('../controllers/customerController');
 
 
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const customers = await customerController.getAll(req.user);
-    if(customers.length === 0) return res.status(404).send('No customers found.');
+    const customers = await customerController.getAll(req.user, req.body);
+    if(customers instanceof Error) return res.status(404).send(customers.message);
 
     return res.status(200).send(customers);
 });
 
 router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const queryParam = mongoose.isValidObjectId(req.params.id) ? { _id: req.params.id } : { 'employmentInfo.ippis': req.params.id };
-    
-    const customer = await customerController.getOne(queryParam);
+    const customer = await customerController.getOne(req.params.id);
     if(customer instanceof Error) return res.status(404).send(customer.message);
 
     return res.status(200).send(customer);

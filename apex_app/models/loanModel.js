@@ -31,10 +31,10 @@ const loanSchema = new mongoose.Schema({
     loanType: {
         type: String,
         enum: [
-            'new',
-            'topUp'
+            'New',
+            'Top Up'
         ],
-        default:'new'
+        default:'New'
     },
     // End of the line where loan agent user can edit.
 
@@ -193,7 +193,7 @@ const loanSchema = new mongoose.Schema({
 
     disbursed: {
         type: Boolean,
-        default: true
+        default: false
     },        
 
     validationParams: {

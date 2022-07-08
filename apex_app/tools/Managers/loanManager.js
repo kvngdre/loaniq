@@ -153,7 +153,7 @@ const manager = {
         
         let loans = [];
         if (user.role !== 'Loan Agent') {
-            loans = await Loan.find(queryParams )
+            loans = await Loan.find( queryParams )
                               .populate({ path: 'customer',model: Customer, select: 'name employmentInfo.ippis' })
                               .sort('-_id');
         }else{
@@ -200,8 +200,8 @@ const manager = {
     };
   },
 
-  getDisbursement: async function (user, queryParam={}) {
-    try{
+  getDisbursement: async function (user, queryParam) {
+    try{        
         let loans = [];
         if(user.role !== 'Loan Agent') {
             loans = await Loan.find(queryParam)

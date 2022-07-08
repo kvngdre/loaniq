@@ -41,7 +41,7 @@ const loans = {
     getLoanBooking: async function(request) {
         request.body.active = true;
         request.body.booked = false;
-        request.body.status = "approved";
+        request.body.status = "Approved";
         request.body.lenderId = request.user.lenderId;
         request.body.createdAt = {$gte: new Date(request.body.fromDate)};
         

@@ -9,6 +9,7 @@ const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
 
+
 async function getValidator(req_, customerSegment = null) {
   try{
     const { loanMetrics, segments } = await lenderController.getSettings(
@@ -37,7 +38,6 @@ async function getValidator(req_, customerSegment = null) {
 }
 
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    console.log('hah====', req.body)
     const loans = await loanController.getAll(req.user, req.body);
     if(loans instanceof Error) return res.status(404).send(loans.message);
 
