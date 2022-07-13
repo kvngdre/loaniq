@@ -16,14 +16,14 @@ router.post('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
     return res.status(201).send(newBank);
 });
 
-router.get('/', verifyToken, verifyRole('allUsers'), async (req, res) => {
+router.get('/', verifyToken, verifyRole(['origin-master','Lender', 'Admin', 'Credit', 'Operations', 'Loan Agent']), async (req, res) => {
     const banks = await bankController.getAll();
     if(banks instanceof Error) return res.status(404).send(banks.message);
 
     return res.status(200).send(banks);
 });
 
-router.get('/:id', verifyToken, verifyRole('allUsers'), async (req, res) => {
+router.get('/:id', verifyToken, verifyRole(['origin-master','Lender', 'Admin']), async (req, res) => {
     const bank = await bankController.getOne(req.params.id);
     if(bank instanceof Error) return res.status(400).send('Bank not found.');
 

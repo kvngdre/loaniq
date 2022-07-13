@@ -12,16 +12,16 @@ function verifyRole(role) {
         };
     };
 
-    if(role='allUsers') {
-        return (req, res, next) => {
+    // if(role='allUsers') {
+    //     return (req, res, next) => {
           
-            next();  
-        }
-    };
+    //         next();  
+    //     }
+    // };
 
     return (req, res, next) => {
         if(req.user.role !== role) {
-            return res.status(401).send(`Access Denied. ${role} users only.`);
+            return res.status(401).send(`Access Denied. ${role} users only`);
         }
         next();
     }

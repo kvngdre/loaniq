@@ -30,7 +30,7 @@ const otpSchema = Joi.string()
                      .messages({'string.pattern.base': '{#label} must be 6 digits'})
 
 const validators = {
-  creation: function (lender) {
+  creation: function(lender) {
     const schema = Joi.object({
       // TODO: change values to required.
       companyName: Joi.string()
@@ -60,7 +60,7 @@ const validators = {
     return schema.validate(lender);
   },
 
-  validateRegVerification: function (lender) {
+  validateRegVerification: function(lender) {
     const schema = Joi.object({
         email: emailSchema.required(),
         otp: Joi.string()
@@ -75,7 +75,7 @@ const validators = {
     return schema.validate(lender);
   },
 
-  validateLogin: function (lender) {
+  validateLogin: function(lender) {
     const schema = Joi.object({
         email: emailSchema.required(),
         password: passwordSchema.required()
@@ -84,7 +84,7 @@ const validators = {
     return schema.validate(lender);
   },
 
-  validateChangePassword: function (passwordObj) {
+  validateChangePassword: function(passwordObj) {
     const schema = Joi.object({
         otp: otpSchema.when('currentPassword', {
             not: Joi.exist(),
@@ -99,7 +99,7 @@ const validators = {
     return schema.validate(passwordObj);
   },
 
-  adminCreation: function (user) {
+  adminCreation: function(user) {
     const schema = Joi.object({
         name: Joi.object({
             firstName: Joi.string()
@@ -128,7 +128,7 @@ const validators = {
     return schema.validate(user);
   },
 
-  update: function (lender) {
+  update: function(lender) {
     const schema = Joi.object({
         companyName: Joi.string().required(),
 
@@ -144,7 +144,7 @@ const validators = {
     return schema.validate(lender);
   },
 
-  validateSettings: function (settings) {
+  validateSettings: function(settings) {
     const schema = Joi.object({
         segments: Joi.array().items(
             Joi.object({

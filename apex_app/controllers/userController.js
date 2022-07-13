@@ -229,6 +229,7 @@ const userFuncs = {
             const user = await User.findOne( { email: requestBody.email } );
             if(!user) throw new Error('User not found');
 
+            // TODO: Check for OTP expire
             if(requestBody?.otp) {
                 const isValid = user.otp.OTP === requestBody.otp;
                 if(!isValid) throw new Error('Invalid OTP');

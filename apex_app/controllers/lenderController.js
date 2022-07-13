@@ -227,7 +227,7 @@ const lender = {
     sendOTP: async function(email, template) {
         try {
             const lender = await Lender.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
-                                     .select('otp')
+                                       .select('otp')
             if(!lender) throw new Error('Lender not found');
 
             const mailResponse = await sendOTPMail(email, lender.companyName, lender.otp.OTP);
