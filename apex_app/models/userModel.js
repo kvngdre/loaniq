@@ -1,7 +1,11 @@
+const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 const Segment = require('../models/segmentModel');
 
+
+const schemaOptions = {timestamps: true, toJSON: { virtuals: true} };
 
 const userSchema = new mongoose.Schema({
     lenderId: {
@@ -11,16 +15,12 @@ const userSchema = new mongoose.Schema({
     name: {
         firstName: {
             type: String,
-            minLength: 3,
-            maxLength: 50,
             trim:true,
             required: true
         },
     
         lastName: {
             type: String,
-            minLength: 3,
-            maxLength: 50,
             trim:true,
             required: true  
         },
@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
     
     displayName: {
         type: String,
+        trim: true,
         default: function() {
             return this.name.firstName.concat(' ', this.name.lastName);
         }
@@ -48,8 +49,6 @@ const userSchema = new mongoose.Schema({
 
     email: {
         type: String,
-        minLength: 10,
-        maxLength: 255,
         lowercase: true,
         trim: true,
         unique: true,
@@ -63,6 +62,7 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
+        trim: true,
         maxLength: 1024,
         required: true
     },
@@ -114,14 +114,30 @@ const userSchema = new mongoose.Schema({
     lastLoginTime: {
         type: Date,
         default: null
+    },
+
+    timeZone:{
+        type: String,
+        default: 'Africa/Lagos'
     }
 
-}, {
-    timestamps: true
-});
+}, schemaOptions);
 
 userSchema.virtual('fullName').get(function() {
     return this.name.firstName.concat(this.name?.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
+})  
+
+userSchema.virtual('createdAtTZAdjusted').get(function() {
+    return moment.tz(this.createdAt, this.timeZone).format();
+})
+
+userSchema.virtual('updatedAtTZAdjusted').get(function() {
+    return moment.tz(this.updatedAt, this.timeZone).format();
+})
+
+userSchema.virtual('lastLoginTimeTZAdjusted').get(function() {
+    if(!this.lastLoginTime) return null;
+    return moment.tz(this.lastLoginTime, this.timeZone).format();
 })
 
 userSchema.methods.generateToken = function() {
@@ -135,8 +151,9 @@ userSchema.methods.generateToken = function() {
         active: this.active,
         emailVerified: this.emailVerified,
         segments: (this.segments ? this.segments : null),
-        lastLoginTime: this.lastLoginTime
-    }, process.env.JWT_PRIVATE_KEY);
+        timeZone: this.timeZone,
+        lastLoginTime: this.lastLoginTimeTzAdjusted
+    }, config.get('jwt_secret'));
 }
 
 // userSchema.pre('save', function (next) {

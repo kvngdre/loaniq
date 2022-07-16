@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const debug = require('debug')('app:txnCtrl');
 const Transaction = require('../models/transactionModel');
 
@@ -28,9 +29,12 @@ const transactionFuncs = {
         }
     },
 
-    getAll: async function(user, queryParams={}) {
+    getAll: async function(user, requestBody) {
         try{
-            queryParams.lenderId = user.lenderId;
+            let queryParams = { lenderId: user.lenderId };
+
+            queryParams = Object.assign(queryParams, _.omit(requestBody, ['start', 'end']));
+            if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") };
 
             const transactions = await Transaction.find( queryParams );
             if(transactions.length === 0) throw new Error('No transactions found');

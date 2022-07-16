@@ -1,0 +1,3 @@
+{
+    "jwt_secret": "JWT_PRIVATE_KEY"
+}

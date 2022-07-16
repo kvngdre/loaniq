@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
+const config = require('config');
 const User = require('../models/userModel');
 const debug = require('debug')('app:userCtrl');
 const sendOTPMail = require('../utils/sendMail');
@@ -12,7 +13,7 @@ const userFuncs = {
     getAll: async function(queryParam={}) {
         try{
             return await User.find(queryParam)
-                              .select('-password -otp')
+                              .select('-password -otp -__v')
                               .sort('name.firstName');
         }catch(exception) {
             debug(exception);
@@ -23,7 +24,7 @@ const userFuncs = {
     get: async function(queryParam) {
         try{
             const user = await User.findOne( queryParam )
-                                   .select('-password -otp');
+                                   .select('-password -otp -__v');
             if(!user) throw new Error('User not found')
     
             return user;
@@ -41,22 +42,19 @@ const userFuncs = {
      * @param {object} user 
      * @returns new user
      */
-    create: async function(role, requestBody, user) {
+    create: async function(requestBody, user) {
         try {
-            const allSegments = await Segment.find().select('_id')
+            const rounds = config.get('salt_rounds');
+            const allSegments = await Segment.find()
+                                             .select('_id')
 
-            switch(role) {
+            switch(requestBody.role) {
                 case 'Admin':
                     if(user.role !== 'Lender') return 401;
 
-                    var adminDoesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
-                    if(adminDoesExist) throw new Error('Admin user has been created.');
-                    
                     // Encrypting password
                     var temporaryPassword = generateRandomPassword();
-                    var saltRounds = 10;
-                    var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedTempPassword = await bcrypt.hash(temporaryPassword, salt);
+                    var encryptedTempPassword = await bcrypt.hash(temporaryPassword, rounds);
 
                     var newUser = new User({
                         name: requestBody.name,
@@ -65,45 +63,34 @@ const userFuncs = {
                         email: requestBody.email,
                         password: encryptedTempPassword,
                         otp: generateOTP(),
-                        role,
+                        role: requestBody.role,
                         active: requestBody.active,
                         lenderId: user.lenderId
                     });
                     break;
 
                 case 'Credit':
-                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
-                    if(doesExist) throw new Error('Email has already been taken.');
-                    
                     // Encrypting password
-                    var temporaryPassword = generateRandomPassword();
-                    var saltRounds = 10;
-                    var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
+                    temporaryPassword = generateRandomPassword();
+                    encryptedPassword = await bcrypt.hash(temporaryPassword, rounds);
 
-                    var newUser = new User({
+                    newUser = new User({
                         name: requestBody.name,
                         displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: generateOTP(),
-                        role,
+                        role: requestBody.role,
                         active: requestBody.active,
-                        segments: !requestBody.segments ? allSegments : requestBody.segments,
+                        segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
                         lenderId: user.lenderId
                     });
                     break;
 
                 case 'Operations':
-                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
-                    if(doesExist) throw new Error('Email has already been taken.');
-                    
-                    // Encrypting password
                     var temporaryPassword = generateRandomPassword();
-                    var saltRounds = 10;
-                    var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, rounds);
                     
                     var newUser = new User({
                         name: requestBody.name,
@@ -112,21 +99,15 @@ const userFuncs = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: generateOTP(),
-                        role,
+                        role: requestBody.role,
                         active: requestBody.active,
                         lenderId: user.lenderId
                     });
                     break;
                 
                 case 'Loan Agent':
-                    var doesExist = await User.findOne( { lenderId: user.lenderId, email: requestBody.email } );
-                    if(doesExist) throw new Error('Email has already been taken.');
-                    
-                    // Encrypting password
                     var temporaryPassword = generateRandomPassword();
-                    var saltRounds = 10;
-                    var salt = await bcrypt.genSalt(saltRounds);
-                    var encryptedPassword = await bcrypt.hash(temporaryPassword, salt);
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, rounds);
                     
                     var newUser = new User({
                         name: requestBody.name,
@@ -135,7 +116,7 @@ const userFuncs = {
                         email: requestBody.email,
                         password: encryptedPassword,
                         otp: generateOTP(),
-                        role,
+                        role: requestBody.role,
                         active: requestBody.active,
                         segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
                         target: requestBody.target,
@@ -144,30 +125,54 @@ const userFuncs = {
                     break;
             };
 
-            // Sending OTP to user mail
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, newUser.otp.OTP, temporaryPassword);
-            debug(mailResponse);
-            if(mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            debug('Email sent successfully');
-
-            await newUser.save();
-
+            const isSaved = await newUser.save();
             newUser.password = temporaryPassword;
+
+            if(isSaved) {
+                // sending otp in mail
+                const mailResponse = await sendOTPMail(requestBody.email, requestBody.name.firstName, newUser.otp.OTP, temporaryPassword);
+                if(mailResponse instanceof Error) {
+                    debug(`Error sending OTP: ${mailResponse.message}`);
+                    throw new Error('Error sending OTP. Try again.');
+                };
+            }else throw new Error('Error creating user');
             
             return {
-                message: 'User created and OTP sent to email.', 
-                user: _.pick(newUser,['_id', 'fullName', 'displayName', 'password', 'email', 'otp.OTP', 'role', 'segments']) 
+                message: "User created. OTP and password sent to user email", 
+                user: _.pick(newUser,[
+                    '_id', 
+                    'fullName', 
+                    'displayName', 
+                    'password', 
+                    'email', 
+                    'otp.OTP', 
+                    'role', 
+                    'segments',
+                    'timeZone',
+                    'createdAtTZAdjusted',
+                    'lastLoginTimeTZAdjusted'
+                ]) 
             };
 
         }catch(exception) {
+            debug(exception);
+            if(exception.code == 11000){
+                // catching duplicate key error in MongoDB
+                if(requestBody.role === 'Admin') return new Error('Admin user has been created or still active');
+
+                const baseString = 'Duplicate ';
+                let field = Object.keys(exception.keyPattern)[0];
+
+                if(field === 'phone') field = 'phone number';
+
+                return new Error(baseString + field);
+            };
+
             return exception;
         };
     },
 
-    verifyRegister: async function (requestBody) {
+    verifyUser: async function (requestBody) {
         try{
             const user = await User.findOne( {email: requestBody.email} );
             if(!user) throw new Error('Invalid email or password');
@@ -177,16 +182,20 @@ const userFuncs = {
 
             if(user.emailVerified) throw new Error('User already verified');
             
-            if(requestBody?.otp !== user.otp.OTP || Date.now() > user.otp.expirationTime) throw new Error('Invalid OTP');
+            if( (requestBody.otp !== user.otp.OTP) || (Date.now() > user.otp.expirationTime) ) throw new Error('Invalid OTP');
              
+            user.token = user.generateToken();
+            authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'phone', 'email', 'role', 'lastLoginTimeTZAdjusted', 'token'])
+            
             await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
-
+            
             return {
-                message: "Email has been verified and account activated",
-                token: user.generateToken()
+                message: "Email verified and account activated",
+                user: authUser
             }
 
         }catch(exception) {
+            debug(exception);
             return exception;
         };
     },
@@ -194,10 +203,10 @@ const userFuncs = {
     login: async function(requestBody) {
         try{
             const user = await User.findOne( {email: requestBody.email} );
-            if(!user) throw new Error('Invalid email or password.');
+            if(!user) throw new Error('Invalid email or password');
             
             const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(!isValidPassword)  throw new Error('Incorrect email or password.');
+            if(!isValidPassword)  throw new Error('Invalid email or password');
 
             if((user.lastLoginTime === null || !user.emailVerified) && !user.active) {
                 return {
@@ -209,9 +218,9 @@ const userFuncs = {
             if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
             user.token = user.generateToken();
-
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
+            // TODO: discuss last login time if before or after now
             await user.updateOne( { lastLoginTime: Date.now() } );
 
             return {
@@ -244,9 +253,7 @@ const userFuncs = {
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
             if(isSimilar) throw new Error('Password is too similar to old password');
 
-            const saltRounds = 10;
-            const salt = await bcrypt.genSalt(saltRounds);
-            const encryptedPassword = await bcrypt.hash(requestBody.newPassword, salt);
+            const encryptedPassword = await bcrypt.hash(requestBody.newPassword, config.get('salt_rounds'));
 
             await user.update( { 'otp.OTP': null, password: encryptedPassword } );
 

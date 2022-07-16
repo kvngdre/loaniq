@@ -7,7 +7,7 @@ const ONE_MINUTE_IN_MILLISECONDS = 60_000;
  */
 function generateOTP(expireIn=5) {
 
-    const otp = Math.floor(100_000 + Math.random() * 900_000)
+    const otp = (Math.floor(100_000 + Math.random() * 900_000)).toString();
     const expirationTime = Date.now() + expireIn * ONE_MINUTE_IN_MILLISECONDS;
 
     return  {

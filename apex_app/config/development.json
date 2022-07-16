@@ -1,0 +1,12 @@
+{   
+    "name": "Apexxia App - Development",
+    "salt_rounds": 10,
+    "databaseURI": "mongodb://localhost/apex_",
+    "mail":{
+        "sender_email": "ucheprince26@gmail.com",
+        "client_secret": "08980qpFCcWlva5kKNEJKZCu",
+        "oauth_playground": "https://developers.google.com/oauthplayground",
+        "client_id": "461975608741-3tod2g7s5hm6m6bqk5hmcdi45jnekos6.apps.googleusercontent.com",
+        "refresh_token": "1//04UgEihHdFFj3CgYIARAAGAQSNwF-L9IruVhTtNMIbbFldBEtUW9jyqEySn3Any1Z1jANdVgEt9mchYG59ebF76JOVcGLDj-BH44"
+    }
+}

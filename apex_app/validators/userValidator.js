@@ -48,68 +48,92 @@ const otpSchema = Joi.string()
 
 
 const validators = {
-    validateRegistration: {
-        admin: function (user) {
-            const schema = Joi.object({
-                name: nameSchema.required(),
-                displayName: Joi.string(),
-                phone: phoneSchema.required(),
-                email: emailSchema.required(),
-                role: Joi.string().required(),
-            });
+    validateSignUp: function(user) {
+        if(!user.role) return {
+            error: {
+                details:[{message: 'Role is required'}]
+            }
+        }
 
-            return schema.validate(user);
-        },
-    
-        credit: function (user) {
-            const schema = Joi.object({
-                name: nameSchema.required(),
-                displayName: Joi.string(),
-                phone: phoneSchema.required(),
-                email: emailSchema.required(),
-                role: Joi.string().required(),
-                segments: segmentSchema.required(),
-        
-            });
-        
-            return schema.validate(user);
-        },
-        
-        operations: function (user) {
-            const schema = Joi.object({
-                name: nameSchema,
-                displayName: Joi.string(),
-                phone: phoneSchema,
-                email: emailSchema,
-                role: Joi.string().required(),
-            });
-        
-            return schema.validate(user);
-        },
-    
-        loanAgent: function (user) {
-            const schema = Joi.object({
-                name: nameSchema.required(),
-                displayName: Joi.string(),
-                phone: phoneSchema.required(),
-                email: emailSchema.required(),
-                role: Joi.string().required(),
-                segments: segmentSchema.required(),
-                target: Joi.number().required(),
-                achieved: Joi.number(),
-            });
+        switch(user.role) {
+            case "Admin": 
+                return (function(user) {
+                    const schema = Joi.object({
+                        name: nameSchema.required(),
+                        displayName: Joi.string(),
+                        phone: phoneSchema.required(),
+                        email: emailSchema.required(),
+                        role: Joi.string().required(),
+                    });
+                    return schema.validate(user);
 
-            return schema.validate(user);
-        },
+                }).call(this, user)
+            
+            case "Credit":
+                return (function (user) {
+                    const schema = Joi.object({
+                        name: nameSchema.required(),
+                        displayName: Joi.string(),
+                        phone: phoneSchema.required(),
+                        email: emailSchema.required(),
+                        role: Joi.string().required(),
+                        segments: segmentSchema.required(),
+                
+                    });
+                    return schema.validate(user);
+
+                }).call(this, user)
+            
+            case "Operations":
+                return (function (user) {
+                    const schema = Joi.object({
+                        name: nameSchema,
+                        displayName: Joi.string(),
+                        phone: phoneSchema,
+                        email: emailSchema,
+                        role: Joi.string().required(),
+                    });
+                    return schema.validate(user);
+
+                }).call(this, user)
+    
+            case "Loan Agent":
+                return (function (user) {
+                    const schema = Joi.object({
+                        name: nameSchema.required(),
+                        displayName: Joi.string(),
+                        phone: phoneSchema.required(),
+                        email: emailSchema.required(),
+                        role: Joi.string().required(),
+                        segments: segmentSchema.required(),
+                        target: Joi.number().required(),
+                        achieved: Joi.number(),
+                    });
+                    return schema.validate(user);
+
+                }).call(this, user)
+
+            case "Jk":
+                return (function() {
+                    console.log('in here')
+                    return 'I returned'
+                }).call(this)
+            
+            default:
+                return {
+                    error: {
+                        details:[{message: 'Invalid role'}]
+                    }
+                }
+        }
+        
     },
 
-    // TODO: Should users be allowed to change their email?
     validateEdit: function(user) {
         const schema = Joi.object({
             name: nameSchema,
             displayName: Joi.string(),
             phone: phoneSchema,
-            email: emailSchema,
             role: Joi.string(),
             segments: segmentSchema,
             target: Joi.number(),
@@ -119,11 +143,11 @@ const validators = {
         return schema.validate(user);
     },
 
-    validateRegVerification: function(user) {
+    validateUserVerification: function(user) {
         const schema = Joi.object({
-            email: emailSchema.required(),
             otp: otpSchema.required(),
-            password: passwordSchema.required()
+            email: emailSchema.required(),
+            password: Joi.string().required()
         });
 
         return schema.validate(user);
@@ -132,7 +156,7 @@ const validators = {
     validateLogin: function(user) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: passwordSchema.required()
+            password: Joi.string().required()
         });
 
         return schema.validate(user);
@@ -154,7 +178,7 @@ const validators = {
                 otherwise: Joi.optional()
             }),
             email: emailSchema.required(),
-            currentPassword: passwordSchema,
+            currentPassword: Joi.string(),
             newPassword: passwordSchema.required(),
         });
 

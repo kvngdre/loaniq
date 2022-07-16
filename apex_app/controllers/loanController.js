@@ -55,7 +55,7 @@ const loans = {
                 status: "Approved",
                 lenderId: user.lenderId,
                 createdAt: { $gte: new Date(startDateTime).toISOString(), $lt: new Date(endDateTime).toISOString() } 
-            } );
+            });
     },
 
     getLoanBooking: async function(request) {

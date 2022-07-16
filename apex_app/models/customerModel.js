@@ -277,7 +277,7 @@ const customerSchema = new mongoose.Schema({
 
         updatedAt: {
             type: Date,
-            default: new Date().toISOString()
+            default: new Date()
         }
         // TODO: read from origin collection.
     },
@@ -285,7 +285,7 @@ const customerSchema = new mongoose.Schema({
     bvnValid: {
         type: Boolean,
         default: false
-    },
+    }   
 
 }, {
     timestamps: true

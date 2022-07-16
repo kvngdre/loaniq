@@ -2,7 +2,7 @@ const router = require('express').Router();
 const debug = require('debug')('app:userRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const userValidator = require('../validators/userValidator');
+const userValidators = require('../validators/userValidator');
 const userController  = require('../controllers/userController');
 
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
@@ -19,55 +19,28 @@ router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res
     return res.status(200).send(user);
 });
 
-router.post('/create-user', verifyToken,verifyRole(['Lender', 'Admin']), async (req, res) => {
-    const role = req.body.role;
-
-    if (!role) return res.status(400).send('Role is required');
-
-    switch(role) {
-        case "Admin":
-            var { error } = userValidator.validateRegistration.admin(req.body);
-            if(error) return res.status(400).send(error.details[0].message);
-            break;
-        
-        case "Credit":
-            var { error } = userValidator.validateRegistration.credit(req.body);
-            if(error) return res.status(400).send(error.details[0].message);
-            break;
-        
-        case "Operations":
-            var { error } = userValidator.validateRegistration.operations(req.body);
-            if(error) return res.status(400).send(error.details[0].message);
-            break;
-
-        case "Loan Agent":
-            var { error } = userValidator.validateRegistration.loanAgent(req.body);
-            if (error) return res.status(400).send(error.details[0].message);
-            break;
-    };  
-    
-
-    const user = await userController.create(role, req.body, req.user);
-    if(user instanceof Error) {
-        debug(user);
-        return res.status(400).send(user.message);
-    };
-
-    return res.status(200).send(user);
-});
-
-router.post('/verify-user', async (req, res) => {
-    const { error } = userValidator.validateRegVerification(req.body);
+router.post('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
+    const { error } = userValidators.validateSignUp(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const isVerified = await userController.verifyRegister(req.body);
+    const user = await userController.create(req.body, req.user);
+    if(user instanceof Error) return res.status(400).send(user.message)
+
+    return res.status(201).send(user);
+});
+
+router.post('/verify', async (req, res) => {
+    const { error } = userValidators.validateUserVerification(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const isVerified = await userController.verifyUser(req.body);
     if(isVerified instanceof Error) return res.status(400).send(isVerified.message);
 
     return res.status(200).send(isVerified);
 });
 
 router.post('/login', async (req, res) => {
-    const { error } = userValidator.validateLogin(req.body);
+    const { error } = userValidators.validateLogin(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const isLoggedIn = await userController.login(req.body);
@@ -80,19 +53,8 @@ router.post('/login', async (req, res) => {
     return res.status(200).send(isLoggedIn);
 });
 
-// router.post('/forgot-password', async (req, res) => {
-//     const { error } = userValidator.validateEmail(req.body);
-//     if(error) return res.status(400).send(error.details[0].message);
-
-//     const user = await userController.forgotPassword(req.body);
-//     if(user instanceof Error) return res.status(400).send(user.message);
-
-//     // return res.redirect(307, `http://localhost:8480/api/users/change-password/`);
-//     return res.status(200).send('Password reset OTP sent to email.');
-// });
-
 router.post('/change-password', async (req, res) => {
-    const { error } = userValidator.validateChangePassword(req.body);
+    const { error } = userValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
     const user = await userController.changePassword(req.body);
@@ -102,7 +64,7 @@ router.post('/change-password', async (req, res) => {
 });
 
 router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent', 'origin-master']), async (req, res) => {
-    const { error } = userValidator.validateEdit(req.body);
+    const { error } = userValidators.validateEdit(req.body);
     if(error)  return res.status(400).send(error.details[0].message);
     
     const user = await userController.update(req.params.id, req.user, req.body);
@@ -112,7 +74,7 @@ router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Operations', '
 });
 
 router.post('/send-otp', async (req, res) => {
-    const { error } = userValidator.validateEmail(req.body);
+    const { error } = userValidators.validateEmail(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
     const otp = await userController.sendOTP(req.body.email, req.body.name);
