@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const Loan = require('../models/loanModel');
 const loanManager = require('../tools/Managers/loanManager');
 
 
@@ -47,15 +46,13 @@ const loans = {
         return await loanManager.edit(user, id, requestBody);
     },
 
-    getDisbursement: async function(user, startDateTime, endDateTime="2050-01-01") {
-        return await loanManager.getDisbursement(user, 
-            {
-                active: true,
-                disbursed: false,
-                status: "Approved",
-                lenderId: user.lenderId,
-                createdAt: { $gte: new Date(startDateTime).toISOString(), $lt: new Date(endDateTime).toISOString() } 
-            });
+    getDisbursement: async function(user, requestBody) {
+        let queryParams = { lenderId: user.lenderId, active: true, disbursed: false, status: 'Approved' };
+
+        queryParams = Object.assign(queryParams, _.omit(requestBody, ['start', 'end']))
+        if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
+        
+        return await loanManager.getDisbursement(user, queryParams);
     },
 
     getLoanBooking: async function(request) {

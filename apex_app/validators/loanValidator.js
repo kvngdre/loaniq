@@ -87,11 +87,12 @@ class LoanRequestValidators {
 };
 
 const loanValidators ={
-    validateDateTimeObj: function (dateTimeObj) {
+    validateDisbursement: function (dateTimeObj) {
         // TODO: finish disbursement
         const schema = Joi.object({
             start: Joi.string().required(),
-            end: Joi.date()
+            end: Joi.date(),
+            disbursed: Joi.boolean()
         });
 
         return schema.validate(dateTimeObj);

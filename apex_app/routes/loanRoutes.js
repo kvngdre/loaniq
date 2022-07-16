@@ -134,10 +134,10 @@ router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']),
 );
 
 router.post('/disburse', verifyToken, verifyRole(['Admin', 'Credit']), async (req, res) => {
-    const { error } = loanValidators.validateDateTimeObj(req.body);
+    const { error } = loanValidators.validateDisbursement(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const loans = await loanController.getDisbursement(req.user, req.body.start, req.body?.end);
+    const loans = await loanController.getDisbursement(req.user, req.body);
     if(loans instanceof Error) return res.status(404).send(loans.message);
 
     return res.status(200).send(loans);

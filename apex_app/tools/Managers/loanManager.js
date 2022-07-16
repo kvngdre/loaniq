@@ -177,11 +177,11 @@ const manager = {
     };
   },
 
-  getDisbursement: async function (user, queryParam) {
+  getDisbursement: async function (user, queryParams) {
     try{        
         let loans = [];
         if(user.role !== 'Loan Agent') {
-            loans = await Loan.find(queryParam)
+            loans = await Loan.find(queryParams)
                               .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
                               .populate({
                                 path: 'customer',
@@ -195,8 +195,8 @@ const manager = {
                             })
                               .sort({ createdAt: -1 });
         }else{
-            queryParam.loanAgent = user.id;
-            loans = await Loan.find(queryParam).sort('_id');
+            queryParams.loanAgent = user.id;
+            loans = await Loan.find(queryParams).sort('_id');
         };
 
         if(loans.length === 0) throw new Error("You have no pending disbursements");
