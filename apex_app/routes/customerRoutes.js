@@ -9,7 +9,7 @@ const customerController = require('../controllers/customerController');
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const customers = await customerController.getAll(req.user, req.body);
     if(customers instanceof Error) return res.status(404).send(customers.message);
-
+    
     return res.status(200).send(customers);
 });
 

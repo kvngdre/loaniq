@@ -88,12 +88,9 @@ const customer = {
                 let queryParams = _.omit(requestBody, ['start', 'end', 'segments', 'netPay', 'name']);
                 
                 if(requestBody.state) queryParams['residentialAddress.state'] = requestBody.state
-                
                 if(requestBody.netPay) queryParams['netPay.value'] = { $gte: requestBody.netPay }
-                
                 if(requestBody.segments) queryParams['employmentInfo.segment'] = { $in: requestBody.segments }
-                
-                if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
+                if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lte: (requestBody.end ? requestBody.end : "2122-01-01") }
 
                 console.log(queryParams)
                 customers = await Customer.find( queryParams )

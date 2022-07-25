@@ -10,7 +10,7 @@ const validators = {
             userId: Joi.objectId,
 
             type: Joi.string()
-                     .valid(['debit', 'credit'])
+                     .valid(['Debit', 'Credit'])
                      .required()
                      .messages({
                         "any.only": `Element at index ${"{#label}".replace('type', '')} is not valid.`

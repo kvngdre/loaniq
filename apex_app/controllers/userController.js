@@ -40,7 +40,7 @@ const userFuncs = {
      * @param {string} role
      * @param {object} requestBody 
      * @param {object} user 
-     * @returns new user
+     * @returns A new user.
      */
     create: async function(requestBody, user) {
         try {
@@ -212,12 +212,12 @@ const userFuncs = {
                 return {
                     message: 'New User',
                     user: _.omit(user._doc, ['password', 'otp', 'displayName'])
-                }
-            }
+                };
+            };
 
             if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
-            user.token = user.generateToken();
+            user.token = user.generateToken()
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
 
             // TODO: discuss last login time if before or after now
@@ -255,7 +255,7 @@ const userFuncs = {
 
             const encryptedPassword = await bcrypt.hash(requestBody.newPassword, config.get('salt_rounds'));
 
-            await user.update( { 'otp.OTP': null, password: encryptedPassword } );
+            await user.update({ 'otp.OTP': null, password: encryptedPassword });
 
             return 'Password updated';
             
@@ -318,7 +318,8 @@ const userFuncs = {
             
             return {
                 message: 'OTP sent successfully',
-                otp: user.otp.OTP
+                otp: user.otp.OTP,
+                email: user.email
             };
 
         }catch(exception) {

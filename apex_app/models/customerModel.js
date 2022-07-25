@@ -15,7 +15,7 @@ const customerSchema = new mongoose.Schema({
         originalName: {
             type: String
         }
-    },
+    },  
 
     name: {
         firstName: {
@@ -39,6 +39,13 @@ const customerSchema = new mongoose.Schema({
             minLength: 3,
             maxLength: 50,
             trim:true
+        }
+    },
+
+    displayName: {
+        type: String,
+        default: function() {
+            return this.name.firstName.concat(this.name.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
         }
     },
     
@@ -290,10 +297,6 @@ const customerSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
-customerSchema.virtual('fullName').get(function() {
-    return this.name.firstName.concat(this.name?.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
-})
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('ippisPrefix');

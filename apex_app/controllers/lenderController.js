@@ -151,13 +151,12 @@ const lender = {
 
             const token = lender.generateToken();
 
-            lender.token = token;
-            lender = _.pick(lender, ['_id', 'companyName', 'email', 'role', 'token']);
+            lender._doc.token = token;
 
             return lender;
 
         }catch (exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         }
     },
@@ -240,11 +239,12 @@ const lender = {
             
             return {
                 message: 'OTP sent to email',
-                otp: lender.otp.OTP
+                otp: lender.otp.OTP,
+                email: lender.email
             };
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         };
     },

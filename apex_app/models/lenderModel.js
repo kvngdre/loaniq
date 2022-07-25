@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('./userModel');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone')
+
+
+const schemaOptions = {timestamps: true, toJSON: {virtuals: true}, id: false};
 
 const lenderSchema = new mongoose.Schema({
     companyName: {
@@ -94,9 +98,20 @@ const lenderSchema = new mongoose.Schema({
         default: null
     }
 
-}, {
-    timestamps: true,
-}); 
+}, schemaOptions); 
+
+lenderSchema.virtual('createdAtTZAdjusted').get(function() {
+    return moment.tz(this.createdAt, this.timeZone).format();
+})
+
+lenderSchema.virtual('updatedAtTZAdjusted').get(function() {
+    return moment.tz(this.updatedAt, this.timeZone).format();
+})
+
+lenderSchema.virtual('lastLoginTimeTZAdjusted').get(function() {
+    if(!this.lastLoginTime) return null;
+    return moment.tz(this.lastLoginTime, this.timeZone).format();
+})
 
 lenderSchema.methods.generateToken = function() {
     return jwt.sign({

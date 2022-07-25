@@ -48,6 +48,4 @@ const upload = multer({
     }
 })
 
-const multipleUpload = upload.fields([{name: 'passport'}, {name: 'idCard'}])
-
-module.exports = multipleUpload;
+module.exports = upload.fields([{name: 'passport'}, {name: 'idCard'}])

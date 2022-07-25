@@ -1,5 +1,5 @@
 /**
- * verifies the user has access to that role.
+ * Grants or denies access to a
  * @param {String|Array} role 
  * @returns 
  */

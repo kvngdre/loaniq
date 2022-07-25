@@ -1,4 +1,9 @@
 class FileUploadError extends Error {
+     /**
+     * Creates a new file upload error
+     * @param {Number} status Http status code
+     * @param {String} message Error message
+     */
     constructor(status, message) {
         super();
 

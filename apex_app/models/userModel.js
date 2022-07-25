@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: function() {
-            return this.name.firstName.concat(' ', this.name.lastName);
+            return this.name.firstName.concat(this.name.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
         }
     },
     
@@ -122,10 +122,6 @@ const userSchema = new mongoose.Schema({
     }
 
 }, schemaOptions);
-
-userSchema.virtual('fullName').get(function() {
-    return this.name.firstName.concat(this.name?.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
-})  
 
 userSchema.virtual('createdAtTZAdjusted').get(function() {
     return moment.tz(this.createdAt, this.timeZone).format();
