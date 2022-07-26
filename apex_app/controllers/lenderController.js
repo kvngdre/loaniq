@@ -82,6 +82,19 @@ const lender = {
         }
     },
 
+    update: async function (id, requestBody) {
+        try{
+            const lender = await Lender.findOneAndUpdate({ _id: id }, requestBody, {new: true})
+            if(!lender) throw new Error('Lender not found.');
+
+            return lender;
+
+        }catch(exception) {
+            debug(exception)
+            return exception;
+        };
+    },
+
     getSettings: async function(queryParam) {
         try{
             const lenderSettings = LenderConfig.findOne(queryParam);
@@ -191,19 +204,6 @@ const lender = {
             debug(exception);
             return exception;
         };
-    },
-
-    update: async function (id, requestBody) {
-        try{
-            const lender = await Lender.findOneAndUpdate({ _id: id }, requestBody, {new: true});
-            if(!lender) throw new Error('Lender not found.');
-
-            return lender;
-
-        }catch(exception) {
-            debug(exception);
-            return exception;
-        }
     },
 
     setConfig: async function (id, requestBody) {

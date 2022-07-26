@@ -61,17 +61,6 @@ router.post('/login', async (req, res) => {
     return res.status(200).send({message: 'Login successful.', lender: isLoggedIn});
 });
 
-// router.post('/forgot-password', async (req, res) => {
-//     const { error } = userValidators.validateForgotPassword(req.body);
-//     if(error) return res.status(400).send(error.details[0].message);
-
-//     const lender = await lenderController.forgotPassword(req.body);
-//     if(lender instanceof Error) return res.status(400).send(lender.message);
-
-//     // res.redirect(307, `http://localhost:8480/api/lenders/change-password/`);
-//     return res.status(200).send('Password reset OTP sent to email.');
-// });
-
 router.post('/change-password', async (req, res) => {
     const { error } = lenderValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);

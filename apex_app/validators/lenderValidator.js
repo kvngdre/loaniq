@@ -130,14 +130,10 @@ const validators = {
 
   update: function(lender) {
     const schema = Joi.object({
-        companyName: Joi.string().required(),
-
-        companyAddress: Joi.string().required(),
-
-        cacNumber: Joi.string().required(),
-
+        companyName: Joi.string(),
+        companyAddress: Joi.string(),
+        cacNumber: Joi.string(),
         category: Joi.string(),
-
         phone: phoneSchema
     });
 
