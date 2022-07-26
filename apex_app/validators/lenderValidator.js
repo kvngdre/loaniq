@@ -60,6 +60,22 @@ const validators = {
     return schema.validate(lender);
   },
 
+  update: function(lender) {
+    const schema = Joi.object({
+        companyName: Joi.string(),
+        companyAddress: Joi.string(),
+        cacNumber: Joi.string()
+                      .pattern(/^RC[0-9]+/)
+                      .messages({
+                          "string.pattern.base": "Invalid CAC Number. Must begin with 'RC'."
+                      }),
+        category: Joi.string(),
+        phone: phoneSchema
+    });
+
+    return schema.validate(lender);
+  },
+
   validateRegVerification: function(lender) {
     const schema = Joi.object({
         email: emailSchema.required(),
@@ -126,18 +142,6 @@ const validators = {
     });
     
     return schema.validate(user);
-  },
-
-  update: function(lender) {
-    const schema = Joi.object({
-        companyName: Joi.string(),
-        companyAddress: Joi.string(),
-        cacNumber: Joi.string(),
-        category: Joi.string(),
-        phone: phoneSchema
-    });
-
-    return schema.validate(lender);
   },
 
   validateSettings: function(settings) {

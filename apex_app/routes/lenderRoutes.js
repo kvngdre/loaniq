@@ -5,26 +5,6 @@ const verifyToken = require('../middleware/verifyToken');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderController = require('../controllers/lenderController');
 
-router.get('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
-    const lenders = await lenderController.getAll();
-    if(lenders instanceof Error) return res.status(404).send(lenders.message);
-
-    return res.status(200).send(lenders);
-});
-
-router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
-    const settings = await lenderController.getSettings( { lenderId: req.user.lenderId } );
-    if(settings instanceof Error) return res.status(404).send(settings.message);
-
-    return res.status(200).send(settings);
-});
-
-router.get('/:id', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
-    const lender = await lenderController.getOne(req.user, req.params.id);
-    if(lender instanceof Error) return res.status(404).send(lender.message);
-
-    return res.status(200).send(lender);   
-});
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.creation(req.body);
@@ -33,11 +13,46 @@ router.post('/', async (req, res) => {
     const lender = await lenderController.createLender(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    //TODO: generate lender url.
+    //TODO: generate lender url with auto increment field.
     return res.status(201).send(lender);
 });
 
-router.post('/verify-lender', async (req, res) => {
+router.get('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
+    const lenders = await lenderController.getAll();
+    if(lenders instanceof Error) return res.status(400).send(lenders.message);
+
+    return res.status(200).send(lenders);
+});
+
+router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
+    const settings = await lenderController.getSettings( { lenderId: req.user.id } );
+    if(settings instanceof Error) return res.status(404).send(settings.message);
+
+    return res.status(200).send(settings);
+});
+
+router.get('/:id?', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
+    const id = req.params.id ? req.params.id : req.user.id
+
+    const lender = await lenderController.getOne(id);
+    if(lender instanceof Error) return res.status(404).send(lender.message);
+
+    return res.status(200).send(lender);   
+});
+
+router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
+    const { error } = lenderValidators.update(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const id = req.params.id ? req.params.id : req.user.id
+
+    const lender = await lenderController.update(id, req.body)
+    if(lender instanceof Error) return res.status(404).send(lender.message);
+    
+    return res.status(200).send(lender);
+});
+
+router.post('/verify', async (req, res) => {
     const { error } = lenderValidators.validateRegVerification(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
@@ -51,17 +66,13 @@ router.post('/login', async (req, res) => {
     const { error } = lenderValidators.validateLogin(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const isLoggedIn = await lenderController.login(req.body);
-    
-    if(isLoggedIn instanceof Error) {
-        debug(isLoggedIn.message);
-        return res.status(400).send(isLoggedIn.message);
-    };
+    const lender = await lenderController.login(req.body.email, req.body.password);
+    if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    return res.status(200).send({message: 'Login successful.', lender: isLoggedIn});
+    return res.status(200).send(lender);
 });
 
-router.post('/change-password', async (req, res) => {
+router.post('/password', async (req, res) => {
     const { error } = lenderValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
@@ -81,16 +92,6 @@ router.post('/create-admin', verifyToken, verifyRole('Lender'), async (req, res)
     return res.status(201).send(adminUser);
 });
 
-router.patch('/:id', verifyToken, verifyRole('Lender'), async (req, res) => {
-    const { error } = lenderValidators.update(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
-
-    const lender = await lenderController.update(req.params.id, req.body);
-    if(lender instanceof Error) return res.status(404).send(lender.message);
-    
-    return res.status(200).send(lender);
-});
-
 router.put('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.validateSettings(req.body);
     if(error) return res.status(400).send(error.details[0].message);
@@ -101,7 +102,7 @@ router.put('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     return res.status(201).send(settings);
 });
 
-router.post('/send-otp', async (req, res) => {
+router.post('/otp', async (req, res) => {
     const { error } = lenderValidators.validateEmail(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     

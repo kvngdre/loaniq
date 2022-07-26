@@ -1,9 +1,10 @@
-const Bank = require('./bankModel');
-const Loan = require('./loanModel');
-const mongoose = require('mongoose');
-const State = require('./stateModel');
-const Segment = require('./segmentModel');
-const debug = require('debug')('app:customerModel');
+const moment = require('moment')
+const Bank = require('./bankModel')
+const Loan = require('./loanModel')
+const mongoose = require('mongoose')
+const State = require('./stateModel')
+const Segment = require('./segmentModel')
+const debug = require('debug')('app:customerModel')
 
 
 const customerSchema = new mongoose.Schema({
@@ -18,7 +19,7 @@ const customerSchema = new mongoose.Schema({
     },  
 
     name: {
-        firstName: {
+        first: {
             type: String,
             minLength: 3,
             maxLength: 50,
@@ -26,7 +27,7 @@ const customerSchema = new mongoose.Schema({
             required: true
         },
     
-        lastName: {
+        last: {
             type: String,
             minLength: 3,
             maxLength: 50,
@@ -34,7 +35,7 @@ const customerSchema = new mongoose.Schema({
             required: true
         },
     
-        middleName: {
+        middle: {
             type: String,
             minLength: 3,
             maxLength: 50,
@@ -45,7 +46,7 @@ const customerSchema = new mongoose.Schema({
     displayName: {
         type: String,
         default: function() {
-            return this.name.firstName.concat(this.name.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
+            return this.name.first.concat(this.name.middle ? ` ${this.name.middle}` : '', ` ${this.name.last}`);
         }
     },
     
@@ -63,20 +64,20 @@ const customerSchema = new mongoose.Schema({
             // Validate age is over 21
             validator: (dob) => {
                 try{
-                    const dob_ = new Date(dob);
-                    const ageDate = new Date( Date.now() - dob_.getTime() );
-                    const ageYear = ageDate.getUTCFullYear();
-                    const age = ageYear - 1970;
-
-                    return age >= 18;
+                    // const dob_ = new Date(dob);
+                    // const ageDate = new Date( Date.now() - dob_.getTime() );
+                    // const ageYear = ageDate.getUTCFullYear();
+                    // const age = ageYear - 1970;
+                    minDateOfBirth = moment().subtract(21, 'years').format('YYYY-MM-DD')
+                    
+                    return dob >= minDateOfBirth;
 
                 }catch(exception) {
                     debug('ageCustomerSchema==', exception.message);
                     return false;
                 };
             },
-            // TODO: why use UTCFullYear instead of FullYear? 
-            message: "Age should be minimum 18."
+            message: "Age should be minimum 21."
         },
     },
 

@@ -1,12 +1,19 @@
-const jwt = require('jsonwebtoken');
-const User = require('./userModel');
-const mongoose = require('mongoose');
+const config = require('config')
+const jwt = require('jsonwebtoken')
+const User = require('./userModel')
+const mongoose = require('mongoose')
 const moment = require('moment-timezone')
+const { boolean } = require('joi')
 
 
 const schemaOptions = {timestamps: true, toJSON: {virtuals: true}, id: false};
 
 const lenderSchema = new mongoose.Schema({
+    id: {
+        type: Number,
+        unique: true
+    },
+
     companyName: {
         type: String,
         trim: true,
@@ -37,6 +44,7 @@ const lenderSchema = new mongoose.Schema({
 
     phone: {
         type: String,
+        unique: true,
         length: 11,
         trim: true,
         required: true
@@ -47,6 +55,16 @@ const lenderSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         required: true
+    },
+
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
+
+    active: {
+        type: Boolean,
+        default: false
     },
 
     password: {
@@ -66,8 +84,6 @@ const lenderSchema = new mongoose.Schema({
         }
     },
 
-    active: Boolean,
-
     role: {
         type: String,
         default: 'Lender'
@@ -78,13 +94,17 @@ const lenderSchema = new mongoose.Schema({
         default: 0
     },
 
-    lastReferenceCode: String,
+    lastReferenceCode: {
+        type: String,
+        default: null
+    },
 
     // TODO: Work on auto generating url
     lenderURL: {
         type: String,
         trim: true,
         lowercase: true,
+        default: null
     },
     // TODO: Should there be more than one admin?
     adminUser: {
@@ -96,6 +116,11 @@ const lenderSchema = new mongoose.Schema({
     lastLoginTime: {
         type: Date,
         default: null
+    },
+
+    timeZone: {
+        type: String,
+        default: 'Africa/Lagos'
     }
 
 }, schemaOptions); 
@@ -115,16 +140,17 @@ lenderSchema.virtual('lastLoginTimeTZAdjusted').get(function() {
 
 lenderSchema.methods.generateToken = function() {
     return jwt.sign({
-        lenderId: this._id, 
+        id: this._id, 
         companyName: this.companyName, 
         email: this.email,
         phone: this.phone,
+        active: this.active,
+        emailVerified: this.emailVerified,
         role: this.role,
         balance: this.balance,
         adminUser: !!this.adminUser,
         lastLoginTime: this.lastLoginTime
-    }, 
-    process.env.JWT_PRIVATE_KEY);
+    }, config.get('jwt_secret'));
 }
 
 const Lender = mongoose.model('Lender', lenderSchema);

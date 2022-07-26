@@ -13,19 +13,19 @@ const userSchema = new mongoose.Schema({
     },
 
     name: {
-        firstName: {
+        first: {
             type: String,
             trim:true,
             required: true
         },
     
-        lastName: {
+        last: {
             type: String,
             trim:true,
             required: true  
         },
     
-        middleName: {
+        middle: {
             type: String,
             minLength: 3,
             maxLength: 50,
@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: function() {
-            return this.name.firstName.concat(this.name.middleName ? ` ${this.name.middleName}` : '', ` ${this.name.lastName}`);
+            return this.name.first.concat(this.name.middle ? ` ${this.name.middle}` : '', ` ${this.name.last}`);
         }
     },
     
@@ -140,8 +140,8 @@ userSchema.methods.generateToken = function() {
     return jwt.sign({
         id: this._id, 
         lenderId: this.lenderId,
-        firstName: this.name.firstName, 
-        lastName: this.name.lastName,
+        firstName: this.name.first, 
+        lastName: this.name.last,
         email: this.email,
         role: this.role,
         active: this.active,

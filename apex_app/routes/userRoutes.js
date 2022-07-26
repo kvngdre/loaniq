@@ -5,6 +5,17 @@ const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/userValidator');
 const userController  = require('../controllers/userController');
 
+
+router.post('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
+    const { error } = userValidators.validateSignUp(req.body);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    const user = await userController.create(req.body, req.user);
+    if(user instanceof Error) return res.status(400).send(user.message)
+
+    return res.status(201).send(user);
+});
+
 router.get('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
     const users = await userController.getAll( { lenderId: req.user.lenderId } );
     if(users.length === 0) return res.status(404).send('No users registered.');
@@ -19,14 +30,14 @@ router.get('/:id', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res
     return res.status(200).send(user);
 });
 
-router.post('/', verifyToken, verifyRole(['Lender', 'Admin']), async (req, res) => {
-    const { error } = userValidators.validateSignUp(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent', 'origin-master']), async (req, res) => {
+    const { error } = userValidators.validateEdit(req.body);
+    if(error)  return res.status(400).send(error.details[0].message);
+    
+    const user = await userController.update(req.params.id, req.user, req.body);
+    if(user instanceof Error) return res.status(400).send(user.message);
 
-    const user = await userController.create(req.body, req.user);
-    if(user instanceof Error) return res.status(400).send(user.message)
-
-    return res.status(201).send(user);
+    return res.status(200).send({message: 'Update Successful', user})
 });
 
 router.post('/verify', async (req, res) => {
@@ -63,17 +74,9 @@ router.post('/change-password', async (req, res) => {
     return res.status(200).send(user);
 });
 
-router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent', 'origin-master']), async (req, res) => {
-    const { error } = userValidators.validateEdit(req.body);
-    if(error)  return res.status(400).send(error.details[0].message);
-    
-    const user = await userController.update(req.params.id, req.user, req.body);
-    if(user instanceof Error) return res.status(400).send(user.message);
 
-    return res.status(200).send({message: 'Update Successful', user})
-});
 
-router.post('/send-otp', async (req, res) => {
+router.post('/otp', async (req, res) => {
     const { error } = userValidators.validateEmail(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     

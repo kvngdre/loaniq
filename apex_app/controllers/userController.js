@@ -65,7 +65,7 @@ const userFuncs = {
                         otp: generateOTP(),
                         role: requestBody.role,
                         active: requestBody.active,
-                        lenderId: user.lenderId
+                        lenderId: user.id
                     });
                     break;
 
@@ -182,7 +182,7 @@ const userFuncs = {
 
             if(user.emailVerified) throw new Error('User already verified');
             
-            if( (requestBody.otp !== user.otp.OTP) || (Date.now() > user.otp.expirationTime) ) throw new Error('Invalid OTP');
+            if( (Date.now() > user.otp.expirationTime) || (requestBody.otp !== user.otp.OTP) ) throw new Error('Invalid OTP');
              
             user.token = user.generateToken();
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'phone', 'email', 'role', 'lastLoginTimeTZAdjusted', 'token'])
@@ -190,7 +190,7 @@ const userFuncs = {
             await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
             
             return {
-                message: "Email verified and account activated",
+                message: 'Email verified and account activated',
                 user: authUser
             }
 
