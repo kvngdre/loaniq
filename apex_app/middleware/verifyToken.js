@@ -1,6 +1,6 @@
-const config = require('config');
-const jwt = require('jsonwebtoken');
-const debug = require('debug')('app:verfToken');
+const config = require('config')
+const jwt = require('jsonwebtoken')
+const debug = require('debug')('app:verifyToken')
 
 
 function verifyToken(req, res, next) {
@@ -17,16 +17,12 @@ function verifyToken(req, res, next) {
     
         const isVerified = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
 
-        // if(isVerified !== req.header("timeZone")) {
-        //     // update user timezone
-        // }
-        // if(!isVerified.active) 
         req.user = isVerified;
 
         next();
 
     }catch(exception) {
-        debug(exception.message);
+        debug(exception.message)
         return res.status(400).send('Invalid token provided');
     };
 }

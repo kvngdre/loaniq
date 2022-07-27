@@ -10,48 +10,52 @@ const userController = require('../controllers/userController');
 
 
 const lender = {
-    createLender: async function (requestBody) {
+    create: async function(requestBody) {
         try{
             const doesExist = await Lender.findOne({ email: requestBody.email });
-            if (doesExist) throw new Error('Email has already been taken');
+            if(doesExist) throw new Error('Email has already been taken');
 
             const encryptedPassword = await bcrypt.hash(requestBody.password, config.get('salt_rounds'));
             requestBody.password = encryptedPassword;
 
             requestBody.otp = generateOTP();
+            
+            const newLender = new Lender(requestBody);
+            await newLender.save();
+            console.log(newLender)
 
-            const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, requestBody.otp.OTP);
-            if(mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-
-            const newLender = await Lender.create(requestBody);
+            // const mailResponse = await sendOTPMail(requestBody.email, requestBody.companyName, requestBody.otp.OTP);
+            // if(mailResponse instanceof Error) {
+            //     debug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
 
             return {
                 // TODO: remove otp from response
-                message: 'Lender created and OTP sent to email.',
-                user: _.pick(newLender, [
+                message: 'Lender created and OTP sent to email',
+                lender: _.pick(newLender, [
                     '_id',
                     'companyName',
                     'phone',
                     'email',
                     'active',
+                    'emailVerified',
                     'balance',
                     'otp.OTP',
                     'adminUser',
                     'lenderURL',
-                    'lastLoginTIme'
+                    'lastLoginTime',
+                    'lastLoginTImeTZAdjusted'
                 ])
             };
-        } catch (exception) {
+        }catch(exception) {
             // TODO: handle duplicates here
             debug(exception);
             return exception;
         }
     },
 
-    getAll: async function () {
+    getAll: async function() {
         try{
             const lenders = await Lender.find()
                                         .select('-password -otp')
@@ -108,10 +112,11 @@ const lender = {
 
             if( (Date.now() > lender.otp.expirationTime) || (requestBody.otp !== lender.otp.OTP) ) throw new Error('Invalid OTP');
 
-            lender.token = lender.generateToken()
+            lender._doc.token = lender.generateToken()
             await lender.updateOne({ emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: new Date() })
 
             const authLender = _.omit(lender._doc, ['password', 'otp'])
+            console.log(lender)
 
             return {
                 message: 'Email verified and account activated',
@@ -133,6 +138,7 @@ const lender = {
             if (!isValidPassword) throw new Error('Invalid email or password.');
 
             if((lender.lastLoginTime === null || !lender.emailVerified) && !lender.active) {
+                console.log(lender)
                 return {
                     message: 'New Lender',
                     lender: _.omit(lender._doc, ['password', 'otp'])
@@ -141,7 +147,8 @@ const lender = {
 
             if(lender.lastLoginTime !== null && lender.emailVerified && !lender.active) throw new Error('Account inactive. Contact administrator');
 
-            lender.token = lender.generateToken();
+            lender._doc.token = lender.generateToken();
+            console.log(lender)
             await lender.updateOne( { lastLoginTime: new Date() } )
 
             const authLender = _.omit(lender._doc, ['password', 'otp'])
@@ -241,15 +248,15 @@ const lender = {
     sendOTP: async function(email, template) {
         try{
             const lender = await Lender.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
-                                       .select('otp')
+                                       .select(['email', 'otp'])
             if(!lender) throw new Error('Lender not found');
 
-            const mailResponse = await sendOTPMail(email, lender.companyName, lender.otp.OTP);
-            if(mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                throw new Error('Error sending OTP. Try again.');
-            };
-            
+            // const mailResponse = await sendOTPMail(email, lender.companyName, lender.otp.OTP);
+            // if(mailResponse instanceof Error) {
+            //     debug(`Error sending OTP: ${mailResponse.message}`);
+            //     throw new Error('Error sending OTP. Try again.');
+            // };
+
             return {
                 message: 'OTP sent to email',
                 otp: lender.otp.OTP,

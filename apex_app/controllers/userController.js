@@ -200,25 +200,25 @@ const userFuncs = {
         };
     },
 
-    login: async function(requestBody) {
+    login: async function(email, password) {
         try{
-            const user = await User.findOne( {email: requestBody.email} );
+            const user = await User.findOne( { email } );
             if(!user) throw new Error('Invalid email or password');
             
-            const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
+            const isValidPassword = await bcrypt.compare(password, user.password);
             if(!isValidPassword)  throw new Error('Invalid email or password');
-
+            
             if((user.lastLoginTime === null || !user.emailVerified) && !user.active) {
                 return {
                     message: 'New User',
                     user: _.omit(user._doc, ['password', 'otp', 'displayName'])
                 };
             };
-
+            
             if(user.lastLoginTime !== null && user.emailVerified && !user.active) throw new Error('Account inactive. Contact administrator');
 
             user.token = user.generateToken()
-            authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'token']);
+            authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'lastLoginTimeTZAdjusted', 'token']);
 
             // TODO: discuss last login time if before or after now
             await user.updateOne( { lastLoginTime: Date.now() } );

@@ -47,6 +47,7 @@ const loans = {
     },
 
     getDisbursement: async function(user, requestBody) {
+        // TODO: handle end date on the controller function
         let queryParams = { lenderId: user.lenderId, active: true, disbursed: false, status: 'Approved' };
 
         queryParams = Object.assign(queryParams, _.omit(requestBody, ['start', 'end']))

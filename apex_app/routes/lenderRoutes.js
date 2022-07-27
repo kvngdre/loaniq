@@ -10,7 +10,7 @@ router.post('/', async (req, res) => {
     const { error } = lenderValidators.creation(req.body);
     if(error) return res.status(404).send(error.details[0].message);
 
-    const lender = await lenderController.createLender(req.body);
+    const lender = await lenderController.create(req.body);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
     //TODO: generate lender url with auto increment field.
@@ -25,14 +25,14 @@ router.get('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
 });
 
 router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
-    const settings = await lenderController.getSettings( { lenderId: req.user.id } );
+    const settings = await lenderController.getSettings( { lenderId: req.user.lenderId } );
     if(settings instanceof Error) return res.status(404).send(settings.message);
 
     return res.status(200).send(settings);
 });
 
 router.get('/:id?', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
-    const id = req.params.id ? req.params.id : req.user.id
+    const id = req.params.id ? req.params.id : req.user.lenderId
 
     const lender = await lenderController.getOne(id);
     if(lender instanceof Error) return res.status(404).send(lender.message);
