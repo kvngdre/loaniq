@@ -37,7 +37,7 @@ async function getValidator(req_, customerSegment = null) {
   }
 }
 
-router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
+router.post('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const loans = await loanController.getAll(req.user, req.body);
     if(loans instanceof Error) return res.status(404).send(loans.message);
 
@@ -60,7 +60,7 @@ router.get('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), a
   }
 );
 
-router.post('/create-loan-request', verifyToken, verifyRole(['Admin', 'Loan Agent', 'guest']), async (req, res) => {
+router.post('/create-loan-request', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req, res) => {
     const validatorObj = await getValidator(req);
     if (validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
 

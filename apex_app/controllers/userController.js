@@ -220,7 +220,6 @@ const userFuncs = {
             user.token = user.generateToken()
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'email', 'role', 'lastLoginTime', 'lastLoginTimeTZAdjusted', 'token']);
 
-            // TODO: discuss last login time if before or after now
             await user.updateOne( { lastLoginTime: Date.now() } );
 
             return {

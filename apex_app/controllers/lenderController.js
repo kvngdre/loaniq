@@ -108,7 +108,7 @@ const lender = {
             const isValidPassword = await bcrypt.compare(requestBody.password, lender.password);
             if(!isValidPassword) throw new Error('Incorrect email or password');
 
-            if(lender.emailVerified) throw new Error('Email already verified');
+            if(lender.emailVerified) throw new Error('Email has been verified');
 
             if( (Date.now() > lender.otp.expirationTime) || (requestBody.otp !== lender.otp.OTP) ) throw new Error('Invalid OTP');
 
@@ -133,6 +133,7 @@ const lender = {
         try {
             const lender = await Lender.findOne({ email })
             if(!lender) throw new Error('Invalid email or password.');
+            console.log(lender)
 
             const isValidPassword = await bcrypt.compare(password, lender.password)
             if (!isValidPassword) throw new Error('Invalid email or password.');
@@ -148,8 +149,8 @@ const lender = {
             if(lender.lastLoginTime !== null && lender.emailVerified && !lender.active) throw new Error('Account inactive. Contact administrator');
 
             lender._doc.token = lender.generateToken();
-            console.log(lender)
             await lender.updateOne( { lastLoginTime: new Date() } )
+
 
             const authLender = _.omit(lender._doc, ['password', 'otp'])
 

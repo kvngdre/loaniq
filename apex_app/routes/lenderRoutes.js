@@ -44,7 +44,7 @@ router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.update(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const id = req.params.id ? req.params.id : req.user.id
+    const id = req.params.id ? req.params.id : req.user.lenderId
 
     const lender = await lenderController.update(id, req.body)
     if(lender instanceof Error) return res.status(404).send(lender.message);

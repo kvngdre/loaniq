@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const debug = require('debug')('app:userRoutes');
 const verifyRole  = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/userValidator');
@@ -60,7 +59,7 @@ router.post('/login', async (req, res) => {
     return res.status(200).send(isLoggedIn);
 });
 
-router.post('/change-password', async (req, res) => {
+router.post('/password', async (req, res) => {
     const { error } = userValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 

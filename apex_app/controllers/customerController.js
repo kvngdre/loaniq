@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const Loan = require('../models/loanModel');
+const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customerModel');
@@ -41,48 +42,49 @@ const customer = {
             let customers = [];
             
             if(user.role === 'Loan Agent') {
-                // return await Loan.find( { loanAgent: user.id } )
-                //                  .populate({path: 'customer', model: Customer, populate:[{path: 'employmentInfo.segment', model: Segment, select: '-_id code'}], select: [
-                //                      'name', 
-                //                      'dateOfBirth',
-                //                      'netPay',
-                //                      'employmentInfo.ippis',
-                //                      'employmentInfo.segment',
-                //                      'employmentInfo.dateOfEnlistment'
-                //                  ]})
-                //                  .select('-_id customer')
-                //                 //  .distinct('customer')
-                customers = await Loan.aggregate([
-                    {
-                        $match: {
-                            lenderId: mongoose.Types.ObjectId(user.lenderId),
-                            loanAgent: mongoose.Types.ObjectId(user.id)
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: "$customer"
-                        }
-                    },
-                    // {
-                    //     $lookup:{
-                    //         from: 'customers',
-                    //         localField: '_id',
-                    //         foreignField: '_id',
-                    //         as: 'customerData'
-                    //     }
-                    // },
-                    // {
-                    //     $project:{
-                    //         customerData: {createdAt: 0, updatedAt: 0, __v: 0}
-                    //     }
-                    // },
-                    // {
-                    //     $project:{
-                    //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
-                    //     }
-                    // }
-                ]).exec()
+                customers = await Loan.find( { loanAgent: user.id } )
+                                 .populate({path: 'customer', model: Customer, populate:[{path: 'employmentInfo.segment', model: Segment, select: '-_id code'}, {path: 'employmentInfo.state', model: State}], select: [
+                                     'name', 
+                                     'dateOfBirth',
+                                     'netPay',
+                                     'employmentInfo.ippis',
+                                     'employmentInfo.segment',
+                                     'employmentInfo.dateOfEnlistment'
+                                 ]})
+                                 .select('-_id customer')
+                                //  .distinct('customer')
+
+                // customers = await Loan.aggregate([
+                //     {
+                //         $match: {
+                //             lenderId: mongoose.Types.ObjectId(user.lenderId),
+                //             loanAgent: mongoose.Types.ObjectId(user.id)
+                //         }
+                //     },
+                //     {
+                //         $group: {
+                //             _id: "$customer"
+                //         }
+                //     },
+                //     // {
+                //     //     $lookup:{
+                //     //         from: 'customers',
+                //     //         localField: '_id',
+                //     //         foreignField: '_id',
+                //     //         as: 'customerData'
+                //     //     }
+                //     // },
+                //     // {
+                //     //     $project:{
+                //     //         customerData: {createdAt: 0, updatedAt: 0, __v: 0}
+                //     //     }
+                //     // },
+                //     // {
+                //     //     $project:{
+                //     //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
+                //     //     }
+                //     // }
+                // ]).exec()
 
             }else{
                 let queryParams = _.omit(requestBody, ['start', 'end', 'segments', 'netPay', 'name']);
@@ -95,7 +97,7 @@ const customer = {
                 console.log(queryParams)
                 customers = await Customer.find( queryParams )
                                           .select('-__v')
-                                        //   .populate('employmentInfo.segment')
+                                          .populate('employmentInfo.segment')
                                           .sort('-_id');
             };
 

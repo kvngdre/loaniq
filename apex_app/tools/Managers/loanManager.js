@@ -93,7 +93,7 @@ const manager = {
 
         if (loans.length > 0) request.body.loanType = 'topUp';
 
-        let agent;
+        let agent = null;
         if (request.user.role === 'Loan Agent') {
             agent = await userController.get({
                 _id: request.user.id,
@@ -106,13 +106,9 @@ const manager = {
             agent = await pickRandomUser(request.user.lenderId, 'Loan Agent', customer.employmentInfo.segment);
         }else if(!agent) { agent = await userController.get( { _id: loans[0].loanAgent } ) }
 
-        if(!agent) throw new Error('Invalid loan agent');
+        if(!agent) throw new Error('Could not assign loan agent');
 
-        let creditOfficer = await pickRandomUser(
-            request.user.lenderId,
-            'Credit',
-            customer.employmentInfo.segment
-        );
+        let creditOfficer = await pickRandomUser(request.user.lenderId, 'Credit', customer.employmentInfo.segment);
         if (!creditOfficer) {
             debug(creditOfficer);
             throw new Error('Could not assign credit officer');
@@ -149,7 +145,7 @@ const manager = {
   },
   getAll: async function (user, queryParams) {
     try{
-        const loans = await Loan.find( queryParams ).sort('-_id');
+        const loans = await Loan.find( queryParams ).sort('-createdAt');
         if(loans.length == 0) throw new Error('No loans found');
 
         return loans;

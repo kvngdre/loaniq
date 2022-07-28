@@ -1,10 +1,11 @@
 const _ = require('lodash');
+const moment = require('moment-timezone')
 const loanManager = require('../tools/Managers/loanManager');
 
 
 const loans = {
     createLoanRequest: async function(loanMetricsObj, request) {
-        if(request.user.role === 'guest') request.user.lenderId = request.params.id;
+        // if(request.user.role === 'guest') request.user.lenderId = request.params.id;
 
         return await loanManager.createLoanRequest(loanMetricsObj, request);
     },
@@ -13,20 +14,31 @@ const loans = {
         return await loanManager.createLoan(customer, loanMetricsObj, request);
     },
 
-    getAll: async function(user, requestBody) {
+    getAll: async function(user, filters) {
         let queryParams = { lenderId: user.lenderId };
-
         if(user.role === 'Loan Agent') {
             queryParams.loanAgent = user.id;
             return await loanManager.getAll(user, queryParams);
         };
 
-        queryParams = Object.assign(queryParams, _.omit(requestBody, ['start', 'end', 'loanAmount', 'tenor']))
-        if(requestBody.tenor) queryParams.recommendedTenor = { $gte: requestBody.tenor }
-        
-        if(requestBody.loanAmount) queryParams.recommendedAmount = { $gte: requestBody.loanAmount }
-        
-        if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lt: (requestBody.end ? requestBody.end : "2122-01-01") }
+        queryParams = Object.assign(queryParams, _.omit(filters, ['date', 'amount', 'tenor']))
+        if(filters.date?.start) queryParams.createdAt = { $gte: filters.date.start};
+        if(filters.date?.end) {
+            const target = queryParams.createdAt ? queryParams.createdAt : {}
+            queryParams.createdAt = Object.assign(target , {$lte: moment.tz(filters.date.end, 'Africa/Lagos').tz('UTC').format()})
+        };
+
+        if(filters.amount?.start) queryParams.recommendedAmount = { $gte: filters.amount.start};
+        if(filters.amount?.end) {
+            const target = queryParams.recommendedAmount ? queryParams.recommendedAmount : {}
+            queryParams.recommendedAmount = Object.assign(target , {$lte: filters.amount.end,})
+        };
+
+        if(filters.tenor?.start) queryParams.recommendedTenor = { $gte: filters.tenor.start};
+        if(filters.tenor?.end) {
+            const target = queryParams.recommendedTenor ? queryParams.recommendedTenor : {}
+            queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.end })
+        };
 
         return await loanManager.getAll(user, queryParams);
     },
