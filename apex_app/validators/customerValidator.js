@@ -4,15 +4,15 @@ Joi.objectId = require('joi-objectid')(Joi);
 
 
 const nameSchema = Joi.object({
-    firstName: Joi.string()
+    first: Joi.string()
                   .min(3)
                   .max(50),
 
-    lastName: Joi.string()
+    last: Joi.string()
                  .min(3)
                  .max(50),
 
-    middleName: Joi.string()
+    middle: Joi.string()
                    .min(3)
                    .max(50),
 });
@@ -24,12 +24,19 @@ const dateOfBirthSchema = Joi.date()
                              .less('now')
                              .message({'date.less': 'Date of Birth must be valid.'});
 
-const residentialAddressSchema = Joi.object({
+const addressSchema = Joi.object({
     street: Joi.string()
                .min(5)
                .max(255),
 
-    state: Joi.objectId()
+    state: Joi.string(),
+
+    stateCode: Joi.string()
+                  .length(2),
+
+    lga: Joi.string(),
+
+    geo: Joi.string()
 });
 
 const contactSchema = Joi.object({
@@ -53,9 +60,7 @@ const employmentSchema = Joi.object({
               .uppercase()
               .messages({'string.pattern.base': '{#label} Invalid IPPIS number.'}),
 
-    companyLocation: Joi.string().lowercase(),
-
-    state: Joi.objectId(),
+    companyLocation: addressSchema,
 
     dateOfEnlistment: Joi.date()
                          .greater(Joi.ref('...dateOfBirth', { adjust: (value) => {
@@ -77,18 +82,14 @@ const idSchema = Joi.object({
 });
 
 const nokSchema = Joi.object({
-    name: Joi.string(),
+    fullName: Joi.string(),
 
-    address: Joi.object({
-        street: Joi.string(),
-
-        state: Joi.objectId()
-    }),
+    address: addressSchema,
 
     phone: Joi.string()
               .pattern(/^0([7-9])([0,1])[0-9]{8}$/)
               .message({
-                "string.pattern.base": "Invalid phone number."
+                "string.pattern.base": "Invalid phone number"
               }),
 
     relationship: Joi.string()
@@ -100,7 +101,10 @@ const accountInfoSchema = Joi.object({
     salaryAccountNumber: Joi.string()
                             .pattern(/^[0-9]{10}$/),
 
-    bank: Joi.objectId()
+    bank: {
+        name: Joi.string(),
+        code: Joi.string()
+    }
 });
 
 const netPaySchema = Joi.object({
@@ -116,9 +120,9 @@ const validators = {
 
             dateOfBirth: dateOfBirthSchema.required(),
 
-            residentialAddress: residentialAddressSchema.required(),
+            residentialAddress: addressSchema.required(),
 
-            contact: contactSchema.required(),
+            contactInfo: contactSchema.required(),
 
             maritalStatus: Joi.string().required(),
 
@@ -148,9 +152,9 @@ const validators = {
             dateOfBirth: dateOfBirthSchema,
 
             // TODO: Add required to fields.
-            residentialAddress: residentialAddressSchema,
+            residentialAddress: addressSchema,
 
-            contact: contactSchema,
+            contactInfo: contactSchema,
 
             maritalStatus: Joi.string(),
 

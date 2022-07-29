@@ -1,20 +1,52 @@
 const moment = require('moment')
-const Bank = require('./bankModel')
 const Loan = require('./loanModel')
 const mongoose = require('mongoose')
-const State = require('./stateModel')
 const Segment = require('./segmentModel')
 const debug = require('debug')('app:customerModel')
 
 
+const schemaOptions = {timestamps: true}
+
+const addressSchema = {
+    street: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        required: true
+    },
+
+    state: {
+        type: String,
+        required: true
+    },
+
+    stateCode: {
+        type: String,
+        uppercase: true,
+        required: true
+    },
+
+    lga: {
+        type: String,
+        required: true
+    },
+
+    geo: {
+        type: String,
+        required: true
+    }
+};
+
 const customerSchema = new mongoose.Schema({
     passport: {
         path: {
-            type: String
+            type: String,
+            default: null
         },
 
         originalName: {
-            type: String
+            type: String,
+            default: null
         }
     },  
 
@@ -61,16 +93,13 @@ const customerSchema = new mongoose.Schema({
         type: Date,
         required: true,
         validate: {
-            // Validate age is over 21
             validator: (dob) => {
                 try{
-                    // const dob_ = new Date(dob);
-                    // const ageDate = new Date( Date.now() - dob_.getTime() );
-                    // const ageYear = ageDate.getUTCFullYear();
-                    // const age = ageYear - 1970;
+                    dob = (new Date(dob))
+                    console.log(dob)
                     minDateOfBirth = moment().subtract(21, 'years').format('YYYY-MM-DD')
-                    
-                    return dob >= minDateOfBirth;
+                    console.log(dob.substring(0, 10), minDateOfBirth)
+                    return dob <= minDateOfBirth;
 
                 }catch(exception) {
                     debug('ageCustomerSchema==', exception.message);
@@ -81,27 +110,11 @@ const customerSchema = new mongoose.Schema({
         },
     },
 
-    residentialAddress: {
-        street: {
-            type: String,
-            minLength: 5,
-            maxLength: 255,
-            trim: true,
-            lowercase: true,
-            required: true
-        },
-    
-        state: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'State',
-            required: true
-        }
-    },
+    residentialAddress: addressSchema,
 
-    contact: {
+    contactInfo: {
         phone: {
             type: String,
-            unique: true,
             trim: true,
             required: true
         },
@@ -110,7 +123,7 @@ const customerSchema = new mongoose.Schema({
             type: String,
             lowercase: true,
             trim: true,
-            required: true
+            default: null
         }
     },
     
@@ -124,8 +137,6 @@ const customerSchema = new mongoose.Schema({
             'Widow',
             'Widower'
         ],
-        default: 'Single',
-        trim: true,
         required: true
     },
 
@@ -138,11 +149,13 @@ const customerSchema = new mongoose.Schema({
 
     idCard: {
         path: {
-            type: String
+            type: String,
+            default: null
         },
 
         originalName: {
-            type: String
+            type: String,
+            default: null
         }
     },
 
@@ -159,16 +172,12 @@ const customerSchema = new mongoose.Schema({
             required: true
         },
     
-        idCardUrl: {
-            type: String
-        },
-    
         idNumber: {
             type: String,
             minLength: 4,
             maxLength: 50,
             trim: true,
-            required: true
+            required: true,
         }
     },
     
@@ -181,26 +190,31 @@ const customerSchema = new mongoose.Schema({
 
         ippis: {
             type: String,
-            trim: true,
             uppercase: true,
             unique: true,
-            required: true
-        },
-    
-        companyLocation: {
-            type: String,
-            minLength: 6,
-            maxLength: 255,
             trim: true,
-            lowercase: true,
-            required: true
+            required: true,
+            validate: {
+                validator: (ippisNo) => {
+                    try{
+                        console.log('======', this)
+                        const segment = Segment.findById(this.employmentInfo.segment)
+                        if(!segment) throw new Error('Segment not found')
+
+                        const ippisPrefix = ippisNo.match(/^[A-Z]{2,3}(?=[0-9])/)
+                        if(segment.ippisPrefix !== ippisPrefix) return false;
+
+                        return true;
+
+                    }catch(exception) {
+                        debug('ippis mongodb validator error=>', exception)
+                    }
+                }
+            },
+            message: 'IPPIS Number does not match segment selected'
         },
     
-        state:{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'State',
-            required: true
-        },
+        companyLocation: addressSchema,
     
         dateOfEnlistment: {
             type: Date,
@@ -209,28 +223,14 @@ const customerSchema = new mongoose.Schema({
     },   
     
     nok: {
-        name: {
+        fullName: {
             type: String,
             trim: true,
             required: true
             
         },
     
-        address: {
-            street: {
-                type: String,
-                trim: true,
-                lowercase: true,
-                required: true
-            },
-
-            state: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'State',
-                required: true
-            },
-
-        },
+        address: addressSchema,
     
         phone: {
             type: String,
@@ -241,16 +241,16 @@ const customerSchema = new mongoose.Schema({
         relationship: {
             type: String,
             enum: [ 
+                'Daughter',
                 'Brother',
                 'Cousin',
-                'Daughter',
                 'Father',
                 'Mother',
                 'Nephew',
-                'Niece',
                 'Sister',
-                'Son',
                 'Spouse',
+                'Niece',
+                'Son',
                 ],
             required: true
         },
@@ -259,9 +259,9 @@ const customerSchema = new mongoose.Schema({
     accountInfo: {
         salaryAccountName: {
             type: String,
-            trim: true,
             lowercase: true,
-            required: true    
+            required: true,
+            trim: true,
         },
     
         salaryAccountNumber: {
@@ -271,16 +271,24 @@ const customerSchema = new mongoose.Schema({
         },
     
         bank: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Bank',
-            required: true
+            name: {
+                type: String,
+                required: true
+            },
+
+            code: {
+                type: String,
+                maxLength: 6,
+                required: true
+            }
         },
     },
 
     // below are set programmatically. No user can edit.
     netPay: {
         value:{
-            type: Number
+            type: Number,
+            default: null
         },
 
         updatedAt: {
@@ -295,9 +303,7 @@ const customerSchema = new mongoose.Schema({
         default: false
     }   
 
-}, {
-    timestamps: true
-});
+}, schemaOptions);
 
 customerSchema.methods.validateSegment = async function() {
     const segments = await Segment.find().select('ippisPrefix');
@@ -308,7 +314,7 @@ customerSchema.methods.validateSegment = async function() {
     const segmentObj = segments.find(segment => segment.ippisPrefix === foundMatch);
 
     this.employmentInfo.segment = segmentObj._id.toString()  
-}
+};
 
 
 customerSchema.pre('save', async function (next) {
@@ -325,13 +331,8 @@ customerSchema.pre('save', async function (next) {
         });
     };
 
-    // capitalize names
-    // TODO: can front end handle this. 
-    // this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
-    // this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
-    // if(this.name.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
-    
     next();
+
   });
 
 const Customer = mongoose.model('Customer', customerSchema);
