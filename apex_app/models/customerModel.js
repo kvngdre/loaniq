@@ -96,9 +96,8 @@ const customerSchema = new mongoose.Schema({
             validator: (dob) => {
                 try{
                     dob = (new Date(dob)).toISOString().substring(0, 10)
-                    console.log(dob)
-                    minDateOfBirth = moment().subtract(21, 'years').format('YYYY-MM-DD')
-                    console.log(dob.substring(0, 10), minDateOfBirth)
+                    const minDateOfBirth = moment().subtract(21, 'years').format('YYYY-MM-DD')
+                    
                     return dob <= minDateOfBirth;
 
                 }catch(exception) {
@@ -195,19 +194,19 @@ const customerSchema = new mongoose.Schema({
             trim: true,
             required: true,
             validate: {
-                validator: function(ippisNo) {
+                validator: async function(ippisNo) {
                     try{
-                        console.log('======', this)
-                        const segment = Segment.findById(this.employmentInfo.segment)
+                        const segment = await Segment.findById(this.employmentInfo.segment)
                         if(!segment) throw new Error('Segment not found')
 
                         const ippisPrefix = ippisNo.match(/^[A-Z]{2,3}(?=[0-9])/)
-                        if(segment.ippisPrefix !== ippisPrefix) return false;
+                        if(segment.ippisPrefix !== ippisPrefix[0]) return false;
 
                         return true;
 
                     }catch(exception) {
                         debug('ippis mongodb validator error=>', exception)
+                        return false;
                     }
                 },
                 message: '>>IPPIS Number does not match segment selected'
@@ -307,16 +306,20 @@ const customerSchema = new mongoose.Schema({
 }, schemaOptions);
 
 customerSchema.methods.validateSegment = async function() {
-    const segments = await Segment.find().select('ippisPrefix');
+    try{
+        const segment = await Segment.findById(this.employmentInfo.segment)
+        if(!segment) return {error: {message: 'Segment not found'}};
 
-    let foundMatch = this.employmentInfo.ippis.match(/[A-Z]{2,3}/)
-    !foundMatch ? foundMatch = '' : foundMatch = foundMatch[0]
+        const ippisPrefix = this.employmentInfo.ippis.match(/^[A-Z]{2,3}(?=[0-9])/)
+        if(segment.ippisPrefix !== ippisPrefix[0]) return {error: {message: 'IPPIS Number does not match segment selected'}};
 
-    const segmentObj = segments.find(segment => segment.ippisPrefix === foundMatch);
+        return true;
 
-    this.employmentInfo.segment = segmentObj._id.toString()  
+    }catch(exception) {
+        debug(exception)
+        return exception;
+    };
 };
-
 
 customerSchema.pre('save', async function (next) {
     const loanEditTrigger = ['dateOfBirth', 'employmentInfo.dateOfEnlistment'];
@@ -325,16 +328,17 @@ customerSchema.pre('save', async function (next) {
         console.log('triggered');
 
         const loans = await Loan.find( { customer: this._id, status: 'pending' } );
-        loans.forEach( async loan => {
-            loan.set({'validationParams.dob': this.dateOfBirth})
-            loan.set({'validationParams.doe': this.employmentInfo.dateOfEnlistment})
-            await loan.save();
-        });
+        if(loans.length > 0) {
+            loans.forEach( async loan => {
+                loan.set({'validationParams.dob': this.dateOfBirth})
+                loan.set({'validationParams.doe': this.employmentInfo.dateOfEnlistment})
+                await loan.save();
+            })
+        };
     };
 
-    next();
-
-  });
+    next()
+});
 
 const Customer = mongoose.model('Customer', customerSchema);
 

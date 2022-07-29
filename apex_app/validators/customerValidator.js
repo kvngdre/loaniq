@@ -140,7 +140,7 @@ const validators = {
             netPay: netPaySchema.required()
         });
 
-    return schema.validate(customer);
+        return schema.validate(customer);
     },
 
     validateEdit: function(customer) {     

@@ -9,32 +9,7 @@ const generateOTP = require('../utils/generateOTP');
 const generateRandomPassword = require('../utils/generatePassword');
 
 
-const userFuncs = {
-    getAll: async function(queryParam={}) {
-        try{
-            return await User.find(queryParam)
-                              .select('-password -otp -__v')
-                              .sort('name.firstName');
-        }catch(exception) {
-            debug(exception);
-            return exception;
-        }
-    },
-
-    get: async function(queryParam) {
-        try{
-            const user = await User.findOne( queryParam )
-                                   .select('-password -otp -__v');
-            if(!user) throw new Error('User not found')
-    
-            return user;
-
-        }catch(exception) {
-            debug(exception);
-            return exception;
-        }
-    },
-
+const userCtrlFuncs = {
     /**
      *  function creates a user.
      * @param {string} role
@@ -66,15 +41,15 @@ const userFuncs = {
                         role: requestBody.role,
                         active: requestBody.active,
                         lenderId: user.id
-                    });
+                    })
                     break;
 
                 case 'Credit':
                     // Encrypting password
-                    temporaryPassword = generateRandomPassword();
-                    encryptedPassword = await bcrypt.hash(temporaryPassword, rounds);
+                    var temporaryPassword = generateRandomPassword();
+                    var encryptedPassword = await bcrypt.hash(temporaryPassword, rounds);
 
-                    newUser = new User({
+                    var newUser = new User({
                         name: requestBody.name,
                         displayName: requestBody?.displayName,
                         phone: requestBody.phone,
@@ -85,7 +60,7 @@ const userFuncs = {
                         active: requestBody.active,
                         segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
                         lenderId: user.lenderId
-                    });
+                    })
                     break;
 
                 case 'Operations':
@@ -121,11 +96,11 @@ const userFuncs = {
                         segments: requestBody.segments === 'all' ? allSegments : requestBody.segments,
                         target: requestBody.target,
                         lenderId: user.lenderId
-                    });
+                    })
                     break;
             };
 
-            const isSaved = await newUser.save();
+            const isSaved = await newUser.save()
             newUser.password = temporaryPassword;
 
             if(isSaved) {
@@ -172,37 +147,96 @@ const userFuncs = {
         };
     },
 
+    getAll: async function(lenderId, filters={}) {
+        try{
+            let queryParams = { lenderId };
+
+            if(Object.keys(filters).length > 0) queryParams = Object.assign(queryParams, filters);
+
+            const users = await User.find( queryParams )
+                                     .select('-password -otp -__v')
+                                     .sort('name.firstName')
+            if(users.length == 0) throw new Error('Users not found');
+
+            return users;
+
+        }catch(exception) {
+            debug(exception)
+            return exception;
+        };
+    },
+
+    getOne: async function(id, filters={}) {
+        try{
+            let queryParams = {_id: id};
+            if(Object.keys(filters).length > 0) queryParams = Object.assign(queryParams, filters);
+
+            const user = await User.findOne( queryParams )
+                                   .select('-password -otp -__v');
+            if(!user) throw new Error('User not found');
+    
+            return user;
+
+        }catch(exception) {
+            debug(exception)
+            return exception;
+        };
+    },
+
+    update: async function(id, alteration, filters={}) {
+        try{
+            let queryParams = {_id: id};
+            if(Object.keys(filters).length > 0) queryParams = Object.assign(queryParams, filters);
+            
+            const user = await User.findByIdAndUpdate(queryParams, alteration, {new: true})
+                                   .select('-password');
+            if(!user) throw new Error('User not found');
+
+            // TODO: how to specify if it's a delete or ADD??
+            // TODO: ask front end if the can build the array.
+            
+            return {
+                message: 'User Updated',
+                data: user
+            };
+            
+        }catch(exception) {
+            debug(exception)
+            return exception;
+        };
+    },
+
     verifyUser: async function (requestBody) {
         try{
-            const user = await User.findOne( {email: requestBody.email} );
+            const user = await User.findOne( {email: requestBody.email} )
             if(!user) throw new Error('Invalid email or password');
 
-            const isValidPassword = await bcrypt.compare(requestBody.password, user.password);
-            if(!isValidPassword) throw new Error('Incorrect email or password');
+            const isValid = await bcrypt.compare(requestBody.password, user.password)
+            if(!isValid) throw new Error('Incorrect email or password');
 
             if(user.emailVerified) throw new Error('User already verified');
             
             if( (Date.now() > user.otp.expirationTime) || (requestBody.otp !== user.otp.OTP) ) throw new Error('Invalid OTP');
              
-            user.token = user.generateToken();
+            user.token = user.generateToken()
             authUser = _.pick(user, ['_id', 'firstName', 'lastName', 'phone', 'email', 'role', 'lastLoginTimeTZAdjusted', 'token'])
             
-            await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } );
+            await user.updateOne( { emailVerified: true, 'otp.OTP': null, active: true, lastLoginTime: Date.now() } )
             
             return {
                 message: 'Email verified and account activated',
                 user: authUser
-            }
+            };
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         };
     },
 
     login: async function(email, password) {
         try{
-            const user = await User.findOne( { email } );
+            const user = await User.findOne({ email });
             if(!user) throw new Error('Invalid email or password');
             
             const isValidPassword = await bcrypt.compare(password, user.password);
@@ -228,6 +262,7 @@ const userFuncs = {
             }
 
         }catch(exception) {
+            debug(exception)
             return exception;
         };
     },
@@ -245,8 +280,8 @@ const userFuncs = {
 
             // TODO: should I change to invalid email or password?
             if(requestBody.currentPassword) {
-                const validPassword = await bcrypt.compare(requestBody.currentPassword, user.password);
-                if(!validPassword) throw new Error('Password is incorrect');
+                const isValid = await bcrypt.compare(requestBody.currentPassword, user.password)
+                if(!isValid) throw new Error('Password is incorrect');
             };
             
             const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
@@ -259,61 +294,22 @@ const userFuncs = {
             return 'Password updated';
             
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         };
-    },
-
-    update: async function(id, requestUser, requestBody) {
-        try{
-            const user = await User.findByIdAndUpdate( { _id: id, lenderId: requestUser.lenderId  }, requestBody, {new: true}).select('-password');
-            if(!user) {
-                debug(user);
-                throw new Error('User not found.');
-            };
-
-            // TODO: how to specify if it's a delete or ADD??
-            // TODO: ask front end if the can build the array.
-            
-            return user;
-            
-        }catch(exception) {
-            return exception;
-        }
-    },
-    
-    delete: async function(id) {
-        try{
-            const user = await User.findById(id);
-            if(!user) throw new Error('User not found.');
-
-            // if(user.customers.length > 0) {
-            //     return 'Are you sure you want to delete?';
-            // };
-
-            user.deleteOne();
-    
-            return user;
-    
-        }catch(exception) {
-            // userDebug(exception.message, exception.stack);
-            return exception;
-        }
     },
 
     sendOTP: async function(email, template) {
         try {
             const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
-                                   .select('otp');
+                                   .select('otp')
             if(!user) throw new Error('User not found');
 
             const mailResponse = await sendOTPMail(email, user.name.firstName, user.otp.OTP);
-                debug(mailResponse);
-                if(mailResponse instanceof Error) {
-                    debug(`Error sending OTP: ${mailResponse.message}`);
-                    throw new Error('Error sending OTP. Try again.');
-                };
-                debug('Email sent successfully');
+            if(mailResponse instanceof Error) {
+                debug(`Error sending OTP: ${mailResponse.message}`);
+                throw new Error('Error sending OTP. Try again.');
+            };
             
             return {
                 message: 'OTP sent successfully',
@@ -322,10 +318,29 @@ const userFuncs = {
             };
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         };
-    }
+    },
+
+    // delete: async function(id) {
+    //     try{
+    //         const user = await User.findById(id);
+    //         if(!user) throw new Error('User not found.');
+
+    //         if(user.customers.length > 0) {
+    //             return 'Are you sure you want to delete?';
+    //         };
+
+    //         user.deleteOne()
+    
+    //         return user;
+    
+    //     }catch(exception) {
+    //         debug(exception)
+    //         return exception;
+    //     }
+    // },
 }
 
-module.exports = userFuncs;
+module.exports = userCtrlFuncs;

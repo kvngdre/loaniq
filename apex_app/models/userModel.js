@@ -152,17 +152,6 @@ userSchema.methods.generateToken = function() {
     }, config.get('jwt_secret'));
 }
 
-// userSchema.pre('save', function (next) {
-//     // capitalize names
-//     // this.name.firstName = this.name.firstName.charAt(0).toUpperCase() + this.name.firstName.slice(1).toLowerCase();
-//     // this.name.lastName = this.name.lastName.charAt(0).toUpperCase() + this.name.lastName.slice(1).toLowerCase();
-//     // if(this.name?.middleName) this.name.middleName = this.name.middleName.charAt(0).toUpperCase() + this.name.middleName.slice(1).toLowerCase();
-
-//     this.displayName = this.name.firstName.concat(' ', this.name.lastName)
-
-//     next();
-//   });
-
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

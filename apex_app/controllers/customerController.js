@@ -9,7 +9,7 @@ const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
 
 
-const customer = {
+const customerCtrlFuncs = {
     create: async function(request) {
         try{
             // TODO: should the net pay be read at time of creation?
@@ -137,7 +137,7 @@ const customer = {
             return customer;
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         };
     },
@@ -232,4 +232,4 @@ const customer = {
     }
 };
 
-module.exports = customer;
+module.exports = customerCtrlFuncs;
