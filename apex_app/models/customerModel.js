@@ -95,7 +95,7 @@ const customerSchema = new mongoose.Schema({
         validate: {
             validator: (dob) => {
                 try{
-                    dob = (new Date(dob))
+                    dob = (new Date(dob)).toISOString().substring(0, 10)
                     console.log(dob)
                     minDateOfBirth = moment().subtract(21, 'years').format('YYYY-MM-DD')
                     console.log(dob.substring(0, 10), minDateOfBirth)
@@ -195,7 +195,7 @@ const customerSchema = new mongoose.Schema({
             trim: true,
             required: true,
             validate: {
-                validator: (ippisNo) => {
+                validator: function(ippisNo) {
                     try{
                         console.log('======', this)
                         const segment = Segment.findById(this.employmentInfo.segment)
@@ -209,9 +209,10 @@ const customerSchema = new mongoose.Schema({
                     }catch(exception) {
                         debug('ippis mongodb validator error=>', exception)
                     }
-                }
-            },
-            message: 'IPPIS Number does not match segment selected'
+                },
+                message: '>>IPPIS Number does not match segment selected'
+            }
+            
         },
     
         companyLocation: addressSchema,

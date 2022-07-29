@@ -25,14 +25,21 @@ const customer = {
             const newCustomer = new Customer(request.body);
             if(newCustomer instanceof Error) throw(newCustomer.message);
             
-            newCustomer.validateSegment();
+            // newCustomer.validateSegment();
             
             await newCustomer.save();
 
             return newCustomer;
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
+            if(exception.code===11000) {
+                const baseString = "Error: Duplicate "
+                let field = Object.keys(exception.keyPattern)[0]
+                if(field === 'phone') field = 'phone number';
+    
+                return baseString + field;
+            };
             return exception;
         };
     },
