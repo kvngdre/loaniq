@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const config = require('config')
+const mongoose = require('mongoose')
 const bcrypt = require('bcrypt');
 const Lender = require('../models/lenderModel');
 const sendOTPMail = require('../utils/sendMail');

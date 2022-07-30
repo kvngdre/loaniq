@@ -31,10 +31,8 @@ router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     return res.status(200).send(settings);
 });
 
-router.get('/:id?', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
-    const id = req.params.id ? req.params.id : req.user.lenderId
-
-    const lender = await lenderController.getOne(id);
+router.get('/:id', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
+    const lender = await lenderController.getOne(req.params.id);
     if(lender instanceof Error) return res.status(404).send(lender.message);
 
     return res.status(200).send(lender);   
@@ -82,7 +80,7 @@ router.post('/password', async (req, res) => {
     return res.status(200).send(lender);
 });
 
-router.post('/create-admin', verifyToken, verifyRole('Lender'), async (req, res) => {
+router.post('/admin/new', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.adminCreation(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
