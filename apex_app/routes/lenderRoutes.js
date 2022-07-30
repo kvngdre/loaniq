@@ -76,7 +76,7 @@ router.post('/password', async (req, res) => {
     const { error } = lenderValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
-    const lender = await lenderController.changePassword(req.body);
+    const lender = await lenderController.changePassword(req.body.email, req.body.newPassword, req.body.otp, req.body.currentPassword);
     if(lender instanceof Error) return res.status(400).send(lender.message);
 
     return res.status(200).send(lender);
@@ -112,12 +112,12 @@ router.post('/otp', async (req, res) => {
     return res.status(200).send(otp);
 });
 
-router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
-    const lender = await lenderController.delete(req.body);
+// router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
+//     const lender = await lenderController.delete(req.body);
 
-    if(lender instanceof Error) return res.status(400).send(lender.message);
+//     if(lender instanceof Error) return res.status(400).send(lender.message);
 
-    return res.status(200).send(lender);
-});
+//     return res.status(200).send(lender);
+// });
 
 module.exports = router;

@@ -101,11 +101,10 @@ const customerCtrlFuncs = {
                 if(requestBody.segments) queryParams['employmentInfo.segment'] = { $in: requestBody.segments }
                 if(requestBody.start) queryParams.createdAt = { $gte: requestBody.start, $lte: (requestBody.end ? requestBody.end : "2122-01-01") }
 
-                console.log(queryParams)
                 customers = await Customer.find( queryParams )
                                           .select('-__v')
                                           .populate('employmentInfo.segment')
-                                          .sort('-_id');
+                                          .sort('-createdAt');
             };
 
             if(customers.length == 0) throw new Error('No customers found');

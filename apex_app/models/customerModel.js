@@ -105,7 +105,7 @@ const customerSchema = new mongoose.Schema({
                     return false;
                 };
             },
-            message: "Age should be minimum 21."
+            message: "Age should be minimum 21"
         },
     },
 
@@ -269,6 +269,11 @@ const customerSchema = new mongoose.Schema({
             trim: true,
             required: true
         },
+
+        validAccountNumber: {
+            type: Boolean,
+            default: null
+        },
     
         bank: {
             name: {
@@ -286,6 +291,7 @@ const customerSchema = new mongoose.Schema({
 
     // below are set programmatically. No user can edit.
     netPay: {
+        // TODO: should this just copy the net pay array from origin?
         value:{
             type: Number,
             default: null

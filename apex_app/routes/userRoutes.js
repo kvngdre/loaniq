@@ -63,7 +63,7 @@ router.post('/password', async (req, res) => {
     const { error } = userValidators.validateChangePassword(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    const user = await userController.changePassword(req.body);
+    const user = await userController.changePassword(req.body.email, req.body.newPassword, req.body.otp, req.body.currentPassword);
     if(user instanceof Error) return res.status(400).send(user.message);
 
     return res.status(200).send(user);

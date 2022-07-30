@@ -54,8 +54,8 @@ const loans = {
         return await loanManager.getOne(queryParams);
     },
 
-    edit: async function(user, id, requestBody) {
-        return await loanManager.edit(user, id, requestBody);
+    edit: async function(user, id, alteration) {
+        return await loanManager.edit(user, id, alteration);
     },
 
     getDisbursement: async function(user, requestBody) {

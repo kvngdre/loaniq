@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+
+const schemaOptions = {strict: false, timestamps: true};
+
 const pendingSchema = new mongoose.Schema({
     lenderId: {
         type: String,
@@ -28,21 +31,18 @@ const pendingSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: [
-            'approved',
-            'denied',
-            'pending',
+            'Approved',
+            'Denied',
+            'Pending',
         ],
-        default: 'pending'
+        default: 'Pending'
     },
 
     reason: {
         type: String
     }
 
-}, {
-    strict: false,
-    timestamps: true
-});
+}, schemaOptions);
 
 const Pending = mongoose.model('PendingEdit', pendingSchema);
 

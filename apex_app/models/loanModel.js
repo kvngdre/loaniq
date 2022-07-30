@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
-const Bank = require('../models/bankModel');
 const User = require('../models/userModel');
 const Lender = require('../models/lenderModel');
 const Metrics = require('../tools/Managers/loanMetricsEval');
 
 
-const metrics = new Metrics();
+const loanMetricFuncs = new Metrics();
+
+const schemaOptions = {timestamps: true}
 
 const loanSchema = new mongoose.Schema({  
     netPay: {
@@ -102,57 +103,61 @@ const loanSchema = new mongoose.Schema({
     },
     
     netValue: {
-        type: Number
+        type: Number,
+        default: null
     },
 
     metrics: {
         ageValid: {
-            result: {
-                type: Boolean
+            isValid: {
+                type: Boolean,
+                default: null
             },
             
-            value: {
-                type: Number
+            age: {
+                type: Number,
+                default: null
             }
         },
         
         serviceLengthValid: {
-            result: {
-                type: Boolean
+            isValid: {
+                type: Boolean,
+                default: null
             },
             
-            value: {
-                type: Number
+            yearsServed: {
+                type: Number,
+                default: null
             }
         },
-        // TODO: should the net pay include the value
+
         netPayValid: {
-            result: {
-                type: Boolean
-            }
+            type: Boolean,
+            default: null
         },
         
+        // TODO: should this be moved to the customer model?
         netPayConsistency: {
-            type: Boolean
+            type: Boolean,
+            default: null
         },
                 
-        salaryAccountValid: {
-            type: Boolean
-        },
-        
         debtToIncomeRatio: {
-            result: {
-                type: Boolean
+            isValid: {
+                type: Boolean,
+                default: null
             },
 
             value: {
-                type: Number
+                type: Number,
+                default: null
             }
         }
     },
 
-     // TODO: remember to correct mongodb time
-     dateAppOrDec: {
+    // TODO: remember to correct mongodb time
+    dateAppOrDec: {
         type: Date
     },
 
@@ -191,30 +196,32 @@ const loanSchema = new mongoose.Schema({
 
     validationParams: {
         dob: {
-            type: Date
+            type: Date,
+            default: null
         },
 
         doe: {
-            type: Date
+            type: Date,
+            default: null
         },
 
         minNetPay: {
-            type: Number
+            type: Number,
+            default: null
         },
 
         dtiThreshold: {
-            type: Number
+            type: Number,
+            default: null
         }
     }
      
-}, {
-    timestamps: true
-});
+}, schemaOptions);
 
 
 loanSchema.pre('save', function(next) {
     if(this.modifiedPaths().some( path => ['amount', 'tenor'].includes(path) )) {
-        this.recommendedAmount = this.amount;
+        this.recommendedAmount = this.amount
         this.recommendedTenor = this.tenor
     };
 
@@ -223,10 +230,10 @@ loanSchema.pre('save', function(next) {
     // setting loan metrics
     if(this.modifiedPaths().some( path => loanMetricsTriggers.includes(path) )) {
         console.log('yes')
-        this.upfrontFee = metrics.calcUpfrontFee(this.recommendedAmount, this.upfrontFeePercentage);
-        this.repayment = metrics.calcRepayment(this.recommendedAmount, this.interestRate, this.recommendedTenor);
-        this.totalRepayment = metrics.calcTotalRepayment(this.repayment, this.recommendedTenor);
-        this.netValue = metrics.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
+        this.upfrontFee = loanMetricFuncs.calcUpfrontFee(this.recommendedAmount, this.upfrontFeePercentage);
+        this.repayment = loanMetricFuncs.calcRepayment(this.recommendedAmount, this.interestRate, this.recommendedTenor);
+        this.totalRepayment = loanMetricFuncs.calcTotalRepayment(this.repayment, this.recommendedTenor);
+        this.netValue = loanMetricFuncs.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
     };
 
 
@@ -234,11 +241,11 @@ loanSchema.pre('save', function(next) {
 
     // setting validation metics
     if(this.modifiedPaths().some( path => validationMetricTrigger.includes(path) )) {
-        console.log('I dey here');
-        this.metrics.ageValid = metrics.ageValidator(this.validationParams.dob);
-        this.metrics.serviceLengthValid = metrics.serviceLengthValidator(this.validationParams.doe);
-        this.metrics.netPayValid = metrics.netPayValidator(this.netPay, this.validationParams.minNetPay);
-        this.metrics.debtToIncomeRatio = metrics.dtiRatioCalculator(this.repayment, this.netPay, this.validationParams.dtiThreshold);
+        console.log('I dey here')
+        this.metrics.ageValid = loanMetricFuncs.ageValidator(this.validationParams.dob);
+        this.metrics.serviceLengthValid = loanMetricFuncs.serviceLengthValidator(this.validationParams.doe);
+        this.metrics.netPayValid = loanMetricFuncs.netPayValidator(this.netPay, this.validationParams.minNetPay);
+        this.metrics.debtToIncomeRatio = loanMetricFuncs.dtiRatioCalculator(this.repayment, this.netPay, this.validationParams.dtiThreshold);
 
     };
 
@@ -248,7 +255,6 @@ loanSchema.pre('save', function(next) {
         const oneMonth = 2628000000;
         const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
         const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toISOString().split('T');
-        console.log(endDate)
         this.expectedEndDate = endDate;
     };
 

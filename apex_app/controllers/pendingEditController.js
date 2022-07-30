@@ -158,8 +158,6 @@ const pendingEditFuncs = {
                 }
             ]).exec()
 
-            console.log(PendingLoanEdits)
-
             const pendingEdits = [...pendingCustomerEdits, ...PendingLoanEdits];
             if(pendingEdits.length === 0) throw new Error('No pending edits');
 

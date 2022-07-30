@@ -19,25 +19,28 @@ const manager = {
             if(customerOrigin) {
                 customer.set({
                 'netPay.value': customerOrigin.netPays[0] || request.body.netPay,
-                'netPay.updatedAt': new Date().toISOString()
+                'netPay.updatedAt': new Date()
                 });
                 request.body.netPay = customer.netPay.value;
             }
 
             const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
-                                    .sort({ createdAt: -1 })
+                                    .sort('-createdAt')
                                     .limit(1);
 
-            if(loans.length > 0) request.body.loanType = 'topUp';
+            if(loans.length > 0) request.body.loanType = 'Top Up';
 
             let agent = null;
             if(request.user.role === 'Loan Agent') {
-                agent = await userController.get({
-                    _id: request.user.id,
-                    lenderId: request.user.lenderId,
-                    segments: customer.employmentInfo.segment
-                });
+                agent = await userController.getOne(
+                    request.user.id, 
+                    {
+                        lenderId: request.user.lenderId,
+                        segments: customer.employmentInfo.segment
+                    }
+                );
             };
+
             if( (!agent || agent instanceof Error) && loans.length == 0) {
                 agent = await pickRandomUser(
                     request.user.lenderId, 
@@ -46,10 +49,14 @@ const manager = {
                 );
             };
             
-            if( (!agent || agent instanceof Error) && loans.length > 0) agent = await userController.get(loans[0].loanAgent);
-            if(!agent || agent instanceof Error) throw new Error('Invalid loan agent');
+            if( (!agent || agent instanceof Error) && loans.length > 0) agent = await userController.getOne(loans[0].loanAgent)
+            if(!agent || agent instanceof Error) throw new Error('Could not assign loan agent');
 
-            const creditOfficer = await pickRandomUser(request.user.lenderId, 'Credit', customer.employmentInfo.segment);
+            const creditOfficer = await pickRandomUser(
+                request.user.lenderId, 
+                'Credit', 
+                customer.employmentInfo.segment
+            )
             if(!creditOfficer) throw new Error('Could not assign credit officer');
 
             request.body.loanAgent = agent._id;
@@ -96,19 +103,23 @@ const manager = {
                 request.body.loan.netPay = customer.netPay.value;
             }
 
-            const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId } )
-                                    .sort({ createdAt: -1 })
+            const loans = await Loan.find( { customer: customer._id, lenderId: request.user.lenderId, active: true } )
+                                    .sort('-createdAt')
                                     .limit(1);
 
-            if (loans.length > 0) request.body.loanType = 'topUp';
+            if (loans.length > 0) request.body.loan.loanType = 'Top Up';
 
             let agent = null;
             if (request.user.role === 'Loan Agent') {
                 agent = await userController.getOne(
                     request.user.id, 
-                    {lenderId: request.user.lenderId, segments: customer.employmentInfo.segment}
+                    {
+                        lenderId: request.user.lenderId, 
+                        segments: customer.employmentInfo.segment
+                    }
                 );
             };
+
             if( (!agent || agent instanceof Error) && loans.length == 0) {
                 agent = await pickRandomUser(
                     request.user.lenderId, 
@@ -120,7 +131,11 @@ const manager = {
             if( (!agent || agent instanceof Error) && loans.length > 0) agent = await userController.getOne(loans[0].loanAgent);
             if(!agent) throw new Error('Could not assign loan agent');
 
-            let creditOfficer = await pickRandomUser(request.user.lenderId, 'Credit', customer.employmentInfo.segment);
+            let creditOfficer = await pickRandomUser(
+                request.user.lenderId, 
+                'Credit', 
+                customer.employmentInfo.segment
+            )
             if(!creditOfficer) throw new Error('Could not assign credit officer');
 
             // TODO: Make this a transaction
@@ -136,7 +151,6 @@ const manager = {
             request.body.loan.validationParams.dtiThreshold = loanMetricsObj.dtiThreshold;
             request.body.loan.validationParams.doe = customer.employmentInfo.dateOfEnlistment;
         
-            console.log('omo e reach here oh')
             await customer.save();
             const newLoan = await Loan.create(request.body.loan);
 
@@ -239,15 +253,16 @@ const manager = {
         };
     },
 
-    edit: async function(user, id, requestBody) {
+    edit: async function(user, id, alteration) {
         try{
-            requestBody = convertToDotNotation(requestBody);
+            alteration = convertToDotNotation(alteration);
+            console.log(alteration)
 
-            if (user.role !== 'Credit') {
-                const result = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
+            if(user.role !== 'Credit') {
+                const result = await Loan.findOne( { _id: id, lenderId: user.lenderId } )
                 if(!result) throw new Error('Loan not found');
 
-                const newPendingEdit = await PendingEditController.create(user, id, 'loan', requestBody);
+                const newPendingEdit = await PendingEditController.create(user, id, 'loan', alteration);
                 if(!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);
                     throw newPendingEdit;
@@ -259,23 +274,23 @@ const manager = {
                 };
             }
 
-            //   TODO: Should the credit user be able to edit every type of loan?
+            // TODO: Should the credit user be able to edit every type of loan?
             const loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
             if(!loan) throw new Error('loan not found');
 
-            if(['approved', 'declined'].includes(requestBody?.status)) {
+            if(['approved', 'declined'].includes(alteration?.status)) {
                 loan.set('dateAppOrDec', Date.now());
             }
 
-            loan.set(requestBody);
-            await loan.save();
+            loan.set(alteration)
+            await loan.save()
 
             return loan;
 
         }catch(exception) {
             debug(exception)
             return exception;
-        }
+        };
     },
 
     closeExpiringLoans: async function() {

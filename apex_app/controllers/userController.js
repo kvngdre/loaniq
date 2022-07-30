@@ -267,27 +267,21 @@ const userCtrlFuncs = {
         };
     },
 
-    changePassword: async function(requestBody) {
+    changePassword: async function(email, newPassword, otp=null, currentPassword=null) {
         try{
-            const user = await User.findOne( { email: requestBody.email } );
+            const user = await User.findOne({ email })
             if(!user) throw new Error('User not found');
 
-            // TODO: Check for OTP expire
-            if(requestBody?.otp) {
-                const isValid = user.otp.OTP === requestBody.otp;
-                if(!isValid) throw new Error('Invalid OTP');
-            }
+            if(otp && ( (Date.now() > user.otp.expirationTIme) || (otp !== user.otp.OTP) ) ) throw new Error('Invalid OTP');
 
-            // TODO: should I change to invalid email or password?
-            if(requestBody.currentPassword) {
-                const isValid = await bcrypt.compare(requestBody.currentPassword, user.password)
+            if(currentPassword) {
+                const isValid = await bcrypt.compare(currentPassword, user.password)
                 if(!isValid) throw new Error('Password is incorrect');
+
+                if(newPassword === currentPassword) throw new Error('New password is too similar to old password');
             };
             
-            const isSimilar = await bcrypt.compare(requestBody.newPassword, user.password);
-            if(isSimilar) throw new Error('Password is too similar to old password');
-
-            const encryptedPassword = await bcrypt.hash(requestBody.newPassword, config.get('salt_rounds'));
+            const encryptedPassword = await bcrypt.hash(newPassword, config.get('salt_rounds'));
 
             await user.update({ 'otp.OTP': null, password: encryptedPassword });
 
@@ -301,8 +295,8 @@ const userCtrlFuncs = {
 
     sendOTP: async function(email, template) {
         try {
-            const user = await User.findOneAndUpdate( { email: email }, { otp: generateOTP() }, {new: true} )
-                                   .select('otp')
+            const user = await User.findOneAndUpdate( { email }, { otp: generateOTP() }, {new: true} )
+                                   .select('email otp')
             if(!user) throw new Error('User not found');
 
             const mailResponse = await sendOTPMail(email, user.name.firstName, user.otp.OTP);
@@ -310,7 +304,7 @@ const userCtrlFuncs = {
                 debug(`Error sending OTP: ${mailResponse.message}`);
                 throw new Error('Error sending OTP. Try again.');
             };
-            
+
             return {
                 message: 'OTP sent successfully',
                 otp: user.otp.OTP,
