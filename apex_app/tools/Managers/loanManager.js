@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const mongoose = require('mongoose')
+const updateLoanDocBasedOnStatus = require('../../utils/loanStatus')
 const debug = require('debug')('app:loanMgr');
 const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
@@ -138,7 +138,6 @@ const manager = {
             )
             if(!creditOfficer) throw new Error('Could not assign credit officer');
 
-            // TODO: Make this a transaction
             request.body.loan.loanAgent = agent._id;
             request.body.loan.customer = customer._id;
             request.body.loan.lenderId = request.user.lenderId;
@@ -170,18 +169,19 @@ const manager = {
 
     getAll: async function (user, queryParams) {
         try{
-            const loans = await Loan.find( queryParams ).sort('-createdAt');
+            const loans = await Loan.find( queryParams )
+                                    .sort('-createdAt')
             if(loans.length == 0) throw new Error('No loans found');
 
             return loans;
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
-        }
+        };
     },
 
-    getOne: async function (user, queryParams) {
+    getOne: async function (queryParams) {
         try{
             const loan = await Loan.findOne(queryParams)
                                 .populate({
@@ -272,18 +272,22 @@ const manager = {
                     message: 'Submitted. Awaiting Review',
                     body: newPendingEdit
                 };
-            }
+            };
 
             // TODO: Should the credit user be able to edit every type of loan?
-            const loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
+            let loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
             if(!loan) throw new Error('loan not found');
 
-            if(['approved', 'declined'].includes(alteration?.status)) {
-                loan.set('dateAppOrDec', Date.now());
-            }
+            // if(['approved', 'declined'].includes(alteration?.status)) {
+            //     loan.set('dateAppOrDec', Date.now());
+            // }
+            
+            if(alteration.status) loan = await updateLoanDocBasedOnStatus(alteration.status, alteration, loan);
+            else{
+                loan.set(alteration)
+                await loan.save()
+            };
 
-            loan.set(alteration)
-            await loan.save()
 
             return loan;
 

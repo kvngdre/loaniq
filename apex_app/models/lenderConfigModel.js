@@ -60,6 +60,12 @@ const configSchema = new mongoose.Schema({
     }
 });
 
+configSchema.pre('findOneAndUpdate', function(next) {
+    console.log(this.modifiedPaths())
+
+    next();
+})
+
 const LenderConfig = mongoose.model('LenderConfig', configSchema);
 
 module.exports = LenderConfig;

@@ -1,12 +1,12 @@
 /**
- * Grants or denies access to a
+ * Grants or denies user access to resource 
  * @param {String|Array} role 
  * @returns 
  */
 function verifyRole(role) {
     if(Array.isArray(role)) {
         return (req, res, next) => {
-            if(!role.includes(req.user.role)) return res.status(401).send('Access Denied.');
+            if(!role.includes(req.user.role)) return res.status(401).send('Access Denied');
 
             next();
         };
@@ -14,10 +14,10 @@ function verifyRole(role) {
 
     return (req, res, next) => {
         if(req.user.role !== role) {
-            return res.status(401).send(`Access Denied. ${role} users only`);
+            return res.status(401).send('Access Denied');
         }
         next();
-    }
-}
+    };
+};
 
 module.exports = verifyRole;

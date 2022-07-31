@@ -16,6 +16,7 @@ const loans = {
 
     getAll: async function(user, filters) {
         let queryParams = { lenderId: user.lenderId };
+
         if(user.role === 'Loan Agent') {
             queryParams.loanAgent = user.id;
             return await loanManager.getAll(user, queryParams);
@@ -49,7 +50,7 @@ const loans = {
         if(user.role === 'Loan Agent') {
             queryParams.loanAgent = user.id
             return await loanManager.getOne(queryParams);
-        }
+        };
 
         return await loanManager.getOne(queryParams);
     },

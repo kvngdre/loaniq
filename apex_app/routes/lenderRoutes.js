@@ -31,7 +31,7 @@ router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     return res.status(200).send(settings);
 });
 
-router.get('/:id', verifyToken, verifyRole(['Lender', 'origin-master']), async (req, res) => {
+router.get('/:id', verifyToken, verifyRole('origin-master'), async (req, res) => {
     const lender = await lenderController.getOne(req.params.id);
     if(lender instanceof Error) return res.status(404).send(lender.message);
 

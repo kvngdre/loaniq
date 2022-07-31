@@ -21,7 +21,9 @@ const loanSchema = new mongoose.Schema({
    
     amountInWords: {
         type: String,
-        trim: true
+        trim: true,
+        lowercase: true,
+        required: true
     },
 
     tenor: {
@@ -37,7 +39,7 @@ const loanSchema = new mongoose.Schema({
         ],
         default:'New'
     },
-    // End of the line where loan agent user can edit.
+    // End of the line where the user--loan agent can edit.
 
     recommendedAmount: {
         type: Number,
@@ -64,7 +66,8 @@ const loanSchema = new mongoose.Schema({
     },
 
     comment: {
-        type: String
+        type: String,
+        default: null
     },
     // End of the line where credit user can edit.
 
@@ -215,7 +218,7 @@ const loanSchema = new mongoose.Schema({
             default: null
         }
     }
-     
+
 }, schemaOptions);
 
 
@@ -237,7 +240,7 @@ loanSchema.pre('save', function(next) {
     };
 
 
-    const validationMetricTrigger = ['validationParams'];
+    const validationMetricTrigger = ['netPay', 'repayment', 'validationParams'];
 
     // setting validation metics
     if(this.modifiedPaths().some( path => validationMetricTrigger.includes(path) )) {
@@ -249,14 +252,14 @@ loanSchema.pre('save', function(next) {
 
     };
 
-    if(this.status === 'approved' && this.active === false) {
-        this.active = true;
+    // if(this.status === 'approved' && this.active === false) {
+    //     this.active = true;
 
-        const oneMonth = 2628000000;
-        const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
-        const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toISOString().split('T');
-        this.expectedEndDate = endDate;
-    };
+    //     const oneMonth = 2628000000;
+    //     const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
+    //     const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toISOString().split('T');
+    //     this.expectedEndDate = endDate;
+    // };
 
     next();
 });

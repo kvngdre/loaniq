@@ -55,8 +55,6 @@ class LoanRequestValidators {
 
     validateEdit(loan) {
         const schema = Joi.object({
-            netPay: this.#netPaySchema,
-
             amount: this.#amountSchema,
 
             amountInWords: Joi.string(),
@@ -65,22 +63,51 @@ class LoanRequestValidators {
 
             loanType: Joi.string(),
 
-            recommendedAmount: Joi.number(),
+            status: Joi.string().valid(
+                'Discontinued', 
+                'Liquidated',
+                'Completed',
+                'Approved', 
+                'On Hold', 
+                'Pending', 
+                'Denied', 
+            ),
 
-            recommendedTenor: Joi.number(),
+            comment: Joi.string().when('status', {
+                is: Joi.exist(), 
+                then: Joi.when('status', {
+                    is: ['Approved', 'Pending'],
+                    then: Joi.optional(),
+                    otherwise: Joi.required()
+                }),
+            }).invalid('', ' ').min(4),
 
-            status: Joi.string(),
+            recommendedAmount: Joi.number()
+                                  .min(this.#minLoanAmount)
+                                  .max(this.#maxLoanAmount)
+                                  .when('status', {
+                                    is: ['Approved', 'Denied', 'On Hold'],
+                                    then: Joi.required()
+                                }),
+
+            recommendedTenor: Joi.number()
+                                 .min(this.#minTenor)
+                                 .max(this.#maxTenor)
+                                 .when('status', {
+                                    is: ['Approved', 'Denied', 'On Hold'],
+                                    then: Joi.required()
+                                }),
 
             customer: Joi.objectId(),
             
             loanAgent: Joi.objectId(),
 
-            interestRate: Joi.number(),
-
-            upfrontFeePercentage: Joi.number(),
-
-            transferFee: Joi.number()
+            // interestRate: Joi.number(),
+            // upfrontFeePercentage: Joi.number(),
+            // transferFee: Joi.number(),
+            // netPay: this.#netPaySchema,
         });
+
         return schema.validate(loan);
     }
 

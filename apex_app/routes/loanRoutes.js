@@ -1,4 +1,5 @@
-const _ = require('lodash');
+const _ = require('lodash')
+const moment = require('moment')
 const router = require('express').Router();
 const debug = require('debug')('app:loanRoute');
 const verifyRole = require('../middleware/verifyRole');
@@ -96,23 +97,18 @@ router.post('/new', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req
 });
 
 router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    try{
-        const {customer: {employmentInfo: { segment }}} = await loanController.getOne(req.user, { _id: req.params.id })
+    const {customer: {employmentInfo: { segment }}} = await loanController.getOne(req.user, req.params.id)
 
-        const { requestValidator } = await getValidator(req, segment)
+    const { requestValidator } = await getValidator(req, segment)
 
-        const { error } = requestValidator.validateEdit(req.body)
-        if(error) return res.status(400).send(error.details[0].message);
+    const { error } = requestValidator.validateEdit(req.body)
+    if(error) return res.status(400).send(error.details[0].message);
+    
+    const loan = await loanController.edit(req.user, req.params.id, req.body)
+    if(loan instanceof Error) return res.status(400).send(loan.message);
 
-        const loan = await loanController.edit(req.user, req.params.id, req.body)
-        if(loan instanceof Error) return res.status(400).send(loan.message);
-
-        return res.status(200).send(loan);
+    return res.status(200).send(loan);
       
-    }catch(exception) {
-        debug(exception)
-        return res.status(404).send('Loan not found');
-    };
 });
 
 router.post('/disburse', verifyToken, verifyRole(['Admin', 'Credit']), async (req, res) => {

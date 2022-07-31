@@ -343,7 +343,7 @@ customerSchema.pre('save', async function (next) {
         };
     };
 
-    next()
+    next();
 });
 
 const Customer = mongoose.model('Customer', customerSchema);
