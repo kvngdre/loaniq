@@ -13,7 +13,7 @@ const { LoanRequestValidators, loanValidators } = require('../validators/loanVal
 
 async function getValidator(request, customerSegment=null) {
     try{
-        const { loanMetrics, segments } = await lenderController.getSettings({ lenderId: request.user.lenderId });
+        const { loanMetrics, segments } = await lenderController.getConfig(request.user.lenderId);
         const { minLoanAmount, maxLoanAmount, minTenor, maxTenor } = segments.find(
             (segmentSettings) => segmentSettings.segment.toString() === (customerSegment ? customerSegment.toString() : request.body.employmentInfo.segment)
         );
@@ -55,7 +55,7 @@ router.get('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), a
     return res.status(200).send(loan);
 });
 
-router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req, res) => {
+router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const validatorObj = await getValidator(req);
     if (validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
 

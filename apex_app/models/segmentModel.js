@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+
+const schemaOptions = {timestamps: true};
+
 const segmentSchema = new mongoose.Schema({
     code: {
         type: String,
@@ -21,7 +24,7 @@ const segmentSchema = new mongoose.Schema({
         required: true
     }
 
-});
+}, schemaOptions)
 
 const Segment = mongoose.model('Segment', segmentSchema);
 

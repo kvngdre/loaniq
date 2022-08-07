@@ -1,13 +1,13 @@
 const _ = require('lodash')
 const config = require('config')
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt');
-const Lender = require('../models/lenderModel');
-const sendOTPMail = require('../utils/sendMail');
-const debug = require('debug')('app:lenderModel');
-const generateOTP = require('../utils/generateOTP');
-const LenderConfig = require('../models/lenderConfigModel');
-const userController = require('../controllers/userController');
+const bcrypt = require('bcrypt')
+const Lender = require('../models/lenderModel')
+const sendOTPMail = require('../utils/sendMail')
+const debug = require('debug')('app:lenderModel')
+const generateOTP = require('../utils/generateOTP')
+const LenderConfig = require('../models/lenderConfigModel')
+const userController = require('../controllers/userController')
+const updateConfigSettings = require('../utils/updateSettings')
 
 
 const lender = {
@@ -188,32 +188,27 @@ const lender = {
         };
     },
 
-    createAdmin: async function (request) {
-        try {
-            const lender = await Lender.findById({_id: request.user.lenderId});
-            const adminUsers = await userController.getAll({lenderId: request.user.lenderId, role: 'Admin'});
+    createAdmin: async function(requestBody, user) {
+        try{
+            const adminUsers = await userController.getAll({ lenderId: user.lenderId, role: 'Admin' });
+            if(adminUsers.length > 0) throw new Error('Admin user already created');
 
-            if (adminUsers.length > 0) throw new Error('Admin user already created.');
-
-            const adminUser = await userController.create('Admin', request.body, request.user);
-            if (!adminUser || adminUser instanceof Error) {
-                debug(adminUser);
-                throw new Error(adminUser.message);
-            }
+            const adminUser = await userController.create(requestBody, user);
+            if(!adminUser || adminUser instanceof Error) throw new Error(adminUser.message);
 
             return adminUser;
 
-        }catch (exception) {
-            debug(exception);
+        }catch(exception) {
+            debug(exception)
             return exception;
-        }
+        };
     },
 
-    setConfig: async function (id, requestBody) {
+    setConfig: async function (lenderId, requestBody) {
         try{
-            requestBody.lenderId = id;
+            requestBody.lenderId = lenderId;
 
-            const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId: id }, requestBody, { new: true, upsert: true });
+            const lenderConfig = await LenderConfig.findOneAndUpdate( { lenderId }, requestBody, { new: true, upsert: true });
             
             return {
                 message: 'Settings have been updated',
@@ -221,14 +216,16 @@ const lender = {
             };
 
         }catch(exception) {
-            debug(exception);
+            debug(exception)
             return exception;
         }
     },
 
-    getSettings: async function(queryParam) {
+    getConfig: async function(lenderId) {
         try{
-            const lenderSettings = LenderConfig.findOne(queryParam);
+            const queryParams = { lenderId };
+
+            const lenderSettings = LenderConfig.findOne(queryParams);
             if(!lenderSettings) throw new Error('No settings for lender');
 
             return lenderSettings;

@@ -5,37 +5,49 @@ async function status(status, alteration, loanDoc) {
     try{
         switch(status) {
             case 'Approved':
-                await loanDoc.set('dateAppOrDec', new Date());
-                await loanDoc.set(alteration)
-                loanDoc.active = true
-                loanDoc.expectedEndDate = moment(new Date().toISOString()).add(loanDoc.recommendedTenor, 'months').format('YYYY-MM-DD')
+                loanDoc.set(alteration)
+                loanDoc.set({
+                    active: true,
+                    dateApprovedOrDenied: new Date(),
+                    expectedEndDate: moment(new Date().toISOString()).add(loanDoc.recommendedTenor, 'months').format('YYYY-MM-DD')
+                })
                 
                 await loanDoc.save()
                 return loanDoc;
             
             case 'Denied':
-                await loanDoc.set('dateAppOrDec', new Date());
-                await loanDoc.set(alteration)
-                await loanDoc.save()
+                loanDoc.set(alteration)
+                loanDoc.set({
+                    dateApprovedOrDenied: new Date(),
+                    active: false
+                })
                 
+                await loanDoc.save()
                 return loanDoc;
     
             case 'On Hold':
                 await loanDoc.set(alteration)
+
                 await loanDoc.save()
-                
                 return loanDoc;
     
             case 'Liquidated':
-                await loanDoc.set(alteration)
+                loanDoc.set(alteration)
+                loanDoc.set({
+                    dateLiquidated: new Date(),
+                    active: false
+                })
+
                 await loanDoc.save()
-                
                 return loanDoc;
     
             case 'Discontinued':
-                await loanDoc.set(alteration)
+                loanDoc.set(alteration)
+                loan.set({
+                    active: false,
+                })
+
                 await loanDoc.save()
-                
                 return loanDoc;
     
             default:

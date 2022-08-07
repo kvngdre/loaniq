@@ -1,58 +1,78 @@
 const _ = require('lodash');
-const moment = require('moment-timezone')
+const moment = require('moment-timezone');
 const loanManager = require('../tools/Managers/loanManager');
+const adjustToUserTimeZone = require('../utils/adjustToTimeZone');
 
 
 const loans = {
     createLoanRequest: async function(loanMetricsObj, request) {
         // if(request.user.role === 'guest') request.user.lenderId = request.params.id;
 
-        return await loanManager.createLoanRequest(loanMetricsObj, request);
+        const newLoanRequest =  await loanManager.createLoanRequest(loanMetricsObj, request)
+        if(newLoanRequest instanceof Error) return newLoanRequest;
+
+        // return newLoanRequest;
+
+        return adjustToUserTimeZone(request.user.timeZone, newLoanRequest);
     },
 
     createLoan: async function(customer, loanMetricsObj, request) {
-        return await loanManager.createLoan(customer, loanMetricsObj, request);
+        const newLoan = await loanManager.createLoan(customer, loanMetricsObj, request);
+        if(newLoan instanceof Error) return newLoan;
+
+        return adjustToUserTimeZone(request.user.timeZone, newLoan);
     },
 
     getAll: async function(user, filters) {
+        let loans = []
         let queryParams = { lenderId: user.lenderId };
 
-        if(user.role === 'Loan Agent') {
+        if(user.role === 'Loan Agent') {           
             queryParams.loanAgent = user.id;
-            return await loanManager.getAll(user, queryParams);
+            loans =  await loanManager.getAll(user, queryParams);
+        }else{
+            queryParams = Object.assign(queryParams, _.omit(filters, ['date', 'amount', 'tenor']))
+            if(filters.date?.start) queryParams.createdAt = { $gte: filters.date.start };
+            if(filters.date?.end) {
+                const target = queryParams.createdAt ? queryParams.createdAt : {}
+                queryParams.createdAt = Object.assign(target , {$lte: moment.tz(filters.date.end, 'Africa/Lagos').tz('UTC').format()})
+            };
+    
+            if(filters.amount?.start) queryParams.recommendedAmount = { $gte: filters.amount.start};
+            if(filters.amount?.end) {
+                const target = queryParams.recommendedAmount ? queryParams.recommendedAmount : {}
+                queryParams.recommendedAmount = Object.assign(target , {$lte: filters.amount.end,})
+            };
+    
+            if(filters.tenor?.start) queryParams.recommendedTenor = { $gte: filters.tenor.start};
+            if(filters.tenor?.end) {
+                const target = queryParams.recommendedTenor ? queryParams.recommendedTenor : {}
+                queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.end })
+            };
+    
+            loans = await loanManager.getAll(user, queryParams)
         };
 
-        queryParams = Object.assign(queryParams, _.omit(filters, ['date', 'amount', 'tenor']))
-        if(filters.date?.start) queryParams.createdAt = { $gte: filters.date.start};
-        if(filters.date?.end) {
-            const target = queryParams.createdAt ? queryParams.createdAt : {}
-            queryParams.createdAt = Object.assign(target , {$lte: moment.tz(filters.date.end, 'Africa/Lagos').tz('UTC').format()})
-        };
+        if(loans instanceof Error) return loans;
 
-        if(filters.amount?.start) queryParams.recommendedAmount = { $gte: filters.amount.start};
-        if(filters.amount?.end) {
-            const target = queryParams.recommendedAmount ? queryParams.recommendedAmount : {}
-            queryParams.recommendedAmount = Object.assign(target , {$lte: filters.amount.end,})
-        };
-
-        if(filters.tenor?.start) queryParams.recommendedTenor = { $gte: filters.tenor.start};
-        if(filters.tenor?.end) {
-            const target = queryParams.recommendedTenor ? queryParams.recommendedTenor : {}
-            queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.end })
-        };
-
-        return await loanManager.getAll(user, queryParams);
+        return adjustToUserTimeZone(user.timeZone, loans);
     },
 
     getOne: async function(user, id) {
+        let loan = null
         const queryParams = { _id: id, lenderId: user.lenderId };
         
         if(user.role === 'Loan Agent') {
             queryParams.loanAgent = user.id
-            return await loanManager.getOne(queryParams);
-        };
+            loan = await loanManager.getOne(queryParams)
 
-        return await loanManager.getOne(queryParams);
+        }else loan =  await loanManager.getOne(queryParams);
+
+        if(loan instanceof Error) return loan;
+
+        // return loan;
+
+        return  adjustToUserTimeZone(user.timeZone, loan);
     },
 
     edit: async function(user, id, alteration) {

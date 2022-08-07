@@ -4,15 +4,15 @@ const { joiPassword } = require('joi-password');
 
 
 const nameSchema = Joi.object({
-    firstName: Joi.string()
+    first: Joi.string()
                   .min(3)
                   .max(50),
 
-    lastName: Joi.string()
+    last: Joi.string()
                  .min(3)
                  .max(50),
 
-    middleName: Joi.string()
+    middle: Joi.string()
                    .min(3)
                    .max(50)
 });
@@ -60,7 +60,7 @@ const validators = {
                 return (function(user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        displayName: Joi.string(),
+                        // displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -73,7 +73,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        displayName: Joi.string(),
+                        // displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -88,7 +88,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema,
-                        displayName: Joi.string(),
+                        // displayName: Joi.string(),
                         phone: phoneSchema,
                         email: emailSchema,
                         role: Joi.string().required(),
@@ -101,7 +101,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        displayName: Joi.string(),
+                        // displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -132,7 +132,7 @@ const validators = {
     validateEdit: function(user) {
         const schema = Joi.object({
             name: nameSchema,
-            displayName: Joi.string(),
+            // displayName: Joi.string(),
             phone: phoneSchema,
             role: Joi.string(),
             segments: segmentSchema,

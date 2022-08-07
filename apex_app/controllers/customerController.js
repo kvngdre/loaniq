@@ -145,34 +145,32 @@ const customerCtrlFuncs = {
         try{
             requestBody = convertToDotNotation(requestBody);
 
-            const customer = await Customer.findById(customerId);
-            if(!customer) {
-                debug(customer);
-                throw new Error('Customer not found.');
-            }; 
+            const customer = await Customer.findById(customerId)
+            if(!customer) throw new Error('Customer not found');
             
             if(user.role !== 'Admin') {
                 const newPendingEdit = await PendingEditController.create(user, customerId, 'customer', requestBody);
                 if(!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);
                     throw newPendingEdit;
-                }
+                };
 
                 return {
                     message: 'Submitted. Awaiting Review.',
                     alteration: newPendingEdit
-                }
+                };
             };            
             
             customer.set(requestBody);
             await customer.save();
 
             return {
-                message: 'updated successfully',
+                message: 'Customer profile updated',
                 editedDoc: customer
             };
             
         }catch(exception) {
+            debug(exception)
             return exception;
         }
     },

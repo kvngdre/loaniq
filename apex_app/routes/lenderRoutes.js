@@ -15,28 +15,28 @@ router.post('/', async (req, res) => {
 
     //TODO: generate lender url with auto increment field.
     return res.status(201).send(lender);
-});
+})
 
 router.get('/', verifyToken, verifyRole('origin-master'), async (req, res) => {
     const lenders = await lenderController.getAll();
     if(lenders instanceof Error) return res.status(400).send(lenders.message);
 
     return res.status(200).send(lenders);
-});
+})
 
 router.get('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
-    const settings = await lenderController.getSettings( { lenderId: req.user.lenderId } );
+    const settings = await lenderController.getConfig(req.user.lenderId)
     if(settings instanceof Error) return res.status(404).send(settings.message);
 
     return res.status(200).send(settings);
-});
+})
 
 router.get('/:id', verifyToken, verifyRole('origin-master'), async (req, res) => {
     const lender = await lenderController.getOne(req.params.id);
     if(lender instanceof Error) return res.status(404).send(lender.message);
 
     return res.status(200).send(lender);   
-});
+})
 
 router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
     const { error } = lenderValidators.update(req.body);
@@ -98,7 +98,7 @@ router.put('/settings', verifyToken, verifyRole('Lender'), async (req, res) => {
     if(settings instanceof Error) return res.status(400).send(settings.message);
 
     return res.status(201).send(settings);
-});
+})
 
 router.post('/otp', async (req, res) => {
     const { error } = lenderValidators.validateEmail(req.body);

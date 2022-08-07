@@ -33,7 +33,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: requestBody.name,
-                        displayName: requestBody?.displayName,
+                        // displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedTempPassword,
@@ -51,7 +51,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: requestBody.name,
-                        displayName: requestBody?.displayName,
+                        // displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
@@ -69,7 +69,7 @@ const userCtrlFuncs = {
                     
                     var newUser = new User({
                         name: requestBody.name,
-                        displayName: requestBody?.displayName,
+                        // displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,
@@ -86,7 +86,7 @@ const userCtrlFuncs = {
                     
                     var newUser = new User({
                         name: requestBody.name,
-                        displayName: requestBody?.displayName,
+                        // displayName: requestBody?.displayName,
                         phone: requestBody.phone,
                         email: requestBody.email,
                         password: encryptedPassword,

@@ -1,8 +1,8 @@
 function convertToDotNotation(obj, newObj={}, prefix="") {
     for(let key in obj) {
-        if (typeof obj[key] === "object") {
+        if(typeof obj[key] === "object") {
             convertToDotNotation(obj[key], newObj, prefix + key + ".");
-        } else {
+        }else{
             newObj[prefix + key] = obj[key];
         }
     }

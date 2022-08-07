@@ -121,20 +121,7 @@ const userSchema = new mongoose.Schema({
         default: 'Africa/Lagos'
     }
 
-}, schemaOptions);
-
-userSchema.virtual('createdAtTZAdjusted').get(function() {
-    return moment.tz(this.createdAt, this.timeZone).format();
-})
-
-userSchema.virtual('updatedAtTZAdjusted').get(function() {
-    return moment.tz(this.updatedAt, this.timeZone).format();
-})
-
-userSchema.virtual('lastLoginTimeTZAdjusted').get(function() {
-    if(!this.lastLoginTime) return null;
-    return moment.tz(this.lastLoginTime, this.timeZone).format();
-})
+}, schemaOptions)
 
 userSchema.methods.generateToken = function() {
     return jwt.sign({
@@ -150,7 +137,7 @@ userSchema.methods.generateToken = function() {
         timeZone: this.timeZone,
         lastLoginTime: this.lastLoginTimeTzAdjusted
     }, config.get('jwt_secret'));
-}
+};
 
 const User = mongoose.model('User', userSchema);
 

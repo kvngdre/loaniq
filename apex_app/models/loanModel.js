@@ -6,7 +6,7 @@ const Metrics = require('../tools/Managers/loanMetricsEval');
 
 const loanMetricFuncs = new Metrics();
 
-const schemaOptions = {timestamps: true}
+const schemaOptions = {timestamps: true};
 
 const loanSchema = new mongoose.Schema({  
     netPay: {
@@ -160,7 +160,11 @@ const loanSchema = new mongoose.Schema({
     },
 
     // TODO: remember to correct mongodb time
-    dateAppOrDec: {
+    dateApprovedOrDenied: {
+        type: Date
+    },
+
+    dateLiquidated: {
         type: Date
     },
 
@@ -168,9 +172,7 @@ const loanSchema = new mongoose.Schema({
         type: String
     },
 
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-    },
+    customer: mongoose.Schema.Types.ObjectId,
 
     creditOfficer: {
         type: mongoose.Schema.Types.ObjectId,
@@ -239,7 +241,6 @@ loanSchema.pre('save', function(next) {
         this.netValue = loanMetricFuncs.calcNetValue(this.recommendedAmount, this.upfrontFee, this.transferFee); 
     };
 
-
     const validationMetricTrigger = ['netPay', 'repayment', 'validationParams'];
 
     // setting validation metics
@@ -251,15 +252,6 @@ loanSchema.pre('save', function(next) {
         this.metrics.debtToIncomeRatio = loanMetricFuncs.dtiRatioCalculator(this.repayment, this.netPay, this.validationParams.dtiThreshold);
 
     };
-
-    // if(this.status === 'approved' && this.active === false) {
-    //     this.active = true;
-
-    //     const oneMonth = 2628000000;
-    //     const tenorMilliseconds = oneMonth * (this.recommendedTenor - 1);
-    //     const endDate = new Date(this.dateAppOrDec.getTime() + tenorMilliseconds).toISOString().split('T');
-    //     this.expectedEndDate = endDate;
-    // };
 
     next();
 });

@@ -3,6 +3,8 @@ const Lender = require('../models/lenderModel');
 const Segment = require('../models/segmentModel');
 
 
+const schemaOptions = {timestamps: true};
+
 const configSchema = new mongoose.Schema({
     lenderId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -58,13 +60,8 @@ const configSchema = new mongoose.Schema({
             // required: true
         }
     }
-});
+}, schemaOptions);
 
-configSchema.pre('findOneAndUpdate', function(next) {
-    console.log(this.modifiedPaths())
-
-    next();
-})
 
 const LenderConfig = mongoose.model('LenderConfig', configSchema);
 

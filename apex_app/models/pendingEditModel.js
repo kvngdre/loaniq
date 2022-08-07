@@ -42,7 +42,7 @@ const pendingSchema = new mongoose.Schema({
         type: String
     }
 
-}, schemaOptions);
+}, schemaOptions)
 
 const Pending = mongoose.model('PendingEdit', pendingSchema);
 

@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+
+const schemaOptions = {timestamps: true};
+
 const stateSchema = new mongoose.Schema({
     code: {
         type: String,
@@ -17,8 +20,14 @@ const stateSchema = new mongoose.Schema({
     lgas: {
         type: [ String ],
         required: true 
+    },
+
+    geo: {
+        type: String,
+        required: true
     }
-});
+
+}, schemaOptions)
 
 const State = mongoose.model('State', stateSchema);
 

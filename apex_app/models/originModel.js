@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+
+const schemaOptions = {timestamps: true};
+
 const originSchema = new mongoose.Schema({
     name: {
         type: String
@@ -68,11 +71,11 @@ originSchema.methods.getLengthOfService = function() {
     const serviceLength = new Date(diff).getUTCFullYear() - 1970;
 
     return serviceLength;
-}
+};
 
 originSchema.methods.getMonthNetPay = function(idx=2) {
     return this.netPays[idx];
-}
+};
 
 const Origin = mongoose.model('Origin', originSchema);
 

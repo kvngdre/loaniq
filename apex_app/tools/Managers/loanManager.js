@@ -34,7 +34,7 @@ const manager = {
             if(request.user.role === 'Loan Agent') {
                 agent = await userController.getOne(
                     request.user.id, 
-                    {
+                    {   
                         lenderId: request.user.lenderId,
                         segments: customer.employmentInfo.segment
                     }
@@ -184,12 +184,12 @@ const manager = {
     getOne: async function (queryParams) {
         try{
             const loan = await Loan.findOne(queryParams)
-                                .populate({
-                                    path: 'customer',
-                                    model: Customer
-                                });
+                                   .populate({
+                                       path: 'customer',
+                                       model: Customer
+                                    })
             if(!loan) throw new Error('Loan not found');
-
+            
             return loan;
 
         }catch(exception) {
@@ -203,7 +203,7 @@ const manager = {
             let loans = [];
             if(user.role !== 'Loan Agent') {
                 loans = await Loan.find(queryParams)
-                                .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateAppOrDec lenderId')
+                                .select('_id customer recommendedAmount recommendedTenor interestRate repayment netPay upfrontFee transferFee netValue totalRepayment metrics.debtToIncomeRatio.value status createdAt dateApprovedOrDenied lenderId')
                                 .populate({
                                     path: 'customer',
                                     model: Customer, 
@@ -234,7 +234,7 @@ const manager = {
         try{
             const loans = await Loans.find(queryParam)
                                     .select([
-                                        'dateAppOrDec',
+                                        'dateApprovedOrDenied',
                                         'status',
                                         'loanType',
                                         'recommendedAmount',
@@ -278,16 +278,11 @@ const manager = {
             let loan = await Loan.findOne( { _id: id, lenderId: user.lenderId } );
             if(!loan) throw new Error('loan not found');
 
-            // if(['approved', 'declined'].includes(alteration?.status)) {
-            //     loan.set('dateAppOrDec', Date.now());
-            // }
-            
             if(alteration.status) loan = await updateLoanDocBasedOnStatus(alteration.status, alteration, loan);
             else{
                 loan.set(alteration)
                 await loan.save()
             };
-
 
             return loan;
 
@@ -302,8 +297,8 @@ const manager = {
             const today = new Date().toLocaleDateString();
             // const loans = await Loan.find( { active: true, expectedEndDate: {$gt: today} } );
             const loans = await Loan.updateMany(
-                { active: true, expectedEndDate: { $gte: today } },
-                { status: 'completed', active: false }
+                { status: 'Approved', active: true, expectedEndDate: { $gte: today } },
+                { status: 'Completed', active: false }
             );
         
             return loans;

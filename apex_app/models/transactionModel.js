@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 
+const schemaOptions = {timestamps: true};
+
 const transactionSchema = new mongoose.Schema({
     lenderId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -18,6 +20,7 @@ const transactionSchema = new mongoose.Schema({
             'Debit',
             'Credit'
         ],
+        required: true
     },
 
     description: {
@@ -35,9 +38,7 @@ const transactionSchema = new mongoose.Schema({
         required: true
     }
 
-}, {
-    timestamps: true
-})
+}, schemaOptions)
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 

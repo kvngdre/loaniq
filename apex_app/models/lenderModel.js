@@ -1,8 +1,8 @@
-const config = require('config')
-const jwt = require('jsonwebtoken')
-const User = require('./userModel')
-const mongoose = require('mongoose')
-const moment = require('moment-timezone')
+const config = require('config');
+const jwt = require('jsonwebtoken');
+const User = require('./userModel');
+const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 // const AutoIncrement = require('mongoose-sequence')(mongoose)
 
 
@@ -127,19 +127,6 @@ const lenderSchema = new mongoose.Schema({
 
 // lenderSchema.plugin(AutoIncrement, {inc_field: 'id'})
 
-lenderSchema.virtual('createdAtTZAdjusted').get( function() {
-    return moment.tz(this.createdAt, this.timeZone).format();
-})
-
-lenderSchema.virtual('updatedAtTZAdjusted').get(function() {
-    return moment.tz(this.updatedAt, this.timeZone).format();
-})
-
-lenderSchema.virtual('lastLoginTimeTZAdjusted').get(function() {
-    if(!this.lastLoginTime) return null;
-    return moment.tz(this.lastLoginTime, this.timeZone).format();
-})
-
 lenderSchema.methods.generateToken = function() {
     return jwt.sign({
         lenderId: this._id, 
@@ -153,7 +140,7 @@ lenderSchema.methods.generateToken = function() {
         adminUser: !!this.adminUser,
         lastLoginTime: this.lastLoginTimeTZAdjusted
     }, config.get('jwt_secret'));
-}
+};
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

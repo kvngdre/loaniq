@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 
+const schemaOptions = {timestamps: true};
+
 const bankSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -17,7 +19,7 @@ const bankSchema = new mongoose.Schema({
         maxLength: 6,
         trim: true
     }
-});
+}, schemaOptions)
 
 const Bank = mongoose.model('Bank', bankSchema);
 

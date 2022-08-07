@@ -1,11 +1,11 @@
-const moment = require('moment')
-const Loan = require('./loanModel')
-const mongoose = require('mongoose')
-const Segment = require('./segmentModel')
-const debug = require('debug')('app:customerModel')
+const moment = require('moment');
+const Loan = require('./loanModel');
+const mongoose = require('mongoose');
+const Segment = require('./segmentModel');
+const debug = require('debug')('app:customerModel');
 
 
-const schemaOptions = {timestamps: true}
+const schemaOptions = {timestamps: true};
 
 const addressSchema = {
     street: {
