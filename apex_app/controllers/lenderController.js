@@ -167,7 +167,7 @@ const lender = {
             const lender = await Lender.findOne( { email } )
             if(!lender) throw new Error('Lender not found');
 
-            if(otp && ( (Date.now() > user.otp.expirationTime) || (otp !== user.otp.OTP) ) ) throw new Error('Invalid OTP');
+            if(otp && ( (Date.now() > lender.otp.expirationTime) || (otp !== lender.otp.OTP) ) ) throw new Error('Invalid OTP');
 
             if(currentPassword) {
                 const isValid = await bcrypt.compare(currentPassword, lender.password);
