@@ -270,9 +270,9 @@ const customerSchema = new mongoose.Schema({
             required: true
         },
 
-        validAccountNumber: {
+        isValidAccountNumber: {
             type: Boolean,
-            default: null
+            default: false //TODO: should this be false or null?
         },
     
         bank: {

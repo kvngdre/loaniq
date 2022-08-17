@@ -99,7 +99,10 @@ const accountInfoSchema = Joi.object({
     salaryAccountName: Joi.string(),
 
     salaryAccountNumber: Joi.string()
-                            .pattern(/^[0-9]{10}$/),
+                            .pattern(/^[0-9]{10}$/)
+                            .message({
+                                "string.pattern.base": "Invalid account number"
+                              }),
 
     bank: {
         name: Joi.string(),
