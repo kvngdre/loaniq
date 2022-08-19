@@ -97,17 +97,20 @@ router.post('/new', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req
 });
 
 router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const {customer: {employmentInfo: { segment }}} = await loanController.getOne(req.user, req.params.id)
+    const loan = await loanController.getOne(req.user, req.params.id);
+    if(loan.errorCode) return res.status(loan.errorCode).send(loan.message);
+
+    const {customer: {employmentInfo: { segment }}} = loan;
 
     const { requestValidator } = await getValidator(req, segment)
 
     const { error } = requestValidator.validateEdit(req.body)
     if(error) return res.status(400).send(error.details[0].message);
     
-    const loan = await loanController.edit(req.user, req.params.id, req.body)
-    if(loan instanceof Error) return res.status(400).send(loan.message);
+    const modifiedLoan = await loanController.edit(req.user, req.params.id, req.body)
+    if(modifiedLoan.errorCode || modifiedLoan instanceof Error) return res.status(modifiedLoan.errorCode || 500).send(modifiedLoan.message);
 
-    return res.status(200).send(loan);
+    return res.status(200).send(modifiedLoan);
       
 });
 

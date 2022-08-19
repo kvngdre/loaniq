@@ -21,6 +21,7 @@ const transactionSchema = new mongoose.Schema(
 
         reference: {
             type: String,
+            default: null
         },
 
         type: {
@@ -51,6 +52,7 @@ const transactionSchema = new mongoose.Schema(
 
         fees: {
             type: Number,
+            default: null
         },
 
         balance: {

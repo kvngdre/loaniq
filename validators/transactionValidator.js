@@ -10,7 +10,7 @@ const validators = {
             userId: Joi.objectId,
 
             type: Joi.string()
-                     .valid(['Debit', 'Credit'])
+                     .valid('Debit', 'Credit')
                      .required()
                      .messages({
                         "any.only": `Element at index ${"{#label}".replace('type', '')} is not valid.`
@@ -28,6 +28,16 @@ const validators = {
         });
 
         return schema.validate(transaction);
+    },
+
+    validateFilters: function(filters) {
+        const schema = Joi.object({
+            type: Joi.string().valid('Credit', 'Debit'),
+            start: Joi.date().iso(),
+            end: Joi.date().iso()
+        })
+        
+        return schema.validate(filters)
     }
 }
 

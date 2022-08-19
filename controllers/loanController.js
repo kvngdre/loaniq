@@ -58,9 +58,9 @@ const loans = {
         return adjustToUserTimeZone(user.timeZone, loans);
     },
 
-    getOne: async function(user, id) {
+    getOne: async function(user, docId) {
         let loan = null
-        const queryParams = { _id: id, lenderId: user.lenderId };
+        const queryParams = { _id: docId, lenderId: user.lenderId };
         
         if(user.role === 'Loan Agent') {
             queryParams.loanAgent = user.id
