@@ -1,7 +1,19 @@
 const Joi = require('joi');
 const { ref } = require('joi');
+const { DateTime } = require('luxon');
 Joi.objectId = require('joi-objectid')(Joi);
 
+
+function isValidDOB(dob, helper) {
+    const dobFormatted = DateTime.fromISO(new Date(dob).toISOString()).toFormat('yyyy-MM-dd')
+    const minDob = DateTime.now().minus({'years': 21}).toFormat('yyyy-MM-dd')
+    console.log(minDob)
+    console.log(dobFormatted)
+    
+    if(dobFormatted > minDob) return helper.error('date.less')
+
+    return dob;
+}
 
 const nameSchema = Joi.object({
     first: Joi.string()
@@ -21,8 +33,8 @@ const genderSchema = Joi.string()
                         .valid('Male', 'Female');
 
 const dateOfBirthSchema = Joi.date()
-                             .less('now')
-                             .message({'date.less': 'Date of Birth must be valid.'});
+                             .custom(isValidDOB)
+                             .message({'date.less': 'Error Date of Birth: Age must be minimum 21'});
 
 const addressSchema = Joi.object({
     street: Joi.string()
@@ -53,6 +65,8 @@ const contactSchema = Joi.object({
 });
 
 const employmentSchema = Joi.object({
+    name: Joi.string(),
+
     segment: Joi.objectId(),
     
     ippis: Joi.string()
@@ -63,12 +77,13 @@ const employmentSchema = Joi.object({
     companyLocation: addressSchema,
 
     dateOfEnlistment: Joi.date()
-                         .greater(Joi.ref('...dateOfBirth', { adjust: (value) => {
-                                value.setFullYear(value.getFullYear() + 18);
+                         .min(Joi.ref('...dateOfBirth', { adjust: (value) => {
+                                value.setFullYear(value.getFullYear() + 21);
+                                console.log(value)
                                 return value;
                                 }}))
                         // TODO: Improve on this error message
-                         .message( {'date.greater': 'Invalid Date of Enlistment.'} )
+                         .message( {'date.min': 'Invalid Date of Enlistment.'} )
 });
 
 const bvnSchema = Joi.string()
@@ -111,7 +126,7 @@ const accountInfoSchema = Joi.object({
 });
 
 const netPaySchema = Joi.object({
-    value: Joi.number()
+    value: Joi.number().precision(2)
 });
 
 const validators = {
