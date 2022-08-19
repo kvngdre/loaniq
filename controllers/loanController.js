@@ -29,7 +29,7 @@ const loans = {
 
         if(user.role === 'Loan Agent') {           
             queryParams.loanAgent = user.id;
-            loans =  await loanManager.getAll(user, queryParams);
+            loans =  await loanManager.getAll(queryParams);
         }else{
             queryParams = Object.assign(queryParams, _.omit(filters, ['date', 'amount', 'tenor']))
             if(filters.date?.start) queryParams.createdAt = { $gte: filters.date.start };
@@ -50,7 +50,7 @@ const loans = {
                 queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.end })
             };
     
-            loans = await loanManager.getAll(user, queryParams)
+            loans = await loanManager.getAll(queryParams)
         };
 
         if(loans instanceof Error) return loans;

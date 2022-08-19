@@ -4,6 +4,7 @@ const debug = require('debug')('app:loanMgr');
 const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
 const Origin = require('../../models/originModel');
+const Segment = require('../../models/segmentModel');
 const Customer = require('../../models/customerModel');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const userController = require('../../controllers/userController');
@@ -50,14 +51,14 @@ const manager = {
             };
             
             if( (!agent || agent instanceof Error) && loans.length > 0) agent = await userController.getOne(loans[0].loanAgent)
-            if(!agent || agent instanceof Error) throw new Error('Could not assign loan agent');
+            if(!agent || agent instanceof Error) return { errorCode: 500, message: 'Failed to assign loan agent' };
 
             const creditOfficer = await pickRandomUser(
                 request.user.lenderId, 
                 'Credit', 
                 customer.employmentInfo.segment
             )
-            if(!creditOfficer) throw new Error('Could not assign credit officer');
+            if(!creditOfficer) return { errorCode: 500, message: 'Failed to assign credit officer' };
 
             request.body.loanAgent = agent._id;
             request.body.netPay = customer.netPay.value;
@@ -167,11 +168,22 @@ const manager = {
         };
     },
 
-    getAll: async function (user, queryParams) {
+    getAll: async function (queryParams) {
         try{
             const loans = await Loan.find( queryParams )
+            .populate({
+                        path: 'customer',
+                        model: Customer,
+                        populate: [
+                            {
+                                path: 'employmentInfo.segment',
+                                model: Segment,
+                                select: '-_id code',
+                            },
+                        ],
+                    })
                                     .sort('-createdAt')
-            if(loans.length == 0) throw new Error('No loans found');
+            if(loans.length == 0) return { errorCode: 404, message: 'No loans found' };
 
             return loans;
 
