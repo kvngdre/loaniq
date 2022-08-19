@@ -30,9 +30,12 @@ const customerCtrlFuncs = {
 
             const newCustomer = new Customer(request.body);
 
-            // await newCustomer.save();
+            await newCustomer.save();
 
-            return newCustomer;
+            return {
+                message: 'Customer created',
+                data: newCustomer,
+            };
         } catch (exception) {
             debug(exception.message);
             if (exception.code === 11000) {
@@ -42,72 +45,86 @@ const customerCtrlFuncs = {
 
                 return { errorCode: 409, message: baseString + field };
             }
+            if (exception.name === 'ValidationError') {
+                exception.message = exception.message.split('>>')[1];
+
+                return { errorCode: 400, message: exception.message };
+            }
             return exception;
         }
     },
 
-    getAll: async function (user, requestBody) {
+    getAll: async function (user, filters) {
         try {
             let customers = [];
 
             if (user.role === 'Loan Agent') {
-                customers = await Loan.find({ loanAgent: user.id })
-                    .populate({
-                        path: 'customer',
-                        model: Customer,
-                        populate: [
-                            {
-                                path: 'employmentInfo.segment',
-                                model: Segment,
-                                select: '-_id code',
-                            },
-                            { path: 'employmentInfo.state', model: State },
-                        ],
-                        select: [
-                            'name',
-                            'dateOfBirth',
-                            'netPay',
-                            'employmentInfo.ippis',
-                            'employmentInfo.segment',
-                            'employmentInfo.dateOfEnlistment',
-                        ],
-                    })
-                    .select('-_id customer');
-                //  .distinct('customer')
+                // customers = await Loan.find({ loanAgent: user.id })
+                //     .populate({
+                //         path: 'customer',
+                //         model: Customer,
+                //         populate: [
+                //             {
+                //                 path: 'employmentInfo.segment',
+                //                 model: Segment,
+                //                 select: '-_id code',
+                //             },
+                //         ],
+                //         // select: [
+                //         //     'name',
+                //         //     'dateOfBirth',
+                //         //     'netPay',
+                //         //     'employmentInfo.ippis',
+                //         //     'employmentInfo.segment',
+                //         //     'employmentInfo.dateOfEnlistment',
+                //         // ],
+                //     })
+                //     .select('-_id customer')
+                //     .distinct('customer');
 
-                // customers = await Loan.aggregate([
-                //     {
-                //         $match: {
-                //             lenderId: mongoose.Types.ObjectId(user.lenderId),
-                //             loanAgent: mongoose.Types.ObjectId(user.id)
-                //         }
-                //     },
-                //     {
-                //         $group: {
-                //             _id: "$customer"
-                //         }
-                //     },
-                //     // {
-                //     //     $lookup:{
-                //     //         from: 'customers',
-                //     //         localField: '_id',
-                //     //         foreignField: '_id',
-                //     //         as: 'customerData'
-                //     //     }
-                //     // },
-                //     // {
-                //     //     $project:{
-                //     //         customerData: {createdAt: 0, updatedAt: 0, __v: 0}
-                //     //     }
-                //     // },
-                //     // {
-                //     //     $project:{
-                //     //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
-                //     //     }
-                //     // }
-                // ]).exec()
+                customers = await Loan.aggregate([
+                    {
+                        $match: {
+                            lenderId: mongoose.Types.ObjectId(user.lenderId),
+                            loanAgent: mongoose.Types.ObjectId(user.id)
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: "$customer",
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from: 'customers',
+                            localField: '_id',
+                            foreignField: '_id',
+                            as: 'customerData'
+                        }
+                    },
+                    {
+                        $sort:{
+                            _id: -1
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                        },
+                    },
+                    // {
+                    //     $project:{
+                    //         customerData: {createdAt: 0, updatedAt: 0, __v: 0}
+                    //     }
+                    // },
+                    // {
+                    //     $project:{
+                    //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
+                    //     }
+                    // }
+                ]).exec()
             } else {
-                let queryParams = _.omit(requestBody, [
+                let queryParams = _.omit(filters, [
                     'start',
                     'end',
                     'segments',
@@ -115,27 +132,45 @@ const customerCtrlFuncs = {
                     'name',
                 ]);
 
-                if (requestBody.state)
-                    queryParams['residentialAddress.state'] = requestBody.state;
-                if (requestBody.netPay)
-                    queryParams['netPay.value'] = { $gte: requestBody.netPay };
-                if (requestBody.segments)
-                    queryParams['employmentInfo.segment'] = {
-                        $in: requestBody.segments,
-                    };
-                if (requestBody.start)
+                // State Filter
+                if (filters.states)
+                    queryParams['residentialAddress.state'] = filters.states;
+
+                // Net Pay Filter
+                if (filters.netPay?.start)
+                    queryParams['netPay.value'] = { $gte: filters.netPay.start };
+                if (filters.netPay?.end) {
+                    const target = queryParams['netPay.value']
+                        ? queryParams['netPay.value']
+                        : {};
+
+                    queryParams['netPay.value'] = Object.assign(target, {
+                        $lte: filters.netPay.end,
+                    });
+                }
+
+                // Segment Filter
+                if (filters.segments)
+                    queryParams['employmentInfo.segment'] = filters.segments
+
+                // Creation Date Filter
+                if (filters.start)
                     queryParams.createdAt = {
-                        $gte: requestBody.start,
-                        $lte: requestBody.end ? requestBody.end : '2122-01-01',
+                        $gte: filters.start,
+                        $lte: filters.end ? filters.end : '2122-01-01',
                     };
 
+                // queryParams['netPay.value'] = {$gte: 50000}
+                // delete queryParams.netPay
+                console.log(queryParams);
                 customers = await Customer.find(queryParams)
                     .select('-__v')
                     .populate('employmentInfo.segment')
                     .sort('-createdAt');
             }
 
-            if (customers.length == 0) throw new Error('No customers found');
+            if (customers.length == 0)
+                return { errorCode: 404, message: 'No customers found' };
 
             return customers;
         } catch (exception) {

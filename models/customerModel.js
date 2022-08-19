@@ -1,4 +1,3 @@
-const moment = require('moment');
 const Loan = require('./loanModel');
 const mongoose = require('mongoose');
 const Segment = require('./segmentModel');
@@ -95,22 +94,6 @@ const customerSchema = new mongoose.Schema(
         dateOfBirth: {
             type: Date,
             required: true,
-            validate: {
-                validator: (dob) => {
-                    try {
-                        dob = new Date(dob).toISOString().substring(0, 10);
-                        const minDateOfBirth = moment()
-                            .subtract(21, 'years')
-                            .format('YYYY-MM-DD');
-
-                        return dob <= minDateOfBirth;
-                    } catch (exception) {
-                        debug('ageCustomerSchema==', exception.message);
-                        return false;
-                    }
-                },
-                message: 'Age should be minimum 21',
-            },
         },
 
         residentialAddress: addressSchema,
