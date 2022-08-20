@@ -67,21 +67,28 @@ const transactionCtrlFuncs = {
                 queryParams,
                 _.omit(filters, ['start', 'end'])
             );
-
-            if (filters.start)
-                queryParams.createdAt = {
-                    $gte: DateTime.fromISO(filters.start)
+            
+            // TODO: should I make the filters a class?
+            // Date Filter - CreatedAt
+            const dateField = 'createdAt';
+            if (filters.date?.start)
+                queryParams[dateField] = {
+                    $gte: DateTime.fromISO(filters.date.start)
                         .setZone(user.timeZone)
                         .toUTC()
-                        .toString(),
                 };
-
-            if (filters.end)
-                queryParams.createdAt['$lte'] = DateTime.fromISO(filters.end)
-                    .setZone(user.timeZone)
-                    .toUTC()
-                    .toString();
-
+            if (filters.date?.end) {
+                const target = queryParams[dateField]
+                    ? queryParams[dateField]
+                    : {};
+                queryParams[dateField] = Object.assign(target, {
+                    $lte: DateTime.fromISO(filters.end)
+                        .setZone(user.timeZone)
+                        .toUTC(),
+                });
+            }
+            
+            
             const transactions = await Transaction.find(queryParams);
             if (transactions.length == 0)
                 return { errorCode: 404, message: 'No transactions found' };

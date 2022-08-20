@@ -32,7 +32,9 @@ router.get(
     async (req, res) => {
         const customers = await customerController.getAll(req.user, req.body);
         if (customers.errorCode || customers instanceof Error)
-            return res.status(customers.errorCode || 500).send(customers.message);
+            return res
+                .status(customers.errorCode || 500)
+                .send(customers.message);
 
         return res.status(200).send(customers);
     }
@@ -77,15 +79,17 @@ router.patch(
         const { error } = customerValidators.validateEdit(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const customerEditObject = await customerController.update(
+        const editedCustomer = await customerController.update(
             req.params.id,
             req.user,
             req.body
         );
-        if (customerEditObject instanceof Error)
-            return res.status(400).send(customerEditObject.message);
+        if (editedCustomer.errorCode || editedCustomer instanceof Error)
+            return res
+                .status(editedCustomer.errorCode || 500)
+                .send(editedCustomer.message);
 
-        return res.status(200).send(customerEditObject);
+        return res.status(200).send(editedCustomer);
     }
 );
 

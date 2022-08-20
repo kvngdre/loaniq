@@ -28,7 +28,7 @@ const pendingEditFuncs = {
     getAllAdmin: async function() {
         try{
             const allPendingEdits = await PendingEdit.find({});
-            if(allPendingEdits.length === 0) throw new Error('No pending edits');
+            if(allPendingEdits.length == 0) return { errorCode: 404, message: 'No pending edits' };
 
             return allPendingEdits;
 
@@ -49,14 +49,14 @@ const pendingEditFuncs = {
                 //         as: 'customerData'
                 //     }
                 // },
-                // {
-                //     $lookup: {
-                //         from: 'users',
-                //         localField: 'userId',
-                //         foreignField: '_id',
-                //         as: 'userData'
-                //     }
-                // },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'userData'
+                    }
+                },
                 {
                     $match: {
                         lenderId: user.lenderId,
@@ -74,7 +74,7 @@ const pendingEditFuncs = {
                         status: 1,
                         userId: 1,
                         // customerData: 1,
-                        // userData: {name: 1}
+                        userData: {displayName: 1}
                     }
                 },
                 {
@@ -121,14 +121,14 @@ const pendingEditFuncs = {
                         as: 'loanData'
                     }
                 },
-                // {
-                //     $lookup: {
-                //         from: 'users',
-                //         localField: 'userId',
-                //         foreignField: '_id',
-                //         as: 'userData'
-                //     }
-                // },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'userData'
+                    }
+                },
                 pipeline$Match,
                 {
                     $project: {
@@ -139,9 +139,9 @@ const pendingEditFuncs = {
                         documentId: 1,
                         status: 1,
                         userId: 1,
-                        createdAt: 1
+                        createdAt: 1,
                         // loanData: 1, 
-                        // userData: {name: 1}
+                        userData: {displayName: 1}
                     }
                 },
                 {
@@ -159,7 +159,7 @@ const pendingEditFuncs = {
             ]).exec()
 
             const pendingEdits = [...pendingCustomerEdits, ...PendingLoanEdits];
-            if(pendingEdits.length === 0) throw new Error('No pending edits');
+            if(pendingEdits.length == 0) return { errorCode: 404, message: 'No pending edits' };
 
             return pendingEdits;
 
@@ -172,22 +172,22 @@ const pendingEditFuncs = {
     getOne: async function(id, user) {
         try{
             const pendingCustomerEdit = await PendingEdit.aggregate([
-                // {
-                //     $lookup: {
-                //         from: 'customers',
-                //         localField: 'documentId',
-                //         foreignField: '_id',
-                //         as: 'customerData'
-                //     }
-                // },
-                // {
-                //     $lookup: {
-                //         from: 'users',
-                //         localField: 'userId',
-                //         foreignField: '_id',
-                //         as: 'userData'
-                //     }
-                // },
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'documentId',
+                        foreignField: '_id',
+                        as: 'customerData'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'userData'
+                    }
+                },
                 {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
@@ -205,8 +205,8 @@ const pendingEditFuncs = {
                         documentId: 1,
                         status: 1,
                         userId: 1,
-                        // customerData: 1,
-                        // userData: {name: 1}
+                        customerData: 1,
+                        userData: {displayName: 1}
                     }
                 },
                 {
@@ -253,14 +253,14 @@ const pendingEditFuncs = {
                             as: 'loanData'
                         }
                     },
-                    // {
-                    //     $lookup: {
-                    //         from: 'users',
-                    //         localField: 'userId',
-                    //         foreignField: '_id',
-                    //         as: 'userData'
-                    //     }
-                    // },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'userId',
+                            foreignField: '_id',
+                            as: 'userData'
+                        }
+                    },
                     Pipeline$MatchObject,
                     {
                         $project: {
@@ -271,8 +271,8 @@ const pendingEditFuncs = {
                             documentId: 1,
                             status: 1,
                             userId: 1,
-                            // loanData: 1, 
-                            // userData: {name: 1}
+                            loanData: 1, 
+                            userData: {displayName: 1}
                         }
                     },
                     {
@@ -298,14 +298,14 @@ const pendingEditFuncs = {
     updateStatus: async function(id, user, requestBody) {
         try{
             const editedDoc = await PendingEdit.findOneAndUpdate(
-                { _id: id, lenderId: user.lenderId, status: 'pending' }, 
+                { _id: id, lenderId: user.lenderId, status: 'Pending' }, 
                 requestBody, 
                 { new: true }
             );
-            if(!editedDoc) throw new Error('Document not found');
+            if(!editedDoc) return { errorCode: 404, message: 'Document not found' };
             
-            if(editedDoc.status === "approved") {
-                if(editedDoc.type === 'customer') {
+            if(editedDoc.status === "Approved") {
+                if(editedDoc.type === 'Customer') {
                     const customer = await Customer.findById(editedDoc.documentId);
                     
                     customer.set( editedDoc.alteration );
@@ -326,7 +326,7 @@ const pendingEditFuncs = {
 
     deleteApproved: async function() {
         try{
-            const count = await PendingEdit.deleteMany({status: 'approved'});
+            const count = await PendingEdit.deleteMany({status: 'Approved'});
         }catch(exception) {
             debug(exception);
             return exception;

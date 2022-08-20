@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
+const { DateTime } = require('luxon');
 const Loan = require('../models/loanModel');
 const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
@@ -59,6 +60,7 @@ const customerCtrlFuncs = {
             let customers = [];
 
             if (user.role === 'Loan Agent') {
+                //TODO: What should be done here?
                 // customers = await Loan.find({ loanAgent: user.id })
                 //     .populate({
                 //         path: 'customer',
@@ -112,16 +114,6 @@ const customerCtrlFuncs = {
                             _id: 0,
                         },
                     },
-                    // {
-                    //     $project:{
-                    //         customerData: {createdAt: 0, updatedAt: 0, __v: 0}
-                    //     }
-                    // },
-                    // {
-                    //     $project:{
-                    //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
-                    //     }
-                    // }
                 ]).exec();
             } else {
                 let queryParams = _.omit(filters, [
@@ -131,6 +123,10 @@ const customerCtrlFuncs = {
                     'netPay',
                     'name',
                 ]);
+
+                // Name filter
+                if (filters.name)
+                    queryParams.displayName = new RegExp(filters.name, 'i');
 
                 // State Filter
                 if (filters.states)
@@ -155,17 +151,29 @@ const customerCtrlFuncs = {
                 if (filters.segments)
                     queryParams['employmentInfo.segment'] = filters.segments;
 
-                // Creation Date Filter
-                if (filters.start)
-                    queryParams.createdAt = {
-                        $gte: filters.start,
-                        $lte: filters.end ? filters.end : '2122-01-01',
+                // Date Filter - CreatedAt
+                const dateField = 'createdAt';
+                if (filters.date?.start)
+                    queryParams[dateField] = {
+                        $gte: DateTime.fromISO(filters.start)
+                            .setZone(user.timeZone)
+                            .toUTC(),
                     };
+                if (filters.date?.end) {
+                    const target = queryParams[dateField]
+                        ? queryParams[dateField]
+                        : {};
+                    queryParams[dateField] = Object.assign(target, {
+                        $lte: DateTime.fromISO(filters.end)
+                            .setZone(user.timeZone)
+                            .toUTC(),
+                    });
+                }
 
                 customers = await Customer.find(queryParams)
                     .select('-__v')
                     .populate('employmentInfo.segment')
-                    .sort('-createdAt');
+                    .sort('-createdAt'); // descending order
             }
 
             if (customers.length == 0)
@@ -186,7 +194,8 @@ const customerCtrlFuncs = {
 
             const customer = await Customer.findOne(queryParams);
 
-            if (!customer) return { errorCode: 404, message: 'Customer not found' };
+            if (!customer)
+                return { errorCode: 404, message: 'Customer not found' };
 
             return customer;
         } catch (exception) {
@@ -195,37 +204,41 @@ const customerCtrlFuncs = {
         }
     },
 
-    update: async function (customerId, user, requestBody) {
+    update: async function (customerId, user, alteration) {
         try {
-            requestBody = convertToDotNotation(requestBody);
+            alteration = convertToDotNotation(alteration);
 
             const customer = await Customer.findById(customerId);
-            if (!customer) throw new Error('Customer not found');
+            if (!customer)
+                return { errorCode: 404, message: 'Customer not found' };
 
             if (user.role !== 'Admin') {
                 const newPendingEdit = await PendingEditController.create(
                     user,
                     customerId,
-                    'customer',
-                    requestBody
+                    'Customer',
+                    alteration
                 );
                 if (!newPendingEdit || newPendingEdit instanceof Error) {
                     debug(newPendingEdit);
-                    throw newPendingEdit;
+                    return {
+                        errorCode: 500,
+                        message: 'Failed to create pending edit',
+                    };
                 }
 
                 return {
-                    message: 'Submitted. Awaiting Review.',
-                    alteration: newPendingEdit,
+                    message: 'Submitted. Awaiting Review',
+                    data: newPendingEdit,
                 };
             }
 
-            customer.set(requestBody);
+            customer.set(alteration);
             await customer.save();
 
             return {
                 message: 'Customer profile updated',
-                editedDoc: customer,
+                data: customer,
             };
         } catch (exception) {
             debug(exception);
@@ -238,9 +251,8 @@ const customerCtrlFuncs = {
             const result = await Loan.aggregate([
                 {
                     $match: {
-                        // TODO: Change status to approved
                         lenderId: mongoose.Types.ObjectId(user.lenderId),
-                        status: 'pending',
+                        status: 'Approved',
                         createdAt: { $gte: new Date(fromDate) },
                     },
                 },
@@ -275,8 +287,8 @@ const customerCtrlFuncs = {
                     },
                 },
             ]).exec();
-            if (result.length === 0)
-                throw new Error('No customers match filter.');
+            if (result.length == 0)
+                return { errorCode: 404, message: 'No match for filters' };
             // TODO: improved on this message.
 
             return result;

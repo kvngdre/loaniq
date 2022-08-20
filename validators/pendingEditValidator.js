@@ -17,13 +17,13 @@ const validators = {
     edit: function(obj) {
         const schema = Joi.object({
             status: Joi.string()
-                       .valid('approved', 'denied')
+                       .valid('Approved', 'Denied')
                        .required(),
 
-            reason: Joi.string().when('status', {
-                is: 'denied',
+            remark: Joi.string().when('status', {
+                is: 'Denied',
                 then: Joi.required(),
-                otherwise: Joi.forbidden()
+                otherwise: Joi.optional()
             })
         });
 
