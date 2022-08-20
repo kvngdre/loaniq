@@ -86,26 +86,26 @@ const customerCtrlFuncs = {
                     {
                         $match: {
                             lenderId: mongoose.Types.ObjectId(user.lenderId),
-                            loanAgent: mongoose.Types.ObjectId(user.id)
-                        }
+                            loanAgent: mongoose.Types.ObjectId(user.id),
+                        },
                     },
                     {
                         $group: {
-                            _id: "$customer",
-                        }
+                            _id: '$customer',
+                        },
                     },
                     {
-                        $lookup:{
+                        $lookup: {
                             from: 'customers',
                             localField: '_id',
                             foreignField: '_id',
-                            as: 'customerData'
-                        }
+                            as: 'customerData',
+                        },
                     },
                     {
-                        $sort:{
-                            _id: -1
-                        }
+                        $sort: {
+                            _id: -1,
+                        },
                     },
                     {
                         $project: {
@@ -122,7 +122,7 @@ const customerCtrlFuncs = {
                     //         customerData: {name: 1, dateOfBirth: 1, 'employmentInfo.ippis': 1}
                     //     }
                     // }
-                ]).exec()
+                ]).exec();
             } else {
                 let queryParams = _.omit(filters, [
                     'start',
@@ -138,7 +138,9 @@ const customerCtrlFuncs = {
 
                 // Net Pay Filter
                 if (filters.netPay?.start)
-                    queryParams['netPay.value'] = { $gte: filters.netPay.start };
+                    queryParams['netPay.value'] = {
+                        $gte: filters.netPay.start,
+                    };
                 if (filters.netPay?.end) {
                     const target = queryParams['netPay.value']
                         ? queryParams['netPay.value']
@@ -151,7 +153,7 @@ const customerCtrlFuncs = {
 
                 // Segment Filter
                 if (filters.segments)
-                    queryParams['employmentInfo.segment'] = filters.segments
+                    queryParams['employmentInfo.segment'] = filters.segments;
 
                 // Creation Date Filter
                 if (filters.start)
@@ -160,9 +162,6 @@ const customerCtrlFuncs = {
                         $lte: filters.end ? filters.end : '2122-01-01',
                     };
 
-                // queryParams['netPay.value'] = {$gte: 50000}
-                // delete queryParams.netPay
-                console.log(queryParams);
                 customers = await Customer.find(queryParams)
                     .select('-__v')
                     .populate('employmentInfo.segment')
@@ -181,21 +180,13 @@ const customerCtrlFuncs = {
 
     getOne: async function (id) {
         try {
-            const queryParam = mongoose.isValidObjectId(id)
+            const queryParams = mongoose.isValidObjectId(id)
                 ? { _id: id }
                 : { 'employmentInfo.ippis': id };
 
-            const customer = await Customer.findOne(queryParam);
-            //    .select([
-            //        'name.firstName',
-            //        'name.lastName',
-            //        'dateOfBirth',
-            //        'employmentInfo.ippis',
-            //        'employmentInfo.segment',
-            //        'employmentInfo.dateOfEnlistment',
-            //        'netPay' ] );
+            const customer = await Customer.findOne(queryParams);
 
-            if (!customer) throw new Error('Customer not found');
+            if (!customer) return { errorCode: 404, message: 'Customer not found' };
 
             return customer;
         } catch (exception) {

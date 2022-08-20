@@ -4,6 +4,28 @@ const verifyToken = require('../middleware/verifyToken');
 const transactionValidators = require('../validators/transactionValidator');
 const transactionController = require('../controllers/transactionController');
 
+router.post('/', async (req, res) => {
+    const newTransaction = await transactionController.create(
+        req.body.lenderId,
+        req.body.userId,
+        req.body.status,
+        req.body.reference,
+        req.body.type,
+        req.body.desc,
+        req.body.channel,
+        req.body.bank,
+        req.body.amount,
+        req.body.fees,
+        req.body.balance
+    );
+    if (newTransaction.errorCode || newTransaction instanceof Error)
+        return res
+            .status(newTransaction.errorCode || 500)
+            .send(newTransaction.message);
+
+    return res.status(201).send(newTransaction);
+});
+
 router.get(
     '/',
     verifyToken,

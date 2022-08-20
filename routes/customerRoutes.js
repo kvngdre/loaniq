@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const { DateTime } = require('luxon');
 const uploadMultipleFiles = require('../middleware/fileUpload');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
@@ -12,8 +11,6 @@ router.post(
     verifyRole(['Admin', 'Credit', 'Loan Agent']),
     uploadMultipleFiles,
     async (req, res) => {
-        console.log(DateTime.now().minus({'years': 21}).toFormat('yyyy-MM-dd'))
-        console.log(DateTime.now().minus({'years': 21}).toString())
         // TODO: add to pending for agent
         const { error } = customerValidators.validateCreation(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -47,8 +44,8 @@ router.get(
     verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const customer = await customerController.getOne(req.params.id);
-        if (customer instanceof Error)
-            return res.status(404).send(customer.message);
+        if (customer.errorCode || customer instanceof Error)
+            return res.status(customer.errorCode || 500).send(customer.message);
 
         return res.status(200).send(customer);
     }
