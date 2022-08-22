@@ -117,11 +117,11 @@ const customerCtrlFuncs = {
                 ]).exec();
             } else {
                 let queryParams = _.omit(filters, [
-                    'start',
-                    'end',
+                    'date',
                     'segments',
                     'netPay',
                     'name',
+                    'states'
                 ]);
 
                 // Name filter
@@ -169,7 +169,7 @@ const customerCtrlFuncs = {
                             .toUTC(),
                     });
                 }
-
+                console.log(queryParams)
                 customers = await Customer.find(queryParams)
                     .select('-__v')
                     .populate('employmentInfo.segment')
