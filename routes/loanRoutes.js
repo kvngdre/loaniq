@@ -34,7 +34,7 @@ async function getValidator(request, customerSegment=null) {
     };
 };
 
-router.post('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
+router.get('/', verifyToken, verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const loans = await loanController.getAll(req.user, req.body)
     if(loans instanceof Error) return res.status(404).send(loans.message);
 

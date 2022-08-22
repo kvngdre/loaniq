@@ -65,7 +65,7 @@ const transactionCtrlFuncs = {
 
             queryParams = Object.assign(
                 queryParams,
-                _.omit(filters, ['start', 'end'])
+                _.omit(filters, ['date', 'end'])
             );
             
             // TODO: should I make the filters a class?
@@ -82,12 +82,11 @@ const transactionCtrlFuncs = {
                     ? queryParams[dateField]
                     : {};
                 queryParams[dateField] = Object.assign(target, {
-                    $lte: DateTime.fromISO(filters.end)
+                    $lte: DateTime.fromISO(filters.date.end)
                         .setZone(user.timeZone)
-                        .toUTC(),
+                        .toUTC()
                 });
             }
-            
             
             const transactions = await Transaction.find(queryParams);
             if (transactions.length == 0)
