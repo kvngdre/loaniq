@@ -5,6 +5,7 @@ const uploadMultipleFiles = require('../middleware/fileUpload');
 const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 
+// Create a customer
 router.post(
     '/',
     verifyToken,
@@ -25,8 +26,9 @@ router.post(
     }
 );
 
-router.get(
-    '/',
+// Get all customers
+router.post(
+    '/all',
     verifyToken,
     verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
@@ -40,6 +42,7 @@ router.get(
     }
 );
 
+// Get one customer
 router.get(
     '/:id',
     verifyToken,
@@ -53,6 +56,7 @@ router.get(
     }
 );
 
+// Get data for customer creation
 router.post(
     '/customer-booking',
     verifyToken,
@@ -69,6 +73,7 @@ router.post(
     }
 );
 
+// Edit a customer
 router.patch(
     '/:id',
     verifyToken,

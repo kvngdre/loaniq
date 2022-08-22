@@ -26,8 +26,9 @@ router.post('/', async (req, res) => {
     return res.status(201).send(newTransaction);
 });
 
-router.get(
-    '/',
+// Get all transactions
+router.post(
+    '/all',
     verifyToken,
     verifyRole(['Admin', 'Lender']),
     async (req, res) => {
