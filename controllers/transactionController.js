@@ -65,7 +65,7 @@ const transactionCtrlFuncs = {
 
             queryParams = Object.assign(
                 queryParams,
-                _.omit(filters, ['date', 'end'])
+                _.omit(filters, ['date', 'amount'])
             );
             
             // TODO: should I make the filters a class?
@@ -85,6 +85,16 @@ const transactionCtrlFuncs = {
                     $lte: DateTime.fromISO(filters.date.end)
                         .setZone(user.timeZone)
                         .toUTC()
+                });
+            }
+
+            // Number Filter - amount
+            if (filters.amount?.min)
+                queryParams.amount = { $gte: filters.amount.min };
+            if (filters.amount?.max) {
+                const target = queryParams.amount ? queryParams.amount : {};
+                queryParams.amount = Object.assign(target, {
+                    $lte: filters.amount.max,
                 });
             }
             

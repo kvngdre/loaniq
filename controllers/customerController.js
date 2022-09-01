@@ -151,7 +151,7 @@ const customerCtrlFuncs = {
                 if (filters.segments)
                     queryParams['employmentInfo.segment'] = filters.segments;
 
-                // Date Filter - CreatedAt
+                // Date Filter - createdAt
                 const dateField = 'createdAt';
                 if (filters.date?.start)
                     queryParams[dateField] = {

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Segment = require('./segmentModel');
 const debug = require('debug')('app:customerModel');
 
-const schemaOptions = { timestamps: true };
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const addressSchema = {
     street: {
@@ -297,6 +297,8 @@ const customerSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        lenders: [ mongoose.Schema.Types.ObjectId ],
     },
     schemaOptions
 );

@@ -126,11 +126,10 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.generateToken = function() {
     return jwt.sign({
         id: this._id, 
-        lenderId: this.lenderId,
-        firstName: this.name.first, 
-        lastName: this.name.last,
+        iss: this.displayName,
         email: this.email,
         role: this.role,
+        isa: false,
         active: this.active,
         emailVerified: this.emailVerified,
         segments: (this.segments ? this.segments : null),

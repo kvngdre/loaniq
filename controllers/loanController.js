@@ -32,22 +32,23 @@ const loans = {
             loans =  await loanManager.getAll(queryParams);
         }else{
             queryParams = Object.assign(queryParams, _.omit(filters, ['date', 'amount', 'tenor']))
+            
             if(filters.date?.start) queryParams.createdAt = { $gte: filters.date.start };
             if(filters.date?.end) {
                 const target = queryParams.createdAt ? queryParams.createdAt : {}
                 queryParams.createdAt = Object.assign(target , {$lte: moment.tz(filters.date.end, 'Africa/Lagos').tz('UTC').format()})
             };
     
-            if(filters.amount?.start) queryParams.recommendedAmount = { $gte: filters.amount.start};
-            if(filters.amount?.end) {
+            if(filters.amount?.min) queryParams.recommendedAmount = { $gte: filters.amount.min};
+            if(filters.amount?.max) {
                 const target = queryParams.recommendedAmount ? queryParams.recommendedAmount : {}
-                queryParams.recommendedAmount = Object.assign(target , {$lte: filters.amount.end,})
+                queryParams.recommendedAmount = Object.assign(target , {$lte: filters.amount.max,})
             };
     
-            if(filters.tenor?.start) queryParams.recommendedTenor = { $gte: filters.tenor.start};
-            if(filters.tenor?.end) {
+            if(filters.tenor?.min) queryParams.recommendedTenor = { $gte: filters.tenor.min};
+            if(filters.tenor?.max) {
                 const target = queryParams.recommendedTenor ? queryParams.recommendedTenor : {}
-                queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.end })
+                queryParams.recommendedTenor = Object.assign(target , { $lte: filters.tenor.max })
             };
     
             loans = await loanManager.getAll(queryParams)
