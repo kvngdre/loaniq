@@ -1,11 +1,11 @@
 const _ = require('lodash');
-const updateLoanDocBasedOnStatus = require('../../utils/loanStatus');
 const debug = require('debug')('app:loanMgr');
 const Bank = require('../../models/bankModel');
 const Loan = require('../../models/loanModel');
 const Origin = require('../../models/originModel');
 const Segment = require('../../models/segmentModel');
 const Customer = require('../../models/customerModel');
+const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
@@ -13,7 +13,7 @@ const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEditController');
 
 const manager = {
-    createLoan: async function (customer, loanMetricsObj, request) {
+    createLoan: async function (customer, loanMetrics, request) {
         try {
             const customerOrigin = await Origin.findOne({
                 ippis: customer.employmentInfo.ippis,
@@ -34,7 +34,6 @@ const manager = {
             })
                 .sort('-createdAt')
                 .limit(1);
-
             if (loans.length > 0) request.body.loanType = 'Top Up';
 
             let agent = null;
@@ -76,16 +75,13 @@ const manager = {
             request.body.netPay = customer.netPay.value;
             request.body.lenderId = request.user.lenderId;
             request.body.creditOfficer = creditOfficer._id;
-            request.body.transferFee = loanMetricsObj.transferFee;
-            request.body.interestRate = loanMetricsObj.interestRate;
-            request.body.validationParams = { dob: customer.dateOfBirth };
-            request.body.validationParams.minNetPay = loanMetricsObj.minNetPay;
-            request.body.upfrontFeePercentage =
-                loanMetricsObj.upfrontFeePercentage;
-            request.body.validationParams.dtiThreshold =
-                loanMetricsObj.dtiThreshold;
-            request.body.validationParams.doe =
-                customer.employmentInfo.dateOfEnlistment;
+            request.body.transferFee = loanMetrics.transferFee;
+            request.body.interestRate = loanMetrics.interestRate;
+            request.body.params = { dob: customer.dateOfBirth };
+            request.body.params.minNetPay = loanMetrics.minNetPay;
+            request.body.upfrontFeePercent = loanMetrics.upfrontFeePercent;
+            request.body.params.dtiThreshold = loanMetrics.dtiThreshold;
+            request.body.params.doe = customer.employmentInfo.dateOfEnlistment;
 
             const newLoan = await Loan.create(request.body);
             await customer.save();
@@ -97,99 +93,100 @@ const manager = {
         }
     },
 
-    createLoanRequest: async function (loanMetricsObj, request) {
+    createLoanRequest: async function (
+        user,
+        loanParams,
+        customerPayload,
+        loanPayload
+    ) {
         try {
             let customer = await customerController.getOne(
-                request.body.employmentInfo.ippis
+                customerPayload.employmentInfo.ippis,
+                user
             );
-            if (customer instanceof Error) {
-                // If customer is an error obj i.e. not found, create new customer
-                customer = new Customer(_.omit(request.body, ['loan']));
-                if (customer instanceof Error) throw customer;
-
-                const { error } = await customer.validateSegment();
-                if (error) throw new Error(error.message);
-            }
-
-            const customerInOrigin = await Origin.findOne({
-                ippis: customer.employmentInfo.ippis,
-            });
-            if (customerInOrigin) {
-                customer.set({
-                    'netPay.value':
-                        customerInOrigin.netPays[0] || request.body.netPay,
-                    'netPay.updatedAt': new Date(),
-                });
-                request.body.loan.netPay = customer.netPay.value;
+            if (customer.errorCode === 404) {
+                customer = await customerController.create(
+                    customerPayload,
+                    user
+                );
+                if (customer.hasOwnProperty('errorCode')) {
+                    // TODO: log error
+                    return customer;
+                }
             }
 
             const loans = await Loan.find({
-                customer: customer._id,
-                lenderId: request.user.lenderId,
                 active: true,
+                customer: customer._id,
+                lenderId: user.lenderId,
             })
                 .sort('-createdAt')
                 .limit(1);
-
-            if (loans.length > 0) request.body.loan.loanType = 'Top Up';
+            if (loans.length > 0) loanPayload.loanType = 'Top Up';
 
             let agent = null;
-            if (request.user.role === 'Loan Agent') {
-                agent = await userController.getOne(request.user.id, {
-                    lenderId: request.user.lenderId,
+            if (user.role === 'Loan Agent') {
+                agent = await userController.getOne(user.id, {
+                    lenderId: user.lenderId,
                     segments: customer.employmentInfo.segment,
                 });
             }
 
-            if ((!agent || agent instanceof Error) && loans.length == 0) {
+            // If no agent was found and customer has no active loan, pick an agent at random.
+            if ((!agent || agent.errorCode) && loans.length == 0) {
                 agent = await pickRandomUser(
-                    request.user.lenderId,
+                    user.lenderId,
                     'Loan Agent',
                     customer.employmentInfo.segment
                 );
             }
 
-            if ((!agent || agent instanceof Error) && loans.length > 0)
+            // if no agent was found and customer has an active loan, use the agent on that loan.
+            if ((!agent || agent.errorCode) && loans.length > 0)
                 agent = await userController.getOne(loans[0].loanAgent);
-            if (!agent) throw new Error('Could not assign loan agent');
 
-            let creditOfficer = await pickRandomUser(
-                request.user.lenderId,
+            // TODO: review the http status code.
+            // If no loan agent still. Fail.
+            if (!agent)
+                return {
+                    errorCode: 424,
+                    message: 'Failed to assign loan agent.',
+                };
+
+            // Assign a credit officer at random.
+            const creditOfficer = await pickRandomUser(
+                user.lenderId,
                 'Credit',
                 customer.employmentInfo.segment
             );
             if (!creditOfficer)
-                throw new Error('Could not assign credit officer');
+                return {
+                    errorCode: 424,
+                    message: 'Failed to assign credit officer.',
+                };
 
-            request.body.loan.loanAgent = agent._id;
-            request.body.loan.customer = customer._id;
-            request.body.loan.lenderId = request.user.lenderId;
-            request.body.loan.creditOfficer = creditOfficer._id;
-            request.body.loan.transferFee = loanMetricsObj.transferFee;
-            request.body.loan.interestRate = loanMetricsObj.interestRate;
-            request.body.loan.validationParams = { dob: customer.dateOfBirth };
-            request.body.loan.validationParams.minNetPay =
-                loanMetricsObj.minNetPay;
-            request.body.loan.upfrontFeePercentage =
-                loanMetricsObj.upfrontFeePercentage;
-            request.body.loan.validationParams.dtiThreshold =
-                loanMetricsObj.dtiThreshold;
-            request.body.loan.validationParams.doe =
-                customer.employmentInfo.dateOfEnlistment;
+            loanPayload.loanAgent = agent._id;
+            loanPayload.customer = customer._id;
+            loanPayload.lenderId = user.lenderId;
+            loanPayload.netPay = customer.netPay.value;
+            loanPayload.creditOfficer = creditOfficer._id;
+            loanPayload.transferFee = loanParams.transferFee;
+            loanPayload.interestRate = loanParams.interestRate;
+            loanPayload.params = { dob: customer.dateOfBirth };
+            loanPayload.params.minNetPay = loanParams.minNetPay;
+            loanPayload.upfrontFeePercent = loanParams.upfrontFeePercent;
+            loanPayload.params.dtiThreshold = loanParams.dtiThreshold;
+            loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
 
-            await customer.save();
-            const newLoan = await Loan.create(request.body.loan);
+            // await customer.save();
+            const newLoan = await Loan.create(loanPayload);
 
             return { customer, loan: newLoan };
         } catch (exception) {
+            // TODO: log error
+            customerController.delete(customerPayload.employmentInfo.ippis);
             debug(exception);
-            if (exception.code === 11000) {
-                const baseString = 'Duplicate ';
-                const field = Object.keys(exception.keyPattern)[0];
-
-                return baseString + field;
-            }
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.'};
         }
     },
 
@@ -227,11 +224,55 @@ const manager = {
                     {
                         path: 'employmentInfo.segment',
                         model: Segment,
-                        select: '-_id code name',
+                        // select: '_id code name',
                     },
                 ],
             });
             if (!loan) return { errorCode: 404, message: 'Loan not found' };
+
+            return loan;
+        } catch (exception) {
+            debug(exception);
+            return exception;
+        }
+    },
+
+    edit: async function (user, loan, payload) {
+        try {
+            payload = convertToDotNotation(payload);
+
+            // If not a credit user, create a pending edit.
+            if (user.role !== 'Credit') {
+                const result = await Loan.findOne({
+                    _id: id,
+                    lenderId: user.lenderId,
+                });
+                if (!result) throw new Error('Loan not found');
+
+                const newPendingEdit = await PendingEditController.create(
+                    user,
+                    loan._id,
+                    'Loan',
+                    payload
+                );
+                if (!newPendingEdit.hasOwnProperty('errorCode')) {
+                    debug(newPendingEdit);
+                    return newPendingEdit;
+                }
+
+                return {
+                    message: 'Submitted. Awaiting Review',
+                    body: newPendingEdit,
+                };
+            }
+
+            if (payload.hasOwnProperty('status'))
+                loan = await updateLoanStatus(payload, loan);
+            else {
+                loan.set(payload);
+            }
+            
+            await loan.save();
 
             return loan;
         } catch (exception) {
@@ -297,67 +338,16 @@ const manager = {
         }
     },
 
-    edit: async function (user, id, alteration) {
-        try {
-            alteration = convertToDotNotation(alteration);
-            console.log(alteration);
-
-            // If not a credit user, create a pending edit.
-            if (user.role !== 'Credit') {
-                const result = await Loan.findOne({
-                    _id: id,
-                    lenderId: user.lenderId,
-                });
-                if (!result) throw new Error('Loan not found');
-
-                const newPendingEdit = await PendingEditController.create(
-                    user,
-                    id,
-                    'loan',
-                    alteration
-                );
-                if (!newPendingEdit || newPendingEdit instanceof Error) {
-                    debug(newPendingEdit);
-                    throw newPendingEdit;
-                }
-
-                return {
-                    message: 'Submitted. Awaiting Review',
-                    body: newPendingEdit,
-                };
-            }
-
-            // TODO: Should the credit user be able to edit every type of loan?
-            let loan = await Loan.findOne({ _id: id, lenderId: user.lenderId });
-            if (!loan) throw new Error('loan not found');
-
-            if (alteration.status)
-                loan = await updateLoanDocBasedOnStatus(
-                    alteration.status,
-                    alteration,
-                    loan
-                );
-            else {
-                loan.set(alteration);
-                await loan.save();
-            }
-
-            return loan;
-        } catch (exception) {
-            debug(exception);
-            return exception;
-        }
-    },
-
     closeExpiringLoans: async function () {
         try {
+            // TODO: Convert time to UTC
             const today = new Date().toLocaleDateString();
-            // const loans = await Loan.find( { active: true, expectedEndDate: {$gt: today} } );
+            // const loans = await Loan.find( { active: true, maturityDate: {$gt: today} } );
             const loans = await Loan.updateMany(
                 {
                     status: 'Approved',
                     active: true,
-                    expectedEndDate: { $gte: today },
+                    maturityDate: { $gte: today },
                 },
                 { status: 'Completed', active: false }
             );

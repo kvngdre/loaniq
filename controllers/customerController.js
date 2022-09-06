@@ -6,15 +6,15 @@ const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customerModel');
+const originController = require('../controllers/originController');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
 
 const customerCtrlFuncs = {
-    create: async function (request) {
+    create: async function (payload, user) {
         try {
-            // TODO: should the net pay be read at time of creation?
             const customerExists = await Customer.findOne({
-                'employmentInfo.ippis': request.body.employmentInfo.ippis,
+                'employmentInfo.ippis': payload.employmentInfo.ippis,
             });
             if (customerExists)
                 return {
@@ -23,35 +23,48 @@ const customerCtrlFuncs = {
                 };
 
             // TODO: uncomment this later
-            // request.body.passport.path = request.file.passport[0].path;
-            // request.body.passport.originalName = request.file.passport[0].originalname;
+            // payload.passport.path = request.file.passport[0].path;
+            // payload.passport.originalName = request.file.passport[0].originalname;
 
-            // request.body.idCard.path = request.file.idCard[0].path;
-            // request.body.passport.originalName = request.file.idCard[0].originalname;
+            // payload.idCard.path = request.file.idCard[0].path;
+            // payload.passport.originalName = request.file.idCard[0].originalname;
 
-            const newCustomer = new Customer(request.body);
+            const customer = new Customer(payload);
+            customer.addLender(user.lenderId);
 
-            await newCustomer.save();
+            const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
+            if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
+            customer.netPay.value = originCopy.netPays[0];
+
+            await customer.save();
 
             return {
-                message: 'Customer created',
-                data: newCustomer,
+                message: 'Customer Created.',
+                data: customer
             };
         } catch (exception) {
-            debug(exception.message);
-            if (exception.code === 11000) {
-                const baseString = 'Duplicate ';
+            // logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
-                if (field === 'phone') field = 'phone number';
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                if (field === 'Phone') field = 'Phone number';
 
-                return { errorCode: 409, message: baseString + field };
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
             }
+
             if (exception.name === 'ValidationError') {
-                exception.message = exception.message.split('>>')[1];
-
-                return { errorCode: 400, message: exception.message };
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message,
+                };
             }
-            return exception;
+
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -60,31 +73,7 @@ const customerCtrlFuncs = {
             let customers = [];
 
             if (user.role === 'Loan Agent') {
-                //TODO: What should be done here?
-                // customers = await Loan.find({ loanAgent: user.id })
-                //     .populate({
-                //         path: 'customer',
-                //         model: Customer,
-                //         populate: [
-                //             {
-                //                 path: 'employmentInfo.segment',
-                //                 model: Segment,
-                //                 select: '-_id code',
-                //             },
-                //         ],
-                //         // select: [
-                //         //     'name',
-                //         //     'dateOfBirth',
-                //         //     'netPay',
-                //         //     'employmentInfo.ippis',
-                //         //     'employmentInfo.segment',
-                //         //     'employmentInfo.dateOfEnlistment',
-                //         // ],
-                //     })
-                //     .select('-_id customer')
-                //     .distinct('customer');
-
-                customers = await Loan.aggregate([
+                    result = await Loan.aggregate([
                     {
                         $match: {
                             lenderId: mongoose.Types.ObjectId(user.lenderId),
@@ -101,7 +90,7 @@ const customerCtrlFuncs = {
                             from: 'customers',
                             localField: '_id',
                             foreignField: '_id',
-                            as: 'customerData',
+                            as: 'customers',
                         },
                     },
                     {
@@ -115,14 +104,23 @@ const customerCtrlFuncs = {
                         },
                     },
                 ]).exec();
+
+                // Flatten result
+                for (customer of result) {
+                    customers.push(customer.customers[0]);
+                }
             } else {
-                let queryParams = _.omit(filters, [
-                    'date',
-                    'segments',
-                    'netPay',
-                    'name',
-                    'states'
-                ]);
+                let queryParams = { lenders: user.lenderId };
+                queryParams = Object.assign(
+                    queryParams,
+                    _.omit(filters, [
+                        'date',
+                        'segments',
+                        'netPay',
+                        'name',
+                        'states',
+                    ])
+                );
 
                 // Name filter
                 if (filters.name)
@@ -132,7 +130,7 @@ const customerCtrlFuncs = {
                 if (filters.states)
                     queryParams['residentialAddress.state'] = filters.states;
 
-                // Net Pay Filter
+                // Amount Filter - Net Pay
                 if (filters.netPay?.start)
                     queryParams['netPay.value'] = {
                         $gte: filters.netPay.start,
@@ -169,53 +167,59 @@ const customerCtrlFuncs = {
                             .toUTC(),
                     });
                 }
-                console.log(queryParams)
+
                 customers = await Customer.find(queryParams)
-                    .select('-__v')
                     .populate('employmentInfo.segment')
                     .sort('-createdAt'); // descending order
             }
 
             if (customers.length == 0)
-                return { errorCode: 404, message: 'No customers found' };
+                return { errorCode: 404, message: 'No customers found.' };
 
-            return customers;
+            return {
+                message: 'success',
+                data: customers,
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    getOne: async function (id) {
+    getOne: async function (id, user) {
         try {
             const queryParams = mongoose.isValidObjectId(id)
-                ? { _id: id }
-                : { 'employmentInfo.ippis': id };
+                ? { _id: id, lenders: user.lenderId }
+                : { 'employmentInfo.ippis': id, lenders: user.lenderId };
 
             const customer = await Customer.findOne(queryParams);
-
             if (!customer)
-                return { errorCode: 404, message: 'Customer not found' };
+                return { errorCode: 404, message: 'Customer not found.' };
 
-            return customer;
+            return {
+                message: 'success',
+                data: customer
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    update: async function (customerId, user, alteration) {
+    update: async function (id, user, alteration) {
         try {
             alteration = convertToDotNotation(alteration);
 
-            const customer = await Customer.findById(customerId);
+            const queryParams = { _id: id, lenders: user.lenderId };
+
+            const customer = await Customer.findOne(queryParams);
             if (!customer)
-                return { errorCode: 404, message: 'Customer not found' };
+                return { errorCode: 404, message: 'Customer not found.' };
 
             if (user.role !== 'Admin') {
                 const newPendingEdit = await PendingEditController.create(
                     user,
-                    customerId,
+                    id,
                     'Customer',
                     alteration
                 );
@@ -223,12 +227,12 @@ const customerCtrlFuncs = {
                     debug(newPendingEdit);
                     return {
                         errorCode: 500,
-                        message: 'Failed to create pending edit',
+                        message: 'Failed to create pending edit.',
                     };
                 }
 
                 return {
-                    message: 'Submitted. Awaiting Review',
+                    message: 'Submitted. Awaiting Review.',
                     data: newPendingEdit,
                 };
             }
@@ -237,17 +241,19 @@ const customerCtrlFuncs = {
             await customer.save();
 
             return {
-                message: 'Customer profile updated',
+                message: 'Customer profile updated.',
                 data: customer,
             };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
     fetchCustomerCreation: async function (user, fromDate) {
         try {
+            const customers = [];
+
             const result = await Loan.aggregate([
                 {
                     $match: {
@@ -271,7 +277,7 @@ const customerCtrlFuncs = {
                 },
                 {
                     $project: {
-                        customerData: {
+                        customers: {
                             name: 1,
                             gender: 1,
                             dateOfBirth: 1,
@@ -287,16 +293,34 @@ const customerCtrlFuncs = {
                     },
                 },
             ]).exec();
-            if (result.length == 0)
-                return { errorCode: 404, message: 'No match for filters' };
-            // TODO: improved on this message.
+            // Flatten result
+            for (customer of result) {
+                customers.push(customer.customers[0]);
+            }
+            if (customers.length === 0)
+                return { errorCode: 404, message: 'No match for filters.' };
 
-            return result;
+            return {
+                message: 'success',
+                data: result
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
+
+    delete: async function(ippis) {
+        try{ 
+            const customer = Customer.findOneAndDelete({'employmentInfo.ippis': ippis});
+            if(!customer) return { errorCode: 404, message: 'Customer not found.'};
+
+            return customer;
+        }catch(exception) {
+            debug(exception);
+            return { errorCode: 500, message: 'Something went wrong.' };
+        }
+    }
 };
 
 module.exports = customerCtrlFuncs;

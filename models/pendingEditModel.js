@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const schemaOptions = { strict: false, timestamps: true };
+const schemaOptions = { strict: false, timestamps: true, versionKey: false };
 
 const pendingSchema = new mongoose.Schema(
     {

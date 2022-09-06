@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const moment = require('moment')
 const router = require('express').Router();
 const debug = require('debug')('app:loanRoute');
 const verifyRole = require('../middleware/verifyRole');
@@ -10,10 +9,10 @@ const customerValidators = require('../validators/customerValidator');
 const customerController = require('../controllers/customerController');
 const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
 
-
+// Get Loan Validators.
 async function getValidator(request, customerSegment=null) {
     try{
-        const { loanMetrics, segments } = await lenderController.getConfig(request.user.lenderId);
+        const { data: { loanMetrics, segments } } = await lenderController.getConfig(request.user.lenderId);
         const { minLoanAmount, maxLoanAmount, minTenor, maxTenor } = segments.find(
             (segmentSettings) => segmentSettings.segment.toString() === (customerSegment ? customerSegment.toString() : request.body.employmentInfo.segment)
         );
@@ -58,13 +57,11 @@ router.get('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), a
 
 router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const validatorObj = await getValidator(req);
-    if (validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
+    if (validatorObj instanceof Error) return res.status(500).send('Error fetching loan and segment configurations.');
 
     const { loanMetrics, requestValidator } = validatorObj;
 
     const customerObj = _.omit(req.body, ['loan']);
-
-    req.body.loan.netPay = req.body.netPay.value;
     const loanObj = req.body.loan;
 
     var { error } = customerValidators.validateCreation(customerObj);
@@ -73,8 +70,8 @@ router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Credit', 'Lo
     var { error } = requestValidator.loanRequestCreation(loanObj)
     if(error)return res.status(400).send(error.details[0].message);
 
-    const loanRequest = await loanController.createLoanRequest(loanMetrics, req);
-    if(loanRequest instanceof Error) return res.status(400).send(loanRequest.message);
+    const loanRequest = await loanController.createLoanRequest(req.user, loanMetrics, customerObj, loanObj);
+    if(loanRequest.hasOwnProperty('errorCode')) return res.status(loanRequest.errorCode).send(loanRequest.message);
 
     return res.status(200).send(loanRequest);
 });
@@ -98,20 +95,10 @@ router.post('/new', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req
 });
 
 router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const loan = await loanController.getOne(req.user, req.params.id);
-    if(loan.errorCode) return res.status(loan.errorCode).send(loan.message);
+    const loan = await loanController.update(req.params.id, req.user, req.body)
+    if(loan.hasOwnProperty('errorCode')) return res.status(loan.errorCode).send(loan.message);
 
-    const {customer: {employmentInfo: { segment }}} = loan;
-
-    const { requestValidator } = await getValidator(req, segment)
-
-    const { error } = requestValidator.validateEdit(req.body)
-    if(error) return res.status(400).send(error.details[0].message);
-    
-    const modifiedLoan = await loanController.edit(req.user, req.params.id, req.body)
-    if(modifiedLoan.errorCode || modifiedLoan instanceof Error) return res.status(modifiedLoan.errorCode || 500).send(modifiedLoan.message);
-
-    return res.status(200).send(modifiedLoan);
+    return res.status(200).send(loan);
       
 });
 

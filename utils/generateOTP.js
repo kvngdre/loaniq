@@ -5,15 +5,14 @@ const ONE_MINUTE_IN_MILLISECONDS = 60_000;
  * @param {number} expireIn
  * @returns {object} six digit otp string and expiration time.
  */
-function generateOTP(expireIn=5) {
+function generateOTP(expireIn = 5) {
+    const otp = Math.floor(100_000 + Math.random() * 900_000).toString();
+    const expires = Date.now() + expireIn * ONE_MINUTE_IN_MILLISECONDS;
 
-    const otp = (Math.floor(100_000 + Math.random() * 900_000)).toString();
-    const expirationTime = Date.now() + expireIn * ONE_MINUTE_IN_MILLISECONDS;
-
-    return  {
+    return {
         OTP: otp,
-        expirationTime
+        expires,
     };
-}   
+}
 
-module.exports  = generateOTP;
+module.exports = generateOTP;

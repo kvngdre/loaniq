@@ -1,6 +1,5 @@
 const cors = require('cors');
 const express = require('express');
-const authRoute = require('../routes/authRoute');
 const loanRoutes = require('../routes/loanRoutes');
 const userRoutes = require('../routes/userRoutes');
 const stateRoutes = require('../routes/stateRoutes');
@@ -21,8 +20,6 @@ module.exports = function(app) {
     app.use(express.json());
 
     // Route handlers
-    app.use('/api/', authRoute);
-    app.use('/api/auth', authRoute);
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/banks', banksRoutes);

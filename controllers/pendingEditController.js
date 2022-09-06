@@ -21,7 +21,7 @@ const pendingEditFuncs = {
 
         }catch(exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.'};
         };
     },
 

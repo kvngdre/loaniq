@@ -13,14 +13,13 @@ router.post(
     uploadMultipleFiles,
     async (req, res) => {
         // TODO: add to pending for agent
+        // TODO: pass the lender id from guest request
         const { error } = customerValidators.validateCreation(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const newCustomer = await customerController.create(req);
-        if (newCustomer.errorCode || newCustomer instanceof Error)
-            return res
-                .status(newCustomer.errorCode || 500)
-                .send(newCustomer.message);
+        const newCustomer = await customerController.create(req.body, req.user);
+        if (newCustomer.hasOwnProperty('errorCode'))
+            return res.status(newCustomer.errorCode).send(newCustomer.message);
 
         return res.status(201).send(newCustomer);
     }
@@ -33,10 +32,8 @@ router.post(
     verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const customers = await customerController.getAll(req.user, req.body);
-        if (customers.errorCode || customers instanceof Error)
-            return res
-                .status(customers.errorCode || 500)
-                .send(customers.message);
+        if (customers.hasOwnProperty('errorCode'))
+            return res.status(customers.errorCode).send(customers.message);
 
         return res.status(200).send(customers);
     }
@@ -48,8 +45,11 @@ router.get(
     verifyToken,
     verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
-        const customer = await customerController.getOne(req.params.id);
-        if (customer.errorCode || customer instanceof Error)
+        const customer = await customerController.getOne(
+            req.params.id,
+            req.user
+        );
+        if (customer.hasOwnProperty('errorCode'))
             return res.status(customer.errorCode || 500).send(customer.message);
 
         return res.status(200).send(customer);
@@ -66,8 +66,8 @@ router.post(
             req.user,
             req.body.fromDate
         );
-        if (result instanceof Error)
-            return res.status(400).send(result.message);
+        if (result.hasOwnProperty('errorCode'))
+            return res.status(result.errorCode).send(result.message);
 
         return res.status(200).send(result);
     }
@@ -84,17 +84,15 @@ router.patch(
         const { error } = customerValidators.validateEdit(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const editedCustomer = await customerController.update(
+        const customer = await customerController.update(
             req.params.id,
             req.user,
             req.body
         );
-        if (editedCustomer.errorCode || editedCustomer instanceof Error)
-            return res
-                .status(editedCustomer.errorCode || 500)
-                .send(editedCustomer.message);
+        if (customer.hasOwnProperty('errorCode'))
+            return res.status(customer.errorCode).send(customer.message);
 
-        return res.status(200).send(editedCustomer);
+        return res.status(200).send(customer);
     }
 );
 

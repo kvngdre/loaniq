@@ -106,7 +106,7 @@ const accountInfoSchema = Joi.object({
     salaryAccountNumber: Joi.string()
         .pattern(/^[0-9]{10}$/)
         .message({
-            'string.pattern.base': 'Invalid account number',
+            'string.pattern.base': 'Invalid account number.',
         }),
 
     bank: {
@@ -145,7 +145,6 @@ const validators = {
             accountInfo: accountInfoSchema.required(),
 
             // not required because validator is used in loan creation
-            netPay: netPaySchema.required(),
         });
 
         return schema.validate(customer);
@@ -176,7 +175,7 @@ const validators = {
 
             accountInfo: accountInfoSchema,
 
-            // netPay: netPaySchema
+            netPay: netPaySchema
         });
 
         return schema.validate(customer);

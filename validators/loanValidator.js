@@ -10,123 +10,109 @@ class LoanRequestValidators {
     #netPaySchema;
     #amountSchema;
     #tenorSchema;
-    constructor(minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor ) {
+    constructor(minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor) {
         this.#minNetPay = minNetPay;
         this.#minLoanAmount = minLoanAmount;
         this.#maxLoanAmount = maxLoanAmount;
         this.#minTenor = minTenor;
         this.#maxTenor = maxTenor;
         this.#netPaySchema = Joi.number().min(this.#minNetPay);
-        this.#amountSchema = Joi.number().min(this.#minLoanAmount).max(this.#maxLoanAmount);
-        this.#tenorSchema = Joi.number().min(this.#minTenor).max(this.#maxTenor);
+        this.#amountSchema = Joi.number()
+            .min(this.#minLoanAmount)
+            .max(this.#maxLoanAmount);
+        this.#tenorSchema = Joi.number()
+            .min(this.#minTenor)
+            .max(this.#maxTenor);
     }
 
     loanRequestCreation(loanRequest) {
-        const schema = Joi.object({  
-            netPay: this.#netPaySchema.required(),
-
+        const schema = Joi.object({
             amount: this.#amountSchema.required(),
-
             amountInWords: Joi.string().required(),
-
             tenor: this.#tenorSchema.required(),
-
             loanType: Joi.string(),
         });
         return schema.validate(loanRequest);
-    };
+    }
 
     loanCreation(newLoan) {
         const schema = Joi.object({
             customer: Joi.objectId().required(),
-
-            netPay: this.#netPaySchema.required(),
-
             amount: this.#amountSchema.required(),
-
             amountInWords: Joi.string().required(),
-
             tenor: this.#tenorSchema.required(),
-
-            loanType: Joi.string()
+            loanType: Joi.string(),
         });
         return schema.validate(newLoan);
-    };
+    }
 
     validateEdit(loan) {
         const schema = Joi.object({
             amount: this.#amountSchema,
-
             amountInWords: Joi.string(),
-
             tenor: this.#tenorSchema,
-
             loanType: Joi.string(),
-
             status: Joi.string().valid(
-                'Discontinued', 
+                'Discontinued',
                 'Liquidated',
                 'Completed',
-                'Approved', 
-                'On Hold', 
-                'Pending', 
-                'Denied', 
+                'Approved',
+                'On Hold',
+                'Pending',
+                'Denied'
             ),
-
-            comment: Joi.string().when('status', {
-                is: Joi.exist(), 
-                then: Joi.when('status', {
-                    is: ['Approved', 'Pending'],
-                    then: Joi.optional(),
-                    otherwise: Joi.required()
-                }),
-            }).invalid('', ' ').min(4),
-
+            comment: Joi.string()
+                .when('status', {
+                    is: Joi.exist(),
+                    then: Joi.when('status', {
+                        is: ['Approved', 'Pending'],
+                        then: Joi.optional(),
+                        otherwise: Joi.required(),
+                    }),
+                })
+                .invalid('', ' ')
+                .min(4),
             recommendedAmount: Joi.number()
-                                  .min(this.#minLoanAmount)
-                                  .max(this.#maxLoanAmount)
-                                  .when('status', {
-                                    is: ['Approved', 'Denied', 'On Hold'],
-                                    then: Joi.required()
-                                }),
-
+                .min(this.#minLoanAmount)
+                .max(this.#maxLoanAmount)
+                .when('status', {
+                    is: ['Approved', 'Denied', 'On Hold'],
+                    then: Joi.required(),
+                }),
             recommendedTenor: Joi.number()
-                                 .min(this.#minTenor)
-                                 .max(this.#maxTenor)
-                                 .when('status', {
-                                    is: ['Approved', 'Denied', 'On Hold'],
-                                    then: Joi.required()
-                                }),
-
+                .min(this.#minTenor)
+                .max(this.#maxTenor)
+                .when('status', {
+                    is: ['Approved', 'Denied', 'On Hold'],
+                    then: Joi.required(),
+                }),
             customer: Joi.objectId(),
-            
             loanAgent: Joi.objectId(),
 
             // interestRate: Joi.number(),
-            // upfrontFeePercentage: Joi.number(),
+            // upfrontFeePercent: Joi.number(),
             // transferFee: Joi.number(),
             // netPay: this.#netPaySchema,
         });
 
         return schema.validate(loan);
     }
+}
 
-};
-
-const loanValidators ={
+const loanValidators = {
     validateDisbursement: function (dateTimeObj) {
         // TODO: finish disbursement
         const schema = Joi.object({
             start: Joi.string().required(),
             end: Joi.date(),
-            disbursed: Joi.boolean()
+            disbursed: Joi.boolean(),
         });
 
         return schema.validate(dateTimeObj);
-    }
+    },
 };
 
 module.exports = {
     LoanRequestValidators,
-    loanValidators
+    loanValidators,
 };

@@ -12,7 +12,7 @@ const bankFuncs = {
         try {
             const bankExists = await Bank.findOne({ code: requestBody.code });
             if (bankExists)
-                return { errorCode: 409, message: 'Bank already exists' };
+                return { errorCode: 409, message: 'Code already in use.' };
 
             const newBank = new Bank({
                 name,
@@ -22,12 +22,12 @@ const bankFuncs = {
             await newBank.save();
 
             return {
-                message: 'Bank created successfully',
+                message: 'Bank created.',
                 data: newBank,
             };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -35,12 +35,15 @@ const bankFuncs = {
         try {
             const bank = Bank.findById(id);
             if (!bank)
-                return { errorCode: 404, message: 'Bank does not exist' };
+                return { errorCode: 404, message: 'Bank does not exist.' };
 
-            return bank;
+            return {
+                message: 'success',
+                data: bank
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -48,12 +51,15 @@ const bankFuncs = {
         try {
             const banks = await Bank.find(queryParams);
             if (banks.length === 0)
-                return { errorCode: 404, message: 'No banks found' };
+                return { errorCode: 404, message: 'No banks found.' };
 
-            return banks;
+            return {
+                message: 'success',
+                data: banks
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -64,24 +70,30 @@ const bankFuncs = {
                 requestBody,
                 { new: true }
             );
-            if (!bank) return { errorCode: 404, message: 'Bank not found' };
+            if (!bank) return { errorCode: 404, message: 'Bank not found.' };
 
-            return bank;
+            return {
+                message: 'Updated',
+                data: bank
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
     delete: async function (id) {
         try {
             const bank = await Bank.findByIdAndRemove(id);
-            if (!bank) return { errorCode: 404, message: 'bank not found' };
+            if (!bank) return { errorCode: 404, message: 'Bank not found.' };
 
-            return bank;
+            return {
+                message: 'Deleted',
+                data: bank
+            };
         } catch (exception) {
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 };

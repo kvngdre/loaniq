@@ -4,8 +4,8 @@ class Metrics {
         return upfrontFee.toFixed(2);
     };
 
-    calcRepayment(loanAmount, interestRate, loanTenor) {
-        const repayment =  (loanAmount * interestRate) + (loanAmount / loanTenor);
+    calcRepayment(recommendedAmount, interestRate, recommendedTenor) {
+        const repayment =  (recommendedAmount * interestRate) + (recommendedAmount / loanTenor);
         return repayment.toFixed(2);
     };
 
@@ -16,7 +16,7 @@ class Metrics {
 
     calcNetValue(loanAmount, upfrontFee, transferFee) {
         const netValue = (loanAmount - upfrontFee) - transferFee;
-        if(netValue >= loanAmount) throw new Error('Error: Net value should not be greater than loan amount');
+        if(netValue >= loanAmount) throw new Error('Error: Net value should not be greater than loan amount.');
 
         return netValue.toFixed(2);
     };
@@ -48,11 +48,11 @@ class Metrics {
     };
 
     dtiRatioCalculator(repayment, netPay, maxDTI) {
-        const value = repayment / netPay;
+        const dti = (repayment / netPay) * 100;
 
         return { 
             isValid: value < maxDTI, 
-            value: value.toFixed(4) 
+            dti: dti.toFixed(2) 
         };
     };
 };

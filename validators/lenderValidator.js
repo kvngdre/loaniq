@@ -2,188 +2,187 @@ const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 const { joiPassword } = require('joi-password');
 
-
 const phoneSchema = Joi.string()
-                       .pattern(/^0([7-9])[0-9]{9}$/)
-                       .message({
-                        'string.pattern.base': 'Invalid phone number.'
-                    });
+    .pattern(/^0([7-9])[0-9]{9}$/)
+    .message({
+        'string.pattern.base': 'Invalid phone number.',
+    });
 
 const emailSchema = Joi.string().email().min(10).max(255);
 
-const passwordSchema = joiPassword.string()
-                                  .minOfUppercase(1)
-                                  .minOfSpecialCharacters(2)
-                                  .minOfNumeric(2)
-                                  .noWhiteSpaces()
-                                  .min(6)
-                                  .max(255)
-                                  .messages({
-                                    'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character.',
-                                    'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special characters.',
-                                    'password.minOfNumeric': '{#label} should contain at least {#min} numbers.',
-                                    'password.noWhiteSpaces': '{#label} should not contain white spaces.'
-                                  });
+const passwordSchema = joiPassword
+    .string()
+    .minOfUppercase(1)
+    .minOfSpecialCharacters(2)
+    .minOfNumeric(2)
+    .noWhiteSpaces()
+    .min(6)
+    .max(255)
+    .messages({
+        'password.minOfUppercase':
+            '{#label} should contain at least {#min} uppercase character.',
+        'password.minOfSpecialCharacters':
+            '{#label} should contain at least {#min} special characters.',
+        'password.minOfNumeric':
+            '{#label} should contain at least {#min} numbers.',
+        'password.noWhiteSpaces': '{#label} should not contain white spaces.',
+    });
 
 const otpSchema = Joi.string()
-                     .pattern(/^[0-9]{6}$/)
-                     .messages({'string.pattern.base': '{#label} must be 6 digits'})
+    .pattern(/^[0-9]{6}$/)
+    .messages({ 'string.pattern.base': '{#label} must be 6 digits' });
 
 const validators = {
-  creation: function(lender) {
-    const schema = Joi.object({
-      // TODO: change values to required.
-      companyName: Joi.string()
-                      .required(),
+    creation: function (lender) {
+        const schema = Joi.object({
+            // TODO: change values to required.
+            companyName: Joi.string().required(),
 
-      companyAddress: Joi.string()
-                         .required(),
+            companyAddress: Joi.string().required(),
 
-      cacNumber: Joi.string()
-                    .pattern(/^RC[0-9]+/)
-                    .required()
-                    .messages({
-                        "string.pattern.base": "Invalid CAC Number. Please ensure the number begins with 'RC'."
-                    }),
+            cacNumber: Joi.string()
+                .pattern(/^RC[0-9]+/)
+                .required()
+                .messages({
+                    'string.pattern.base':
+                        "Invalid CAC Number. Please ensure the number begins with 'RC'.",
+                }),
 
-      category: Joi.string(),
+            category: Joi.string(),
 
-      phone: phoneSchema.required(),
+            phone: phoneSchema.required(),
 
-      email: emailSchema.required(),
+            email: emailSchema.required(),
 
-      password: passwordSchema.required(),
+            password: passwordSchema.required(),
 
-      lenderURL: Joi.string()
-    });
+            lenderURL: Joi.string(),
+        });
 
-    return schema.validate(lender);
-  },
+        return schema.validate(lender);
+    },
 
-  update: function(lender) {
-    const schema = Joi.object({
-        companyName: Joi.string(),
-        companyAddress: Joi.string(),
-        cacNumber: Joi.string()
-                      .pattern(/^RC[0-9]+/)
-                      .messages({
-                          "string.pattern.base": "Invalid CAC Number. Must begin with 'RC'."
-                      }),
-        category: Joi.string(),
-        phone: phoneSchema
-    });
+    update: function (lender) {
+        const schema = Joi.object({
+            companyName: Joi.string(),
+            companyAddress: Joi.string(),
+            cacNumber: Joi.string()
+                .pattern(/^RC[0-9]+/)
+                .messages({
+                    'string.pattern.base':
+                        "Invalid CAC Number. Must begin with 'RC'.",
+                }),
+            category: Joi.string(),
+            phone: phoneSchema,
+        });
 
-    return schema.validate(lender);
-  },
+        return schema.validate(lender);
+    },
 
-  validateRegVerification: function(lender) {
-    const schema = Joi.object({
-        email: emailSchema.required(),
-        otp: Joi.string()
+    validateRegVerification: function (lender) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            otp: Joi.string()
                 .required()
                 .pattern(/^[0-9]{6}$/)
-                .messages({ 
-                    'string.pattern.base': '{#label} must be 6 digits.' 
+                .messages({
+                    'string.pattern.base': '{#label} must be 6 digits.',
                 }),
-        password: passwordSchema.required()
-    });
+            password: passwordSchema.required(),
+        });
 
-    return schema.validate(lender);
-  },
+        return schema.validate(lender);
+    },
 
-  validateLogin: function(lender) {
-    const schema = Joi.object({
-        email: emailSchema.required(),
-        password: passwordSchema.required()
-    });
+    validateLogin: function (lender) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            password: passwordSchema.required(),
+        });
 
-    return schema.validate(lender);
-  },
+        return schema.validate(lender);
+    },
 
-  validateChangePassword: function(passwordObj) {
-    const schema = Joi.object({
-        otp: otpSchema.when('currentPassword', {
-            not: Joi.exist(),
-            then: Joi.required(),
-            otherwise: Joi.optional()
-        }),
-        email: emailSchema.required(),
-        currentPassword: passwordSchema,
-        newPassword: passwordSchema.required()
-    });
+    validateChangePassword: function (passwordObj) {
+        const schema = Joi.object({
+            otp: otpSchema.when('currentPassword', {
+                not: Joi.exist(),
+                then: Joi.required(),
+                otherwise: Joi.optional(),
+            }),
+            email: emailSchema.required(),
+            currentPassword: passwordSchema,
+            newPassword: passwordSchema.required(),
+        });
 
-    return schema.validate(passwordObj);
-  },
+        return schema.validate(passwordObj);
+    },
 
-  adminCreation: function(user) {
-    const schema = Joi.object({
-        name: Joi.object({
-            firstName: Joi.string()
-                        .required()
-                        .min(3)
-                        .max(50),
+    adminCreation: function (user) {
+        const schema = Joi.object({
+            name: Joi.object({
+                firstName: Joi.string().required().min(3).max(50),
 
-            lastName: Joi.string()
-                        .required()
-                        .min(3)
-                        .max(50),
+                lastName: Joi.string().required().min(3).max(50),
 
-            middleName: Joi.string().min(3).max(50)
-        }),
-        displayName: Joi.string(),
-        phone: phoneSchema.required(),
-        email: emailSchema.required(),
+                middleName: Joi.string().min(3).max(50),
+            }),
+            displayName: Joi.string(),
+            phone: phoneSchema.required(),
+            email: emailSchema.required(),
 
-        role: Joi.string().equal('Admin'),
+            role: Joi.string().equal('Admin'),
 
-        active: Joi.boolean().equal(true),
+            active: Joi.boolean().equal(true),
 
-        lenderId: Joi.objectId()
-    });
-    
-    return schema.validate(user);
-  },
+            lenderId: Joi.objectId(),
+        });
 
-  validateSettings: function(settings) {
-    const schema = Joi.object({
-        segments: Joi.array().items(
-            Joi.object({
-                segment: Joi.objectId(),
-                minLoanAmount: Joi.number(),
-                maxLoanAmount: Joi.number(),
-                minTenor: Joi.number(),
-                maxTenor: Joi.number()
-            })
-        ).min(1),
+        return schema.validate(user);
+    },
 
-        loanMetrics: Joi.object({
-            interestRate: Joi.number().required(),
-            upfrontFeePercentage: Joi.number().required(),
-            transferFee: Joi.number().required(),
-            minNetPay: Joi.number().required(),
-            dtiThreshold: Joi.number().required()
-        })
-    });
+    validateSettings: function (settings) {
+        const schema = Joi.object({
+            segments: Joi.array()
+                .items(
+                    Joi.object({
+                        segment: Joi.objectId(),
+                        minLoanAmount: Joi.number(),
+                        maxLoanAmount: Joi.number(),
+                        minTenor: Joi.number(),
+                        maxTenor: Joi.number(),
+                    })
+                )
+                .min(1),
 
-    return schema.validate(settings);
-  },
+            loanMetrics: Joi.object({
+                interestRate: Joi.number().required(),
+                upfrontFeePercent: Joi.number().required(),
+                transferFee: Joi.number().required(),
+                minNetPay: Joi.number().required(),
+                dtiThreshold: Joi.number().required(),
+            }),
+        });
 
-  validateEmail: function(email) {
-    const schema = Joi.object({
-        email: emailSchema.required()
-    })
+        return schema.validate(settings);
+    },
 
-    return schema.validate(email);
-  },
+    validateEmail: function (email) {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+        });
 
-  delete: function(lender) {
-    const schema = Joi.object({
-        id: Joi.objectId().required(),
-        email: emailSchema.required()
-    });
+        return schema.validate(email);
+    },
 
-    return schema.validate(lender);
-  }
+    delete: function (lender) {
+        const schema = Joi.object({
+            id: Joi.objectId().required(),
+            email: emailSchema.required(),
+        });
+
+        return schema.validate(lender);
+    },
 };
 
 module.exports = validators;

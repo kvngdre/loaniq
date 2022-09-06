@@ -37,6 +37,7 @@ const origin = {
 
     getOne: async function(queryParam={}) {
         const customer = await Origin.findOne( queryParam );
+        if(!customer) return { errorCode: 404, message: 'Not found.'};
 
         return customer;
     },

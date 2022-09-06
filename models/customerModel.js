@@ -200,7 +200,7 @@ const customerSchema = new mongoose.Schema(
 
                         return true;
                     },
-                    message: '>>IPPIS Number does not match segment selected',
+                    message: 'IPPIS Number does not match segment selected',
                 },
             },
 
@@ -283,7 +283,7 @@ const customerSchema = new mongoose.Schema(
             // TODO: should this just copy the net pay array from origin?
             value: {
                 type: Number,
-                default: null,
+                default: 80000.0,
             },
 
             updatedAt: {
@@ -298,7 +298,10 @@ const customerSchema = new mongoose.Schema(
             default: false,
         },
 
-        lenders: [ mongoose.Schema.Types.ObjectId ],
+        lenders: {
+            type: [String],
+            default: null,
+        },
     },
     schemaOptions
 );
@@ -313,7 +316,7 @@ customerSchema.methods.validateSegment = async function () {
         if (segment.ippisPrefix !== ippisPrefix[0])
             return {
                 error: {
-                    message: 'IPPIS Number does not match segment selected',
+                    message: 'IPPIS Number does not match segment selected.',
                 },
             };
 
@@ -322,6 +325,18 @@ customerSchema.methods.validateSegment = async function () {
         debug(exception);
         return exception;
     }
+};
+
+customerSchema.methods.addLender = function (lender) {
+    const lenders = new Set(this.lenders);
+    lenders.add(lender);
+    this.lenders = Array.from(lenders);
+};
+
+customerSchema.methods.removeLender = function (lender) {
+    const lenders = new Set(this.lenders);
+    lenders.delete(lender);
+    this.lenders = Array.from(lenders);
 };
 
 customerSchema.pre('save', async function (next) {
@@ -336,10 +351,9 @@ customerSchema.pre('save', async function (next) {
         });
         if (loans.length > 0) {
             loans.forEach(async (loan) => {
-                loan.set({ 'validationParams.dob': this.dateOfBirth });
+                loan.set({ 'params.dob': this.dateOfBirth });
                 loan.set({
-                    'validationParams.doe':
-                        this.employmentInfo.dateOfEnlistment,
+                    'params.doe': this.employmentInfo.dateOfEnlistment,
                 });
                 await loan.save();
             });

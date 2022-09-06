@@ -1,28 +1,31 @@
-const moment = require('moment')
+const { DateTime } = require('luxon');
 const debug = require('debug')('app:updateLoanDoc')
 
-async function status(status, alteration, loanDoc) {
+
+async function updateStatus(alteration, loanDoc) {
     try{
+        const status = alteration.status;
+
         switch(status) {
             case 'Approved':
                 loanDoc.set(alteration)
                 loanDoc.set({
                     active: true,
                     dateApprovedOrDenied: new Date(),
-                    expectedEndDate: moment(new Date().toISOString()).add(loanDoc.recommendedTenor, 'months').format('YYYY-MM-DD')
+                    maturityDate: DateTime.now().setZone(user.timeZone).plus({months: loanDoc.recommendedTenor}).toUTC().toFormat('yyyy-MM-dd')
                 })
                 
-                await loanDoc.save()
+                // await loanDoc.save()
                 return loanDoc;
             
             case 'Denied':
                 loanDoc.set(alteration)
                 loanDoc.set({
-                    dateApprovedOrDenied: new Date(),
+                    dateApprovedOrDenied: DateTime.now().setZone(user.timeZone),
                     active: false
                 })
                 
-                await loanDoc.save()
+                // await loanDoc.save()
                 return loanDoc;
     
             case 'On Hold':
@@ -34,11 +37,11 @@ async function status(status, alteration, loanDoc) {
             case 'Liquidated':
                 loanDoc.set(alteration)
                 loanDoc.set({
-                    dateLiquidated: new Date(),
+                    dateLiquidated: DateTime.now().setZone(user.timeZone),
                     active: false
                 })
 
-                await loanDoc.save()
+                // await loanDoc.save()
                 return loanDoc;
     
             case 'Discontinued':
@@ -47,9 +50,9 @@ async function status(status, alteration, loanDoc) {
                     active: false,
                 })
 
-                await loanDoc.save()
+                // await loanDoc.save()
                 return loanDoc;
-    
+
             default:
                 break;
         }
@@ -59,4 +62,4 @@ async function status(status, alteration, loanDoc) {
     };
 };
 
-module.exports = status;
+module.exports = updateStatus;
