@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const auth = require('../controllers/auth');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/userValidator');
@@ -71,7 +70,7 @@ router.post('/verify', async (req, res) => {
     const { error } = userValidators.validateUserVerification(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const response = await auth.verifyUser(req.body);
+    const response = await userController.verifyUser(req.body);
     if (response.hasOwnProperty('errorCode'))
         return res.status(response.errorCode).send(response.message);
 
@@ -82,7 +81,7 @@ router.post('/login', async (req, res) => {
     const { error } = userValidators.validateLogin(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const response = await auth.login(req.body.email, req.body.password);
+    const response = await userController.login(req.body.email, req.body.password);
     if (response.hasOwnProperty('errorCode'))
         return res.status(response.errorCode).send(response.message);
 
@@ -93,7 +92,7 @@ router.post('/password', async (req, res) => {
     const { error } = userValidators.validateChangePassword(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const response = await auth.changePassword(
+    const response = await userController.changePassword(
         req.body.email,
         req.body.newPassword,
         req.body.otp,
