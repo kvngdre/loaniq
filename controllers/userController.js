@@ -6,6 +6,7 @@ const debug = require('debug')('app:userCtrl');
 const sendOTPMail = require('../utils/sendMail');
 const Segment = require('../models/segmentModel');
 const generateOTP = require('../utils/generateOTP');
+const logger = require('../utils/logger')('userCtrl.js');
 const generateRandomPassword = require('../utils/generatePassword');
 
 const userCtrlFuncs = {
@@ -34,7 +35,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: payload.name,
-                        // displayName: requestBody?.displayName,
+                        displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
                         password: encryptedTempPassword,
@@ -55,7 +56,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: payload.name,
-                        // displayName: requestBody?.displayName,
+                        displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
                         password: encryptedPassword,
@@ -79,7 +80,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: payload.name,
-                        // displayName: requestBody?.displayName,
+                        displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
                         password: encryptedPassword,
@@ -99,7 +100,7 @@ const userCtrlFuncs = {
 
                     var newUser = new User({
                         name: payload.name,
-                        // displayName: requestBody?.displayName,
+                        displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
                         password: encryptedPassword,
@@ -119,7 +120,7 @@ const userCtrlFuncs = {
             await newUser.save();
             newUser.password = temporaryPassword;
 
-            // sending otp in mail
+            // Sending OTP to user email.
             const mailResponse = await sendOTPMail(
                 payload.email,
                 payload.name.firstName,
@@ -132,12 +133,15 @@ const userCtrlFuncs = {
             }
 
             return {
-                message: 'User created. OTP and password sent to user email',
+                message:
+                    'Success. OTP and password has been sent to user email.',
                 data: newUser,
             };
         } catch (exception) {
-            // logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+
+            // Duplicate field error.
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
@@ -161,55 +165,52 @@ const userCtrlFuncs = {
         }
     },
 
-    getAll: async function (lenderId, filters = {}) {
+    getAll: async function (lenderId, filters) {
         try {
-            let queryParams = { lenderId };
+            const queryParams = { lenderId };
 
-            if (Object.keys(filters).length > 0)
-                queryParams = Object.assign(queryParams, filters);
-
-            const users = await User.find(queryParams)
-                .select('-password -otp -__v')
-                .sort('name.firstName');
+            const users = await User.find(queryParams, {
+                password: 0,
+                otp: 0,
+            }).sort('name.firstName');
             if (users.length === 0)
-                return { errorCode: 404, message: 'Users not found.' };
+                return { errorCode: 404, message: 'No users found.' };
 
             return users;
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    getOne: async function (id, filters = {}) {
+    getOne: async function (id, filters) {
         try {
-            let queryParams = { _id: id };
-            if (Object.keys(filters).length > 0)
-                queryParams = Object.assign(queryParams, filters);
+            const queryParams = Object.assign({ _id: id }, filters);
 
             const user = await User.findOne(queryParams, {
                 password: 0,
                 otp: 0,
             });
-            if (!user) return { errorCode: 404, message: 'User not found.' };
+            if (!user)
+                return { errorCode: 404, message: 'User document not found.' };
 
             return user;
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    update: async function (id, alteration, filters = {}) {
+    update: async function (id, alteration, filters) {
         try {
-            let queryParams = { _id: id };
-            if (Object.keys(filters).length > 0)
-                queryParams = Object.assign(queryParams, filters);
+            const queryParams = Object.assign({ _id: id }, filters);
 
             const user = await User.findByIdAndUpdate(queryParams, alteration, {
                 new: true,
             }).select('-password');
-            if (!user) return { errorCode: 404, message: 'User not found.' };
+            if (!user) return { errorCode: 404, message: 'User document not found.' };
 
             // TODO: how to specify if it's a delete or ADD??
             // TODO: ask front end if the can build the array.
@@ -219,6 +220,7 @@ const userCtrlFuncs = {
                 data: user,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -226,13 +228,19 @@ const userCtrlFuncs = {
 
     login: async function (email, password) {
         try {
-            let user = await User.findOne({ email }, {otp: 0});
+            let user = await User.findOne({ email }, { otp: 0 });
             if (!user)
-                return { errorCode: 401, message: 'Invalid email or password.' };
-            
+                return {
+                    errorCode: 401,
+                    message: 'Invalid email or password.',
+                };
+
             const isValid = await bcrypt.compare(password, user.password);
             if (!isValid)
-                return { errorCode: 401, message: 'Invalid email or password.' };
+                return {
+                    errorCode: 401,
+                    message: 'Invalid email or password.',
+                };
 
             if (
                 (user.lastLoginTime === null || !user.emailVerified) &&
@@ -240,7 +248,7 @@ const userCtrlFuncs = {
             ) {
                 return {
                     message: 'New User',
-                    user: _.omit(user, ['password'])
+                    user: _.omit(user, ['password']),
                 };
             }
 
@@ -256,7 +264,7 @@ const userCtrlFuncs = {
 
             user.token = user.generateToken();
             await user.updateOne({ lastLoginTime: Date.now() });
-            
+
             user = _.pick(user, [
                 '_id',
                 'displayName',
@@ -266,12 +274,12 @@ const userCtrlFuncs = {
                 'token',
             ]);
 
-
             return {
                 message: 'Login Successful.',
-                user
+                user,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -297,7 +305,7 @@ const userCtrlFuncs = {
                 };
 
             if (user.emailVerified)
-                return { errorCode: 409, message: 'User already verified.' };
+                return { errorCode: 409, message: 'User has already been verified.' };
 
             if (Date.now() > user.otp.expires || payload.otp !== user.otp.OTP)
                 return { errorCode: 401, message: 'Invalid OTP.' };
@@ -325,6 +333,7 @@ const userCtrlFuncs = {
                 user: authUser,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -338,7 +347,7 @@ const userCtrlFuncs = {
     ) {
         try {
             const user = await User.findOne({ email });
-            if (!user) return { errorCode: 404, message: 'User not found.' };
+            if (!user) return { errorCode: 404, message: 'User document not found.' };
 
             if (otp && (Date.now() > user.otp.expires || otp !== user.otp.OTP))
                 return { errorCode: 401, message: 'Invalid OTP.' };
@@ -369,7 +378,7 @@ const userCtrlFuncs = {
             await user.update({ 'otp.OTP': null, password: encryptedPassword });
 
             return {
-                message: 'Password updated',
+                message: 'Password updated.',
             };
         } catch (exception) {
             debug(exception);
@@ -384,7 +393,7 @@ const userCtrlFuncs = {
                 { otp: generateOTP() },
                 { new: true }
             ).select('email otp');
-            if (!user) return { errorCode: 404, message: 'User not found.' };
+            if (!user) return { errorCode: 404, message: 'User document not found.' };
 
             const mailResponse = await sendOTPMail(
                 email,
@@ -403,7 +412,7 @@ const userCtrlFuncs = {
                 message: 'OTP sent to email.',
                 data: {
                     otp: user.otp.OTP,
-                    email: user.email
+                    email: user.email,
                 },
             };
         } catch (exception) {

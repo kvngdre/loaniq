@@ -12,7 +12,7 @@ async function updateStatus(alteration, loanDoc) {
                 loanDoc.set({
                     active: true,
                     dateApprovedOrDenied: new Date(),
-                    maturityDate: DateTime.now().setZone(user.timeZone).plus({months: loanDoc.recommendedTenor}).toUTC().toFormat('yyyy-MM-dd')
+                    maturityDate: DateTime.now().plus({months: loanDoc.recommendedTenor}).toUTC().toFormat('yyyy-MM-dd')
                 })
                 
                 // await loanDoc.save()
@@ -21,7 +21,7 @@ async function updateStatus(alteration, loanDoc) {
             case 'Denied':
                 loanDoc.set(alteration)
                 loanDoc.set({
-                    dateApprovedOrDenied: DateTime.now().setZone(user.timeZone),
+                    dateApprovedOrDenied: new Date(),
                     active: false
                 })
                 
@@ -37,7 +37,7 @@ async function updateStatus(alteration, loanDoc) {
             case 'Liquidated':
                 loanDoc.set(alteration)
                 loanDoc.set({
-                    dateLiquidated: DateTime.now().setZone(user.timeZone),
+                    dateLiquidated: new Date(),
                     active: false
                 })
 

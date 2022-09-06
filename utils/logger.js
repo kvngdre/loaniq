@@ -34,7 +34,7 @@ const Logger = createLogger({
                     }`;
                 })
             ),
-            handleExceptions: true,
+            // handleExceptions: true,
             json: true,
         }),
     ],
