@@ -31,10 +31,11 @@ const customerCtrlFuncs = {
 
             const customer = new Customer(payload);
             customer.addLender(user.lenderId);
-
-            const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
-            if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
-            customer.netPay.value = originCopy.netPays[0];
+            
+            // TODO: uncomment this later
+            // const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
+            // if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
+            // customer.netPay.value = originCopy.netPays[0];
 
             await customer.save();
 
@@ -191,7 +192,7 @@ const customerCtrlFuncs = {
             const queryParams = mongoose.isValidObjectId(id)
                 ? { _id: id, lenders: user.lenderId }
                 : { 'employmentInfo.ippis': id, lenders: user.lenderId };
-
+            
             const customer = await Customer.findOne(queryParams);
             if (!customer)
                 return { errorCode: 404, message: 'Customer not found.' };

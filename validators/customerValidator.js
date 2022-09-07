@@ -120,7 +120,7 @@ const netPaySchema = Joi.object({
 });
 
 const validators = {
-    validateCreation: function (customer) {
+    customerCreation: function (customer) {
         const schema = Joi.object({
             name: nameSchema.required(),
 

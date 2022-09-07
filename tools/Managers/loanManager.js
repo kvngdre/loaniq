@@ -100,20 +100,23 @@ const manager = {
         loanPayload
     ) {
         try {
-            let customer = await customerController.getOne(
+            let response = await customerController.getOne(
                 customerPayload.employmentInfo.ippis,
                 user
             );
-            if (customer.errorCode === 404) {
-                customer = await customerController.create(
+
+            // If customer not found, create new customer.
+            if (response.hasOwnProperty('errorCode')) {
+                response = await customerController.create(
                     customerPayload,
                     user
                 );
-                if (customer.hasOwnProperty('errorCode')) {
-                    // TODO: log error
-                    return customer;
-                }
             }
+            if (response.hasOwnProperty('errorCode')) {
+                // TODO: log error
+                return customer;
+            }
+            const customer = response.data;
 
             const loans = await Loan.find({
                 active: true,
@@ -131,7 +134,7 @@ const manager = {
                     segments: customer.employmentInfo.segment,
                 });
             }
-
+            console.log(customer)
             // If no agent was found and customer has no active loan, pick an agent at random.
             if ((!agent || agent.errorCode) && loans.length == 0) {
                 agent = await pickRandomUser(
@@ -184,7 +187,7 @@ const manager = {
             return { customer, loan: newLoan };
         } catch (exception) {
             // TODO: log error
-            customerController.delete(customerPayload.employmentInfo.ippis);
+            // customerController.delete(customerPayload.employmentInfo.ippis);
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.'};
         }

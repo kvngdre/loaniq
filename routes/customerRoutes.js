@@ -14,7 +14,7 @@ router.post(
     async (req, res) => {
         // TODO: add to pending for agent
         // TODO: pass the lender id from guest request
-        const { error } = customerValidators.validateCreation(req.body);
+        const { error } = customerValidators.customerCreation(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const newCustomer = await customerController.create(req.body, req.user);

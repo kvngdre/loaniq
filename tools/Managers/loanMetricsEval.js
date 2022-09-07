@@ -5,7 +5,7 @@ class Metrics {
     };
 
     calcRepayment(recommendedAmount, interestRate, recommendedTenor) {
-        const repayment =  (recommendedAmount * interestRate) + (recommendedAmount / loanTenor);
+        const repayment =  (recommendedAmount * interestRate) + (recommendedAmount / recommendedTenor);
         return repayment.toFixed(2);
     };
 
@@ -51,8 +51,8 @@ class Metrics {
         const dti = (repayment / netPay) * 100;
 
         return { 
-            isValid: value < maxDTI, 
-            dti: dti.toFixed(2) 
+            isValid: dti < maxDTI, 
+            value: dti.toFixed(2) 
         };
     };
 };
