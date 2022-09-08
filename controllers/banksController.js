@@ -11,10 +11,6 @@ const bankCtrlFuncs = {
      */
     create: async function (name, code) {
         try {
-            const bankExists = await Bank.findOne({ code: requestBody.code });
-            if (bankExists)
-                return { errorCode: 409, message: 'Code already in use.' };
-
             const newBank = new Bank({
                 name,
                 code,
@@ -29,6 +25,16 @@ const bankCtrlFuncs = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
+            }
+
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },

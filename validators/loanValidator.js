@@ -19,10 +19,18 @@ class LoanRequestValidators {
         this.#netPaySchema = Joi.number().min(this.#minNetPay);
         this.#amountSchema = Joi.number()
             .min(this.#minLoanAmount)
-            .max(this.#maxLoanAmount);
+            .max(this.#maxLoanAmount)
+            .messages({
+                'number.min': `Minimum loan amount is ${(this.#minLoanAmount).toLocaleString()}.`,
+                'number.max': `Maximum loan amount is ${(this.#maxLoanAmount).toLocaleString()}.`
+            });
         this.#tenorSchema = Joi.number()
             .min(this.#minTenor)
-            .max(this.#maxTenor);
+            .max(this.#maxTenor)
+            .messages({
+                'number.min': `Minimum tenor is ${(this.#minTenor).toLocaleString()} months.`,
+                'number.max': `Maximum tenor is ${(this.#maxTenor).toLocaleString()} months.`
+            });
     }
 
     loanRequestCreation(loanRequest) {

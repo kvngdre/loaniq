@@ -1,4 +1,4 @@
-class Metrics {
+class Params {
     calcUpfrontFee(loanAmount, upfrontFeePercent) {
         const upfrontFee = loanAmount * upfrontFeePercent;
         return upfrontFee.toFixed(2);
@@ -48,13 +48,13 @@ class Metrics {
     };
 
     dtiRatioCalculator(repayment, netPay, maxDTI) {
-        const dti = (repayment / netPay) * 100;
-
+        const dti = repayment / netPay;
+        
         return { 
-            isValid: dti < maxDTI, 
-            value: dti.toFixed(2) 
+            isValid: dti < maxDTI * 100, 
+            value: (dti * 100).toFixed(2) 
         };
     };
 };
 
-module.exports = Metrics;
+module.exports = Params;

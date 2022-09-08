@@ -1,46 +1,24 @@
 const _ = require('lodash');
 const { DateTime } = require('luxon');
 const debug = require('debug')('app:txnCtrl');
+const logger = require('../utils/logger')('txnCtrl.js');
 const Transaction = require('../models/transactionModel');
 
-const transactionCtrlFuncs = {
-    create: async function (
-        lenderId,
-        userId,
-        status,
-        ref,
-        type,
-        desc,
-        channel,
-        bank,
-        amount,
-        fees,
-        balance
-    ) {
+const ctrlFuncs = {
+    create: async function (payload) {
         try {
-            const newTransaction = new Transaction({
-                lenderId,
-                userId,
-                status,
-                reference: ref,
-                type,
-                description: desc,
-                channel,
-                bank,
-                amount,
-                fees,
-                balance,
-            });
+            const newTransaction = new Transaction(payload);
 
             await newTransaction.save();
 
             return {
-                message: 'Transaction created',
+                message: 'Transaction created.',
                 data: newTransaction,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -52,10 +30,14 @@ const transactionCtrlFuncs = {
             if (!transaction)
                 return { errorCode: 404, message: 'Transaction not found' };
 
-            return transaction;
+            return {
+                message: 'Success',
+                data: transaction,
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -67,7 +49,7 @@ const transactionCtrlFuncs = {
                 queryParams,
                 _.omit(filters, ['date', 'amount'])
             );
-            
+
             // TODO: should I make the filters a class?
             // Date Filter - CreatedAt
             const dateField = 'createdAt';
@@ -75,7 +57,7 @@ const transactionCtrlFuncs = {
                 queryParams[dateField] = {
                     $gte: DateTime.fromISO(filters.date.start)
                         .setZone(user.timeZone)
-                        .toUTC()
+                        .toUTC(),
                 };
             if (filters.date?.end) {
                 const target = queryParams[dateField]
@@ -84,7 +66,7 @@ const transactionCtrlFuncs = {
                 queryParams[dateField] = Object.assign(target, {
                     $lte: DateTime.fromISO(filters.date.end)
                         .setZone(user.timeZone)
-                        .toUTC()
+                        .toUTC(),
                 });
             }
 
@@ -97,17 +79,21 @@ const transactionCtrlFuncs = {
                     $lte: filters.amount.max,
                 });
             }
-            
+
             const transactions = await Transaction.find(queryParams);
             if (transactions.length == 0)
                 return { errorCode: 404, message: 'No transactions found' };
 
-            return transactions;
+            return {
+                message: 'Success',
+                data: transactions,
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 };
 
-module.exports = transactionCtrlFuncs;
+module.exports = ctrlFuncs;

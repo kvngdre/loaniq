@@ -134,7 +134,7 @@ const manager = {
                     segments: customer.employmentInfo.segment,
                 });
             }
-            console.log(customer)
+
             // If no agent was found and customer has no active loan, pick an agent at random.
             if ((!agent || agent.errorCode) && loans.length == 0) {
                 agent = await pickRandomUser(
@@ -178,7 +178,7 @@ const manager = {
             loanPayload.params = { dob: customer.dateOfBirth };
             loanPayload.params.minNetPay = loanParams.minNetPay;
             loanPayload.upfrontFeePercent = loanParams.upfrontFeePercent;
-            loanPayload.params.dtiThreshold = loanParams.dtiThreshold;
+            loanPayload.params.dtiThreshold = loanParams.maxDti;
             loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
 
             // await customer.save();

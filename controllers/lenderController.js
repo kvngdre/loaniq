@@ -7,7 +7,6 @@ const debug = require('debug')('app:lenderModel');
 const generateOTP = require('../utils/generateOTP');
 const LenderConfig = require('../models/lenderConfigModel');
 const userController = require('../controllers/userController');
-const updateConfigSettings = require('../utils/updateSettings');
 
 const lender = {
     create: async function (requestBody) {
@@ -310,6 +309,8 @@ const lender = {
                 requestBody,
                 { new: true, upsert: true }
             );
+
+            lenderConfig.save();
 
             return {
                 message: 'Settings have been updated.',

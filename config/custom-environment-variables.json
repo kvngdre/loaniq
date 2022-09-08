@@ -1,3 +1,22 @@
 {
-    "jwt_secret": "JWT_PRIVATE_KEY"
+    "db": {
+        "dev_database_uri": "DEV_DATABASE_URI",
+        "test_database_uri": "TEST_DATABASE_URI",
+        "prod_database_uri": "PROD_DATABASE_URI",
+        "database_password": "DATABASE_PASSWORD"
+    },
+    "jwt_secret": "JWT_PRIVATE_KEY",
+    "salt": "SALT",
+    "mail": {
+        "password": "USER_EMAIL_PASSWORD"
+    },
+    "paystack": {
+        "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
+    },
+    "flutterwave": {
+        "flw_public_key": "FLW_PUBLIC_KEY",
+        "flw_secret_key": "FLW_PRIVATE_KEY",
+        "flw_encryption_key": "FLW_ENCRYPTION_KEY",
+        "flw_webhook_hash": "FLW_WEBHOOK_HASH"
+    }
 }

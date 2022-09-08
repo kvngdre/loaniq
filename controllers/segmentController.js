@@ -18,18 +18,21 @@ const segment = {
     },
 
     getAll: async function() {
-        return await Segment.find().select('-ippisPrefix');
+        return await Segment.find();
     },
 
-    get: async function(id) {
+    getOne: async function(id) {
         try{
-            const segment = await Segment.findById(id).select('-ippisPrefix');
-            if(!segment) throw new Error('Segment not found.');
+            const segment = await Segment.findById(id);
+            if(!segment) return { errorCode: 404, message: 'Segment not found.' };
 
-            return segment;
+            return {
+                message: 'Success',
+                data: segment
+            };
 
         }catch(exception) {
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         };
     },
 

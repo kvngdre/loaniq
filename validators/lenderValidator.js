@@ -30,16 +30,13 @@ const passwordSchema = joiPassword
 
 const otpSchema = Joi.string()
     .pattern(/^[0-9]{6}$/)
-    .messages({ 'string.pattern.base': '{#label} must be 6 digits' });
+    .messages({ 'string.pattern.base': 'Invalid OTP' });
 
 const validators = {
     creation: function (lender) {
         const schema = Joi.object({
-            // TODO: change values to required.
             companyName: Joi.string().required(),
-
             companyAddress: Joi.string().required(),
-
             cacNumber: Joi.string()
                 .pattern(/^RC[0-9]+/)
                 .required()
@@ -49,13 +46,9 @@ const validators = {
                 }),
 
             category: Joi.string(),
-
             phone: phoneSchema.required(),
-
             email: emailSchema.required(),
-
             password: passwordSchema.required(),
-
             lenderURL: Joi.string(),
         });
 
@@ -86,7 +79,7 @@ const validators = {
                 .required()
                 .pattern(/^[0-9]{6}$/)
                 .messages({
-                    'string.pattern.base': '{#label} must be 6 digits.',
+                    'string.pattern.base': 'Invalid OTP.',
                 }),
             password: passwordSchema.required(),
         });
@@ -122,45 +115,66 @@ const validators = {
         const schema = Joi.object({
             name: Joi.object({
                 firstName: Joi.string().required().min(3).max(50),
-
                 lastName: Joi.string().required().min(3).max(50),
-
                 middleName: Joi.string().min(3).max(50),
             }),
             displayName: Joi.string(),
             phone: phoneSchema.required(),
             email: emailSchema.required(),
-
             role: Joi.string().equal('Admin'),
-
             active: Joi.boolean().equal(true),
-
             lenderId: Joi.objectId(),
         });
 
         return schema.validate(user);
     },
 
-    validateSettings: function (settings) {
+    setConfigSettings: function (settings) {
         const schema = Joi.object({
             segments: Joi.array()
                 .items(
-                    Joi.object({
-                        segment: Joi.objectId(),
-                        minLoanAmount: Joi.number(),
-                        maxLoanAmount: Joi.number(),
-                        minTenor: Joi.number(),
-                        maxTenor: Joi.number(),
+                    Joi.object().keys({
+                        id: Joi.objectId().required(),
+                        minLoanAmount: Joi.number().required(),
+                        maxLoanAmount: Joi.number().required(),
+                        minTenor: Joi.number().required(),
+                        maxTenor: Joi.number().required(),
+                        maxDti: Joi.number(),
+                        useDefault: Joi.boolean().default((parent) => parent.maxDti ? false : true)
                     })
                 )
                 .min(1),
 
-            loanMetrics: Joi.object({
-                interestRate: Joi.number().required(),
+            loanParams: Joi.object({
+                interestRate: Joi.number(),
                 upfrontFeePercent: Joi.number().required(),
                 transferFee: Joi.number().required(),
                 minNetPay: Joi.number().required(),
-                dtiThreshold: Joi.number().required(),
+                maxDti: Joi.number().required(),
+            }),
+        });
+
+        return schema.validate(settings);
+    },
+
+    editConfigSettings: function (settings) {
+        const schema = Joi.object({
+            segment: Joi.object({
+                id: Joi.objectId().required(),
+                minLoanAmount: Joi.number(),
+                maxLoanAmount: Joi.number(),
+                minTenor: Joi.number(),
+                maxTenor: Joi.number(),
+                maxDti: Joi.number(),
+                useDefault: Joi.boolean()
+            }),
+
+            loanParams: Joi.object({
+                interestRate: Joi.number(),
+                upfrontFeePercent: Joi.number(),
+                transferFee: Joi.number(),
+                minNetPay: Joi.number(),
+                maxDti: Joi.number(),
             }),
         });
 

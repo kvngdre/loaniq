@@ -6,6 +6,7 @@ const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customerModel');
+const logger = require('../utils/logger')('customerCtrl.js');
 const originController = require('../controllers/originController');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
@@ -13,15 +14,6 @@ const PendingEditController = require('../controllers/pendingEditController');
 const customerCtrlFuncs = {
     create: async function (payload, user) {
         try {
-            const customerExists = await Customer.findOne({
-                'employmentInfo.ippis': payload.employmentInfo.ippis,
-            });
-            if (customerExists)
-                return {
-                    errorCode: 409,
-                    message: 'Duplicate Staff ID. Customer already exists',
-                };
-
             // TODO: uncomment this later
             // payload.passport.path = request.file.passport[0].path;
             // payload.passport.originalName = request.file.passport[0].originalname;
@@ -31,7 +23,7 @@ const customerCtrlFuncs = {
 
             const customer = new Customer(payload);
             customer.addLender(user.lenderId);
-            
+
             // TODO: uncomment this later
             // const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
             // if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
@@ -41,13 +33,14 @@ const customerCtrlFuncs = {
 
             return {
                 message: 'Customer Created.',
-                data: customer
+                data: customer,
             };
         } catch (exception) {
-            // logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
+                field = field.replace('employmentInfo.', '');
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
@@ -74,7 +67,7 @@ const customerCtrlFuncs = {
             let customers = [];
 
             if (user.role === 'Loan Agent') {
-                    result = await Loan.aggregate([
+                result = await Loan.aggregate([
                     {
                         $match: {
                             lenderId: mongoose.Types.ObjectId(user.lenderId),
@@ -111,9 +104,8 @@ const customerCtrlFuncs = {
                     customers.push(customer.customers[0]);
                 }
             } else {
-                let queryParams = { lenders: user.lenderId };
-                queryParams = Object.assign(
-                    queryParams,
+                const queryParams = Object.assign(
+                    { lenders: user.lenderId },
                     _.omit(filters, [
                         'date',
                         'segments',
@@ -192,14 +184,14 @@ const customerCtrlFuncs = {
             const queryParams = mongoose.isValidObjectId(id)
                 ? { _id: id, lenders: user.lenderId }
                 : { 'employmentInfo.ippis': id, lenders: user.lenderId };
-            
+
             const customer = await Customer.findOne(queryParams);
             if (!customer)
                 return { errorCode: 404, message: 'Customer not found.' };
 
             return {
                 message: 'success',
-                data: customer
+                data: customer,
             };
         } catch (exception) {
             debug(exception);
@@ -303,7 +295,7 @@ const customerCtrlFuncs = {
 
             return {
                 message: 'success',
-                data: result
+                data: result,
             };
         } catch (exception) {
             debug(exception);
@@ -311,17 +303,20 @@ const customerCtrlFuncs = {
         }
     },
 
-    delete: async function(ippis) {
-        try{ 
-            const customer = Customer.findOneAndDelete({'employmentInfo.ippis': ippis});
-            if(!customer) return { errorCode: 404, message: 'Customer not found.'};
+    delete: async function (ippis) {
+        try {
+            const customer = Customer.findOneAndDelete({
+                'employmentInfo.ippis': ippis,
+            });
+            if (!customer)
+                return { errorCode: 404, message: 'Customer not found.' };
 
             return customer;
-        }catch(exception) {
+        } catch (exception) {
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
-    }
+    },
 };
 
 module.exports = customerCtrlFuncs;

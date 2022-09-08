@@ -5,7 +5,7 @@ const debug = require('debug')('app:loanCtrl');
 const lenderController = require('./lenderController');
 const logger = require('../utils/logger')('loanCtrl.js');
 const loanManager = require('../tools/Managers/loanManager');
-const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
+const { LoanRequestValidators } = require('../validators/loanValidator');
 
 // Get Loan Validators.
 async function getValidator(params) {
@@ -14,20 +14,22 @@ async function getValidator(params) {
         const payload = params.hasOwnProperty('payload') ? params.payload : null;
         const customerSegment = params.hasOwnProperty('customerSegment') ? params.customerSegment : null;
 
-        const { data: { loanMetrics, segments } } = await lenderController.getConfig(user.lenderId);
-        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor } = segments.find(
-            (segmentSettings) => segmentSettings.segment.toString() === (customerSegment ? customerSegment.toString() : payload.employmentInfo.segment)
+        const { data: { loanParams, segments } } = await lenderController.getConfig(user.lenderId);
+        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor, maxDti } = segments.find(
+            segment => segment.id === (customerSegment ? customerSegment.toString() : payload.employmentInfo.segment)
         );
 
         const payloadValidator = new LoanRequestValidators(
-            loanMetrics.minNetPay,
+            loanParams.minNetPay,
             minLoanAmount,
             maxLoanAmount,
             minTenor,
             maxTenor
         );
 
-        return { loanMetrics, payloadValidator };
+
+        console.log('maxDti', maxDti);
+        return { loanParams, payloadValidator };
 
     }catch(exception) {
         logger.error({ message: `getValidator - ${exception.message}`, meta: exception.stack });
@@ -50,14 +52,14 @@ const loans = {
                 return { errorCode: 424, message: 'Unable to fetch loan and segment configurations.' };
             }
 
-            const { loanMetrics, payloadValidator } = validator;
+            const { loanParams, payloadValidator } = validator;
     
             const { error } = payloadValidator.loanRequestCreation(loanPayload)
             if(error)return { errorCode: 400, message: error.details[0].message };
     
             const response = await loanManager.createLoanRequest(
                 user,
-                loanMetrics,
+                loanParams,
                 customerPayload,
                 loanPayload
             );

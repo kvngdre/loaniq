@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
+const Metrics = require('../utils/LoanParams');
 const Lender = require('../models/lenderModel');
-const Metrics = require('../tools/Managers/loanMetricsEval');
 
 const loanMetricFuncs = new Metrics();
 
@@ -215,7 +215,7 @@ const loanSchema = new mongoose.Schema(
                 default: null,
             },
 
-            dtiThreshold: {
+            maxDti: {
                 type: Number,
                 default: null,
             },

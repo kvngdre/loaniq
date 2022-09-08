@@ -5,22 +5,10 @@ const transactionValidators = require('../validators/transactionValidator');
 const transactionController = require('../controllers/transactionController');
 
 router.post('/', async (req, res) => {
-    const newTransaction = await transactionController.create(
-        req.body.lenderId,
-        req.body.userId,
-        req.body.status,
-        req.body.reference,
-        req.body.type,
-        req.body.desc,
-        req.body.channel,
-        req.body.bank,
-        req.body.amount,
-        req.body.fees,
-        req.body.balance
-    );
-    if (newTransaction.errorCode || newTransaction instanceof Error)
+    const newTransaction = await transactionController.create(req.body);
+    if (newTransaction.hasOwnProperty('errorCode'))
         return res
-            .status(newTransaction.errorCode || 500)
+            .status(newTransaction.errorCode)
             .send(newTransaction.message);
 
     return res.status(201).send(newTransaction);
@@ -39,9 +27,9 @@ router.post(
             req.user,
             req.body
         );
-        if (transactions.errorCode || transactions instanceof Error)
+        if (transactions.hasOwnProperty('errorCode'))
             return res
-                .status(transactions.errorCode || 500)
+                .status(transactions.errorCode)
                 .send(transactions.message);
 
         return res.status(200).send(transactions);
@@ -57,10 +45,8 @@ router.get(
             req.params.id,
             req.user
         );
-        if (transaction.errorCode || transaction instanceof Error)
-            return res
-                .status(transaction.errorCode || 500)
-                .send(transaction.message);
+        if (transaction.hasOwnProperty('errorCode'))
+            return res.status(transaction.errorCode).send(transaction.message);
 
         return res.status(200).send(transaction);
     }

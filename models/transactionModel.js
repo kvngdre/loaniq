@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const schemaOptions = { timestamps: true };
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const transactionSchema = new mongoose.Schema(
     {
@@ -9,8 +9,13 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
 
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
+        id: {
+            type: String,
+            default: null
+        },
+
+        provider: {
+            type: String,
             required: true,
         },
 
@@ -21,10 +26,10 @@ const transactionSchema = new mongoose.Schema(
 
         reference: {
             type: String,
-            default: null
+            unique: true,
         },
 
-        type: {
+        category: {
             type: String,
             enum: ['Debit', 'Credit'],
             required: true,
@@ -32,7 +37,7 @@ const transactionSchema = new mongoose.Schema(
 
         description: {
             type: String,
-            required: true,
+            default: null,
         },
 
         channel: {
@@ -40,7 +45,12 @@ const transactionSchema = new mongoose.Schema(
             default: null,
         },
 
-        bank: {
+        bankName: {
+            type: String,
+            default: null,
+        },
+
+        cardType: {
             type: String,
             default: null,
         },
@@ -50,14 +60,23 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
 
-        fees: {
+        currency: {
+            type: String,
+            default: 'NGN',
+        },
+
+        fee: {
             type: Number,
-            default: null
         },
 
         balance: {
             type: Number,
             required: true,
+        },
+
+        paidAt: {
+            type: Date,
+            default: null,
         },
     },
     schemaOptions

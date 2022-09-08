@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const bankNameSchema = Joi.string();
+const bankNameSchema = Joi.string().min(10).max(255);
 
 const bankCodeSchema = Joi.string()
                           .min(3)
