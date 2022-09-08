@@ -40,7 +40,6 @@ const configSchema = new mongoose.Schema(
 
                 useDefault: {
                     type: Boolean,
-                    required: true,
                 },
             },
         ],
