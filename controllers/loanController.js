@@ -1,25 +1,27 @@
 const _ = require('lodash');
+const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
-const Loan = require('../models/loanModel');
+const Loan = require('../models/loan');
 const debug = require('debug')('app:loanCtrl');
+const Customer = require('../models/customer');
 const lenderController = require('./lenderController');
 const logger = require('../utils/logger')('loanCtrl.js');
+const settingsController = require('./settingsController');
 const loanManager = require('../tools/Managers/loanManager');
 const { LoanRequestValidators } = require('../validators/loanValidator');
 
 // Get Loan Validators.
-async function getValidator(params) {
-    try{
-        const user = params.hasOwnProperty('user') ? params.user : null;
-        const payload = params.hasOwnProperty('payload') ? params.payload : null;
-        const customerSegment = params.hasOwnProperty('customerSegment') ? params.customerSegment : null;
+async function getValidator(user, segmentId) {
+    try {
+        const {
+            data: { loanParams, segments },
+        } = await settingsController.getOne(user.lenderId);
+        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor, maxDti } =
+            segments.find((segment) => segment.id === segmentId);
 
-        const { data: { loanParams, segments } } = await lenderController.getConfig(user.lenderId);
-        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor, maxDti } = segments.find(
-            segment => segment.id === (customerSegment ? customerSegment.toString() : payload.employmentInfo.segment)
-        );
-
-        const payloadValidator = new LoanRequestValidators(
+        // Segment specific maxDti
+        loanParams.maxDti = maxDti;
+        const loanReqValidator = new LoanRequestValidators(
             loanParams.minNetPay,
             minLoanAmount,
             maxLoanAmount,
@@ -27,60 +29,69 @@ async function getValidator(params) {
             maxTenor
         );
 
-
-        console.log('maxDti', maxDti);
-        return { loanParams, payloadValidator };
-
-    }catch(exception) {
-        logger.error({ message: `getValidator - ${exception.message}`, meta: exception.stack });
+        return { loanParams, loanReqValidator };
+    } catch (exception) {
+        logger.error({
+            message: `getValidator - ${exception.message}`,
+            meta: exception.stack,
+        });
         debug(exception);
         return exception;
-    };
-};
+    }
+}
 
 const loans = {
     createLoanRequest: async function (user, payload) {
-        try{
+        try {
             // if(request.user.role === 'guest') request.user.lenderId = request.params.id;
 
-            const customerPayload = _.omit(payload, ['loan']);
-            const loanPayload = payload.loan;
-    
-            const validator = await getValidator({ user, payload: customerPayload });
-            if(validator instanceof Error) {
-                logger.error({ message: 'Error fetching loan and segment configurations.', meta: { userId: user.id, lenderId: user.lenderId } });
-                return { errorCode: 424, message: 'Unable to fetch loan and segment configurations.' };
+            if (mongoose.isValidObjectId(payload.customer)) {
+                const customer = await Customer.findById(payload.customer);
+                if (!customer)
+                    return { errorCode: 404, message: 'Customer not found.' };
+
+                payload.customer = customer._doc;
             }
 
-            const { loanParams, payloadValidator } = validator;
-    
-            const { error } = payloadValidator.loanRequestCreation(loanPayload)
-            if(error)return { errorCode: 400, message: error.details[0].message };
-    
+            const validator = await getValidator(
+                user,
+                payload.customer.employmentInfo.segment
+            );
+            if (validator instanceof Error) {
+                logger.error({
+                    message: 'Error fetching loan and segment configurations.',
+                    meta: {
+                        userId: user.id || 'guest',
+                        lenderId: user.lenderId,
+                    },
+                });
+                return {
+                    errorCode: 424,
+                    message: 'Unable to fetch loan and segment configurations.',
+                };
+            }
+
+            const { loanParams, loanReqValidator } = validator;
+
+            const { error } = loanReqValidator.create(
+                payload.loan
+            );
+            if (error)
+                return { errorCode: 400, message: error.details[0].message };
+
             const response = await loanManager.createLoanRequest(
                 user,
                 loanParams,
-                customerPayload,
-                loanPayload
+                payload.customer,
+                payload.loan
             );
-    
-            return response;
 
-        }catch(exception) {
+            return response;
+        } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.'};
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
-    },
-
-    createLoan: async function (customer, loanMetricsObj, request) {
-        const newLoan = await loanManager.createLoan(
-            customer,
-            loanMetricsObj,
-            request
-        );
-
-        return newLoan;
     },
 
     getAll: async function (user, filters) {
@@ -157,22 +168,37 @@ const loans = {
     },
 
     update: async function (id, user, payload) {
-        try{
-            const queryParams = { _id: id, lenderId: user.lenderId, status: { $nin: ['Matured', 'Completed'] }};
-    
+        try {
+            const queryParams = {
+                _id: id,
+                lenderId: user.lenderId,
+                status: { $nin: ['Matured', 'Completed'] },
+            };
+
             const loan = await Loan.findOne(queryParams);
-            if(!loan) return { errorCode: 404, message: 'Loan document not found.' };
+            if (!loan)
+                return { errorCode: 404, message: 'Loan document not found.' };
 
             // Get Validator
-            const {customer: {employmentInfo: { segment: { _id } }}} = loan;
-            const { payloadValidator } = await getValidator({ user: req.user, payload: req.body, customerSegment: _id.toString() });
-    
-            const { error } = payloadValidator.validateEdit(req.body)
-            if(error) return { errorCode: 400, message: error.details[0].message };
-            
-            return await loanManager.edit(user, loan, payload);
+            const {
+                customer: {
+                    employmentInfo: {
+                        segment: { _id },
+                    },
+                },
+            } = loan;
+            const { payloadValidator } = await getValidator({
+                user: req.user,
+                payload: req.body,
+                customerSegment: _id.toString(),
+            });
 
-        }catch(exception) {
+            const { error } = payloadValidator.validateEdit(req.body);
+            if (error)
+                return { errorCode: 400, message: error.details[0].message };
+
+            return await loanManager.edit(user, loan, payload);
+        } catch (exception) {
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }

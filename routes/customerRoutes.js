@@ -17,7 +17,7 @@ router.post(
         const { error } = customerValidators.customerCreation(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const newCustomer = await customerController.create(req.body, req.user);
+        const newCustomer = await customerController.create(req.user, req.body);
         if (newCustomer.hasOwnProperty('errorCode'))
             return res.status(newCustomer.errorCode).send(newCustomer.message);
 
@@ -50,7 +50,7 @@ router.get(
             req.user
         );
         if (customer.hasOwnProperty('errorCode'))
-            return res.status(customer.errorCode || 500).send(customer.message);
+            return res.status(customer.errorCode).send(customer.message);
 
         return res.status(200).send(customer);
     }
@@ -93,6 +93,22 @@ router.patch(
             return res.status(customer.errorCode).send(customer.message);
 
         return res.status(200).send(customer);
+    }
+);
+
+router.delete(
+    '/:id',
+    verifyToken,
+    verifyRole(['Lender', 'Admin']),
+    async (req, res) => {
+        const response = await customerController.delete(
+            req.user,
+            req.params.id
+        );
+        if (response.hasOwnProperty('errorCode'))
+            return res.status(response.errorCode).send(response.message);
+
+        return res.status(204).send(response);
     }
 );
 

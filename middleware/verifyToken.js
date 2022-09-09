@@ -1,6 +1,7 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const debug = require('debug')('app:verifyToken');
+const logger = require('../utils/logger')('verfToken.js');
 
 function verifyToken(req, res, next) {
     try {
@@ -21,6 +22,7 @@ function verifyToken(req, res, next) {
 
         next();
     } catch (exception) {
+        logger.error({ message: exception.message, meta: exception.stack });
         debug(exception.message);
         return res.status(403).send('Invalid token provided');
     }

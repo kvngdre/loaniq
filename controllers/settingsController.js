@@ -1,15 +1,17 @@
-const Lender = require('../models/lenderModel');
 const debug = require('debug')('app:configCtrl');
 const Segment = require('../models/segmentModel');
+const Settings = require('../models/settingsModel');
 const logger = require('../utils/logger')('configCtrl.js');
-const LenderConfig = require('../models/lenderConfigModel');
 
 const ctrlFuncs = {
     create: async function (user, payload) {
         try {
-            const settings = new LenderConfig({});
-
-            settings.lenderId = user.lenderId;
+            let settings = await Settings.findOne({ userId: user.id });
+            if (!settings) {
+                settings = new Settings({});
+                settings.userId = user.id;
+                settings.type = 'Lender';
+            }
             settings.segments = payload.segments;
             settings.loanParams = {
                 interestRate: payload.loanParams.interestRate,
@@ -51,13 +53,13 @@ const ctrlFuncs = {
 
     getOne: async function (id) {
         try {
-            const queryParams = { lenderId: id };
+            const queryParams = { userId: id };
 
-            const settings = await LenderConfig.findOne(queryParams);
+            const settings = await Settings.findOne(queryParams);
             if (!settings)
                 return {
                     errorCode: 404,
-                    message: 'No configuration settings found.',
+                    message: 'No settings found.',
                 };
 
             return {
@@ -73,16 +75,16 @@ const ctrlFuncs = {
 
     getAll: async function () {
         try {
-            const settings = await LenderConfig.find({})
-                .populate({
-                    path: 'lenderId',
-                    model: Lender,
-                })
+            const settings = await Settings.find({})
+                // .populate({
+                //     path: 'userId',
+                //     model: Lender,
+                // })
                 .sort('-createdAt');
             if (settings.length === 0)
                 return {
                     errorCode: 404,
-                    message: 'No lender configuration settings.',
+                    message: 'No  settings found.',
                 };
             return {
                 message: 'Success',
@@ -97,11 +99,11 @@ const ctrlFuncs = {
 
     update: async function (id, payload) {
         try {
-            const settings = await LenderConfig.findOne({ lenderId: id });
+            const settings = await Settings.findOne({ userId: id });
             if (!settings)
                 return {
                     errorCode: 404,
-                    message: 'Configuration settings not found.',
+                    message: 'Settings not found.',
                 };
 
             if (payload.segment) {
@@ -146,6 +148,23 @@ const ctrlFuncs = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+            if (exception.name === 'MongoServerError')
+                return {
+                    errorCode: 409,
+                    message: '',
+                };
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message.replace(
+                        'Path',
+                        ''
+                    ),
+                };
+            }
+
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },

@@ -14,7 +14,7 @@ const pendingSchema = new mongoose.Schema(
             required: true,
         },
 
-        documentId: {
+        docId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
         },
@@ -34,7 +34,7 @@ const pendingSchema = new mongoose.Schema(
         remark: {
             type: String,
             trim: true,
-        },
+        }
     },
     schemaOptions
 );

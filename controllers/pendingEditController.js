@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const Loan = require('../models/loanModel');
+const Loan = require('../models/loan');
 const debug = require('debug')('pendingEditCtrl');
-const Customer = require('../models/customerModel');
+const Customer = require('../models/customer');
 const PendingEdit = require('../models/pendingEditModel');
 
 const pendingEditFuncs = {

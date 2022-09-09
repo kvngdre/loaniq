@@ -1,67 +1,69 @@
 const _ = require('lodash');
 const config = require('config');
 const bcrypt = require('bcrypt');
-const Lender = require('../models/lenderModel');
-const sendOTPMail = require('../utils/sendMail');
+const Lender = require('../models/lender');
+const User = require('../models/userModel');
+const sendOTPMail = require('../utils/mailer');
 const debug = require('debug')('app:lenderModel');
+const userController = require('./userController');
+const Settings = require('../models/settingsModel');
 const generateOTP = require('../utils/generateOTP');
-const LenderConfig = require('../models/lenderConfigModel');
-const userController = require('../controllers/userController');
+const logger = require('../utils/logger')('lenderCtrl.js');
 
-const lender = {
-    create: async function (requestBody) {
+const ctrlFuncs = {
+    create: async function (payload) {
         try {
-            const doesExist = await Lender.findOne({
-                email: requestBody.email,
-            });
-            if (doesExist)
-                return {
-                    errorCode: 409,
-                    message: 'Email has already been taken.',
-                };
-
             const encryptedPassword = await bcrypt.hash(
-                requestBody.password,
+                payload.password,
                 config.get('salt_rounds')
             );
-            requestBody.password = encryptedPassword;
+            payload.password = encryptedPassword;
 
-            requestBody.otp = generateOTP();
-
-            const newLender = new Lender(requestBody);
-            await newLender.save();
+            payload.otp = generateOTP();
 
             // Sending OTP to email.
-            const mailResponse = await sendOTPMail(
-                requestBody.email,
-                requestBody.companyName,
-                requestBody.otp.OTP
-            );
-            if (mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                return { errorCode: 502, message: 'Error sending OTP.' };
-            }
+            // const mailResponse = await sendOTPMail(
+            //     payload.email,
+            //     payload.companyName,
+            //     payload.otp.OTP
+            // );
+            // if (mailResponse instanceof Error) {
+            //     debug(`Error sending OTP: ${mailResponse.message}`);
+            //     return { errorCode: 502, message: 'Error sending OTP.' };
+            // }
+
+            const lender = new Lender(payload);
+            await Settings.create({userId: lender._id, type: 'Lender'});
+            await lender.save();
 
             return {
-                // TODO: remove otp from response
-                message: 'Lender created and OTP sent to email',
-                lender: _.pick(newLender, [
-                    '_id',
-                    'companyName',
-                    'phone',
-                    'email',
-                    'active',
-                    'emailVerified',
-                    'balance',
-                    'otp.OTP',
-                    'adminUser',
-                    'lenderURL',
-                    'lastLoginTime',
-                ]),
+                message: 'Account created and OTP has been sent to your email.',
+                data: _.omit(lender._doc, ['otp', 'password']),
             };
         } catch (exception) {
-            // TODO: handle duplicates here
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+
+            // Duplicate field error.
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                if (field === 'Phone') field = 'Phone number';
+
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
+            }
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message,
+                };
+            }
+
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
@@ -75,10 +77,11 @@ const lender = {
                 return { errorCode: 404, message: 'No lenders found.' };
 
             return {
-                message: 'success',
+                message: 'Success',
                 data: lenders,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -88,13 +91,14 @@ const lender = {
         try {
             const lender = await Lender.findById(id).select('-password -otp');
             if (!lender)
-                return { errorCode: 404, message: 'Lender not found.' };
+                return { errorCode: 404, message: 'Account not found.' };
 
             return {
-                message: 'success',
+                message: 'Success',
                 data: lender,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -106,13 +110,14 @@ const lender = {
                 new: true,
             });
             if (!lender)
-                return { errorCode: 404, message: 'Lender not found.' };
+                return { errorCode: 404, message: 'Account not found.' };
 
             return {
-                message: 'Lender Updated',
+                message: 'Account Updated',
                 lender,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -162,6 +167,7 @@ const lender = {
                 lender: authLender,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -205,6 +211,7 @@ const lender = {
                     errorCode: 403,
                     message: 'Account inactive. Contact administrator.',
                 };
+            // TODO: change to contact support
 
             lender._doc.token = lender.generateToken();
             await lender.updateOne({ lastLoginTime: new Date() });
@@ -216,6 +223,7 @@ const lender = {
                 lender: authLender,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -230,7 +238,7 @@ const lender = {
         try {
             const lender = await Lender.findOne({ email });
             if (!lender)
-                return { errorCode: 404, message: 'Lender not found.' };
+                return { errorCode: 404, message: 'Account not found.' };
 
             if (
                 otp &&
@@ -270,6 +278,7 @@ const lender = {
                 message: 'Password updated.',
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -288,53 +297,14 @@ const lender = {
                 };
 
             const adminUser = await userController.create(payload, user);
-            if (!adminUser.hasOwnProperty('errorCode')) return adminUser;
+            if (adminUser.hasOwnProperty('errorCode')) return adminUser;
 
             return {
                 message: 'Admin user created.',
                 data: adminUser,
             };
         } catch (exception) {
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-    setConfig: async function (lenderId, requestBody) {
-        try {
-            requestBody.lenderId = lenderId;
-
-            const lenderConfig = await LenderConfig.findOneAndUpdate(
-                { lenderId },
-                requestBody,
-                { new: true, upsert: true }
-            );
-
-            lenderConfig.save();
-
-            return {
-                message: 'Settings have been updated.',
-                configuration: lenderConfig,
-            };
-        } catch (exception) {
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-    getConfig: async function (lenderId) {
-        try {
-            const queryParams = { lenderId };
-
-            const configSettings = await LenderConfig.findOne(queryParams);
-            if (!configSettings)
-                return { errorCode: 404, message: 'No configuration settings found.' };
-
-            return {
-                message: 'Success',
-                data: configSettings,
-            };
-        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -368,22 +338,30 @@ const lender = {
                 },
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    // delete: async function (requestBody) {
-    //     try{
-    //         const lender = await Lender.findOneAndDelete({email: requestBody.email});
-    //         if (!lender) throw new Error('Lender does not exist');
+    deactivate: async function (lenderId) {
+        try {
+            const lender = await Lender.findOne({ lenderId });
+            await User.updateMany({ lenderId: lender._id }, { active: false });
 
-    //         return lender;
+            lender.set({ active: false });
 
-    //     }catch(exception) {
-    //         return { errorCode: 500, message: 'Something went wrong.' };
-    //     }
-    // }
+            await lender.save();
+
+            return {
+                message: 'Account Deactivated.',
+            };
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            return { errorCode: 500, message: 'Something went wrong.' };
+        }
+    },
 };
 
-module.exports = lender;
+module.exports = ctrlFuncs;

@@ -1,15 +1,10 @@
 const config = require('config');
+const { string } = require('joi');
 const jwt = require('jsonwebtoken');
-const User = require('./userModel');
 const mongoose = require('mongoose');
-const moment = require('moment-timezone');
 // const AutoIncrement = require('mongoose-sequence')(mongoose)
 
-const schemaOptions = {
-    timestamps: true,
-    versionKey: false,
-    toJSON: { virtuals: true },
-};
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const lenderSchema = new mongoose.Schema(
     {
@@ -94,11 +89,6 @@ const lenderSchema = new mongoose.Schema(
             default: 0,
         },
 
-        lastReferenceCode: {
-            type: String,
-            default: null,
-        },
-
         // TODO: Work on auto generating url
         lenderURL: {
             type: String,
@@ -107,10 +97,22 @@ const lenderSchema = new mongoose.Schema(
             default: null,
         },
         // TODO: Should there be more than one admin?
-        adminUser: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+        publicUrl: {
+            // This should be the short url.
+            type: String,
             default: null,
+        },
+
+        support: {
+            email: {
+                type: String,
+                default: null
+            },
+
+            phone: {
+                type: String,
+                default: null
+            }
         },
 
         lastLoginTime: {
@@ -132,15 +134,12 @@ lenderSchema.methods.generateToken = function () {
     return jwt.sign(
         {
             lenderId: this._id,
-            companyName: this.companyName,
             email: this.email,
-            phone: this.phone,
             active: this.active,
             emailVerified: this.emailVerified,
             role: this.role,
             balance: this.balance,
-            adminUser: !!this.adminUser,
-            lastLoginTime: this.lastLoginTimeTZAdjusted,
+            lastLoginTime: this.lastLoginTime,
         },
         config.get('jwt_secret')
     );

@@ -2,12 +2,48 @@ const mongoose = require('mongoose');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
-const configSchema = new mongoose.Schema(
+const settingsSchema = new mongoose.Schema(
     {
-        lenderId: {
+        userId: {
             type: mongoose.Schema.Types.ObjectId,
             unique: true,
             required: true,
+        },
+
+        type: {
+            type: String,
+            enum: [
+                'Lender',
+                'User'
+            ],
+            default: 'User'
+        },
+
+        loanParams: {
+            interestRate: {
+                type: Number,
+                // required: true,
+            },
+
+            upfrontFeePercent: {
+                type: Number,
+                // required: true,
+            },
+
+            transferFee: {
+                type: Number,
+                // required: true,
+            },
+
+            minNetPay: {
+                type: Number,
+                // required: true,
+            },
+
+            maxDti: {
+                type: Number,
+                // required: true,
+            },
         },
 
         segments: [
@@ -19,23 +55,18 @@ const configSchema = new mongoose.Schema(
 
                 minLoanAmount: {
                     type: Number,
-                    required: true,
                 },
                 maxLoanAmount: {
                     type: Number,
-                    required: true,
                 },
                 minTenor: {
                     type: Number,
-                    required: true,
                 },
                 maxTenor: {
                     type: Number,
-                    required: true,
                 },
                 maxDti: {
                     type: Number,
-                    // required: true
                 },
 
                 useDefault: {
@@ -44,37 +75,12 @@ const configSchema = new mongoose.Schema(
             },
         ],
 
-        loanParams: {
-            interestRate: {
-                type: Number,
-                required: true,
-            },
-
-            upfrontFeePercent: {
-                type: Number,
-                required: true,
-            },
-
-            transferFee: {
-                type: Number,
-                required: true,
-            },
-
-            minNetPay: {
-                type: Number,
-                required: true,
-            },
-
-            maxDti: {
-                type: Number,
-                required: true,
-            },
-        },
     },
     schemaOptions
 );
 
-configSchema.pre('save', function (next) {
+settingsSchema.pre('save', function (next) {
+    console.log(this.modifiedPaths())
     // Convert interest rate to decimal value.
     if (this.modifiedPaths().includes('loanParams.interestRate'))
         this.loanParams.interestRate = (
@@ -109,6 +115,6 @@ configSchema.pre('save', function (next) {
     next();
 });
 
-const LenderConfig = mongoose.model('LenderConfig', configSchema);
+const Settings = mongoose.model('Setting', settingsSchema);
 
-module.exports = LenderConfig;
+module.exports = Settings;

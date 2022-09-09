@@ -1,4 +1,4 @@
-const Loan = require('./loanModel');
+const Loan = require('./loan');
 const mongoose = require('mongoose');
 const Segment = require('./segmentModel');
 const debug = require('debug')('app:customerModel');
@@ -347,7 +347,7 @@ customerSchema.pre('save', async function (next) {
 
         const loans = await Loan.find({
             customer: this._id,
-            status: 'pending',
+            status: 'Pending',
         });
         if (loans.length > 0) {
             loans.forEach(async (loan) => {

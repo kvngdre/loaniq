@@ -1,98 +1,19 @@
 const _ = require('lodash');
+const Bank = require('../../models/bank');
+const Loan = require('../../models/loan');
 const debug = require('debug')('app:loanMgr');
-const Bank = require('../../models/bankModel');
-const Loan = require('../../models/loanModel');
+const Customer = require('../../models/customer');
 const Origin = require('../../models/originModel');
 const Segment = require('../../models/segmentModel');
-const Customer = require('../../models/customerModel');
 const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
+const logger = require('../../utils/logger')('loanManager.js');
 const userController = require('../../controllers/userController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEditController');
 
 const manager = {
-    createLoan: async function (customer, loanMetrics, request) {
-        try {
-            const customerOrigin = await Origin.findOne({
-                ippis: customer.employmentInfo.ippis,
-            });
-            if (customerOrigin) {
-                customer.set({
-                    'netPay.value':
-                        customerOrigin.netPays[0] || request.body.netPay,
-                    'netPay.updatedAt': new Date(),
-                });
-                request.body.netPay = customer.netPay.value;
-            }
-
-            const loans = await Loan.find({
-                customer: customer._id,
-                lenderId: request.user.lenderId,
-                active: true,
-            })
-                .sort('-createdAt')
-                .limit(1);
-            if (loans.length > 0) request.body.loanType = 'Top Up';
-
-            let agent = null;
-            if (request.user.role === 'Loan Agent') {
-                agent = await userController.getOne(request.user.id, {
-                    lenderId: request.user.lenderId,
-                    segments: customer.employmentInfo.segment,
-                });
-            }
-
-            if ((!agent || agent instanceof Error) && loans.length == 0) {
-                agent = await pickRandomUser(
-                    request.user.lenderId,
-                    'Loan Agent',
-                    customer.employmentInfo.segment
-                );
-            }
-
-            if ((!agent || agent instanceof Error) && loans.length > 0)
-                agent = await userController.getOne(loans[0].loanAgent);
-            if (!agent || agent instanceof Error)
-                return {
-                    errorCode: 500,
-                    message: 'Failed to assign loan agent',
-                };
-
-            const creditOfficer = await pickRandomUser(
-                request.user.lenderId,
-                'Credit',
-                customer.employmentInfo.segment
-            );
-            if (!creditOfficer)
-                return {
-                    errorCode: 500,
-                    message: 'Failed to assign credit officer',
-                };
-
-            request.body.loanAgent = agent._id;
-            request.body.netPay = customer.netPay.value;
-            request.body.lenderId = request.user.lenderId;
-            request.body.creditOfficer = creditOfficer._id;
-            request.body.transferFee = loanMetrics.transferFee;
-            request.body.interestRate = loanMetrics.interestRate;
-            request.body.params = { dob: customer.dateOfBirth };
-            request.body.params.minNetPay = loanMetrics.minNetPay;
-            request.body.upfrontFeePercent = loanMetrics.upfrontFeePercent;
-            request.body.params.dtiThreshold = loanMetrics.dtiThreshold;
-            request.body.params.doe = customer.employmentInfo.dateOfEnlistment;
-
-            const newLoan = await Loan.create(request.body);
-            await customer.save();
-
-            return newLoan;
-        } catch (exception) {
-            debug(exception);
-            return exception;
-        }
-    },
-
     createLoanRequest: async function (
         user,
         loanParams,
@@ -111,11 +32,13 @@ const manager = {
                     customerPayload,
                     user
                 );
+
+                if (response.hasOwnProperty('errorCode')) {
+                    logger.error({ message: 'Failed to create customer', meta: {lenderId: user.lenderId, response: response.message, customer: customerPayload }});
+                    return response;
+                }
             }
-            if (response.hasOwnProperty('errorCode')) {
-                // TODO: log error
-                return customer;
-            }
+
             const customer = response.data;
 
             const loans = await Loan.find({
@@ -167,19 +90,24 @@ const manager = {
                     errorCode: 424,
                     message: 'Failed to assign credit officer.',
                 };
-
+            
+            // 
+            loanPayload.lenderId = user.lenderId;
             loanPayload.loanAgent = agent._id;
             loanPayload.customer = customer._id;
-            loanPayload.lenderId = user.lenderId;
-            loanPayload.netPay = customer.netPay.value;
             loanPayload.creditOfficer = creditOfficer._id;
-            loanPayload.transferFee = loanParams.transferFee;
+            
+            // Setting loan metrics
             loanPayload.interestRate = loanParams.interestRate;
-            loanPayload.params = { dob: customer.dateOfBirth };
-            loanPayload.params.minNetPay = loanParams.minNetPay;
             loanPayload.upfrontFeePercent = loanParams.upfrontFeePercent;
-            loanPayload.params.dtiThreshold = loanParams.maxDti;
+            loanPayload.transferFee = loanParams.transferFee;
+            
+            // Setting parameters used to evaluate loan
+            loanPayload.params = { dob: customer.dateOfBirth };
             loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
+            loanPayload.params.netPay.value = customer.netPay.value;
+            loanPayload.params.minNetPay = loanParams.minNetPay;
+            loanPayload.params.maxDti = loanParams.maxDti;
 
             // await customer.save();
             const newLoan = await Loan.create(loanPayload);

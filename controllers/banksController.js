@@ -1,8 +1,8 @@
-const Bank = require('../models/bankModel');
+const Bank = require('../models/bank');
 const debug = require('debug')('app:bankModel');
 const logger = require('../utils/logger')('bankCtrl.js');
 
-const bankCtrlFuncs = {
+const CtrlFuncs = {
     /**
      * Creates a new bank.
      * @param {string} name The name of the bank.
@@ -115,4 +115,4 @@ const bankCtrlFuncs = {
     },
 };
 
-module.exports = bankCtrlFuncs;
+module.exports = CtrlFuncs;

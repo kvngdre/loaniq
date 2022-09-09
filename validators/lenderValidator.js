@@ -67,6 +67,7 @@ const validators = {
                 }),
             category: Joi.string(),
             phone: phoneSchema,
+            timeZone: Joi.string(),
         });
 
         return schema.validate(lender);
@@ -129,7 +130,7 @@ const validators = {
         return schema.validate(user);
     },
 
-    setConfigSettings: function (settings) {
+    createSettings: function (settings) {
         const schema = Joi.object({
             segments: Joi.array()
                 .items(
@@ -140,7 +141,9 @@ const validators = {
                         minTenor: Joi.number().required(),
                         maxTenor: Joi.number().required(),
                         maxDti: Joi.number(),
-                        useDefault: Joi.boolean().default((parent) => parent.maxDti ? false : true)
+                        useDefault: Joi.boolean().default((parent) =>
+                            parent.maxDti ? false : true
+                        ),
                     })
                 )
                 .min(1),
@@ -157,7 +160,7 @@ const validators = {
         return schema.validate(settings);
     },
 
-    editConfigSettings: function (settings) {
+    updateSettings: function (settings) {
         const schema = Joi.object({
             segment: Joi.object({
                 id: Joi.objectId().required(),
@@ -166,7 +169,7 @@ const validators = {
                 minTenor: Joi.number(),
                 maxTenor: Joi.number(),
                 maxDti: Joi.number(),
-                useDefault: Joi.boolean()
+                useDefault: Joi.boolean(),
             }),
 
             loanParams: Joi.object({

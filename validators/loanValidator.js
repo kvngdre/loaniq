@@ -33,19 +33,18 @@ class LoanRequestValidators {
             });
     }
 
-    loanRequestCreation(loanRequest) {
+    create(loan) {
         const schema = Joi.object({
             amount: this.#amountSchema.required(),
             amountInWords: Joi.string().required(),
             tenor: this.#tenorSchema.required(),
-            loanType: Joi.string(),
         });
-        return schema.validate(loanRequest);
+        return schema.validate(loan);
     }
 
     loanCreation(newLoan) {
         const schema = Joi.object({
-            customer: Joi.objectId().required(),
+            customerId: Joi.objectId().required(),
             amount: this.#amountSchema.required(),
             amountInWords: Joi.string().required(),
             tenor: this.#tenorSchema.required(),

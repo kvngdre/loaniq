@@ -3,7 +3,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const lenderValidators = require('../validators/lenderValidator');
 const lenderController = require('../controllers/lenderController');
-const configController = require('../controllers/lenderConfigController');
+const settingsController = require('../controllers/settingsController');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.creation(req.body);
@@ -110,8 +110,8 @@ router.post(
     async (req, res) => {
         const { value, error } = lenderValidators.setConfigSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-        
-        const settings = await configController.create(req.user, value);
+
+        const settings = await settingsController.create(req.user, value);
         if (settings.hasOwnProperty('errorCode'))
             return res.status(settings.errorCode).send(settings.message);
 
@@ -124,7 +124,7 @@ router.get(
     verifyToken,
     verifyRole(['Lender', 'Master']),
     async (req, res) => {
-        const settings = await configController.getOne(req.params.id);
+        const settings = await settingsController.getOne(req.params.id);
         if (settings.hasOwnProperty('errorCode'))
             return res.status(settings.errorCode).send(settings.message);
 
@@ -133,7 +133,7 @@ router.get(
 );
 
 router.get('/settings', verifyToken, verifyRole('Master'), async (req, res) => {
-    const settings = await configController.getAll(req.user);
+    const settings = await settingsController.getAll(req.user);
     if (settings.hasOwnProperty('errorCode'))
         return res.status(settings.errorCode).send(settings.message);
 
@@ -145,10 +145,13 @@ router.patch(
     verifyToken,
     verifyRole(['Lender', 'Master']),
     async (req, res) => {
-        const { value, error } = lenderValidators.editConfigSettings(req.body);
+        const { value, error } = lenderValidators.settings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-        console.log(value)
-        const settings = await configController.update(req.params.id, req.body);
+        console.log(value);
+        const settings = await settingsController.update(
+            req.params.id,
+            req.body
+        );
         if (settings.hasOwnProperty('errorCode'))
             return res.status(settings.errorCode).send(settings.message);
 
@@ -167,12 +170,17 @@ router.post('/otp', async (req, res) => {
     return res.status(200).send(otp);
 });
 
-// router.delete('/', verifyToken, verifyRole('unknown'), async (req, res) => {
-//     const lender = await lenderController.delete(req.body);
+router.get(
+    '/deactivate/:id',
+    verifyToken,
+    verifyRole(['Lender', 'Master']),
+    async (req, res) => {
+        const response = await lenderController.deactivate(req.params.id);
+        if (response.hasOwnProperty('errorCode'))
+            return res.status(response.errorCode).send(response.message);
 
-//     if(lender instanceof Error) return res.status(400).send(lender.message);
-
-//     return res.status(200).send(lender);
-// });
+        return res.status(200).send(response);
+    }
+);
 
 module.exports = router;

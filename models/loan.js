@@ -1,19 +1,14 @@
+const Lender = require('./lender');
+const User = require('./userModel');
 const mongoose = require('mongoose');
-const User = require('../models/userModel');
 const Metrics = require('../utils/LoanParams');
-const Lender = require('../models/lenderModel');
 
-const loanMetricFuncs = new Metrics();
+const metricFuncs = new Metrics();
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
 const loanSchema = new mongoose.Schema(
     {
-        netPay: {
-            type: Number,
-            required: true,
-        },
-
         amount: {
             type: Number,
             required: true,
@@ -62,16 +57,13 @@ const loanSchema = new mongoose.Schema(
             default: 'Pending',
         },
 
-        comment: {
+        remark: {
             type: String,
             default: null,
         },
         // End of the line where credit user can edit.
 
-        loanAgent: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-        },
+        loanAgent: mongoose.Schema.Types.ObjectId,
 
         interestRate: {
             type: Number,
@@ -107,59 +99,6 @@ const loanSchema = new mongoose.Schema(
             default: null,
         },
 
-        metrics: {
-            age: {
-                isValid: {
-                    type: Boolean,
-                    default: null,
-                },
-
-                age: {
-                    type: Number,
-                    default: null,
-                },
-            },
-
-            serviceLength: {
-                isValid: {
-                    type: Boolean,
-                    default: null,
-                },
-
-                yearsServed: {
-                    type: Number,
-                    default: null,
-                },
-            },
-
-            netPay: {
-                value: {
-                    type: Number
-                },
-                valid:{
-                    type: Boolean,
-                }
-            },
-
-            // TODO: should this be moved to the customer model?
-            netPayConsistency: {
-                type: Boolean,
-                default: null,
-            },
-
-            debtToIncomeRatio: {
-                isValid: {
-                    type: Boolean,
-                    default: null,
-                },
-
-                value: {
-                    type: Number,
-                    default: null,
-                },
-            },
-        },
-
         dateApprovedOrDenied: {
             type: Date,
         },
@@ -174,15 +113,9 @@ const loanSchema = new mongoose.Schema(
 
         customer: mongoose.Schema.Types.ObjectId,
 
-        creditOfficer: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-        },
+        creditOfficer: mongoose.Schema.Types.ObjectId,
 
-        lenderId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Lender',
-        },
+        lenderId: mongoose.Schema.Types.ObjectId,
 
         active: {
             type: Boolean,
@@ -205,17 +138,61 @@ const loanSchema = new mongoose.Schema(
                 default: null,
             },
 
+            age: {
+                isValid: {
+                    type: Boolean,
+                    default: null,
+                },
+
+                age: {
+                    type: Number,
+                    default: null,
+                },
+            },
+
             doe: {
                 type: Date,
                 default: null,
             },
 
-            minNetPay: {
+            serviceLength: {
+                isValid: {
+                    type: Boolean,
+                    default: null,
+                },
+
+                yearsServed: {
+                    type: Number,
+                    default: null,
+                },
+            },
+
+            netPay: {
+                value: {
+                    type: Number,
+                },
+                valid: {
+                    type: Boolean,
+                },
+            },
+
+            // TODO: should this be moved to the customer model?
+            netPayConsistency: {
+                type: Boolean,
+                default: null,
+            },
+
+            dti: {
                 type: Number,
                 default: null,
             },
 
             maxDti: {
+                type: Number,
+                default: null,
+            },
+
+            minNetPay: {
                 type: Number,
                 default: null,
             },
@@ -239,27 +216,27 @@ loanSchema.pre('save', function (next) {
         this.modifiedPaths().some((path) => loanMetricsTriggers.includes(path))
     ) {
         console.log('yes');
-        this.upfrontFee = loanMetricFuncs.calcUpfrontFee(
+        this.upfrontFee = metricFuncs.calcUpfrontFee(
             this.recommendedAmount,
             this.upfrontFeePercent
         );
-        this.repayment = loanMetricFuncs.calcRepayment(
+        this.repayment = metricFuncs.calcRepayment(
             this.recommendedAmount,
             this.interestRate,
             this.recommendedTenor
         );
-        this.totalRepayment = loanMetricFuncs.calcTotalRepayment(
+        this.totalRepayment = metricFuncs.calcTotalRepayment(
             this.repayment,
             this.recommendedTenor
         );
-        this.netValue = loanMetricFuncs.calcNetValue(
+        this.netValue = metricFuncs.calcNetValue(
             this.recommendedAmount,
             this.upfrontFee,
             this.transferFee
         );
     }
 
-    const validationMetricTrigger = ['netPay', 'repayment', 'params'];
+    const validationMetricTrigger = ['repayment', 'params'];
 
     // setting validation metics
     if (
@@ -268,22 +245,12 @@ loanSchema.pre('save', function (next) {
         )
     ) {
         console.log('I dey here');
-        // Checking age validity
-        this.metrics.age = loanMetricFuncs.ageValidator(this.params.dob);
-        // Checking service length validity
-        this.metrics.serviceLength =
-            loanMetricFuncs.serviceLengthValidator(this.params.doe);
-        // Checking net pay validity
-        this.metrics.netPayValid = loanMetricFuncs.netPayValidator(
-            this.netPay,
-            this.params.minNetPay
+        this.params.age = metricFuncs.ageValidator(this.params.dob);
+        this.params.serviceLength = metricFuncs.serviceLengthValidator(
+            this.params.doe
         );
-        // Calculating Debt-to-Income ratio
-        this.metrics.debtToIncomeRatio = loanMetricFuncs.dtiRatioCalculator(
-            this.repayment,
-            this.netPay,
-            this.params.dtiThreshold
-        );
+        this.params.netPay.valid = this.netPay >= this.params.minNetPay;
+        this.params.dti = metricFuncs.calcDti(this.repayment, this.netPay);
     }
 
     next();

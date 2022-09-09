@@ -21,9 +21,15 @@ class Params {
         return netValue.toFixed(2);
     };
 
+    calcDti(repayment, netPay) {
+        const dti = repayment / netPay;
+        
+        return (dti * 100).toFixed(2) ;
+    };
+
     ageValidator(dob) {
-        const dobMSec = dob.getTime();
-        const diff = Date.now() - dobMSec;
+        const dobMs = dob.getTime();
+        const diff = Date.now() - dobMs;
         const age = new Date(diff).getUTCFullYear() - 1970;
 
         return { 
@@ -33,26 +39,13 @@ class Params {
     };
 
     serviceLengthValidator(doe) {
-        const doeMSec = doe.getTime();
-        const diff = Date.now() - doeMSec;
+        const doeMs = doe.getTime();
+        const diff = Date.now() - doeMs;
         const serviceLength = new Date(diff).getUTCFullYear() - 1970;
 
         return { 
             isValid: serviceLength <= 33, 
             yearsServed: serviceLength 
-        };
-    };
-
-    netPayValidator(netPay, minNetPay) {
-        return netPay >= minNetPay;
-    };
-
-    dtiRatioCalculator(repayment, netPay, maxDTI) {
-        const dti = repayment / netPay;
-        
-        return { 
-            isValid: dti < maxDTI * 100, 
-            value: (dti * 100).toFixed(2) 
         };
     };
 };

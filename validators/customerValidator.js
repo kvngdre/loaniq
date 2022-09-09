@@ -1,5 +1,4 @@
 const Joi = require('joi');
-const { ref } = require('joi');
 const { DateTime } = require('luxon');
 Joi.objectId = require('joi-objectid')(Joi);
 
@@ -16,9 +15,7 @@ function isValidDOB(dob, helper) {
 
 const nameSchema = Joi.object({
     first: Joi.string().min(3).max(50),
-
     last: Joi.string().min(3).max(50),
-
     middle: Joi.string().min(3).max(50),
 });
 
@@ -30,13 +27,9 @@ const dateOfBirthSchema = Joi.date()
 
 const addressSchema = Joi.object({
     street: Joi.string().min(5).max(255),
-
     state: Joi.string(),
-
     stateCode: Joi.string().length(2),
-
     lga: Joi.string(),
-
     geo: Joi.string(),
 });
 
@@ -46,28 +39,22 @@ const contactSchema = Joi.object({
         .message({
             'string.pattern.base': 'Invalid phone number.',
         }),
-
     email: Joi.string().email().min(10).max(255),
 });
 
 const employmentSchema = Joi.object({
     name: Joi.string(),
-
     segment: Joi.objectId(),
-
     ippis: Joi.string()
         .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
         .uppercase()
         .messages({ 'string.pattern.base': 'Invalid IPPIS number.' }),
-
     companyLocation: addressSchema,
-
     dateOfEnlistment: Joi.date()
         .min(
             Joi.ref('...dateOfBirth', {
                 adjust: (value) => {
                     value.setFullYear(value.getFullYear() + 21);
-                    console.log(value);
                     return value;
                 },
             })
@@ -82,33 +69,27 @@ const bvnSchema = Joi.string()
 
 const idSchema = Joi.object({
     idType: Joi.string(),
-
     idNumber: Joi.string(),
 });
 
 const nokSchema = Joi.object({
     fullName: Joi.string(),
-
     address: addressSchema,
-
     phone: Joi.string()
         .pattern(/^0([7-9])([0,1])[0-9]{8}$/)
         .message({
             'string.pattern.base': 'Invalid phone number',
         }),
-
     relationship: Joi.string(),
 });
 
 const accountInfoSchema = Joi.object({
     salaryAccountName: Joi.string(),
-
     salaryAccountNumber: Joi.string()
         .pattern(/^[0-9]{10}$/)
         .message({
             'string.pattern.base': 'Invalid account number.',
         }),
-
     bank: {
         name: Joi.string(),
         code: Joi.string(),
@@ -120,32 +101,23 @@ const netPaySchema = Joi.object({
 });
 
 const validators = {
-    customerCreation: function (customer) {
-        const schema = Joi.object({
-            name: nameSchema.required(),
-
-            gender: genderSchema.required(),
-
-            dateOfBirth: dateOfBirthSchema.required(),
-
-            residentialAddress: addressSchema.required(),
-
-            contactInfo: contactSchema.required(),
-
-            maritalStatus: Joi.string().required(),
-
-            bvn: bvnSchema.required(),
-
-            idCardInfo: idSchema.required(),
-
-            employmentInfo: employmentSchema.required(),
-
-            nok: nokSchema.required(),
-
-            accountInfo: accountInfoSchema.required(),
-
-            // not required because validator is used in loan creation
-        });
+    create: function (customer) {
+        const schema = Joi.alternatives().try(
+            Joi.objectId().required(),
+            Joi.object({
+                name: nameSchema.required(),
+                gender: genderSchema.required(),
+                dateOfBirth: dateOfBirthSchema.required(),
+                residentialAddress: addressSchema.required(),
+                contactInfo: contactSchema.required(),
+                maritalStatus: Joi.string().required(),
+                bvn: bvnSchema.required(),
+                idCardInfo: idSchema.required(),
+                employmentInfo: employmentSchema.required(),
+                nok: nokSchema.required(),
+                accountInfo: accountInfoSchema.required(),
+            })
+        )
 
         return schema.validate(customer);
     },
@@ -153,29 +125,18 @@ const validators = {
     validateEdit: function (customer) {
         const schema = Joi.object({
             name: nameSchema,
-
             gender: genderSchema,
-
             dateOfBirth: dateOfBirthSchema,
-
             // TODO: Add required to fields.
             residentialAddress: addressSchema,
-
             contactInfo: contactSchema,
-
             maritalStatus: Joi.string(),
-
             bvn: bvnSchema,
-
             idCardInfo: idSchema,
-
             employmentInfo: employmentSchema,
-
             nok: nokSchema,
-
             accountInfo: accountInfoSchema,
-
-            netPay: netPaySchema
+            netPay: netPaySchema,
         });
 
         return schema.validate(customer);

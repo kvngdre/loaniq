@@ -1,18 +1,18 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
-const Loan = require('../models/loanModel');
+const Loan = require('../models/loan');
 const State = require('../models/stateModel');
 const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:customerCtrl');
-const Customer = require('../models/customerModel');
+const Customer = require('../models/customer');
 const logger = require('../utils/logger')('customerCtrl.js');
 const originController = require('../controllers/originController');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 const PendingEditController = require('../controllers/pendingEditController');
 
-const customerCtrlFuncs = {
-    create: async function (payload, user) {
+const ctrlFuncs = {
+    create: async function (user, payload) {
         try {
             // TODO: uncomment this later
             // payload.passport.path = request.file.passport[0].path;
@@ -21,7 +21,21 @@ const customerCtrlFuncs = {
             // payload.idCard.path = request.file.idCard[0].path;
             // payload.passport.originalName = request.file.idCard[0].originalname;
 
-            const customer = new Customer(payload);
+            const queryParams = { 'employmentInfo.ippis': payload.employmentInfo.ippis };
+            
+            let customer = await Customer.findOne(queryParams)
+            console.log(customer)
+            if(!customer) customer = new Customer(payload);
+            else{
+                // Update info
+                customer.set({
+                    contactInfo: payload.contactInfo,
+                    residentialAddress: payload.residentialAddress,
+                    maritalStatus: payload.maritalStatus,
+                    'employmentInfo.companyLocation': payload.employmentInfo.companyLocation
+                },)
+                
+            }
             customer.addLender(user.lenderId);
 
             // TODO: uncomment this later
@@ -170,10 +184,11 @@ const customerCtrlFuncs = {
                 return { errorCode: 404, message: 'No customers found.' };
 
             return {
-                message: 'success',
+                message: 'Success',
                 data: customers,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -194,6 +209,7 @@ const customerCtrlFuncs = {
                 data: customer,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -216,7 +232,7 @@ const customerCtrlFuncs = {
                     'Customer',
                     alteration
                 );
-                if (!newPendingEdit || newPendingEdit instanceof Error) {
+                if (newPendingEdit.errorCode) {
                     debug(newPendingEdit);
                     return {
                         errorCode: 500,
@@ -238,6 +254,7 @@ const customerCtrlFuncs = {
                 data: customer,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -298,25 +315,35 @@ const customerCtrlFuncs = {
                 data: result,
             };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    delete: async function (ippis) {
+    delete: async function (user, id) {
         try {
-            const customer = Customer.findOneAndDelete({
-                'employmentInfo.ippis': ippis,
-            });
+            const queryParams = mongoose.isValidObjectId(id)
+                ? { _id: id, lenders: user.lenderId }
+                : { 'employmentInfo.ippis': id, lenders: user.lenderId };
+
+            const customer = await Customer.findOne(queryParams);
             if (!customer)
                 return { errorCode: 404, message: 'Customer not found.' };
 
-            return customer;
+            customer.removeLender(user.lenderId);
+
+            await customer.save();
+
+            return {
+                message: 'Customer has been deleted.'
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 };
 
-module.exports = customerCtrlFuncs;
+module.exports = ctrlFuncs;

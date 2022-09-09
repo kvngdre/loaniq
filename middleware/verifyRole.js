@@ -7,7 +7,7 @@ function verifyRole(role) {
     if (Array.isArray(role)) {
         return (req, res, next) => {
             if (!role.includes(req.user.role))
-                return res.status(401).send('Access Denied');
+                return res.status(403).send('Access Denied');
 
             next();
         };
@@ -15,7 +15,7 @@ function verifyRole(role) {
 
     return (req, res, next) => {
         if (req.user.role !== role) {
-            return res.status(401).send('Access Denied');
+            return res.status(403).send('Access Denied');
         }
         next();
     };

@@ -18,5 +18,9 @@
         "flw_secret_key": "FLW_PRIVATE_KEY",
         "flw_encryption_key": "FLW_ENCRYPTION_KEY",
         "flw_webhook_hash": "FLW_WEBHOOK_HASH"
+    },
+    "crypto": {
+        "initVector": "INIT_VECTOR",
+        "secret_key": "SECURITY_KEY"
     }
 }
