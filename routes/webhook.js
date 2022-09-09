@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const flwCtrl = require('../utils/flutterwave');
-const webhooks = require('../controllers/webhookController');
+const webhooks = require('../controllers/webhook');
 
 router.post('/paystack', async (req, res) => {
     if(!req.headers['x-paystack-signature']) return res.sendStatus(401);

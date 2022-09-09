@@ -5,7 +5,7 @@ const flw = require('../utils/flutterwave');
 const Lender = require('../models/lenderModel');
 const debug = require('debug')('app:webhookCtrl');
 const logger = require('../utils/logger')('webhookCtrl.js');
-const transactionController = require('./transactionController');
+const transactionController = require('./transaction');
 
 const webhooks = {
     paystack: async function (signature, payload) {

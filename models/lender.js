@@ -1,5 +1,4 @@
 const config = require('config');
-const { string } = require('joi');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 // const AutoIncrement = require('mongoose-sequence')(mongoose)

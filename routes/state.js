@@ -3,7 +3,7 @@ const debug = require('debug')('app:stateRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const stateController = require('../controllers/state');
 const verifyToken = require('../middleware/verifyToken');
-const stateValidators = require('../validators/stateValidator');
+const stateValidators = require('../validators/state');
 
 router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
     const { error } = stateValidators.validateCreation(req.body);

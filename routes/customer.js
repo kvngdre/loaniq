@@ -3,7 +3,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const customerController = require('../controllers/customer');
 const uploadMultipleFiles = require('../middleware/fileUpload');
-const customerValidators = require('../validators/customerValidator');
+const customerValidators = require('../validators/customer');
 
 router.post(
     '/',

@@ -3,7 +3,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const lenderValidators = require('../validators/lender');
 const lenderController = require('../controllers/lender');
-const settingsController = require('../controllers/settingsController');
+const settingsController = require('../controllers/settings');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);

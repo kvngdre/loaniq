@@ -1,10 +1,10 @@
 const _ = require('lodash');
 const router = require('express').Router();
+const loanController = require('../controllers/loan');
 const verifyRole = require('../middleware/verifyRole');
+const { loanValidators } = require('../validators/loan');
 const verifyToken = require('../middleware/verifyToken');
-const loanController = require('../controllers/loanController');
-const { loanValidators } = require('../validators/loanValidator');
-const customerValidators = require('../validators/customerValidator');
+const customerValidators = require('../validators/customer');
 
 router.post(
     '/new/loan-request',

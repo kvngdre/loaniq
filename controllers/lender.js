@@ -6,7 +6,7 @@ const Lender = require('../models/lender');
 const sendOTPMail = require('../utils/mailer');
 const Settings = require('../models/settings');
 const debug = require('debug')('app:lenderModel');
-const userController = require('./userController');
+const userController = require('./user');
 const generateOTP = require('../utils/generateOTP');
 const logger = require('../utils/logger')('lenderCtrl.js');
 

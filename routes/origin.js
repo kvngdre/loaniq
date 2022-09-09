@@ -2,8 +2,8 @@ const router = require('express').Router();
 const debug = require('debug')('app:originRoute');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const originValidators = require('../validators/originValidator');
-const originController = require('../controllers/originController');
+const originValidators = require('../validators/origin');
+const originController = require('../controllers/origin');
 
 router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
     const { error } = originValidators.create(req.body);

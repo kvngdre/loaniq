@@ -6,9 +6,9 @@ const lenderController = require('./lender');
 const debug = require('debug')('app:loanCtrl');
 const Customer = require('../models/customer');
 const logger = require('../utils/logger')('loanCtrl.js');
-const settingsController = require('./settingsController');
+const settingsController = require('./settings');
 const loanManager = require('../tools/Managers/loanManager');
-const { LoanRequestValidators } = require('../validators/loanValidator');
+const { LoanRequestValidators } = require('../validators/loan');
 
 // Get Loan Validators.
 async function getValidator(user, segmentId) {

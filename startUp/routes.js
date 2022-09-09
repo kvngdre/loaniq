@@ -1,15 +1,15 @@
 const cors = require('cors');
 const express = require('express');
+const loanRouter = require('../routes/loan');
+const userRouter = require('../routes/user');
+const banksRouter = require('../routes/bank');
 const stateRouter = require('../routes/state');
 const lenderRouter = require('../routes/lender');
+const originRouter = require('../routes/origin');
+const segmentRouter = require('../routes/segment');
 const customerRouter = require('../routes/customer');
-const loanRoutes = require('../routes/loanRoutes');
-const userRoutes = require('../routes/userRoutes');
-const banksRoutes = require('../routes/banksRoutes');
-const originRoutes = require('../routes/originRoutes');
-const segmentRoutes = require('../routes/segmentRoutes');
-const pendingEditRoutes = require('../routes/pendingEditRoutes');
-const transactionRoutes = require('../routes/transactionRoutes');
+const pendingEditRouter = require('../routes/pendingEdit');
+const transactionRouter = require('../routes/transaction');
 
 const errorHandler = require('../middleware/errorHandler');
 
@@ -20,16 +20,16 @@ module.exports = function(app) {
     app.use(express.json());
 
     // Route handlers
-    app.use('/api/loans', loanRoutes);
-    app.use('/api/users', userRoutes);
-    app.use('/api/banks', banksRoutes);
+    app.use('/api/loans', loanRouter);
+    app.use('/api/users', userRouter);
+    app.use('/api/banks', banksRouter);
     app.use('/api/states', stateRouter);
-    app.use('/api/origin', originRoutes);
+    app.use('/api/origin', originRouter);
     app.use('/api/lenders', lenderRouter);
-    app.use('/api/segments', segmentRoutes);
+    app.use('/api/segments', segmentRouter);
     app.use('/api/customers', customerRouter);
-    app.use('/api/transactions', transactionRoutes);
-    app.use('/api/pending-edits', pendingEditRoutes);
+    app.use('/api/transactions', transactionRouter);
+    app.use('/api/pending-edits', pendingEditRouter);
 
     // Error handling middleware
     app.use(errorHandler);

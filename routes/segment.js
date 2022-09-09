@@ -2,8 +2,8 @@ const router = require('express').Router();
 const debug = require('debug')('app:segmentRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const segmentValidators = require('../validators/segmentValidator');
-const segmentController = require('../controllers/segmentController');
+const segmentValidators = require('../validators/segment');
+const segmentController = require('../controllers/segment');
 
 router.post('/', verifyToken, verifyRole(['Master']), async (req, res) => {
     const { error } = segmentValidators.validateCreation(req.body);
