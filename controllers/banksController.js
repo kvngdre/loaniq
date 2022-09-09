@@ -46,7 +46,7 @@ const CtrlFuncs = {
      */
     getOne: async function (id) {
         try {
-            const bank = Bank.findById(id);
+            const bank = await Bank.findById(id);
             if (!bank)
                 return { errorCode: 404, message: 'Bank does not exist.' };
 

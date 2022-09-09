@@ -33,7 +33,7 @@ const otpSchema = Joi.string()
     .messages({ 'string.pattern.base': 'Invalid OTP' });
 
 const validators = {
-    creation: function (lender) {
+    create: function (lender) {
         const schema = Joi.object({
             companyName: Joi.string().required(),
             companyAddress: Joi.string().required(),
@@ -73,7 +73,7 @@ const validators = {
         return schema.validate(lender);
     },
 
-    validateRegVerification: function (lender) {
+    verifyReg: function (lender) {
         const schema = Joi.object({
             email: emailSchema.required(),
             otp: Joi.string()
@@ -82,22 +82,22 @@ const validators = {
                 .messages({
                     'string.pattern.base': 'Invalid OTP.',
                 }),
-            password: passwordSchema.required(),
+            password: Joi.string().required(),
         });
 
         return schema.validate(lender);
     },
 
-    validateLogin: function (lender) {
+    login: function (lender) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: passwordSchema.required(),
+            password: Joi.string().required(),
         });
 
         return schema.validate(lender);
     },
 
-    validateChangePassword: function (passwordObj) {
+    changePassword: function (passwordObj) {
         const schema = Joi.object({
             otp: otpSchema.when('currentPassword', {
                 not: Joi.exist(),
@@ -105,7 +105,7 @@ const validators = {
                 otherwise: Joi.optional(),
             }),
             email: emailSchema.required(),
-            currentPassword: passwordSchema,
+            currentPassword: Joi.string(),
             newPassword: passwordSchema.required(),
         });
 
@@ -192,10 +192,9 @@ const validators = {
         return schema.validate(email);
     },
 
-    delete: function (lender) {
+    deactivate: function (lender) {
         const schema = Joi.object({
-            id: Joi.objectId().required(),
-            email: emailSchema.required(),
+            password: Joi.string()
         });
 
         return schema.validate(lender);

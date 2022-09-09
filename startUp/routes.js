@@ -1,13 +1,13 @@
 const cors = require('cors');
 const express = require('express');
+const stateRouter = require('../routes/state');
+const lenderRouter = require('../routes/lender');
+const customerRouter = require('../routes/customer');
 const loanRoutes = require('../routes/loanRoutes');
 const userRoutes = require('../routes/userRoutes');
-const stateRoutes = require('../routes/stateRoutes');
 const banksRoutes = require('../routes/banksRoutes');
-const lenderRoutes = require('../routes/lenderRoutes');
 const originRoutes = require('../routes/originRoutes');
 const segmentRoutes = require('../routes/segmentRoutes');
-const customerRoutes = require('../routes/customerRoutes');
 const pendingEditRoutes = require('../routes/pendingEditRoutes');
 const transactionRoutes = require('../routes/transactionRoutes');
 
@@ -23,11 +23,11 @@ module.exports = function(app) {
     app.use('/api/loans', loanRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/banks', banksRoutes);
-    app.use('/api/states', stateRoutes);
+    app.use('/api/states', stateRouter);
     app.use('/api/origin', originRoutes);
-    app.use('/api/lenders', lenderRoutes);
+    app.use('/api/lenders', lenderRouter);
     app.use('/api/segments', segmentRoutes);
-    app.use('/api/customers', customerRoutes);
+    app.use('/api/customers', customerRouter);
     app.use('/api/transactions', transactionRoutes);
     app.use('/api/pending-edits', pendingEditRoutes);
 

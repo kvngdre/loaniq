@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const { DateTime } = require('luxon');
 const debug = require('debug')('app:txnCtrl');
+const Transaction = require('../models/transaction');
 const logger = require('../utils/logger')('txnCtrl.js');
-const Transaction = require('../models/transactionModel');
 
 const ctrlFuncs = {
     create: async function (payload) {

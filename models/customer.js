@@ -170,6 +170,8 @@ const customerSchema = new mongoose.Schema(
         employmentInfo: {
             name: {
                 type: String,
+                minLength: 3,
+                maxLength: 255,
                 trim: true,
                 required: true,
             },

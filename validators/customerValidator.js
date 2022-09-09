@@ -35,15 +35,17 @@ const addressSchema = Joi.object({
 
 const contactSchema = Joi.object({
     phone: Joi.string()
-        .pattern(/^0([7-9])([0-1])[0-9]{8}$/)
+        .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .message({
-            'string.pattern.base': 'Invalid phone number.',
+            'string.pattern.base':
+                'Invalid phone number. Should have international dialing code.',
         }),
     email: Joi.string().email().min(10).max(255),
 });
 
 const employmentSchema = Joi.object({
-    name: Joi.string(),
+    name: Joi.string().min(3).max(255),
+    depart: Joi.string().min(3).max(255),
     segment: Joi.objectId(),
     ippis: Joi.string()
         .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
@@ -117,7 +119,7 @@ const validators = {
                 nok: nokSchema.required(),
                 accountInfo: accountInfoSchema.required(),
             })
-        )
+        );
 
         return schema.validate(customer);
     },
@@ -127,7 +129,6 @@ const validators = {
             name: nameSchema,
             gender: genderSchema,
             dateOfBirth: dateOfBirthSchema,
-            // TODO: Add required to fields.
             residentialAddress: addressSchema,
             contactInfo: contactSchema,
             maritalStatus: Joi.string(),

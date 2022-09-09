@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const pendingEditController = require('../controllers/pendingEdit');
 const pendingEditValidators = require('../validators/pendingEditValidator');
-const pendingEditController = require('../controllers/pendingEditController');
 
 
 router.get('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {

@@ -2,14 +2,12 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 const Loan = require('../models/loan');
-const State = require('../models/state');
-const Segment = require('../models/segment');
-const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customer');
+const debug = require('debug')('app:customerCtrl');
+const originController = require('./originController');
+const PendingEditController = require('./pendingEdit');
 const logger = require('../utils/logger')('customerCtrl.js');
-const originController = require('../controllers/originController');
 const convertToDotNotation = require('../utils/convertToDotNotation');
-const PendingEditController = require('../controllers/pendingEditController');
 
 const ctrlFuncs = {
     create: async function (user, payload) {
@@ -207,7 +205,7 @@ const ctrlFuncs = {
                 return { errorCode: 404, message: 'Customer not found.' };
 
             return {
-                message: 'success',
+                message: 'Success',
                 data: customer,
             };
         } catch (exception) {

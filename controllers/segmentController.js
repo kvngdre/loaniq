@@ -1,6 +1,5 @@
-const Segment = require('../models/segmentModel');
-const debug = require('debug')('app:segmentContr');
-const ObjectId = require('mongoose').Types.ObjectId;
+const Segment = require('../models/segment');
+const debug = require('debug')('app:segmentCtrl');
 
 const segment = {  
     create: async function(requestBody) {

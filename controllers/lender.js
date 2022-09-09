@@ -1,12 +1,12 @@
 const _ = require('lodash');
 const config = require('config');
 const bcrypt = require('bcrypt');
-const Lender = require('../models/lender');
 const User = require('../models/user');
+const Lender = require('../models/lender');
 const sendOTPMail = require('../utils/mailer');
+const Settings = require('../models/settings');
 const debug = require('debug')('app:lenderModel');
 const userController = require('./userController');
-const Settings = require('../models/settings');
 const generateOTP = require('../utils/generateOTP');
 const logger = require('../utils/logger')('lenderCtrl.js');
 
@@ -33,7 +33,7 @@ const ctrlFuncs = {
             // }
 
             const lender = new Lender(payload);
-            await Settings.create({userId: lender._id, type: 'Lender'});
+            await Settings.create({ userId: lender._id, type: 'Lender' });
             await lender.save();
 
             return {
@@ -89,7 +89,7 @@ const ctrlFuncs = {
 
     getOne: async function (id) {
         try {
-            const lender = await Lender.findById(id).select('-password -otp');
+            const lender = await Lender.findById(id, {password: 0, otp: 0});
             if (!lender)
                 return { errorCode: 404, message: 'Account not found.' };
 
@@ -114,7 +114,7 @@ const ctrlFuncs = {
 
             return {
                 message: 'Account Updated',
-                lender,
+                data: _.omit(lender._doc, ['otp', 'password']),
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -123,48 +123,47 @@ const ctrlFuncs = {
         }
     },
 
-    verifyLender: async function (requestBody) {
+    verifyLender: async function (payload) {
         try {
-            const lender = await Lender.findOne({ email: requestBody.email });
+            const lender = await Lender.findOne({ email: payload.email });
             if (!lender)
                 return {
-                    errorCode: 404,
+                    errorCode: 401,
                     message: 'Invalid email or password.',
                 };
 
             // Comparing passwords.
-            const isValid = await bcrypt.compare(
-                requestBody.password,
+            const isMatch = await bcrypt.compare(
+                payload.password,
                 lender.password
             );
-            if (!isValid)
+            if (!isMatch)
                 return {
                     errorCode: 401,
                     message: 'Incorrect email or password.',
                 };
 
             if (lender.emailVerified)
-                return { errorCode: 401, message: 'Email has been verified.' };
+                return { errorCode: 409, message: 'Email has been verified.' };
 
             if (
                 Date.now() > lender.otp.expires ||
-                requestBody.otp !== lender.otp.OTP
+                payload.otp !== lender.otp.OTP
             )
                 return { errorCode: 401, message: 'Invalid OTP.' };
 
+                await lender.updateOne({
+                    emailVerified: true,
+                    'otp.OTP': null,
+                    active: true,
+                    lastLoginTime: new Date(),
+                });
+                
             lender._doc.token = lender.generateToken();
-            await lender.updateOne({
-                emailVerified: true,
-                'otp.OTP': null,
-                active: true,
-                lastLoginTime: new Date(),
-            });
-
-            const authLender = _.omit(lender._doc, ['password', 'otp']);
 
             return {
                 message: 'Email verified and account activated.',
-                lender: authLender,
+                data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -182,11 +181,11 @@ const ctrlFuncs = {
                     message: 'Invalid email or password.',
                 };
 
-            const isValidPassword = await bcrypt.compare(
+            const isMatch = await bcrypt.compare(
                 password,
                 lender.password
             );
-            if (!isValidPassword)
+            if (!isMatch)
                 return {
                     errorCode: 401,
                     message: 'Invalid email or password.',
@@ -198,7 +197,7 @@ const ctrlFuncs = {
             ) {
                 return {
                     message: 'New Lender.',
-                    lender: _.omit(lender._doc, ['password', 'otp']),
+                    data: _.omit(lender._doc, ['password', 'otp']),
                 };
             }
 
@@ -213,14 +212,12 @@ const ctrlFuncs = {
                 };
             // TODO: change to contact support
 
-            lender._doc.token = lender.generateToken();
             await lender.updateOne({ lastLoginTime: new Date() });
-
-            const authLender = _.omit(lender._doc, ['password', 'otp']);
+            
+            lender._doc.token = lender.generateToken();
 
             return {
-                message: 'Login Successful.',
-                lender: authLender,
+                data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -247,11 +244,11 @@ const ctrlFuncs = {
                 return { errorCode: 401, message: 'Invalid OTP.' };
 
             if (currentPassword) {
-                const isValid = await bcrypt.compare(
+                const isMatch = await bcrypt.compare(
                     currentPassword,
                     lender.password
                 );
-                if (!isValid)
+                if (!isMatch)
                     return {
                         errorCode: 401,
                         message: 'Password is incorrect.',
@@ -344,9 +341,20 @@ const ctrlFuncs = {
         }
     },
 
-    deactivate: async function (lenderId) {
+    deactivate: async function (id, password) {
         try {
-            const lender = await Lender.findOne({ lenderId });
+            const lender = await Lender.findById(id);
+
+            const isMatch = await bcrypt.compare(
+                password,
+                lender.password
+            );
+            if (!isMatch)
+                return {
+                    errorCode: 401,
+                    message: 'Invalid email or password.',
+                };
+
             await User.updateMany({ lenderId: lender._id }, { active: false });
 
             lender.set({ active: false });

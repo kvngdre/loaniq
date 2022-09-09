@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const debug = require('debug')('app:stateRoutes');
 const verifyRole = require('../middleware/verifyRole');
+const stateController = require('../controllers/state');
 const verifyToken = require('../middleware/verifyToken');
 const stateValidators = require('../validators/stateValidator');
-const stateController = require('../controllers/stateController');
 
 router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
     const { error } = stateValidators.validateCreation(req.body);

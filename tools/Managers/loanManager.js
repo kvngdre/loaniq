@@ -1,16 +1,16 @@
 const _ = require('lodash');
 const Loan = require('../../models/loan');
 const debug = require('debug')('app:loanMgr');
-const Customer = require('../../models/customer');
 const Origin = require('../../models/origin');
 const Segment = require('../../models/segment');
+const Customer = require('../../models/customer');
 const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const logger = require('../../utils/logger')('loanManager.js');
+const customerController = require('../../controllers/customer');
 const userController = require('../../controllers/userController');
+const PendingEditController = require('../../controllers/pendingEdit');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
-const customerController = require('../../controllers/customerController');
-const PendingEditController = require('../../controllers/pendingEditController');
 
 const manager = {
     createLoanRequest: async function (
@@ -100,8 +100,9 @@ const manager = {
             //
             loanPayload.lenderId = user.lenderId;
             loanPayload.customer = customer._id;
-            if(!loanPayload.loanAgent) loanPayload.loanAgent = agent._id;
-            if(!loanPayload.creditOfficer) loanPayload.creditOfficer = creditOfficer._id;
+            if (!loanPayload.loanAgent) loanPayload.loanAgent = agent._id;
+            if (!loanPayload.creditOfficer)
+                loanPayload.creditOfficer = creditOfficer._id;
 
             // Setting loan metrics
             loanPayload.interestRate = loanParams.interestRate;

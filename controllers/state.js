@@ -1,6 +1,5 @@
-const State = require('../models/stateModel');
-const debug = require('debug')('app:stateContr');
-const ObjectId = require('mongoose').Types.ObjectId;
+const State = require('../models/state');
+const debug = require('debug')('app:stateCtrl');
 
 const state = {  
     create: async function(requestBody) {

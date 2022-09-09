@@ -1,11 +1,10 @@
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const customerController = require('../controllers/customer');
 const uploadMultipleFiles = require('../middleware/fileUpload');
 const customerValidators = require('../validators/customerValidator');
-const customerController = require('../controllers/customerController');
 
-// Create a customer
 router.post(
     '/',
     verifyToken,
@@ -39,7 +38,6 @@ router.post(
     }
 );
 
-// Get one customer
 router.get(
     '/:id',
     verifyToken,
@@ -56,8 +54,7 @@ router.get(
     }
 );
 
-// Get data for customer creation
-router.post(
+router.post(     
     '/customer-booking',
     verifyToken,
     verifyRole(['Loan Agent']),
@@ -73,7 +70,6 @@ router.post(
     }
 );
 
-// Edit a customer
 router.patch(
     '/:id',
     verifyToken,
