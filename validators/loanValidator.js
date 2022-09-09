@@ -21,15 +21,15 @@ class LoanRequestValidators {
             .min(this.#minLoanAmount)
             .max(this.#maxLoanAmount)
             .messages({
-                'number.min': `Minimum loan amount is ${(this.#minLoanAmount).toLocaleString()}.`,
-                'number.max': `Maximum loan amount is ${(this.#maxLoanAmount).toLocaleString()}.`
+                'number.min': `Minimum loan amount is ${this.#minLoanAmount.toLocaleString()}.`,
+                'number.max': `Maximum loan amount is ${this.#maxLoanAmount.toLocaleString()}.`,
             });
         this.#tenorSchema = Joi.number()
             .min(this.#minTenor)
             .max(this.#maxTenor)
             .messages({
-                'number.min': `Minimum tenor is ${(this.#minTenor).toLocaleString()} months.`,
-                'number.max': `Maximum tenor is ${(this.#maxTenor).toLocaleString()} months.`
+                'number.min': `Minimum tenor is ${this.#minTenor.toLocaleString()} months.`,
+                'number.max': `Maximum tenor is ${this.#maxTenor.toLocaleString()} months.`,
             });
     }
 
@@ -38,19 +38,10 @@ class LoanRequestValidators {
             amount: this.#amountSchema.required(),
             amountInWords: Joi.string().required(),
             tenor: this.#tenorSchema.required(),
+            loanAgent: Joi.objectId(),
+            creditOfficer: Joi.objectId(),
         });
         return schema.validate(loan);
-    }
-
-    loanCreation(newLoan) {
-        const schema = Joi.object({
-            customerId: Joi.objectId().required(),
-            amount: this.#amountSchema.required(),
-            amountInWords: Joi.string().required(),
-            tenor: this.#tenorSchema.required(),
-            loanType: Joi.string(),
-        });
-        return schema.validate(newLoan);
     }
 
     validateEdit(loan) {
@@ -68,7 +59,7 @@ class LoanRequestValidators {
                 'Pending',
                 'Denied'
             ),
-            comment: Joi.string()
+            remark: Joi.string()
                 .when('status', {
                     is: Joi.exist(),
                     then: Joi.when('status', {
@@ -78,23 +69,47 @@ class LoanRequestValidators {
                     }),
                 })
                 .invalid('', ' ')
+                .valid(
+                    'Duplicate request',
+                    'Ok for disbursement',
+                    'Net pay below threshold',
+                    'Inconsistent net pay',
+                    'High exposure',
+                    'Confirm recommended loan amount',
+                    'Confirm recommended tenor',
+                    'Confirm BVN',
+                    'Confirm account number',
+                    'Confirm BVN and account number',
+                    'Bad loan with other institution',
+                    'Age above threshold',
+                    'Length of service above threshold',
+                    'Negative net pay',
+                    'Department not eligible',
+                    'Name mismatch',
+                    'Not eligible for top up',
+                    'Net pay not available',
+                    'Incorrect IPPIS number',
+                    'Client discontinued',
+                    'Failed to provide valid documentation'
+                )
                 .min(4),
             recommendedAmount: Joi.number()
                 .min(this.#minLoanAmount)
                 .max(this.#maxLoanAmount)
                 .when('status', {
                     is: ['Approved', 'Denied', 'On Hold'],
-                    then: Joi.required(),
+                    then: Joi.optional(),
                 }),
             recommendedTenor: Joi.number()
                 .min(this.#minTenor)
                 .max(this.#maxTenor)
                 .when('status', {
                     is: ['Approved', 'Denied', 'On Hold'],
-                    then: Joi.required(),
+                    then: Joi.optional(),
                 }),
-            customer: Joi.objectId(),
+            // customer: Joi.objectId(),
             loanAgent: Joi.objectId(),
+            creditOfficer: Joi.objectId(),
 
             // interestRate: Joi.number(),
             // upfrontFeePercent: Joi.number(),

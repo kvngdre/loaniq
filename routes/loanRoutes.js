@@ -4,38 +4,9 @@ const debug = require('debug')('app:loanRoute');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const loanController = require('../controllers/loanController');
-const lenderController = require('../controllers/lenderController');
 const customerValidators = require('../validators/customerValidator');
-const customerController = require('../controllers/customerController');
-const { LoanRequestValidators, loanValidators } = require('../validators/loanValidator');
+const { loanValidators } = require('../validators/loanValidator');
 
-// Get Loan Validators.
-async function getValidator(params) {
-    try{
-        const user = params.hasOwnProperty('user') ? params.user : null;
-        const payload = params.hasOwnProperty('payload') ? params.payload : null;
-        const customerSegment = params.hasOwnProperty('customerSegment') ? params.customerSegment : null;
-
-        const { data: { loanMetrics, segments } } = await lenderController.getConfig(user.lenderId);
-        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor } = segments.find(
-            (segmentSettings) => segmentSettings.segment.toString() === (customerSegment ? customerSegment.toString() : payload.employmentInfo.segment)
-        );
-
-        const requestValidator = new LoanRequestValidators(
-            loanMetrics.minNetPay,
-            minLoanAmount,
-            maxLoanAmount,
-            minTenor,
-            maxTenor
-        );
-
-        return { loanMetrics, requestValidator };
-
-    }catch(exception) {
-        debug(exception)
-        return exception;
-    };
-};
 
 
 router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
@@ -46,24 +17,6 @@ router.post('/new/loan-request', verifyToken, verifyRole(['Admin', 'Credit', 'Lo
     if(response.hasOwnProperty('errorCode')) return res.status(response.errorCode).send(response.message);
 
     return res.status(200).send(response);
-});
-
-router.post('/new', verifyToken, verifyRole(['Admin', 'Loan Agent']), async (req, res) => {
-    const customer = await customerController.getOne(req.body.customer)
-    if(customer instanceof Error) return res.status(400).send(customer.message);
-
-    const validatorObj = await getValidator(req, customer.employmentInfo.segment)
-    if(validatorObj instanceof Error) return res.status(400).send('Error fetching loan and segment configurations');
-
-    const { loanMetrics, requestValidator } = validatorObj
-
-    const { error } = requestValidator.loanCreation(req.body)
-    if(error) return res.status(400).send(error.details[0].message);
-
-    const loan = await loanController.createLoan(customer, loanMetrics, req)
-    if(loan instanceof Error) return res.status(400).send(loan.message);
-
-    return res.status(200).send(loan);
 });
 
 // Get all loans

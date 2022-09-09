@@ -55,7 +55,7 @@ const loans = {
 
             const validator = await getValidator(
                 user,
-                payload.customer.employmentInfo.segment
+                payload.customer.employmentInfo.segment.toString()
             );
             if (validator instanceof Error) {
                 logger.error({
@@ -73,9 +73,7 @@ const loans = {
 
             const { loanParams, loanReqValidator } = validator;
 
-            const { error } = loanReqValidator.create(
-                payload.loan
-            );
+            const { error } = loanReqValidator.create(payload.loan);
             if (error)
                 return { errorCode: 400, message: error.details[0].message };
 
@@ -172,13 +170,16 @@ const loans = {
             const queryParams = {
                 _id: id,
                 lenderId: user.lenderId,
-                status: { $nin: ['Matured', 'Completed'] },
+                status: { $nin: ['Matured', 'Liquidated'] },
             };
 
-            const loan = await Loan.findOne(queryParams);
+            const loan = await Loan.findOne(queryParams).populate({
+                path: 'customer',
+                model: Customer,
+            });
             if (!loan)
                 return { errorCode: 404, message: 'Loan document not found.' };
-
+            
             // Get Validator
             const {
                 customer: {
@@ -187,17 +188,16 @@ const loans = {
                     },
                 },
             } = loan;
-            const { payloadValidator } = await getValidator({
-                user: req.user,
-                payload: req.body,
-                customerSegment: _id.toString(),
-            });
+            const { loanReqValidator } = await getValidator(
+                user,
+                _id.toString()
+            );
 
-            const { error } = payloadValidator.validateEdit(req.body);
+            const { error } = loanReqValidator.validateEdit(payload);
             if (error)
                 return { errorCode: 400, message: error.details[0].message };
 
-            return await loanManager.edit(user, loan, payload);
+            return await loanManager.update(user, loan, payload);
         } catch (exception) {
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };

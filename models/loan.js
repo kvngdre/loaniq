@@ -1,5 +1,3 @@
-const Lender = require('./lender');
-const User = require('./userModel');
 const mongoose = require('mongoose');
 const Metrics = require('../utils/LoanParams');
 
@@ -59,6 +57,29 @@ const loanSchema = new mongoose.Schema(
 
         remark: {
             type: String,
+            enum: [
+                'Duplicate request',
+                'Ok for disbursement',
+                'Net pay below threshold',
+                'Inconsistent net pay',
+                'Incorrect IPPIS number',
+                'Confirm recommended loan amount',
+                'Confirm recommended tenor',
+                'Confirm account number',
+                'Confirm BVN',
+                'Confirm BVN and account number',
+                'Age above threshold',
+                'Length of service above threshold',
+                'Bad loan with other institution',
+                'Department not eligible',
+                'Negative net pay',
+                'Not eligible for top up',
+                'High exposure',
+                'Name mismatch',
+                'Net pay not available',
+                'Client discontinued',
+                'Failed to provide valid documentation',
+            ],
             default: null,
         },
         // End of the line where credit user can edit.
@@ -168,11 +189,12 @@ const loanSchema = new mongoose.Schema(
             },
 
             netPay: {
+                isValid: {
+                    type: Boolean,
+                },
+
                 value: {
                     type: Number,
-                },
-                valid: {
-                    type: Boolean,
                 },
             },
 
@@ -245,12 +267,10 @@ loanSchema.pre('save', function (next) {
         )
     ) {
         console.log('I dey here');
-        this.params.age = metricFuncs.ageValidator(this.params.dob);
-        this.params.serviceLength = metricFuncs.serviceLengthValidator(
-            this.params.doe
-        );
-        this.params.netPay.valid = this.netPay >= this.params.minNetPay;
-        this.params.dti = metricFuncs.calcDti(this.repayment, this.netPay);
+        this.params.age = metricFuncs.age(this.params.dob);
+        this.params.serviceLength = metricFuncs.serviceLength(this.params.doe);
+        this.params.netPay.isValid = this.params.netPay.value >= this.params.minNetPay;
+        this.params.dti = metricFuncs.calcDti(this.repayment, this.params.netPay.value);
     }
 
     next();

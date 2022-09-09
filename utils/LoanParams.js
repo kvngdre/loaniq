@@ -11,7 +11,7 @@ class Params {
 
     calcTotalRepayment(repayment, loanTenor) {
         const totalRepayment = repayment * loanTenor;
-        return totalRepayment;
+        return (totalRepayment).toFixed(2);
     };
 
     calcNetValue(loanAmount, upfrontFee, transferFee) {
@@ -23,11 +23,12 @@ class Params {
 
     calcDti(repayment, netPay) {
         const dti = repayment / netPay;
+        console.log(dti)
         
-        return (dti * 100).toFixed(2) ;
+        return (dti).toFixed(4) ;
     };
 
-    ageValidator(dob) {
+    age(dob) {
         const dobMs = dob.getTime();
         const diff = Date.now() - dobMs;
         const age = new Date(diff).getUTCFullYear() - 1970;
@@ -38,7 +39,7 @@ class Params {
         };
     };
 
-    serviceLengthValidator(doe) {
+    serviceLength(doe) {
         const doeMs = doe.getTime();
         const diff = Date.now() - doeMs;
         const serviceLength = new Date(diff).getUTCFullYear() - 1970;

@@ -174,9 +174,13 @@ const customerSchema = new mongoose.Schema(
                 required: true,
             },
 
+            depart: {
+                type: String,
+                trim: true
+            },
+
             segment: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Segment',
                 required: true,
             },
 

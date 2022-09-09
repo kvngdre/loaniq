@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const Bank = require('../../models/bank');
 const Loan = require('../../models/loan');
 const debug = require('debug')('app:loanMgr');
 const Customer = require('../../models/customer');
@@ -34,7 +33,14 @@ const manager = {
                 );
 
                 if (response.hasOwnProperty('errorCode')) {
-                    logger.error({ message: 'Failed to create customer', meta: {lenderId: user.lenderId, response: response.message, customer: customerPayload }});
+                    logger.error({
+                        message: 'Failed to create customer',
+                        meta: {
+                            lenderId: user.lenderId,
+                            response: response.message,
+                            customer: customerPayload,
+                        },
+                    });
                     return response;
                 }
             }
@@ -90,34 +96,39 @@ const manager = {
                     errorCode: 424,
                     message: 'Failed to assign credit officer.',
                 };
-            
-            // 
+
+            //
             loanPayload.lenderId = user.lenderId;
-            loanPayload.loanAgent = agent._id;
             loanPayload.customer = customer._id;
-            loanPayload.creditOfficer = creditOfficer._id;
-            
+            if(!loanPayload.loanAgent) loanPayload.loanAgent = agent._id;
+            if(!loanPayload.creditOfficer) loanPayload.creditOfficer = creditOfficer._id;
+
             // Setting loan metrics
             loanPayload.interestRate = loanParams.interestRate;
             loanPayload.upfrontFeePercent = loanParams.upfrontFeePercent;
             loanPayload.transferFee = loanParams.transferFee;
-            
+
             // Setting parameters used to evaluate loan
             loanPayload.params = { dob: customer.dateOfBirth };
             loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
-            loanPayload.params.netPay.value = customer.netPay.value;
+            loanPayload.params.netPay = { value: customer.netPay.value };
             loanPayload.params.minNetPay = loanParams.minNetPay;
             loanPayload.params.maxDti = loanParams.maxDti;
 
             // await customer.save();
             const newLoan = await Loan.create(loanPayload);
 
-            return { customer, loan: newLoan };
+            return {
+                message: 'Success',
+                data: {
+                    customer,
+                    loan: newLoan,
+                },
+            };
         } catch (exception) {
-            // TODO: log error
-            // customerController.delete(customerPayload.employmentInfo.ippis);
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.'};
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -131,7 +142,7 @@ const manager = {
                         {
                             path: 'employmentInfo.segment',
                             model: Segment,
-                            select: '-_id code name',
+                            // select: '-_id code name',
                         },
                     ],
                 })
@@ -139,8 +150,12 @@ const manager = {
             if (loans.length == 0)
                 return { errorCode: 404, message: 'No loans found' };
 
-            return loans;
+            return {
+                message: 'Success',
+                data: loans,
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
@@ -161,14 +176,18 @@ const manager = {
             });
             if (!loan) return { errorCode: 404, message: 'Loan not found' };
 
-            return loan;
+            return {
+                message: 'Success',
+                data: loan,
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
     },
 
-    edit: async function (user, loan, payload) {
+    update: async function (user, loan, payload) {
         try {
             payload = convertToDotNotation(payload);
 
@@ -192,21 +211,24 @@ const manager = {
                 }
 
                 return {
-                    message: 'Submitted. Awaiting Review',
+                    message: 'Submitted. Awaiting Review.',
                     body: newPendingEdit,
                 };
             }
 
-            if (payload.hasOwnProperty('status'))
-                loan = await updateLoanStatus(payload, loan);
+            if (payload.status) loan = await updateLoanStatus(payload, loan);
             else {
                 loan.set(payload);
             }
-            
+
             await loan.save();
 
-            return loan;
+            return {
+                message: 'Loan Updated.',
+                data: loan,
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
@@ -243,6 +265,7 @@ const manager = {
 
             return loans;
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
@@ -264,6 +287,7 @@ const manager = {
 
             return loans;
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
@@ -285,6 +309,7 @@ const manager = {
 
             return loans;
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return exception;
         }
