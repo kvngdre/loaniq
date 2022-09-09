@@ -108,7 +108,7 @@ router.post(
     verifyToken,
     verifyRole(['Lender', 'Master']),
     async (req, res) => {
-        const { value, error } = lenderValidators.setConfigSettings(req.body);
+        const { value, error } = lenderValidators.createSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const settings = await settingsController.create(req.user, value);
@@ -145,9 +145,9 @@ router.patch(
     verifyToken,
     verifyRole(['Lender', 'Master']),
     async (req, res) => {
-        const { value, error } = lenderValidators.settings(req.body);
+        const { value, error } = lenderValidators.updateSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-        console.log(value);
+        
         const settings = await settingsController.update(
             req.params.id,
             req.body

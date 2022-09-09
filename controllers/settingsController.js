@@ -110,7 +110,6 @@ const ctrlFuncs = {
                 const isMatch = (segment) => segment.id === payload.segment.id;
 
                 const index = settings.segments.findIndex(isMatch);
-                console.log(index);
 
                 if (index < 0) {
                     const segment = await Segment.findById(payload.segment.id);
