@@ -2,11 +2,11 @@ const _ = require('lodash');
 const config = require('config');
 const bcrypt = require('bcrypt');
 const Lender = require('../models/lender');
-const User = require('../models/userModel');
+const User = require('../models/user');
 const sendOTPMail = require('../utils/mailer');
 const debug = require('debug')('app:lenderModel');
 const userController = require('./userController');
-const Settings = require('../models/settingsModel');
+const Settings = require('../models/settings');
 const generateOTP = require('../utils/generateOTP');
 const logger = require('../utils/logger')('lenderCtrl.js');
 

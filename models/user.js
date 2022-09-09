@@ -1,7 +1,7 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const Segment = require('../models/segmentModel');
+const Segment = require('./segment');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

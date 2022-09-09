@@ -2,8 +2,8 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 const Loan = require('../models/loan');
-const State = require('../models/stateModel');
-const Segment = require('../models/segmentModel');
+const State = require('../models/state');
+const Segment = require('../models/segment');
 const debug = require('debug')('app:customerCtrl');
 const Customer = require('../models/customer');
 const logger = require('../utils/logger')('customerCtrl.js');
@@ -21,20 +21,22 @@ const ctrlFuncs = {
             // payload.idCard.path = request.file.idCard[0].path;
             // payload.passport.originalName = request.file.idCard[0].originalname;
 
-            const queryParams = { 'employmentInfo.ippis': payload.employmentInfo.ippis };
-            
-            let customer = await Customer.findOne(queryParams)
-            console.log(customer)
-            if(!customer) customer = new Customer(payload);
-            else{
+            const queryParams = {
+                'employmentInfo.ippis': payload.employmentInfo.ippis,
+            };
+
+            let customer = await Customer.findOne(queryParams);
+
+            if (!customer) customer = new Customer(payload);
+            else {
                 // Update info
                 customer.set({
                     contactInfo: payload.contactInfo,
                     residentialAddress: payload.residentialAddress,
                     maritalStatus: payload.maritalStatus,
-                    'employmentInfo.companyLocation': payload.employmentInfo.companyLocation
-                },)
-                
+                    'employmentInfo.companyLocation':
+                        payload.employmentInfo.companyLocation,
+                });
             }
             customer.addLender(user.lenderId);
 
@@ -336,7 +338,7 @@ const ctrlFuncs = {
             await customer.save();
 
             return {
-                message: 'Customer has been deleted.'
+                message: 'Customer has been deleted.',
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });

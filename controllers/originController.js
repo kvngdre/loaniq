@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Origin = require('../models/originModel');
+const Origin = require('../models/origin');
 const debug = require('debug')('app:OriginCtrl');
 
 

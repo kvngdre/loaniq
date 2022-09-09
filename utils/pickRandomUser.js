@@ -1,4 +1,4 @@
-const User = require('../models/userModel');
+const User = require('../models/user');
 
 async function pickAgentId(lenderId, role, segmentId) {
     const users = await User.find( { lenderId, role, active: true, emailVerified: true, segments: segmentId } )

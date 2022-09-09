@@ -1,6 +1,6 @@
 const debug = require('debug')('app:configCtrl');
-const Segment = require('../models/segmentModel');
-const Settings = require('../models/settingsModel');
+const Segment = require('../models/segment');
+const Settings = require('../models/settings');
 const logger = require('../utils/logger')('configCtrl.js');
 
 const ctrlFuncs = {

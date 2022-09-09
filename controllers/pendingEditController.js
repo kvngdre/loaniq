@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Loan = require('../models/loan');
 const debug = require('debug')('pendingEditCtrl');
 const Customer = require('../models/customer');
-const PendingEdit = require('../models/pendingEditModel');
+const PendingEdit = require('../models/pendingEdit');
 
 const pendingEditFuncs = {
     create: async function(user, documentId, type, alteration) {

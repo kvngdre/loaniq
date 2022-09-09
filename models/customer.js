@@ -1,6 +1,6 @@
 const Loan = require('./loan');
 const mongoose = require('mongoose');
-const Segment = require('./segmentModel');
+const Segment = require('./segment');
 const debug = require('debug')('app:customerModel');
 
 const schemaOptions = { timestamps: true, versionKey: false };
