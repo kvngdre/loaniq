@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const debug = require('debug')('app:originRoute');
+const concatErrorMsg = require('../utils/concatMsg');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const originValidators = require('../validators/origin');
@@ -7,50 +7,52 @@ const originController = require('../controllers/origin');
 
 router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
     const { error } = originValidators.create(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error) {
+        const errorResponse = concatErrorMsg(error.details);
+        return res.status(400).send(errorResponse);
+    }
 
-    const newCustomer = await originController.create(req.body);
-    if (newCustomer instanceof Error)
-        return res.status(400).send(newCustomer.message);
+    const staff = await originController.create(req.body);
+    if (staff.hasOwnProperty('errorCode'))
+        return res.status(staff.errorCode).send(staff.message);
 
-    return res.status(201).send(newCustomer);
+    return res.status(201).send(staff);
 });
 
-router.get('/', verifyToken, verifyRole('Master'), async (req, res) => {
-    const customers = await originController.getAll(req.body);
-    if (customers.length === 0)
-        return res.status(404).send('No customers found.');
+// Get all staff
+router.post('/all', verifyToken, verifyRole('Master'), async (req, res) => {
+    const staff = await originController.getAll(req.body);
+    if (staff.hasOwnProperty('errorCode'))
+        return res.status(staff.errorCode).send(staff.message);
 
-    return res.status(200).send(customers);
+    return res.status(200).send(staff);
 });
 
-router.get('/one', verifyToken, verifyRole('Master'), async (req, res) => {
-    const customer = await originController.getOne(req.body);
-    if (!customer) return res.status(404).send('No customer found');
+router.get('/:id', verifyToken, async (req, res) => {
+    const staff = await originController.getOne(req.params.id);
+    if (staff.hasOwnProperty('errorCode'))
+        return res.status(staff.errorCode).send(staff.message);
 
-    return res.status(200).send(customer);
+    return res.status(200).send(staff);
 });
 
 router.patch('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
-    const { error } = originValidators.edit(req.body);
+    const { error } = originValidators.update(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const updatedCustomer = await originController.edit(
-        req.params.id,
-        req.body
-    );
-    if (updatedCustomer instanceof Error)
-        return res.status(400).send(updatedCustomer.message);
+    const staff = await originController.update(req.params.id, req.body);
+    if (staff.hasOwnProperty('errorCode'))
+        return res.status(staff.errorCode).send(staff.message);
 
-    return res.status(200).send(updatedCustomer);
+    return res.status(200).send(staff);
 });
 
 router.delete('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
-    const deletedCustomer = await originController.delete(req.params.id);
-    if (deletedCustomer instanceof Error)
-        return res.status(404).send(deletedCustomer.message);
+    const staff = await originController.delete(req.params.id);
+    if (staff.hasOwnProperty('errorCode'))
+        return res.status(404).send(staff.message);
 
-    return res.status(204).send(deletedCustomer);
+    return res.status(204).send(staff);
 });
 
 module.exports = router;

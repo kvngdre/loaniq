@@ -20,11 +20,12 @@ const ctrlFuncs = {
             // payload.passport.originalName = request.file.idCard[0].originalname;
 
             const queryParams = {
-                'employmentInfo.ippis': payload.employmentInfo.ippis, lenders: user.lenderId
+                'employmentInfo.ippis': payload.employmentInfo.ippis,
+                lenders: user.lenderId,
             };
 
             let customer = await Customer.findOne(queryParams);
-            if(customer) return { errorCode: 409, message: 'Customer exists'}
+            if (customer) return { errorCode: 409, message: 'Customer exists' };
             if (!customer) customer = new Customer(payload);
             // else {
             //     // Update info
@@ -140,17 +141,17 @@ const ctrlFuncs = {
                     queryParams['residentialAddress.state'] = filters.states;
 
                 // Amount Filter - Net Pay
-                if (filters.netPay?.start)
+                if (filters.netPay?.min)
                     queryParams['netPay.value'] = {
-                        $gte: filters.netPay.start,
+                        $gte: filters.netPay.min,
                     };
-                if (filters.netPay?.end) {
+                if (filters.netPay?.max) {
                     const target = queryParams['netPay.value']
                         ? queryParams['netPay.value']
                         : {};
 
                     queryParams['netPay.value'] = Object.assign(target, {
-                        $lte: filters.netPay.end,
+                        $lte: filters.netPay.max,
                     });
                 }
 
@@ -162,7 +163,7 @@ const ctrlFuncs = {
                 const dateField = 'createdAt';
                 if (filters.date?.start)
                     queryParams[dateField] = {
-                        $gte: DateTime.fromISO(filters.start)
+                        $gte: DateTime.fromISO(filters.date.start)
                             .setZone(user.timeZone)
                             .toUTC(),
                     };
@@ -171,7 +172,7 @@ const ctrlFuncs = {
                         ? queryParams[dateField]
                         : {};
                     queryParams[dateField] = Object.assign(target, {
-                        $lte: DateTime.fromISO(filters.end)
+                        $lte: DateTime.fromISO(filters.date.end)
                             .setZone(user.timeZone)
                             .toUTC(),
                     });
@@ -258,6 +259,26 @@ const ctrlFuncs = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.replace('employmentInfo.', '');
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                if (field === 'Phone') field = 'Phone number';
+
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
+            }
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message,
+                };
+            }
+
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },

@@ -1,71 +1,215 @@
+const _ = require('lodash');
 const mongoose = require('mongoose');
+const { DateTime } = require('luxon');
 const Origin = require('../models/origin');
 const debug = require('debug')('app:OriginCtrl');
-
+const logger = require('../utils/logger')('originCtrl.js');
 
 const origin = {
-    create: async function(requestBody) {
-        try{
-            const customer = await Origin.findOne( { ippis: requestBody.ippis } );
-            if(customer) throw new Error('Customer already exists in origin.');
+    create: async function (payload) {
+        try {
+            const staff = new Origin(payload);
 
-            const newCustomer = await Origin.create(requestBody);
+            await staff.save();
 
-            return newCustomer;
-
-        }catch(exception) {
-            return exception;
-        };
-    },
-
-    edit: async function(id, requestBody) {
-        try{
-            const filter = mongoose.isValidObjectId(id) ? {_id: id} : {ippis: id}
-
-            const updatedCustomer = await Origin.findOneAndUpdate( filter, requestBody, {new: true} );
-            if(!updatedCustomer) {
-                debug(updatedCustomer);
-                throw new Error('Customer does not exist in origin.');
+            return {
+                message: 'Staff record created.',
+                data: staff
             };
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                if (field === 'Phone') field = 'Phone number';
 
-            return updatedCustomer;
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
+            }
 
-        }catch(exception) {
-            return exception;
-        };
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message,
+                };
+            }
+
+            return { errorCode: 500, message: exception.message };
+        }
     },
 
-    getOne: async function(queryParam={}) {
-        const customer = await Origin.findOne( queryParam );
-        if(!customer) return { errorCode: 404, message: 'Not found.'};
+    update: async function (id, alteration) {
+        try {
+            const queryParams = mongoose.isValidObjectId(id)
+                ? { _id: id }
+                : { ippis: id };
 
-        return customer;
-    },
+            const staff = await Origin.findOne(queryParams);
+            if (!staff) return { errorCode: 404, message: 'Staff not found.' };
 
-    getAll: async function(queryParam={}) {
-        const customers = await Origin.find( queryParam );
+            staff.set(alteration);
 
-        return customers;
-    },
+            await staff.save();
 
-    delete: async function(id) {
-        try{
-            const filter = mongoose.isValidObjectId(id) ? { _id: id } : { ippis: id }
-
-            const deletedCustomer = await Origin.findOneAndDelete( filter );
-            if(!deletedCustomer) {
-                debug(deletedCustomer);
-                throw new Error('Customer not found in origin.');
+            return {
+                message: 'Staff record updated.',
+                data: staff
             };
-            
-            return deletedCustomer;
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                if (field === 'Phone') field = 'Phone number';
 
-        }catch(exception) {
-            return exception;
-        };
+                return {
+                    errorCode: 409,
+                    message: field + ' has already been taken.',
+                };
+            }
 
-        
-    }
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message,
+                };
+            }
+
+            return { errorCode: 500, message: exception.message };
+        }
+    },
+
+    getOne: async function (id) {
+        try {
+            const queryParams = mongoose.isValidObjectId(id)
+                ? { _id: id }
+                : { ippis: id };
+
+            const staff = await Origin.findOne(queryParams);
+            if (!staff) return { errorCode: 404, message: 'Staff not found.' };
+
+            return {
+                message: 'Success',
+                data: staff
+            };
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            return { errorCode: 500, message: exception.message };
+        }
+    },
+
+    getAll: async function (filters) {
+        try {
+            const queryParams = Object.assign(
+                {},
+                _.omit(filters, ['age', 'yearsServed', 'netPay', 'name'])
+            );
+
+            // Name filter
+            if (filters.name) queryParams.name = new RegExp(filters.name, 'gi');
+
+            // Amount Filter - Net Pay
+            if (filters.netPay?.min)
+                queryParams['netPays.0'] = {
+                    $gte: filters.netPay.min,
+                };
+            if (filters.netPay?.max) {
+                const target = queryParams['netPays.0']
+                    ? queryParams['netPays.0']
+                    : {};
+
+                queryParams['netPays.0'] = Object.assign(target, {
+                    $lte: filters.netPay.max,
+                });
+            }
+
+            // Date Filter - Date of Birth
+            if (filters.age?.min)
+                queryParams['dateOfBirth'] = {
+                    $lte: DateTime.now()
+                        .minus({ years: filters.age.min })
+                        .toFormat('yyyy'),
+                };
+            console.log(queryParams);
+            if (filters.age?.max) {
+                const target = queryParams['dateOfBirth']
+                    ? queryParams['dateOfBirth']
+                    : {};
+                console.log(target);
+                queryParams['dateOfBirth'] = Object.assign(target, {
+                    $gte: DateTime.now()
+                        .minus({ years: filters.age.max })
+                        .toFormat('yyyy'),
+                });
+            }
+
+            // Date Filter - Date of Enlistment
+            if (filters.yearsServed?.min)
+                queryParams['dateOfEnlistment'] = {
+                    $lte: DateTime.now()
+                        .minus({ years: filters.yearsServed.min })
+                        .toFormat('yyyy'),
+                };
+            if (filters.yearsServed?.max) {
+                const target = queryParams['dateOfEnlistment']
+                    ? queryParams['dateOfEnlistment']
+                    : {};
+                queryParams['dateOfEnlistment'] = Object.assign(target, {
+                    $gte: DateTime.now()
+                        .minus({ years: filters.yearsServed.max })
+                        .toFormat('yyyy'),
+                });
+            }
+
+            const staff = await Origin.find(queryParams);
+            if (staff.length === 0)
+                return {
+                    errorCode: 404,
+                    message: 'No staff found/match filter.',
+                };
+
+            return {
+                message: 'Success',
+                data: staff
+            };
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            return { errorCode: 500, message: exception.message };
+        }
+    },
+
+    delete: async function (id) {
+        try {
+            const queryParams = mongoose.isValidObjectId(id)
+                ? { _id: id }
+                : { ippis: id };
+
+            const staff = await Origin.findOne(queryParams);
+            if (!staff)
+                return {
+                    errorCode: 404,
+                    message: 'Customer not found in origin.',
+                };
+
+            await staff.delete();
+
+            return {
+                message: 'Staff record Deleted.'
+            };
+        } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
+            debug(exception);
+            return { errorCode: 500, message: exception.message };
+        }
+    },
 };
 
 module.exports = origin;

@@ -47,8 +47,12 @@ const addressSchema = Joi.object({
 
 const contactSchema = Joi.object({
     phone: Joi.string()
+        .min(13)
+        .max(14)
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-        .message({
+        .messages({
+            'string.min': 'Invalid phone number.',
+            'string.max': 'Phone number is too long.',
             'string.pattern.base':
                 'Invalid phone number, please include international dialing code.',
         }),
@@ -101,7 +105,10 @@ const idSchema = Joi.object({
 });
 
 const nokSchema = Joi.object({
-    fullName: Joi.string(),
+    fullName: Joi.string().min(10).max(70).messages({
+        'string.min': `Next of kin name is too short.`,
+        'string.max': `Next of kin name is too long.`,
+    }),
     address: addressSchema,
     phone: Joi.string()
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
@@ -151,7 +158,7 @@ const validators = {
             })
         );
 
-        return schema.validate(customer, {abortEarly: false});
+        return schema.validate(customer, { abortEarly: false });
     },
 
     validateEdit: function (customer) {
