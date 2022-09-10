@@ -154,6 +154,7 @@ const loanSchema = new mongoose.Schema(
         },
 
         params: {
+            // Date of Birth
             dob: {
                 type: Date,
                 default: null,
@@ -171,6 +172,7 @@ const loanSchema = new mongoose.Schema(
                 },
             },
 
+            // Date of Enlistment
             doe: {
                 type: Date,
                 default: null,

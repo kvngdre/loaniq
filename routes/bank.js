@@ -4,7 +4,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const bankValidators = require('../validators/bank');
 
-router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
+router.post('/', verifyToken, verifyRole(['Lender', 'Admin', 'Master']), async (req, res) => {
     const { error } = bankValidators.validateCreation(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -51,7 +51,7 @@ router.get(
 router.patch(
     '/:id',
     verifyToken,
-    verifyRole(['Admin', 'Master']),
+    verifyRole(['Lender', 'Admin', 'Master']),
     async (req, res) => {
         const { error } = bankValidators.validateEdit(req.body);
         if (error) return res.status(400).send(error.details[0].message);

@@ -1,9 +1,10 @@
 const router = require('express').Router();
+const concatErrorMsg = require('../utils/concatMsg');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const customerValidators = require('../validators/customer');
 const customerController = require('../controllers/customer');
 const uploadMultipleFiles = require('../middleware/fileUpload');
-const customerValidators = require('../validators/customer');
 
 router.post(
     '/',
@@ -13,14 +14,19 @@ router.post(
     async (req, res) => {
         // TODO: add to pending for agent
         // TODO: pass the lender id from guest request
-        const { error } = customerValidators.customerCreation(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
+        const { error } = customerValidators.create(req.body);
+        if (error) {
+            const errorResponse = concatErrorMsg(
+                error.details[0].context.message
+            );
+            return res.status(400).send(errorResponse);
+        }
 
-        const newCustomer = await customerController.create(req.user, req.body);
-        if (newCustomer.hasOwnProperty('errorCode'))
-            return res.status(newCustomer.errorCode).send(newCustomer.message);
+        const customer = await customerController.create(req.user, req.body);
+        if (customer.hasOwnProperty('errorCode'))
+            return res.status(customer.errorCode).send(customer.message);
 
-        return res.status(201).send(newCustomer);
+        return res.status(201).send(customer);
     }
 );
 
@@ -54,7 +60,7 @@ router.get(
     }
 );
 
-router.post(     
+router.post(
     '/customer-booking',
     verifyToken,
     verifyRole(['Loan Agent']),
@@ -77,7 +83,7 @@ router.patch(
     async (req, res) => {
         if (Object.entries(req.body).length == 0) return res.sendStatus(400);
 
-        const { error } = customerValidators.validateEdit(req.body);
+        const { error } = customerValidators.update(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const customer = await customerController.update(

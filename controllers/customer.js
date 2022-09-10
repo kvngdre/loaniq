@@ -20,22 +20,24 @@ const ctrlFuncs = {
             // payload.passport.originalName = request.file.idCard[0].originalname;
 
             const queryParams = {
-                'employmentInfo.ippis': payload.employmentInfo.ippis,
+                'employmentInfo.ippis': payload.employmentInfo.ippis, lenders: user.lenderId
             };
 
             let customer = await Customer.findOne(queryParams);
-
+            if(customer) return { errorCode: 409, message: 'Customer exists'}
             if (!customer) customer = new Customer(payload);
-            else {
-                // Update info
-                customer.set({
-                    contactInfo: payload.contactInfo,
-                    residentialAddress: payload.residentialAddress,
-                    maritalStatus: payload.maritalStatus,
-                    'employmentInfo.companyLocation':
-                        payload.employmentInfo.companyLocation,
-                });
-            }
+            // else {
+            //     // Update info
+            //     // TODO: do a redirect
+            //     customer.set({
+            //         contactInfo: payload.contactInfo,
+            //         residentialAddress: payload.residentialAddress,
+            //         maritalStatus: payload.maritalStatus,
+            //         'employmentInfo.companyLocation':
+            //             payload.employmentInfo.companyLocation,
+            //         nok: payload.nok
+            //     });
+            // }
             customer.addLender(user.lenderId);
 
             // TODO: uncomment this later

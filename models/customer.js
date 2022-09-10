@@ -178,7 +178,7 @@ const customerSchema = new mongoose.Schema(
 
             depart: {
                 type: String,
-                trim: true
+                trim: true,
             },
 
             segment: {
@@ -252,14 +252,14 @@ const customerSchema = new mongoose.Schema(
         },
 
         accountInfo: {
-            salaryAccountName: {
+            accountName: {
                 type: String,
                 lowercase: true,
                 required: true,
                 trim: true,
             },
 
-            salaryAccountNumber: {
+            accountNumber: {
                 type: String,
                 trim: true,
                 required: true,

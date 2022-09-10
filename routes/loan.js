@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const router = require('express').Router();
+const concatErrorMsg = require('../utils/concatMsg');
 const loanController = require('../controllers/loan');
 const verifyRole = require('../middleware/verifyRole');
 const { loanValidators } = require('../validators/loan');
@@ -12,7 +13,12 @@ router.post(
     verifyRole(['Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const { error } = customerValidators.create(req.body.customer);
-        if (error) return res.status(400).send(error.details[0].message);
+        if (error) {
+            const errorResponse = concatErrorMsg(
+                error.details[0].context.message
+            );
+            return res.status(400).send(errorResponse);
+        }
 
         const response = await loanController.createLoanRequest(
             req.user,

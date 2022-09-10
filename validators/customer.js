@@ -6,7 +6,7 @@ function isValidDOB(dob, helper) {
     const dobFormatted = DateTime.fromISO(new Date(dob).toISOString()).toFormat(
         'yyyy-MM-dd'
     );
-    const minDob = DateTime.now().minus({ years: 21 }).toFormat('yyyy-MM-dd');
+    const minDob = DateTime.now().minus({ years: 18 }).toFormat('yyyy-MM-dd');
 
     if (dobFormatted > minDob) return helper.error('date.less');
 
@@ -14,19 +14,31 @@ function isValidDOB(dob, helper) {
 }
 
 const nameSchema = Joi.object({
-    first: Joi.string().min(3).max(50),
-    last: Joi.string().min(3).max(50),
-    middle: Joi.string().min(3).max(50),
+    first: Joi.string().min(3).max(30).messages({
+        'string.min': `First name is too short.`,
+        'string.max': `first name is too long.`,
+    }),
+    last: Joi.string().min(3).max(30).messages({
+        'string.min': `Surname is too short.`,
+        'string.max': `Surname is too long.`,
+    }),
+    middle: Joi.string().min(3).max(30).messages({
+        'string.min': `Middle name is too short.`,
+        'string.max': `Middle name is too long.`,
+    }),
 });
 
 const genderSchema = Joi.string().valid('Male', 'Female');
 
 const dateOfBirthSchema = Joi.date()
     .custom(isValidDOB)
-    .message({ 'date.less': 'Error Date of Birth: Age must be minimum 21' });
+    .message({ 'date.less': 'Must be 18 years or older.' });
 
 const addressSchema = Joi.object({
-    street: Joi.string().min(5).max(255),
+    street: Joi.string().min(9).max(70).messages({
+        'string.min': `Street name is too short.`,
+        'string.max': `Street name is too long.`,
+    }),
     state: Joi.string(),
     stateCode: Joi.string().length(2),
     lga: Joi.string(),
@@ -38,14 +50,20 @@ const contactSchema = Joi.object({
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .message({
             'string.pattern.base':
-                'Invalid phone number. Should have international dialing code.',
+                'Invalid phone number, please include international dialing code.',
         }),
-    email: Joi.string().email().min(10).max(255),
+    email: Joi.string().email().min(10).max(50).messages({
+        'string.min': `Invalid email address.`,
+        'string.max': `Invalid email address.`,
+    }),
 });
 
 const employmentSchema = Joi.object({
-    name: Joi.string().min(3).max(255),
-    depart: Joi.string().min(3).max(255),
+    name: Joi.string().min(10).max(70).messages({
+        'string.min': `Next of kin name is too short.`,
+        'string.max': `Next of kin name is too long.`,
+    }),
+    depart: Joi.string().min(3).max(50),
     segment: Joi.objectId(),
     ippis: Joi.string()
         .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
@@ -56,7 +74,7 @@ const employmentSchema = Joi.object({
         .min(
             Joi.ref('...dateOfBirth', {
                 adjust: (value) => {
-                    value.setFullYear(value.getFullYear() + 21);
+                    value.setFullYear(value.getFullYear() + 18);
                     return value;
                 },
             })
@@ -70,24 +88,36 @@ const bvnSchema = Joi.string()
     .message({ 'string.pattern.base': 'Invalid BVN.' });
 
 const idSchema = Joi.object({
-    idType: Joi.string(),
-    idNumber: Joi.string(),
+    idType: Joi.string().valid(
+        'Voters card',
+        'International passport',
+        'Staff ID card',
+        'National ID card',
+        "Driver's license"
+    ),
+    idNumber: Joi.string()
+        .pattern(/^([a-zA-Z]{2,7})?.[0-9]{3,11}$/)
+        .messages({ 'string.pattern.base': 'Invalid ID number.' }),
 });
 
 const nokSchema = Joi.object({
     fullName: Joi.string(),
     address: addressSchema,
     phone: Joi.string()
-        .pattern(/^0([7-9])([0,1])[0-9]{8}$/)
+        .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .message({
-            'string.pattern.base': 'Invalid phone number',
+            'string.pattern.base':
+                'Invalid next of kin phone number, please include international dialing code.',
         }),
     relationship: Joi.string(),
 });
 
 const accountInfoSchema = Joi.object({
-    salaryAccountName: Joi.string(),
-    salaryAccountNumber: Joi.string()
+    accountName: Joi.string().min(10).max(70).messages({
+        'string.min': `Account name is too short.`,
+        'string.max': `Account name is too long.`,
+    }),
+    accountNumber: Joi.string()
         .pattern(/^[0-9]{10}$/)
         .message({
             'string.pattern.base': 'Invalid account number.',
@@ -121,7 +151,7 @@ const validators = {
             })
         );
 
-        return schema.validate(customer);
+        return schema.validate(customer, {abortEarly: false});
     },
 
     validateEdit: function (customer) {
