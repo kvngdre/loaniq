@@ -14,7 +14,7 @@ const origin = {
 
             return {
                 message: 'Staff record created.',
-                data: staff
+                data: staff,
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -57,7 +57,7 @@ const origin = {
 
             return {
                 message: 'Staff record updated.',
-                data: staff
+                data: staff,
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -96,7 +96,7 @@ const origin = {
 
             return {
                 message: 'Success',
-                data: staff
+                data: staff,
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -177,7 +177,7 @@ const origin = {
 
             return {
                 message: 'Success',
-                data: staff
+                data: staff,
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
@@ -202,7 +202,7 @@ const origin = {
             await staff.delete();
 
             return {
-                message: 'Staff record Deleted.'
+                message: 'Staff record Deleted.',
             };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });

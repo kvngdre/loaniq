@@ -217,6 +217,7 @@ const ctrlFuncs = {
             lender._doc.token = lender.generateToken();
 
             return {
+                message: 'Login Successful.',
                 data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
