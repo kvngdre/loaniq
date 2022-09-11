@@ -132,15 +132,15 @@ const ctrlFuncs = {
                     ])
                 );
 
-                // Name filter
+                // String Filter - displayName
                 if (filters.name)
                     queryParams.displayName = new RegExp(filters.name, 'i');
 
-                // State Filter
+                // String Filter - state
                 if (filters.states)
                     queryParams['residentialAddress.state'] = filters.states;
 
-                // Amount Filter - Net Pay
+                // Number Filter - Net Pay
                 if (filters.netPay?.min)
                     queryParams['netPay.value'] = {
                         $gte: filters.netPay.min,
@@ -155,23 +155,22 @@ const ctrlFuncs = {
                     });
                 }
 
-                // Segment Filter
+                // String Filter - segment
                 if (filters.segments)
                     queryParams['employmentInfo.segment'] = filters.segments;
 
                 // Date Filter - createdAt
-                const dateField = 'createdAt';
                 if (filters.date?.start)
-                    queryParams[dateField] = {
+                    queryParams.createdAt = {
                         $gte: DateTime.fromISO(filters.date.start)
                             .setZone(user.timeZone)
                             .toUTC(),
                     };
                 if (filters.date?.end) {
-                    const target = queryParams[dateField]
-                        ? queryParams[dateField]
+                    const target = queryParams.createdAt
+                        ? queryParams.createdAt
                         : {};
-                    queryParams[dateField] = Object.assign(target, {
+                    queryParams.createdAt = Object.assign(target, {
                         $lte: DateTime.fromISO(filters.date.end)
                             .setZone(user.timeZone)
                             .toUTC(),

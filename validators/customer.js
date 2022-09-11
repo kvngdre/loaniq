@@ -161,7 +161,7 @@ const validators = {
         return schema.validate(customer, { abortEarly: false });
     },
 
-    validateEdit: function (customer) {
+    update: function (customer) {
         const schema = Joi.object({
             name: nameSchema,
             gender: genderSchema,
