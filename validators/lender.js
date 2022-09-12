@@ -29,7 +29,7 @@ const passwordSchema = joiPassword
     });
 
 const otpSchema = Joi.string()
-    .pattern(/^[0-9]{6}$/)
+    .pattern(/^[0-9]{8}$/)
     .messages({ 'string.pattern.base': 'Invalid OTP' });
 
 const validators = {
@@ -68,7 +68,7 @@ const validators = {
             category: Joi.string(),
             phone: phoneSchema,
             timeZone: Joi.string(),
-        });
+        }).min(1);
 
         return schema.validate(lender);
     },
@@ -112,7 +112,7 @@ const validators = {
         return schema.validate(passwordObj);
     },
 
-    adminCreation: function (user) {
+    createAdmin: function (user) {
         const schema = Joi.object({
             name: Joi.object({
                 firstName: Joi.string().required().min(3).max(50),
@@ -184,7 +184,7 @@ const validators = {
         return schema.validate(settings);
     },
 
-    validateEmail: function (email) {
+    otp: function (email) {
         const schema = Joi.object({
             email: emailSchema.required(),
         });
@@ -192,9 +192,20 @@ const validators = {
         return schema.validate(email);
     },
 
+    fundAccount: function (payload) {
+        const schema = Joi.object({
+            amount: Joi.number().precision(2).min(100.00).required().messages({
+                'number.min': 'Minimum amount is 100.00.',
+            }),
+            choice: Joi.number().min(0).max(1),
+        });
+
+        return schema.validate(payload);
+    },
+
     deactivate: function (lender) {
         const schema = Joi.object({
-            password: Joi.string()
+            password: Joi.string(),
         });
 
         return schema.validate(lender);

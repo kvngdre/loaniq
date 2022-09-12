@@ -29,7 +29,7 @@ const validators = {
         const schema = Joi.object({
             name: bankNameSchema,
             code: bankCodeSchema,
-        });
+        }).min(1);
 
         return schema.validate(bank);
     },

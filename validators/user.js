@@ -43,15 +43,15 @@ const segmentSchema = Joi.alternatives()
                          .try(Joi.array().items(Joi.objectId).min(1), Joi.string().valid('all'))
 
 const otpSchema = Joi.string()
-                     .pattern(/^[0-9]{6}$/)
-                     .messages({'string.pattern.base': '{#label} must be 6 digits'})
+                     .pattern(/^[0-9]{8}$/)
+                     .messages({'string.pattern.base': 'Invalid OTP.'})
 
 
 const validators = {
     validateSignUp: function(user) {
         if(!user.role) return {
             error: {
-                details:[{message: 'Role is required'}]
+                details:[{message: 'Role is required.'}]
             }
         }
 

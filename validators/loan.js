@@ -44,7 +44,7 @@ class LoanRequestValidators {
         return schema.validate(loan);
     }
 
-    validateEdit(loan) {
+    update(loan) {
         const schema = Joi.object({
             amount: this.#amountSchema,
             amountInWords: Joi.string()
@@ -136,7 +136,7 @@ class LoanRequestValidators {
             // upfrontFeePercent: Joi.number(),
             // transferFee: Joi.number(),
             // netPay: this.#netPaySchema,
-        });
+        }).min(1);
 
         return schema.validate(loan);
     }

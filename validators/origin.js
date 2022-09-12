@@ -17,18 +17,18 @@ const nameSchema = Joi.string().min(10).max(70).messages({
     'string.max': `Employee name is too long.`,
 });
 
-const genderSchema =  Joi.string().valid('Male', 'Female');
+const genderSchema = Joi.string().valid('Male', 'Female');
 
 const phoneSchema = Joi.string()
-.min(13)
-.max(14)
-.pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-.messages({
-    'string.min': 'Invalid phone number.',
-    'string.max': 'Phone number is too long.',
-    'string.pattern.base':
-        'Invalid phone number, please include international dialing code.',
-})
+    .min(13)
+    .max(14)
+    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
+    .messages({
+        'string.min': 'Invalid phone number.',
+        'string.max': 'Phone number is too long.',
+        'string.pattern.base':
+            'Invalid phone number, please include international dialing code.',
+    });
 
 const dateOfBirthSchema = Joi.date()
     .custom(isValidDOB)
@@ -64,27 +64,16 @@ const validators = {
     create: function (customer) {
         const schema = Joi.object({
             name: nameSchema,
-
             gender: genderSchema,
-
             phone: phoneSchema,
-
             dateOfBirth: dateOfBirthSchema,
-
             bvn: bvnSchema,
-
             ippis: ippisSchema,
-
             segment: Joi.string(),
-
             netPays: Joi.array().items(Joi.number()),
-
             dateOfEnlistment: dateOfEnlistmentSchema,
-
             accountNumber: accountNoSchema,
-
             bank: Joi.string(),
-
             command: Joi.string(),
         });
         return schema.validate(customer, { abortEarly: false });
@@ -93,29 +82,18 @@ const validators = {
     update: function (customer) {
         const schema = Joi.object({
             name: nameSchema,
-
             gender: genderSchema,
-
             phone: phoneSchema,
-
             dateOfBirth: dateOfBirthSchema,
-
             bvn: bvnSchema,
-
             ippis: ippisSchema,
-
             segment: Joi.string(),
-
             netPays: Joi.array().items(Joi.number()),
-
             dateOfEnlistment: dateOfEnlistmentSchema,
-
             accountNumber: accountNoSchema,
-
             bank: Joi.string(),
-
             command: Joi.string(),
-        });
+        }).min(1);
         return schema.validate(customer);
     },
 };

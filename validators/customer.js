@@ -175,7 +175,7 @@ const validators = {
             nok: nokSchema,
             accountInfo: accountInfoSchema,
             netPay: netPaySchema,
-        });
+        }).min(1);
 
         return schema.validate(customer);
     },

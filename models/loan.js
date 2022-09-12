@@ -248,7 +248,7 @@ loanSchema.pre('save', function (next) {
             this.recommendedAmount,
             this.interestRate,
             this.recommendedTenor
-        );
+           );
         this.totalRepayment = metricFuncs.calcTotalRepayment(
             this.repayment,
             this.recommendedTenor

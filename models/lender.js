@@ -114,6 +114,16 @@ const lenderSchema = new mongoose.Schema(
             }
         },
 
+        lastCreditDate: {
+            type: Date,
+            default: null,
+        },
+
+        requestCounter: {
+            type: Number,
+            default: 0,
+        },
+
         lastLoginTime: {
             type: Date,
             default: null,
@@ -131,7 +141,8 @@ const lenderSchema = new mongoose.Schema(
 
 lenderSchema.methods.generateToken = function () {
     return jwt.sign(
-        {
+        {   
+            id: this._id,
             lenderId: this._id,
             email: this.email,
             active: this.active,

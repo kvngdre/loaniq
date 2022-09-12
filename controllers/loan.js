@@ -2,20 +2,33 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 const Loan = require('../models/loan');
-const lenderController = require('./lender');
 const debug = require('debug')('app:loanCtrl');
 const Customer = require('../models/customer');
-const logger = require('../utils/logger')('loanCtrl.js');
 const settingsController = require('./settings');
+const logger = require('../utils/logger')('loanCtrl.js');
 const loanManager = require('../tools/Managers/loanManager');
 const { LoanRequestValidators } = require('../validators/loan');
 
 // Get Loan Validators.
 async function getValidator(user, segmentId) {
     try {
+        const settings = await settingsController.getOne(user.lenderId);
+        if (settings.hasOwnProperty('errorCode')) {
+            logger.error({
+                message: 'Failed to find lender settings.',
+                meta: {
+                    lender: user.lenderId,
+                    user: user.id,
+                    role: user.role,
+                    email: user.email,
+                },
+            });
+            throw new Error(settings.message);
+        }
         const {
             data: { loanParams, segments },
-        } = await settingsController.getOne(user.lenderId);
+        } = settings;
+
         const { minLoanAmount, maxLoanAmount, minTenor, maxTenor, maxDti } =
             segments.find((segment) => segment.id === segmentId);
 
@@ -207,7 +220,7 @@ const loans = {
                 _id.toString()
             );
 
-            const { error } = loanReqValidator.validateEdit(payload);
+            const { error } = loanReqValidator.update(payload);
             if (error)
                 return { errorCode: 400, message: error.details[0].message };
 
@@ -255,16 +268,15 @@ const loans = {
     },
 
     getLoanBooking: async function (request) {
-        try{
+        try {
             request.body.active = true;
             request.body.booked = false;
             request.body.status = 'Approved';
             request.body.lenderId = request.user.lenderId;
             request.body.createdAt = { $gte: new Date(request.body.fromDate) };
-    
-            return await loanManager.getLoanBooking(request.body);
 
-        }catch(exception) {
+            return await loanManager.getLoanBooking(request.body);
+        } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
