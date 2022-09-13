@@ -100,7 +100,7 @@ class LoanRequestValidators {
                     'Not eligible for top up',
                     'Net pay not available',
                     'Incorrect IPPIS number',
-                    'Client discontinued',
+                    'Client rejected offer',
                     'Failed to provide valid documentation'
                 )
                 .messages({

@@ -80,7 +80,6 @@ const loanSchema = new mongoose.Schema(
                 'Client discontinued',
                 'Failed to provide valid documentation',
             ],
-            default: null,
         },
         // End of the line where credit user can edit.
 
