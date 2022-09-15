@@ -119,7 +119,7 @@ const lenderSchema = new mongoose.Schema(
             default: null,
         },
 
-        requestCounter: {
+        requestCount: {
             type: Number,
             default: 0,
         },

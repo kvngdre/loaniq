@@ -92,7 +92,7 @@ const ctrlFuncs = {
 
     getOne: async function (id) {
         try {
-            const lender = await Lender.findById(id, {password: 0, otp: 0});
+            const lender = await Lender.findById(id, { password: 0, otp: 0 });
             if (!lender)
                 return { errorCode: 404, message: 'Account not found.' };
 
@@ -155,13 +155,13 @@ const ctrlFuncs = {
             )
                 return { errorCode: 401, message: 'Invalid OTP.' };
 
-                await lender.updateOne({
-                    emailVerified: true,
-                    'otp.OTP': null,
-                    active: true,
-                    lastLoginTime: new Date(),
-                });
-                
+            await lender.updateOne({
+                emailVerified: true,
+                'otp.OTP': null,
+                active: true,
+                lastLoginTime: new Date(),
+            });
+
             lender._doc.token = lender.generateToken();
 
             return {
@@ -184,10 +184,7 @@ const ctrlFuncs = {
                     message: 'Invalid email or password.',
                 };
 
-            const isMatch = await bcrypt.compare(
-                password,
-                lender.password
-            );
+            const isMatch = await bcrypt.compare(password, lender.password);
             if (!isMatch)
                 return {
                     errorCode: 401,
@@ -216,7 +213,7 @@ const ctrlFuncs = {
             // TODO: change to contact support
 
             await lender.updateOne({ lastLoginTime: new Date() });
-            
+
             lender._doc.token = lender.generateToken();
 
             return {
@@ -350,13 +347,14 @@ const ctrlFuncs = {
      * @param {string} id Identifier for lender.
      * @returns
      */
-     getBalance: async function (id) {
+    getBalance: async function (id) {
         try {
             const lender = await Lender.findById(id).select([
                 'companyName',
                 'balance',
             ]);
-            if (!lender) return { errorCode: 404, message: 'Lender not found.' };
+            if (!lender)
+                return { errorCode: 404, message: 'Lender not found.' };
 
             return {
                 message: 'Success',
@@ -369,129 +367,45 @@ const ctrlFuncs = {
         }
     },
 
-    /**
-     * Generates a payment link based on user choice.
-     * @param {Object} params - Function parameters
-     * @property {string} params.id - The user's id.
-     * @property {string} params.email - The user's email
-     * @property {number} params.amount - The amount the user wishes to fund.
-     * @property {number} [params.choice=0] - Paystack = 0; Flutterwave = 1.
-     * @returns {Object} Returns a payment link from either Paystack or Flutterwave.
-     */
-     getPaymentLink: async function (params) {
-        try {
-            const id = params.id;
-            const email = params.email;
-            const amount = params.amount;
-            const choice = params.choice !== undefined ? params.choice : 0;
-
-            let response = null;
-
-            const lender = await Lender.findById(id);
-            if (!lender) {
-                logger.error({
-                    message: 'User not found for generate payment link.',
-                });
-                debug(`Gen Pay Link Error lender - ${lender}`);
-                return { errorCode: 500, message: 'Something went wrong.' };
-            }
-            console.log('hi')
-            // Paystack
-            if (choice === 0)
-                response = await getSKPaymentLink({ amount, email });
-
-            // Flutterwave
-            if (
-                choice === 1 ||
-                response.status !== 200 ||
-                response instanceof Error
-            ) {
-                response = await getFLWPaymentLink({
-                    amount,
-                    customerDetails: {
-                        name: lender.companyName,
-                        email,
-                        phonenumber: lender.phone,
-                    },
-                });
-            }
-
-            if (response.status !== 200 || response instanceof Error)
-                return {
-                    errorCode: 424,
-                    message: 'Error generating payment link.',
-                };
-
-            logger.info({
-                message: 'Payment link generated.',
-                meta: {
-                    provider: choice ? 'Flutterwave' : 'Paystack',
-                    companyName: lender.companyName,
-                    email: lender.email,
-                    amount,
-                    ref: response.data.data.reference,
-                },
-            });
-
-            const newTransaction = await txnController.create({
-                lenderId: lender._id.toString(),
-                provider: choice ? 'Flutterwave' : 'Paystack',
-                status: 'Pending',
-                reference: response.data.data.reference,
-                category: 'Credit',
-                amount: amount,
-                balance: lender.balance,
-            });
-            if (newTransaction.hasOwnProperty('errorCode')) {
-                logger.error({
-                    message: newTransaction.message,
-                    meta: newTransaction.stack,
-                });
-
-                return {
-                    errorCode: 500,
-                    message: 'Something went wrong.',
-                };
-            }
-
-            return {
-                message: 'Payment link generated.',
-                reference: response.data.data.reference,
-                paymentLink:
-                    response.data.data.authorization_url ||
-                    response.data.data.link,
-            };
-        } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-
-    deactivate: async function (id, password) {
+    deactivate: async function (id, user, password) {
         try {
             const lender = await Lender.findById(id);
 
-            const isMatch = await bcrypt.compare(
-                password,
-                lender.password
-            );
+            const isMatch = await bcrypt.compare(password, lender.password);
             if (!isMatch)
                 return {
                     errorCode: 401,
-                    message: 'Invalid email or password.',
+                    message: 'Password is incorrect.',
                 };
 
-            await User.updateMany({ lenderId: lender._id }, { active: false });
+            if (user.role !== 'Master') {
+                // TODO: Create template for deactivation.
+                const mailResponse = await sendOTPMail(
+                    config.get('support.email'), // apexxia support
+                    lender.companyName,
+                );
+                if (mailResponse instanceof Error) {
+                    debug(`Error sending OTP: ${mailResponse.message}`);
+                    return { errorCode: 502, message: 'Error sending deactivation request.' };
+                }
 
-            lender.set({ active: false });
+                return {
+                    message: 'Sent deactivation request.'
+                }
+            } else {
+                await User.updateMany(
+                    { lenderId: lender._id },
+                    { active: false }
+                );
 
-            await lender.save();
+                lender.set({ active: false });
 
-            return {
-                message: 'Account Deactivated.',
-            };
+                await lender.save();
+
+                return {
+                    message: 'Account Deactivated.',
+                };
+            }
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);

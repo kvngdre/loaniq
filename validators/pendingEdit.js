@@ -4,9 +4,9 @@ Joi.objectId = require('joi-objectid')(Joi);
 const validators = {
     create: function(obj) {
         const schema = Joi.object({
-            documentId: Joi.objectId().required(),
+            docId: Joi.objectId().required(),
             type: Joi.string()
-                     .valid('customer', 'loan')
+                     .valid('Customer', 'Loan')
                      .required(),
             alteration: Joi.object().required()
         });
@@ -21,7 +21,7 @@ const validators = {
                        .required(),
 
             remark: Joi.string().when('status', {
-                is: 'Denied',
+                is: ['Denied', 'Approved'],
                 then: Joi.required(),
                 otherwise: Joi.optional()
             })

@@ -2,9 +2,9 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 const Loan = require('../models/loan');
+const originController = require('./origin');
 const Customer = require('../models/customer');
 const debug = require('debug')('app:customerCtrl');
-const originController = require('./origin');
 const PendingEditController = require('./pendingEdit');
 const logger = require('../utils/logger')('customerCtrl.js');
 const convertToDotNotation = require('../utils/convertToDotNotation');
@@ -25,6 +25,7 @@ const ctrlFuncs = {
             };
 
             let customer = await Customer.findOne(queryParams);
+
             if (customer) return { errorCode: 409, message: 'Customer exists' };
             if (!customer) customer = new Customer(payload);
             // else {

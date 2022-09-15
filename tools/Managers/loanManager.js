@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const Loan = require('../../models/loan');
+const Lender = require('../../models/lender');
 const debug = require('debug')('app:loanMgr');
 const Origin = require('../../models/origin');
 const Segment = require('../../models/segment');
@@ -28,8 +29,8 @@ const manager = {
             // If customer not found, create new customer.
             if (response.hasOwnProperty('errorCode')) {
                 response = await customerController.create(
+                    user,
                     customerPayload,
-                    user
                 );
 
                 if (response.hasOwnProperty('errorCode')) {
@@ -118,6 +119,11 @@ const manager = {
 
             // await customer.save();
             const newLoan = await Loan.create(loanPayload);
+            // TODO: charge customer
+            await Lender.updateOne(
+                { _id: user.lenderId },
+                { $inc: { requestCount: 1 } }
+            );
 
             return {
                 message: 'Success',

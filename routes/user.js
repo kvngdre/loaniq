@@ -34,11 +34,13 @@ router.get(
 );
 
 router.get(
-    '/:id',
+    '/:id?',
     verifyToken,
     verifyRole(['Lender', 'Admin']),
     async (req, res) => {
-        const user = await userController.getOne(req.params.id, {
+        const id = req.params.id !== undefined ? req.params.id : req.user.id;
+
+        const user = await userController.getOne(id, {
             lenderId: req.user.lenderId,
         });
         if (user.hasOwnProperty('errorCode'))
@@ -49,14 +51,16 @@ router.get(
 );
 
 router.patch(
-    '/:id',
+    '/:id?',
     verifyToken,
     verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent', 'Master']),
     async (req, res) => {
         const { error } = userValidators.validateEdit(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const user = await userController.update(req.params.id, req.body, {
+        const id = req.params.id !== undefined ? req.params.id : req.user.id;
+
+        const user = await userController.update(id, req.body, {
             lenderId: req.user.lenderId,
         });
         if (user.hasOwnProperty('errorCode'))

@@ -2,5 +2,8 @@
     "server": {
         "host": "localhost",
         "port": 8480
+    },
+    "support": {
+        "email": "support@apexxialtd.com"
     }
 }
