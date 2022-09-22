@@ -28,7 +28,7 @@ const ctrlFuncs = {
 
             const transaction = await Transaction.findOne(queryParams);
             if (!transaction)
-                return { errorCode: 404, message: 'Transaction not found' };
+                return { errorCode: 404, message: 'Transaction not found.' };
 
             return {
                 message: 'Success',

@@ -17,14 +17,14 @@ router.post('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), asy
 
 router.get('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
     const pendingEdits = await pendingEditController.getAll(req.user);
-    if(pendingEdits instanceof Error) return res.status(404).send(pendingEdits.message);
+    if(pendingEdits.hasOwnProperty('errorCode')) return res.status(404).send(pendingEdits.message);
 
     return res.status(200).send(pendingEdits);
 });
 
 router.get('/admin', verifyToken, verifyRole('Admin'), async (req, res) => {
     const pendingEdits = await pendingEditController.getAllAdmin();
-    if(pendingEdits instanceof Error) return res.status(404).send(pendingEdits.message);
+    if(pendingEdits.hasOwnProperty('errorCode')) return res.status(404).send(pendingEdits.message);
 
     return res.status(200).send(pendingEdits);
 });
@@ -41,7 +41,7 @@ router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit']), async (req, r
     if(error) return res.status(400).send(error.details[0].message);
 
     const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body);
-    if(result instanceof Error) return res.status(400).send(result.message);
+    if(result.hasOwnProperty('errorCode')) return res.status(400).send(result.message);
 
     return res.status(200).send(result);
 

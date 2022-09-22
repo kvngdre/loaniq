@@ -72,7 +72,7 @@ const ctrlFuncs = {
                 const field = Object.keys(exception.errors)[0];
                 return {
                     errorCode: 400,
-                    message: exception.errors[field].message,
+                    message: exception.errors[field].message.replace('Path', ''),
                 };
             }
 

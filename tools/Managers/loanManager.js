@@ -5,11 +5,12 @@ const debug = require('debug')('app:loanMgr');
 const Origin = require('../../models/origin');
 const Segment = require('../../models/segment');
 const Customer = require('../../models/customer');
+const PendingEdit = require('../../models/pendingEdit');
+const userController = require('../../controllers/user');
 const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const logger = require('../../utils/logger')('loanManager.js');
 const customerController = require('../../controllers/customer');
-const userController = require('../../controllers/user');
 const PendingEditController = require('../../controllers/pendingEdit');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 
@@ -30,7 +31,7 @@ const manager = {
             if (response.hasOwnProperty('errorCode')) {
                 response = await customerController.create(
                     user,
-                    customerPayload,
+                    customerPayload
                 );
 
                 if (response.hasOwnProperty('errorCode')) {
@@ -133,7 +134,7 @@ const manager = {
                 },
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'createLoanRequest', message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -162,9 +163,9 @@ const manager = {
                 data: loans,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'getAll', message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -188,9 +189,9 @@ const manager = {
                 data: loan,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'getOne', message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -198,27 +199,30 @@ const manager = {
         try {
             payload = convertToDotNotation(payload);
 
-            // If not a credit user, create a pending edit.
+            // Reassignment of Loan agent or Credit officer.
+            if (
+                ['Lender', 'Admin'].includes(user.role) &&
+                (Object.keys(payload).some(path => ['creditOfficer', 'loanAgent',].includes(path)))
+            ) {
+                if(payload.creditOfficer) loan.set({ creditOfficer: payload.creditOfficer });
+                if(payload.loanAgent) loan.set({ loanAgent: payload.loanAgent });
+                await loan.save();
+            }
+
+            // If not a Credit user, create a pending edit.
             if (user.role !== 'Credit') {
-                const result = await Loan.findOne({
-                    _id: id,
+                const newPendingEdit = new PendingEdit({
                     lenderId: user.lenderId,
+                    userId: user.id,
+                    docId: loan._id,
+                    type: 'Loan',
+                    alteration: payload
                 });
-                if (!result) throw new Error('Loan not found');
 
-                const newPendingEdit = await PendingEditController.create(
-                    user,
-                    loan._id,
-                    'Loan',
-                    payload
-                );
-                if (!newPendingEdit.hasOwnProperty('errorCode')) {
-                    debug(newPendingEdit);
-                    return newPendingEdit;
-                }
-
+                await newPendingEdit.save();
+                
                 return {
-                    message: 'Submitted. Awaiting Review.',
+                    message: 'Submitted. Awaiting review.',
                     body: newPendingEdit,
                 };
             }
@@ -235,9 +239,19 @@ const manager = {
                 data: loan,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'update', message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+
+            // MongoDB Validation Error
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return {
+                    errorCode: 400,
+                    message: exception.errors[field].message.replace('Path', ''),
+                };
+            }
+
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -274,7 +288,7 @@ const manager = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -296,7 +310,7 @@ const manager = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
@@ -318,7 +332,7 @@ const manager = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
-            return exception;
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 };

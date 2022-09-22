@@ -31,10 +31,17 @@ const pendingSchema = new mongoose.Schema(
             default: 'Pending',
         },
 
+        updatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: function () {
+                return this.userId;
+            },
+        },
+
         remark: {
             type: String,
             trim: true,
-        }
+        },
     },
     schemaOptions
 );

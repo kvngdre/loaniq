@@ -112,6 +112,7 @@ const ctrlFuncs = {
                 const index = settings.segments.findIndex(isMatch);
 
                 if (index < 0) {
+                    // new segment setting
                     const segment = await Segment.findById(payload.segment.id);
                     if (!segment)
                         return {
@@ -124,6 +125,7 @@ const ctrlFuncs = {
                         : (payload.useDefault = true);
                     settings.segments.push(payload.segment);
                 } else {
+                    // existing segment setting
                     Object.keys(payload.segment).forEach((key) => {
                         if (key === 'maxDti')
                             settings.segments[index]['useDefault'] = false;

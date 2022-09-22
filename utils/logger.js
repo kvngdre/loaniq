@@ -28,10 +28,8 @@ const Logger = createLogger({
                     format: 'DD-MM-YYYY HH:mm:ss',
                 }),
                 align(),
-                printf(({ level, label, timestamp, message, meta }) => {
-                    return `[${level}]:[${label}] ${timestamp} ${message} -- ${
-                        meta ? JSON.stringify(meta) : ''
-                    }`;
+                printf(({ level, label, timestamp, method, message, meta }) => {
+                    return `[${level}]:[${label}] ${timestamp} --${method} --${message} --${meta ? JSON.stringify(meta) : ''}`;
                 })
             ),
             // handleExceptions: true,
@@ -40,6 +38,6 @@ const Logger = createLogger({
     ],
 });
 
-module.exports = function (filename) {
-    return Logger.child({ label: filename });
+module.exports = function (filename, methodName) {
+    return Logger.child({ label: filename, method: methodName });
 };

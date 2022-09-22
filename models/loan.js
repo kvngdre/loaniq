@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Metrics = require('../utils/LoanParams');
+const logger = require('../utils/logger')('loanModel.js');
 
 const metricFuncs = new Metrics();
 
@@ -225,56 +226,71 @@ const loanSchema = new mongoose.Schema(
 );
 
 loanSchema.pre('save', function (next) {
-    if (
-        this.modifiedPaths().some((path) => ['amount', 'tenor'].includes(path))
-    ) {
-        this.recommendedAmount = this.amount;
-        this.recommendedTenor = this.tenor;
+    try {
+        if (
+            this.modifiedPaths().some((path) =>
+                ['amount', 'tenor'].includes(path)
+            )
+        ) {
+            this.recommendedAmount = this.amount;
+            this.recommendedTenor = this.tenor;
+        }
+
+        const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
+
+        // setting loan metrics
+        if (
+            this.modifiedPaths().some((path) =>
+                loanMetricsTriggers.includes(path)
+            )
+        ) {
+            console.log('yes');
+            this.upfrontFee = metricFuncs.calcUpfrontFee(
+                this.recommendedAmount,
+                this.upfrontFeePercent
+            );
+            this.repayment = metricFuncs.calcRepayment(
+                this.recommendedAmount,
+                this.interestRate,
+                this.recommendedTenor
+            );
+            this.totalRepayment = metricFuncs.calcTotalRepayment(
+                this.repayment,
+                this.recommendedTenor
+            );
+            this.netValue = metricFuncs.calcNetValue(
+                this.recommendedAmount,
+                this.upfrontFee,
+                this.transferFee
+            );
+        }
+
+        const validationMetricTrigger = ['repayment', 'params'];
+
+        // setting validation metics
+        if (
+            this.modifiedPaths().some((path) =>
+                validationMetricTrigger.includes(path)
+            )
+        ) {
+            console.log('I dey here');
+            this.params.age = metricFuncs.age(this.params.dob);
+            this.params.serviceLength = metricFuncs.serviceLength(
+                this.params.doe
+            );
+            this.params.netPay.isValid =
+                this.params.netPay.value >= this.params.minNetPay;
+            this.params.dti = metricFuncs.calcDti(
+                this.repayment,
+                this.params.netPay.value
+            );
+        }
+
+        next();
+    } catch (exception) {
+        logger.error({ message: exception.message, meta: exception.meta });
+        next({ errorCode: 500, message: 'Something went wrong' });
     }
-
-    const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
-
-    // setting loan metrics
-    if (
-        this.modifiedPaths().some((path) => loanMetricsTriggers.includes(path))
-    ) {
-        console.log('yes');
-        this.upfrontFee = metricFuncs.calcUpfrontFee(
-            this.recommendedAmount,
-            this.upfrontFeePercent
-        );
-        this.repayment = metricFuncs.calcRepayment(
-            this.recommendedAmount,
-            this.interestRate,
-            this.recommendedTenor
-           );
-        this.totalRepayment = metricFuncs.calcTotalRepayment(
-            this.repayment,
-            this.recommendedTenor
-        );
-        this.netValue = metricFuncs.calcNetValue(
-            this.recommendedAmount,
-            this.upfrontFee,
-            this.transferFee
-        );
-    }
-
-    const validationMetricTrigger = ['repayment', 'params'];
-
-    // setting validation metics
-    if (
-        this.modifiedPaths().some((path) =>
-            validationMetricTrigger.includes(path)
-        )
-    ) {
-        console.log('I dey here');
-        this.params.age = metricFuncs.age(this.params.dob);
-        this.params.serviceLength = metricFuncs.serviceLength(this.params.doe);
-        this.params.netPay.isValid = this.params.netPay.value >= this.params.minNetPay;
-        this.params.dti = metricFuncs.calcDti(this.repayment, this.params.netPay.value);
-    }
-
-    next();
 });
 
 const Loan = mongoose.model('Loan', loanSchema);

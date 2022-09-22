@@ -197,7 +197,6 @@ const loans = {
             const queryParams = {
                 _id: id,
                 lenderId: user.lenderId,
-                status: { $nin: ['Matured', 'Liquidated'] },
             };
 
             const loan = await Loan.findOne(queryParams).populate({
@@ -206,6 +205,12 @@ const loans = {
             });
             if (!loan)
                 return { errorCode: 404, message: 'Loan document not found.' };
+
+            if (['Matured', 'Liquidated'].includes(loan.status))
+                return {
+                    errorCode: 403,
+                    message: 'Cannot edit a matured or liquidated loan.',
+                };
 
             // Get Validator
             const {
@@ -224,7 +229,9 @@ const loans = {
             if (error)
                 return { errorCode: 400, message: error.details[0].message };
 
-            return await loanManager.update(user, loan, payload);
+            const response = await loanManager.update(user, loan, payload);
+
+            return response;
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);

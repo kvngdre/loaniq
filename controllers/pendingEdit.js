@@ -35,7 +35,10 @@ const ctrlFuncs = {
             if (allPendingEdits.length == 0)
                 return { errorCode: 404, message: 'No pending edits.' };
 
-            return allPendingEdits;
+            return {
+                message: 'Success',
+                data: allPendingEdits
+            };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
@@ -46,20 +49,20 @@ const ctrlFuncs = {
     getAll: async function (user) {
         try {
             const pendingCustomerEdits = await PendingEdit.aggregate([
-                // {
-                //     $lookup: {
-                //         from: 'customers',
-                //         localField: 'documentId',
-                //         foreignField: '_id',
-                //         as: 'customerData'
-                //     }
-                // },
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'docId',
+                        foreignField: '_id',
+                        as: 'customer'
+                    }
+                },
                 {
                     $lookup: {
                         from: 'users',
                         localField: 'userId',
                         foreignField: '_id',
-                        as: 'userData',
+                        as: 'user',
                     },
                 },
                 {
@@ -69,27 +72,28 @@ const ctrlFuncs = {
                             user.role === 'Admin'
                                 ? { $ne: null }
                                 : mongoose.Types.ObjectId(user.id),
-                        type: 'customer',
+                        type: 'Customer',
                     },
                 },
                 {
                     $project: {
                         _id: 1,
                         lenderId: 1,
+                        docId: 1,
                         type: 1,
                         alteration: 1,
-                        documentId: 1,
                         status: 1,
                         userId: 1,
-                        // customerData: 1,
-                        userData: { displayName: 1 },
+                        customer: 1,
+                        // userData: { displayName: 1 },
+                        userData: 1,
                     },
                 },
                 {
                     $project: {
                         __v: 0,
-                        'customerData.createdAt': 0,
-                        'customerData.updatedAt': 0,
+                        'customer.createdAt': 0,
+                        'customer.updatedAt': 0,
                     },
                 },
                 {
@@ -99,13 +103,13 @@ const ctrlFuncs = {
                 },
             ]).exec();
 
-            let pipeline$Match;
+            let pipeline$Match = null;
             if (user.role === 'Credit') {
                 pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
-                        type: 'loan',
-                        loanData: {
+                        type: 'Loan',
+                        loan: {
                             $elemMatch: {
                                 creditOfficer: mongoose.Types.ObjectId(user.id),
                             },
@@ -120,7 +124,7 @@ const ctrlFuncs = {
                             user.role === 'Admin'
                                 ? { $ne: null }
                                 : mongoose.Types.ObjectId(user.id),
-                        type: 'loan',
+                        type: 'Loan',
                     },
                 };
             }
@@ -130,9 +134,9 @@ const ctrlFuncs = {
                 {
                     $lookup: {
                         from: 'loans',
-                        localField: 'documentId',
+                        localField: 'docId',
                         foreignField: '_id',
-                        as: 'loanData',
+                        as: 'loan',
                     },
                 },
                 {
@@ -140,7 +144,7 @@ const ctrlFuncs = {
                         from: 'users',
                         localField: 'userId',
                         foreignField: '_id',
-                        as: 'userData',
+                        as: 'user',
                     },
                 },
                 pipeline$Match,
@@ -154,7 +158,7 @@ const ctrlFuncs = {
                         status: 1,
                         userId: 1,
                         createdAt: 1,
-                        // loanData: 1,
+                        loan: 1,
                         userData: { displayName: 1 },
                     },
                 },
@@ -174,9 +178,12 @@ const ctrlFuncs = {
 
             const pendingEdits = [...pendingCustomerEdits, ...PendingLoanEdits];
             if (pendingEdits.length == 0)
-                return { errorCode: 404, message: 'No pending edits' };
+                return { errorCode: 404, message: 'No pending edits.' };
 
-            return pendingEdits;
+            return {
+                message: 'Success',
+                data: pendingEdits
+            };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
@@ -190,9 +197,9 @@ const ctrlFuncs = {
                 {
                     $lookup: {
                         from: 'customers',
-                        localField: 'documentId',
+                        localField: 'docId',
                         foreignField: '_id',
-                        as: 'customerData',
+                        as: 'customer',
                     },
                 },
                 {
@@ -200,7 +207,7 @@ const ctrlFuncs = {
                         from: 'users',
                         localField: 'userId',
                         foreignField: '_id',
-                        as: 'userData',
+                        as: 'user',
                     },
                 },
                 {
@@ -211,20 +218,21 @@ const ctrlFuncs = {
                             user.role === 'Admin'
                                 ? { $ne: null }
                                 : mongoose.Types.ObjectId(user.id),
-                        type: 'customer',
+                        type: 'Customer',
                     },
                 },
                 {
                     $project: {
                         _id: 1,
                         lenderId: 1,
+                        userId: 1,
                         type: 1,
                         alteration: 1,
-                        documentId: 1,
+                        docId: 1,
                         status: 1,
-                        userId: 1,
-                        customerData: 1,
-                        userData: { displayName: 1 },
+                        customer: 1,
+                        // userData: { displayName: 1 },
+                        userData: 1,
                     },
                 },
                 {
@@ -243,8 +251,8 @@ const ctrlFuncs = {
                         $match: {
                             _id: mongoose.Types.ObjectId(id),
                             lenderId: user.lenderId,
-                            status: 'pending',
-                            type: 'loan',
+                            status: 'Pending',
+                            type: 'Loan',
                             loanData: {
                                 $elemMatch: {
                                     creditOfficer: mongoose.Types.ObjectId(
@@ -263,8 +271,8 @@ const ctrlFuncs = {
                                 user.role === 'Admin'
                                     ? { $ne: null }
                                     : mongoose.Types.ObjectId(user.id),
-                            status: 'pending',
-                            type: 'loan',
+                            status: 'Pending',
+                            type: 'Loan',
                         },
                     };
                 }
@@ -273,9 +281,9 @@ const ctrlFuncs = {
                     {
                         $lookup: {
                             from: 'loans',
-                            localField: 'documentId',
+                            localField: 'docId',
                             foreignField: '_id',
-                            as: 'loanData',
+                            as: 'loan',
                         },
                     },
                     {
@@ -283,7 +291,7 @@ const ctrlFuncs = {
                             from: 'users',
                             localField: 'userId',
                             foreignField: '_id',
-                            as: 'userData',
+                            as: 'user',
                         },
                     },
                     Pipeline$MatchObject,
@@ -293,11 +301,12 @@ const ctrlFuncs = {
                             lenderId: 1,
                             type: 1,
                             alteration: 1,
-                            documentId: 1,
+                            docId: 1,
                             status: 1,
                             userId: 1,
-                            loanData: 1,
-                            userData: { displayName: 1 },
+                            loan: 1,
+                            // userData: { displayName: 1 },
+                            user: 1,
                         },
                     },
                     {
@@ -312,40 +321,47 @@ const ctrlFuncs = {
                 return pendingLoanEdit;
             }
 
-            return pendingCustomerEdit;
+            return {
+                message: 'Success',
+                data: pendingCustomerEdit
+            };
         } catch (exception) {
+            logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    updateStatus: async function (id, user, requestBody) {
+    updateStatus: async function (id, user, payload) {
         try {
-            const editedDoc = await PendingEdit.findOneAndUpdate(
+            const doc = await PendingEdit.findOneAndUpdate(
                 { _id: id, lenderId: user.lenderId, status: 'Pending' },
-                requestBody,
+                payload,
                 { new: true }
             );
-            if (!editedDoc)
-                return { errorCode: 404, message: 'Document not found' };
+            if (!doc)
+                return { errorCode: 404, message: 'Document not found.' };
 
-            if (editedDoc.status === 'Approved') {
-                if (editedDoc.type === 'Customer') {
+            if (doc.status === 'Approved') {
+                if (doc.type === 'Customer') {
                     const customer = await Customer.findById(
-                        editedDoc.documentId
+                        doc.docId
                     );
 
-                    customer.set(editedDoc.alteration);
+                    customer.set(doc.alteration);
                     await customer.save();
                 } else {
                     await Loan.updateOne(
-                        { _id: editedDoc.documentId },
-                        editedDoc.alteration
+                        { _id: doc.docId },
+                        doc.alteration
                     );
                 }
             }
 
-            return editedDoc;
+            return {
+                message: 'Updated.',
+                data: doc
+            };
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
