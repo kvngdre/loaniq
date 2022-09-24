@@ -51,6 +51,7 @@ const settingsSchema = new mongoose.Schema(
                 id: {
                     type: String,
                     unique: true,
+                    sparse: true
                 },
 
                 minLoanAmount: {

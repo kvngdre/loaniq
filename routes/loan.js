@@ -20,10 +20,7 @@ router.post(
             return res.status(400).send(errorResponse);
         }
 
-        const response = await loanController.createLoanRequest(
-            req.user,
-            req.body
-        );
+        const response = await loanController.createLoanReq(req.user, req.body);
         if (response.hasOwnProperty('errorCode'))
             return res.status(response.errorCode).send(response.message);
 

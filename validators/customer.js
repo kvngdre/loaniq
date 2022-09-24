@@ -54,7 +54,7 @@ const contactSchema = Joi.object({
             'string.min': 'Invalid phone number.',
             'string.max': 'Phone number is too long.',
             'string.pattern.base':
-                'Invalid phone number, please include international dialing code.',
+                'Invalid phone number, please include international dialling code.',
         }),
     email: Joi.string().email().min(10).max(50).messages({
         'string.min': `Invalid email address.`,

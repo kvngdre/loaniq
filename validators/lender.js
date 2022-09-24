@@ -2,13 +2,37 @@ const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 const { joiPassword } = require('joi-password');
 
-const phoneSchema = Joi.string()
-    .pattern(/^0([7-9])[0-9]{9}$/)
-    .message({
-        'string.pattern.base': 'Invalid phone number.',
+const companyNameSchema = Joi.string().min(10).max(50).messages({
+    'string.min': `Company name is too short.`,
+    'string.max': `Company name is too long.`,
+});
+
+const addressSchema = Joi.string().min(10).max(70).messages({
+    'string.min': `Company address is too short.`,
+    'string.max': `Company address is too long.`,
+});
+
+const cacNumberSchema = Joi.string()
+    .pattern(/^RC[0-9]{3,8}/)
+    .invalid('RC0000 RC000')
+    .messages({
+        'any.invalid': 'Invalid CAC number',
+        'string.pattern.base': 'CAC number must begin with "RC".',
     });
 
-const emailSchema = Joi.string().email().min(10).max(255);
+const phoneSchema = Joi.string()
+    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
+    .messages({
+        'string.min': 'Invalid phone number.',
+        'string.max': 'Phone number is too long.',
+        'string.pattern.base':
+            'Invalid phone number, please include international dialling code.',
+    });
+
+const emailSchema = Joi.string().email().min(10).max(50).messages({
+    'string.min': `Invalid email address.`,
+    'string.max': `Invalid email address.`,
+});
 
 const passwordSchema = joiPassword
     .string()
@@ -17,7 +41,7 @@ const passwordSchema = joiPassword
     .minOfNumeric(2)
     .noWhiteSpaces()
     .min(6)
-    .max(255)
+    .max(40)
     .messages({
         'password.minOfUppercase':
             '{#label} should contain at least {#min} uppercase character.',
@@ -32,43 +56,48 @@ const otpSchema = Joi.string()
     .pattern(/^[0-9]{8}$/)
     .messages({ 'string.pattern.base': 'Invalid OTP' });
 
+const supportSchema = Joi.object({
+    email: emailSchema.required(),
+    phone: Joi.string()
+        .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
+        .messages({
+            'string.min': 'Invalid phone number.',
+            'string.max': 'Phone number is too long.',
+            'string.pattern.base':
+                'Invalid support phone number, please include international dialling code.',
+        })
+        .required(),
+});
+
 const validators = {
     create: function (lender) {
         const schema = Joi.object({
-            companyName: Joi.string().required(),
-            companyAddress: Joi.string().required(),
-            cacNumber: Joi.string()
-                .pattern(/^RC[0-9]+/)
-                .required()
-                .messages({
-                    'string.pattern.base':
-                        "Invalid CAC Number. Please ensure the number begins with 'RC'.",
-                }),
-
+            companyName: companyNameSchema.required(),
+            companyAddress: addressSchema.required(),
+            cacNumber: cacNumberSchema,
             category: Joi.string(),
             phone: phoneSchema.required(),
             email: emailSchema.required(),
             password: passwordSchema.required(),
-            lenderURL: Joi.string(),
+            website: Joi.string(),
+            support: supportSchema,
+            timeZone: Joi.string(),
         });
 
-        return schema.validate(lender);
+        return schema.validate(lender, { abortEarly: false });
     },
 
     update: function (lender) {
         const schema = Joi.object({
-            companyName: Joi.string(),
-            companyAddress: Joi.string(),
-            cacNumber: Joi.string()
-                .pattern(/^RC[0-9]+/)
-                .messages({
-                    'string.pattern.base':
-                        "Invalid CAC Number. Must begin with 'RC'.",
-                }),
+            companyName: companyNameSchema,
+            companyAddress: addressSchema,
+            cacNumber: cacNumberSchema,
             category: Joi.string(),
             phone: phoneSchema,
+            website: Joi.string(),
+            support: supportSchema,
             timeZone: Joi.string(),
-        }).min(1);
+        });
 
         return schema.validate(lender);
     },
@@ -76,13 +105,8 @@ const validators = {
     verifyReg: function (lender) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            otp: Joi.string()
-                .required()
-                .pattern(/^[0-9]{6}$/)
-                .messages({
-                    'string.pattern.base': 'Invalid OTP.',
-                }),
-            password: Joi.string().required(),
+            otp: otpSchema.required(),
+            password: Joi.string().max(40).required(),
         });
 
         return schema.validate(lender);
@@ -91,7 +115,7 @@ const validators = {
     login: function (lender) {
         const schema = Joi.object({
             email: emailSchema.required(),
-            password: Joi.string().required(),
+            password: Joi.string().max(40).required(),
         });
 
         return schema.validate(lender);
@@ -105,7 +129,7 @@ const validators = {
                 otherwise: Joi.optional(),
             }),
             email: emailSchema.required(),
-            currentPassword: Joi.string(),
+            currentPassword: Joi.string().max(40),
             newPassword: passwordSchema.required(),
         });
 
@@ -123,7 +147,6 @@ const validators = {
             phone: phoneSchema.required(),
             email: emailSchema.required(),
             role: Joi.string().equal('Admin'),
-            active: Joi.boolean().equal(true),
             lenderId: Joi.objectId(),
         });
 
@@ -194,7 +217,7 @@ const validators = {
 
     fundAccount: function (payload) {
         const schema = Joi.object({
-            amount: Joi.number().precision(2).min(100.00).required().messages({
+            amount: Joi.number().precision(2).min(100.0).required().messages({
                 'number.min': 'Minimum amount is 100.00.',
             }),
             choice: Joi.number().min(0).max(1),

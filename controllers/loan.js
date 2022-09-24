@@ -45,7 +45,8 @@ async function getValidator(user, segmentId) {
         return { loanParams, loanReqValidator };
     } catch (exception) {
         logger.error({
-            message: `getValidator - ${exception.message}`,
+            method: 'getValidator',
+            message: exception.message,
             meta: exception.stack,
         });
         debug(exception);
@@ -54,7 +55,7 @@ async function getValidator(user, segmentId) {
 }
 
 const loans = {
-    createLoanRequest: async function (user, payload) {
+    createLoanReq: async function (user, payload) {
         try {
             // if(request.user.role === 'guest') request.user.lenderId = request.params.id;
 
@@ -99,7 +100,11 @@ const loans = {
 
             return response;
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'createLoanReq',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }

@@ -4,47 +4,79 @@ const verifyToken = require('../middleware/verifyToken');
 const pendingEditValidators = require('../validators/pendingEdit');
 const pendingEditController = require('../controllers/pendingEdit');
 
-router.post('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const { error } = pendingEditValidators.create(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+router.post(
+    '/',
+    verifyToken,
+    verifyRole(['Admin', 'Operations', 'Credit', 'Loan Agent']),
+    async (req, res) => {
+        const { error } = pendingEditValidators.create(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
 
-    const newEdit = await pendingEditController.create(req.user, req.body);
-    if(newEdit.hasOwnProperty('errorCode')) return res.status(newEdit.errorCode).send(newEdit.message);
-    
-    return res.status(201).send(newEdit);
-});
+        const newEditDoc = await pendingEditController.create(req.user, req.body);
+        if (newEditDoc.hasOwnProperty('errorCode'))
+            return res.status(newEditDoc.errorCode).send(newEditDoc.message);
 
+        return res.status(201).send(newEditDoc);
+    }
+);
 
-router.get('/', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const pendingEdits = await pendingEditController.getAll(req.user);
-    if(pendingEdits.hasOwnProperty('errorCode')) return res.status(404).send(pendingEdits.message);
+router.get(
+    '/',
+    verifyToken,
+    verifyRole(['Admin', 'Operations', 'Credit', 'Loan Agent']),
+    async (req, res) => {
+        const editDocs = await pendingEditController.getAll(req.user);
+        if (editDocs.hasOwnProperty('errorCode'))
+            return res.status(editDocs.errorCode).send(editDocs.message);
 
-    return res.status(200).send(pendingEdits);
-});
+        return res.status(200).send(editDocs);
+    }
+);
 
-router.get('/admin', verifyToken, verifyRole('Admin'), async (req, res) => {
-    const pendingEdits = await pendingEditController.getAllAdmin();
-    if(pendingEdits.hasOwnProperty('errorCode')) return res.status(404).send(pendingEdits.message);
+router.get(
+    '/:id',
+    verifyToken,
+    verifyRole(['Admin', 'Operations', 'Credit', 'Loan Agent']),
+    async (req, res) => {
+        const editDoc = await pendingEditController.getOne(
+            req.params.id,
+            req.user
+        );
+        if (editDoc.hasOwnProperty('errorCode'))
+            return res.status(editDoc.errorCode).send('document not found.');
 
-    return res.status(200).send(pendingEdits);
-});
+        return res.status(200).send(editDoc);
+    }
+);
 
-router.get('/:id', verifyToken, verifyRole(['Admin', 'Credit', 'Loan Agent']), async (req, res) => {
-    const pendingEdit = await pendingEditController.getOne(req.params.id, req.user);
-    if(pendingEdit.length === 0) return res.status(404).send('document not found.');
+router.patch(
+    '/:id',
+    verifyToken,
+    async (req, res) => {
+        const { error } = pendingEditValidators.update(req.user, req.body);
+        if (error) return res.status(400).send(error.details[0].message);
 
-    return res.status(200).send(pendingEdit);
-});
+        const modifiedDoc = await pendingEditController.update(
+            req.params.id,
+            req.user,
+            req.body
+        );
+        if (modifiedDoc.hasOwnProperty('errorCode'))
+            return res.status(modifiedDoc.errorCode).send(modifiedDoc.message);
 
-router.patch('/:id', verifyToken, verifyRole(['Admin', 'Credit']), async (req, res) => {
-    const { error } = pendingEditValidators.edit(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+        return res.status(200).send(modifiedDoc);
+    }
+);
 
-    const result = await pendingEditController.updateStatus(req.params.id, req.user, req.body);
-    if(result.hasOwnProperty('errorCode')) return res.status(400).send(result.message);
+router.delete('/:id', verifyToken, async (req, res) => {
+    const response = await pendingEditController.delete(
+        req.params.id,
+        req.user
+    );
+    if (response.hasOwnProperty('errorCode'))
+        return res.status(response.errorCode).send(response.message);
 
-    return res.status(200).send(result);
-
+    return res.status(204).send(response);
 });
 
 module.exports = router;

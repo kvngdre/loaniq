@@ -17,6 +17,8 @@ const nameSchema = Joi.object({
                    .max(50)
 });
 
+const displayNameSchema = Joi.string()
+
 const phoneSchema = Joi.string()
                        .pattern(/^0([7-9])[0-9]{9}$/)
                        .message({
@@ -60,7 +62,7 @@ const validators = {
                 return (function(user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        // displayName: Joi.string(),
+                        displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -73,7 +75,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        // displayName: Joi.string(),
+                        displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -88,7 +90,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema,
-                        // displayName: Joi.string(),
+                        displayName: Joi.string(),
                         phone: phoneSchema,
                         email: emailSchema,
                         role: Joi.string().required(),
@@ -101,7 +103,7 @@ const validators = {
                 return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
-                        // displayName: Joi.string(),
+                        displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
                         role: Joi.string().required(),
@@ -132,7 +134,7 @@ const validators = {
     validateEdit: function(user) {
         const schema = Joi.object({
             name: nameSchema,
-            // displayName: Joi.string(),
+            displayName: Joi.string(),
             phone: phoneSchema,
             role: Joi.string(),
             segments: segmentSchema,

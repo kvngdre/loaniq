@@ -14,7 +14,7 @@ const logger = require('../utils/logger')('lenderCtrl.js');
 const { getFLWPaymentLink } = require('../utils/flutterwave');
 
 const ctrlFuncs = {
-    create: async function (payload) {
+    signUp: async function (payload) {
         try {
             const encryptedPassword = await bcrypt.hash(
                 payload.password,
@@ -36,15 +36,20 @@ const ctrlFuncs = {
             // }
 
             const lender = new Lender(payload);
-            await Settings.create({ userId: lender._id, type: 'Lender' });
             await lender.save();
+            await Settings.create({ userId: lender._id, type: 'Lender' });
+            // TODO: generate public URL.
 
             return {
                 message: 'Account created and OTP has been sent to your email.',
                 data: _.omit(lender._doc, ['otp', 'password']),
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'signUp',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
 
             // Duplicate field error.
@@ -84,7 +89,11 @@ const ctrlFuncs = {
                 data: lenders,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getAll',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -101,7 +110,11 @@ const ctrlFuncs = {
                 data: lender,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getOne',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -120,13 +133,17 @@ const ctrlFuncs = {
                 data: _.omit(lender._doc, ['otp', 'password']),
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    verifyLender: async function (payload) {
+    verifySignUp: async function (payload) {
         try {
             const lender = await Lender.findOne({ email: payload.email });
             if (!lender)
@@ -155,21 +172,27 @@ const ctrlFuncs = {
             )
                 return { errorCode: 401, message: 'Invalid OTP.' };
 
-            await lender.updateOne({
+            lender.set({
                 emailVerified: true,
                 'otp.OTP': null,
                 active: true,
                 lastLoginTime: new Date(),
             });
 
-            lender._doc.token = lender.generateToken();
+            lender._doc.token = lender.generateAccessToken();
+
+            await lender.save();
 
             return {
                 message: 'Email verified and account activated.',
                 data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'verifySignUp',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -214,14 +237,19 @@ const ctrlFuncs = {
 
             await lender.updateOne({ lastLoginTime: new Date() });
 
-            lender._doc.token = lender.generateToken();
+            lender._doc.accessToken = lender.generateAccessToken();
+            lender._doc.refreshToken = lender.generateRefreshToken()
 
             return {
                 message: 'Login Successful.',
                 data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'login',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -276,7 +304,11 @@ const ctrlFuncs = {
                 message: 'Password updated.',
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'changePassword',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -284,25 +316,30 @@ const ctrlFuncs = {
 
     createAdmin: async function (payload, user) {
         try {
-            const adminUsers = await userController.getAll({
-                lenderId: user.lenderId,
-                role: 'Admin',
-            });
-            if (adminUsers.length > 0)
-                return {
-                    errorCode: 409,
-                    message: 'Admin user already created.',
-                };
+            // const adminUsers = await userController.getAll({
+            //     lenderId: user.lenderId,
+            //     role: 'Admin',
+            // });
+
+            // if (adminUsers.length > 0)
+            //     return {
+            //         errorCode: 409,
+            //         message: 'Admin user already created.',
+            //     };
 
             const adminUser = await userController.create(payload, user);
             if (adminUser.hasOwnProperty('errorCode')) return adminUser;
 
             return {
-                message: 'Admin user created.',
+                message: 'User created. OTP & Password sent to email.',
                 data: adminUser,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'createAdmin',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -336,7 +373,11 @@ const ctrlFuncs = {
                 },
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'sendOTP',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -361,11 +402,17 @@ const ctrlFuncs = {
                 balance: lender.balance,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getBalance',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
+
+
 
     deactivate: async function (id, user, password) {
         try {
@@ -382,16 +429,19 @@ const ctrlFuncs = {
                 // TODO: Create template for deactivation.
                 const mailResponse = await sendOTPMail(
                     config.get('support.email'), // apexxia support
-                    lender.companyName,
+                    lender.companyName
                 );
                 if (mailResponse instanceof Error) {
                     debug(`Error sending OTP: ${mailResponse.message}`);
-                    return { errorCode: 502, message: 'Error sending deactivation request.' };
+                    return {
+                        errorCode: 502,
+                        message: 'Error sending deactivation request.',
+                    };
                 }
 
                 return {
-                    message: 'Sent deactivation request.'
-                }
+                    message: 'Sent deactivation request.',
+                };
             } else {
                 await User.updateMany(
                     { lenderId: lender._id },
@@ -407,10 +457,27 @@ const ctrlFuncs = {
                 };
             }
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'deactivate',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
+    },
+
+    guestLoanReq: async function (payload) {
+        try {
+            const lender = await Lender.findOne({ id });
+
+            user = {
+                id: payload.customer.employmentInfo.ippis,
+                lenderId: lender._id,
+                role: 'guest',
+                email: payload.customer.contactInfo.email,
+            };
+        } catch (exception) {}
     },
 };
 

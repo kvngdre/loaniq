@@ -1,17 +1,12 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-// const AutoIncrement = require('mongoose-sequence')(mongoose)
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
 const lenderSchema = new mongoose.Schema(
     {
-        // id: {
-        //     type: Number,
-        //     unique: true
-        // },
-
         companyName: {
             type: String,
             trim: true,
@@ -28,6 +23,7 @@ const lenderSchema = new mongoose.Schema(
 
         cacNumber: {
             type: String,
+            unique: true,
             required: true,
         },
 
@@ -39,7 +35,6 @@ const lenderSchema = new mongoose.Schema(
         phone: {
             type: String,
             unique: true,
-            length: 11,
             trim: true,
             required: true,
         },
@@ -88,13 +83,13 @@ const lenderSchema = new mongoose.Schema(
             default: 0,
         },
 
-        // TODO: Work on auto generating url
-        lenderURL: {
+        website: {
             type: String,
             trim: true,
             lowercase: true,
             default: null,
         },
+
         // TODO: Should there be more than one admin?
         publicUrl: {
             // This should be the short url.
@@ -102,16 +97,49 @@ const lenderSchema = new mongoose.Schema(
             default: null,
         },
 
+        urlId: {
+            type: Number,
+            unique: true,
+        },
+
         support: {
             email: {
                 type: String,
-                default: null
+                trim: true,
+                required: true,
             },
 
             phone: {
                 type: String,
+                default: null,
+            },
+        },
+
+        social: {
+            twitter: {
+                type: String,
                 default: null
-            }
+            },
+            instagram: {
+                type: String,
+                default: null
+            },
+            facebook: {
+                type: String,
+                default: null
+            },
+            whatsApp: {
+                type: String,
+                default: null
+            },
+            YouTube: {
+                type: String,
+                default: null
+            },
+            tiktok: {
+                type: String,
+                default: null
+            },
         },
 
         lastCreditDate: {
@@ -137,11 +165,11 @@ const lenderSchema = new mongoose.Schema(
     schemaOptions
 );
 
-// lenderSchema.plugin(AutoIncrement, {inc_field: 'id'})
+lenderSchema.plugin(AutoIncrement, { inc_field: 'urlId' });
 
-lenderSchema.methods.generateToken = function () {
+lenderSchema.methods.generateAccessToken = function () {
     return jwt.sign(
-        {   
+        {
             id: this._id,
             lenderId: this._id,
             email: this.email,
@@ -151,8 +179,15 @@ lenderSchema.methods.generateToken = function () {
             balance: this.balance,
             lastLoginTime: this.lastLoginTime,
         },
-        config.get('jwt_secret')
+        config.get('jwt_secret'),
+        { expiresIn: '10m' }
     );
+};
+
+lenderSchema.methods.generateRefreshToken = function () {
+    return jwt.sign({
+        email: this.email,
+    }, config.get('jwt_refresh'), { expiresIn: '8h' });
 };
 
 const Lender = mongoose.model('Lender', lenderSchema);

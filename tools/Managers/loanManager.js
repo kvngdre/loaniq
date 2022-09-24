@@ -36,7 +36,8 @@ const manager = {
 
                 if (response.hasOwnProperty('errorCode')) {
                     logger.error({
-                        message: 'Failed to create customer',
+                        method: 'createLoanReq',
+                        message: 'Failed to create customer.',
                         meta: {
                             lenderId: user.lenderId,
                             response: response.message,
@@ -46,7 +47,6 @@ const manager = {
                     return response;
                 }
             }
-
             const customer = response.data;
 
             const loans = await Loan.find({
@@ -134,7 +134,11 @@ const manager = {
                 },
             };
         } catch (exception) {
-            logger.error({method: 'createLoanRequest', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'createLoanRequest',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -163,7 +167,11 @@ const manager = {
                 data: loans,
             };
         } catch (exception) {
-            logger.error({method: 'getAll', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getAll',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -189,7 +197,11 @@ const manager = {
                 data: loan,
             };
         } catch (exception) {
-            logger.error({method: 'getOne', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getOne',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return { errorCode: 500, message: 'Something went wrong.' };
         }
@@ -202,10 +214,14 @@ const manager = {
             // Reassignment of Loan agent or Credit officer.
             if (
                 ['Lender', 'Admin'].includes(user.role) &&
-                (Object.keys(payload).some(path => ['creditOfficer', 'loanAgent',].includes(path)))
+                Object.keys(payload).some((path) =>
+                    ['creditOfficer', 'loanAgent'].includes(path)
+                )
             ) {
-                if(payload.creditOfficer) loan.set({ creditOfficer: payload.creditOfficer });
-                if(payload.loanAgent) loan.set({ loanAgent: payload.loanAgent });
+                if (payload.creditOfficer)
+                    loan.set({ creditOfficer: payload.creditOfficer });
+                if (payload.loanAgent)
+                    loan.set({ loanAgent: payload.loanAgent });
                 await loan.save();
             }
 
@@ -216,11 +232,17 @@ const manager = {
                     userId: user.id,
                     docId: loan._id,
                     type: 'Loan',
-                    alteration: payload
+                    modifiedBy: {
+                        id: user.id,
+                        name: user.fullName,
+                        role: user.role,
+                        timestamp: new Date(),
+                    },
+                    alteration: payload,
                 });
 
                 await newPendingEdit.save();
-                
+
                 return {
                     message: 'Submitted. Awaiting review.',
                     body: newPendingEdit,
@@ -239,7 +261,11 @@ const manager = {
                 data: loan,
             };
         } catch (exception) {
-            logger.error({method: 'update', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
 
             // MongoDB Validation Error
@@ -247,7 +273,10 @@ const manager = {
                 const field = Object.keys(exception.errors)[0];
                 return {
                     errorCode: 400,
-                    message: exception.errors[field].message.replace('Path', ''),
+                    message: exception.errors[field].message.replace(
+                        'Path',
+                        ''
+                    ),
                 };
             }
 

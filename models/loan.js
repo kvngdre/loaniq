@@ -288,7 +288,7 @@ loanSchema.pre('save', function (next) {
 
         next();
     } catch (exception) {
-        logger.error({ message: exception.message, meta: exception.meta });
+        logger.error({method: 'loan_pre_save', message: exception.message, meta: exception.meta });
         next({ errorCode: 500, message: 'Something went wrong' });
     }
 });

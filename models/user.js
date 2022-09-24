@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Segment = require('./segment');
 
-const schemaOptions = { timestamps: true, versionKey: false };
+const schemaOptions = { timestamps: true, versionKey: false, toJSON: {virtuals: true}, id: false };
 
 const userSchema = new mongoose.Schema(
     {
@@ -42,6 +42,16 @@ const userSchema = new mongoose.Schema(
                     ` ${this.name.last}`
                 );
             },
+        },
+
+        queryName: {
+            type: String,
+            default: () => {
+                return this.name.first.concat(
+                    this.name.middle ? ` ${this.name.middle}` : '',
+                    ` ${this.name.last}`, `${this.displayName}`
+                )
+            }
         },
 
         phone: {
@@ -127,17 +137,26 @@ const userSchema = new mongoose.Schema(
     schemaOptions
 );
 
+userSchema.virtual('fullName').get(function() {
+    console.log(this)
+    return this.name.first.concat(
+        this.name.middle ? ` ${this.name.middle}` : '',
+        ` ${this.name.last}`
+    );
+})
+
 userSchema.methods.generateToken = function () {
     return jwt.sign(
         {
             id: this._id,
             lenderId: this.lenderId,
+            fullName: this.fullName,
             email: this.email,
             role: this.role,
             active: this.active,
             emailVerified: this.emailVerified,
             timeZone: this.timeZone,
-            lastLoginTime: this.lastLoginTimeTzAdjusted,
+            lastLoginTime: this.lastLoginTime,
         },
         config.get('jwt_secret'), {expiresIn: '8h'}
     );

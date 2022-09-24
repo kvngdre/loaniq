@@ -8,9 +8,9 @@ const settingsController = require('../controllers/settings');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);
-    if (error) return res.status(404).send(error.details[0].message);
+    if (error) return res.status(400).send(error.details[0].message);
 
-    const lender = await lenderController.create(req.body);
+    const lender = await lenderController.signUp(req.body);
     if (lender.hasOwnProperty('errorCode'))
         return res.status(lender.errorCode).send(lender.message);
 
@@ -58,7 +58,7 @@ router.post('/verify', async (req, res) => {
     const { error } = lenderValidators.verifyReg(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const isVerified = await lenderController.verifyLender(req.body);
+    const isVerified = await lenderController.verifySignUp(req.body);
     if (isVerified.hasOwnProperty('errorCode'))
         return res.status(400).send(isVerified.message);
 
@@ -78,6 +78,10 @@ router.post('/login', async (req, res) => {
 
     return res.status(200).send(lender);
 });
+
+router.post('/logout', (req, res) => {
+    return res.sendStatus(204);
+})
 
 router.post('/password', async (req, res) => {
     const { error } = lenderValidators.changePassword(req.body);
@@ -160,10 +164,7 @@ router.patch(
         const { value, error } = lenderValidators.updateSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const settings = await settingsController.update(
-            id,
-            req.body
-        );
+        const settings = await settingsController.update(id, req.body);
         if (settings.hasOwnProperty('errorCode'))
             return res.status(settings.errorCode).send(settings.message);
 
@@ -204,7 +205,7 @@ router.post(
     async (req, res) => {
         const { error } = lenderValidators.fundAccount(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-        
+
         const response = await paymentController.getPaymentLink({
             id: req.params.id !== undefined ? req.params.id : req.user.id,
             email: req.user.email,
@@ -240,8 +241,22 @@ router.post(
     }
 );
 
-router.post('/reactivate/:id?', verifyToken, verifyRole('Master'), async (req, res) => {
-    
-})
+router.post('/token', async (req, res) => {
+    const refreshToken = req.header('x-auth-token');
+
+    const token = await lenderController.getToken(refreshToken);
+});
+
+router.post('/forms/:id', async (req, res) => {
+    const response = await lenderController.guestLoanReq(req.body);
+});
+router.get('/:lenderId/support');
+
+router.post(
+    '/reactivate/:id?',
+    verifyToken,
+    verifyRole('Master'),
+    async (req, res) => {}
+);
 
 module.exports = router;

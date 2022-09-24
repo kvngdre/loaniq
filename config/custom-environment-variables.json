@@ -6,6 +6,7 @@
         "database_password": "DATABASE_PASSWORD"
     },
     "jwt_secret": "JWT_PRIVATE_KEY",
+    "jwt_refresh": "JWT_REFRESH_KEY",
     "salt": "SALT",
     "mail": {
         "password": "USER_EMAIL_PASSWORD"

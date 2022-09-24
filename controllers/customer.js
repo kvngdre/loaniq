@@ -259,6 +259,8 @@ const ctrlFuncs = {
         } catch (exception) {
             logger.error({ message: exception.message, meta: exception.stack });
             debug(exception);
+
+            // Duplicate field error
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.replace('employmentInfo.', '');
