@@ -1,4 +1,6 @@
 const Lender = require('../models/lender');
+const paystackService = require('../services/paystack');
+const flutterwaveService = require('../services/flutterwave');
 
 const ctrlFuncs = {
     /**
@@ -10,7 +12,7 @@ const ctrlFuncs = {
      * @property {number} [params.choice=0] - Paystack = 0; Flutterwave = 1.
      * @returns {Object} Returns a payment link from either Paystack or Flutterwave.
      */
-     getPaymentLink: async function (params) {
+     getUrl: async function (params) {
         try {
             const id = params.id;
             const email = params.email;
@@ -19,10 +21,12 @@ const ctrlFuncs = {
 
             let response = null;
 
+            // Find lender doc
             const lender = await Lender.findById(id);
             if (!lender) {
                 logger.error({
-                    message: 'User not found for generate payment link.',
+                    method: 'getUrl',
+                    message: 'Lender not found.',
                 });
                 debug(`Gen Pay Link Error lender - ${lender}`);
                 return { errorCode: 500, message: 'Something went wrong.' };
@@ -30,15 +34,15 @@ const ctrlFuncs = {
 
             // Paystack
             if (choice === 0)
-                response = await getSKPaymentLink({ amount, email });
+                response = await paystackService.getPaymentLink({ amount, email });
 
-            // Flutterwave
+            // If choice is 1 or error getting Paystack link.
             if (
                 choice === 1 ||
                 response.status !== 200 ||
                 response instanceof Error
             ) {
-                response = await getFLWPaymentLink({
+                response = await flutterwaveService.getPaymentLink({
                     amount,
                     customerDetails: {
                         name: lender.companyName,
@@ -51,10 +55,11 @@ const ctrlFuncs = {
             if (response.status !== 200 || response instanceof Error)
                 return {
                     errorCode: 424,
-                    message: 'Error generating payment link.',
+                    message: 'Error initiating payment.',
                 };
 
             logger.info({
+                method: 'getUrl',
                 message: 'Payment link generated.',
                 meta: {
                     provider: choice ? 'Flutterwave' : 'Paystack',

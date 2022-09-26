@@ -1,23 +1,24 @@
-const cors = require('cors');
-const express = require('express');
-const loanRouter = require('../routes/loan');
-const userRouter = require('../routes/user');
 const banksRouter = require('../routes/bank');
-const stateRouter = require('../routes/state');
-const lenderRouter = require('../routes/lender');
-const originRouter = require('../routes/origin');
-const segmentRouter = require('../routes/segment');
+const cors = require('cors');
 const customerRouter = require('../routes/customer');
-const pendingEditRouter = require('../routes/pendingEdit');
-const transactionRouter = require('../routes/transaction');
-
 const errorHandler = require('../middleware/errorHandler');
+const express = require('express');
+const helmet = require('helmet');
+const lenderRouter = require('../routes/lender');
+const loanRouter = require('../routes/loan');
+const originRouter = require('../routes/origin');
+const pendingEditRouter = require('../routes/pendingEdit');
+const segmentRouter = require('../routes/segment');
+const stateRouter = require('../routes/state');
+const transactionRouter = require('../routes/transaction');
+const userRouter = require('../routes/user');
 
-
-module.exports = function(app) {
+module.exports = function (app) {
     // middleware
     app.use(cors());
+    app.use(helmet());
     app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
     // Route handlers
     app.use('/api/loans', loanRouter);
@@ -33,4 +34,4 @@ module.exports = function(app) {
 
     // Error handling middleware
     app.use(errorHandler);
-}
+};

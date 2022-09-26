@@ -18,7 +18,11 @@ const validators = {
             case 'Operations':
                 return (function (payload) {
                     const schema = Joi.object({
-                        alteration: Joi.object().min(1).messages({
+                        alteration: Joi.object().min(1).when('status', {
+                            is: Joi.exist(),
+                            then: Joi.forbidden(),
+                            otherwise: Joi.optional()
+                        }).messages({
                             'object.min': 'Alteration cannot be empty.'
                         }),
 

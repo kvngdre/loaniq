@@ -21,7 +21,7 @@ const userCtrlFuncs = {
         try {
             const rounds = config.get('salt_rounds');
             const allSegments = await Segment.find().select('_id');
-
+            
             switch (payload.role) {
                 case 'Admin':
                     if (user.role !== 'Lender') return 401;
@@ -34,6 +34,7 @@ const userCtrlFuncs = {
                     );
 
                     var newUser = new User({
+                        lenderId: user.id,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
@@ -41,8 +42,7 @@ const userCtrlFuncs = {
                         password: encryptedTempPassword,
                         otp: generateOTP(),
                         role: payload.role,
-                        active: payload.active,
-                        lenderId: user.id,
+                        timeZone: payload.timeZone,
                     });
                     break;
 
@@ -55,6 +55,7 @@ const userCtrlFuncs = {
                     );
 
                     var newUser = new User({
+                        lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
@@ -62,12 +63,11 @@ const userCtrlFuncs = {
                         password: encryptedPassword,
                         otp: generateOTP(),
                         role: payload.role,
-                        active: payload.active,
                         segments:
                             payload.segments === 'all'
                                 ? allSegments
                                 : payload.segments,
-                        lenderId: user.lenderId,
+                        timeZone: payload.timeZone,
                     });
                     break;
 
@@ -79,6 +79,7 @@ const userCtrlFuncs = {
                     );
 
                     var newUser = new User({
+                        lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
@@ -86,8 +87,7 @@ const userCtrlFuncs = {
                         password: encryptedPassword,
                         otp: generateOTP(),
                         role: payload.role,
-                        active: payload.active,
-                        lenderId: user.lenderId,
+                        timeZone: payload.timeZone,
                     });
                     break;
 
@@ -99,6 +99,7 @@ const userCtrlFuncs = {
                     );
 
                     var newUser = new User({
+                        lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
@@ -106,13 +107,12 @@ const userCtrlFuncs = {
                         password: encryptedPassword,
                         otp: generateOTP(),
                         role: payload.role,
-                        active: payload.active,
                         segments:
                             payload.segments === 'all'
                                 ? allSegments
                                 : payload.segments,
                         target: payload.target,
-                        lenderId: user.lenderId,
+                        timeZone: payload.timeZone,
                     });
                     break;
             }
@@ -120,7 +120,7 @@ const userCtrlFuncs = {
             await newUser.save();
             newUser.password = temporaryPassword;
 
-            // Sending OTP to user email.
+            // Sending OTP & Password to user email.
             const mailResponse = await sendOTPMail(
                 payload.email,
                 payload.name.firstName,
@@ -129,7 +129,7 @@ const userCtrlFuncs = {
             );
             if (mailResponse instanceof Error) {
                 debug(`Error OTP: ${mailResponse.message}`);
-                return { errorCode: 502, message: 'Error sending OTP.' };
+                return { errorCode: 502, message: 'Error sending OTP & password.' };
             }
 
             return {
@@ -138,7 +138,7 @@ const userCtrlFuncs = {
                 data: newUser,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'create', message: exception.message, meta: exception.stack });
             debug(exception);
 
             // Duplicate field error.
@@ -153,6 +153,7 @@ const userCtrlFuncs = {
                 };
             }
 
+            // Validation Error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
                 return {
@@ -193,7 +194,7 @@ const userCtrlFuncs = {
                 otp: 0,
             });
             if (!user)
-                return { errorCode: 404, message: 'User document not found.' };
+                return { errorCode: 404, message: 'User not found.' };
 
             return user;
         } catch (exception) {

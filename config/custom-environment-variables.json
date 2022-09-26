@@ -5,9 +5,16 @@
         "prod_database_uri": "PROD_DATABASE_URI",
         "database_password": "DATABASE_PASSWORD"
     },
-    "jwt_secret": "JWT_PRIVATE_KEY",
-    "jwt_refresh": "JWT_REFRESH_KEY",
-    "salt": "SALT",
+    "jwt": {
+        "secret": "JWT_PRIVATE_KEY",
+        "access": "JWT_ACCESS",
+        "access_time": "JWT_ACCESS_TIME",
+        "refresh": "JWT_REFRESH",
+        "refresh_time": "JWT_REFRESH_TIME",
+        "audience": "JWT_AUDIENCE",
+        "issuer": "JWT_ISSUER"
+    },
+    "salt_rounds": "SALT",
     "mail": {
         "password": "USER_EMAIL_PASSWORD"
     },

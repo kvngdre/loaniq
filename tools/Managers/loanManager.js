@@ -127,7 +127,7 @@ const manager = {
             );
 
             return {
-                message: 'Success',
+                message: 'Loan request submitted.',
                 data: {
                     customer,
                     loan: newLoan,

@@ -1,7 +1,6 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const Segment = require('./segment');
 
 const schemaOptions = { timestamps: true, versionKey: false, toJSON: {virtuals: true}, id: false };
 
@@ -46,10 +45,10 @@ const userSchema = new mongoose.Schema(
 
         queryName: {
             type: String,
-            default: () => {
+            default: function () {
                 return this.name.first.concat(
                     this.name.middle ? ` ${this.name.middle}` : '',
-                    ` ${this.name.last}`, `${this.displayName}`
+                    ` ${this.name.last}`, ` ${this.displayName}`
                 )
             }
         },
@@ -110,9 +109,7 @@ const userSchema = new mongoose.Schema(
         // following fields below are for loan agents
         segments: {
             type: [mongoose.Schema.Types.ObjectId],
-            ref: 'Segment',
             default: null,
-            required: true,
         },
 
         // TODO: Duration of target?
@@ -158,7 +155,7 @@ userSchema.methods.generateToken = function () {
             timeZone: this.timeZone,
             lastLoginTime: this.lastLoginTime,
         },
-        config.get('jwt_secret'), {expiresIn: '8h'}
+        config.get('jwt.secret'), {expiresIn: '8h'}
     );
 };
 

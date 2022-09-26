@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const userValidators = require('../validators/user');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const lenderValidators = require('../validators/lender');
@@ -104,10 +105,10 @@ router.post(
     verifyToken,
     verifyRole('Lender'),
     async (req, res) => {
-        const { error } = lenderValidators.createAdmin(req.body);
+        const { error } = userValidators.validateSignUp(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const adminUser = await lenderController.createAdmin(req);
+        const adminUser = await lenderController.createAdmin(req.body, req.user);
         if (adminUser.hasOwnProperty('errorCode'))
             return res.status(adminUser.errorCode).send(adminUser.message);
 

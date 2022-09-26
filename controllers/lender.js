@@ -1,17 +1,16 @@
 const _ = require('lodash');
-const config = require('config');
 const bcrypt = require('bcrypt');
-const User = require('../models/user');
-const userController = require('./user');
-const Lender = require('../models/lender');
-const txnController = require('./transaction');
-const sendOTPMail = require('../utils/mailer');
-const Settings = require('../models/settings');
+const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
 const generateOTP = require('../utils/generateOTP');
-const { getSKPaymentLink } = require('../utils/paystack');
+const Lender = require('../models/lender');
+const loanController = require('./loan');
 const logger = require('../utils/logger')('lenderCtrl.js');
-const { getFLWPaymentLink } = require('../utils/flutterwave');
+const sendOTPMail = require('../utils/mailer');
+const Settings = require('../models/settings');
+const txnController = require('./transaction');
+const User = require('../models/user');
+const userController = require('./user');
 
 const ctrlFuncs = {
     signUp: async function (payload) {
@@ -179,9 +178,9 @@ const ctrlFuncs = {
                 lastLoginTime: new Date(),
             });
 
-            lender._doc.token = lender.generateAccessToken();
-
             await lender.save();
+
+            lender._doc.token = lender.generateAccessToken();
 
             return {
                 message: 'Email verified and account activated.',
@@ -238,7 +237,7 @@ const ctrlFuncs = {
             await lender.updateOne({ lastLoginTime: new Date() });
 
             lender._doc.accessToken = lender.generateAccessToken();
-            lender._doc.refreshToken = lender.generateRefreshToken()
+            lender._doc.refreshToken = lender.generateRefreshToken();
 
             return {
                 message: 'Login Successful.',
@@ -316,17 +315,6 @@ const ctrlFuncs = {
 
     createAdmin: async function (payload, user) {
         try {
-            // const adminUsers = await userController.getAll({
-            //     lenderId: user.lenderId,
-            //     role: 'Admin',
-            // });
-
-            // if (adminUsers.length > 0)
-            //     return {
-            //         errorCode: 409,
-            //         message: 'Admin user already created.',
-            //     };
-
             const adminUser = await userController.create(payload, user);
             if (adminUser.hasOwnProperty('errorCode')) return adminUser;
 
@@ -412,8 +400,6 @@ const ctrlFuncs = {
         }
     },
 
-
-
     deactivate: async function (id, user, password) {
         try {
             const lender = await Lender.findById(id);
@@ -477,7 +463,22 @@ const ctrlFuncs = {
                 role: 'guest',
                 email: payload.customer.contactInfo.email,
             };
-        } catch (exception) {}
+
+            const response = await loanController.createLoanReq(user, payload);
+
+            return {
+                message: 'Loan application submitted successfully.',
+                data: response.data,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'guestLoanReq',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return { errorCode: 500, message: 'Something went wrong.' };
+        }
     },
 };
 

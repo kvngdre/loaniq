@@ -136,23 +136,6 @@ const validators = {
         return schema.validate(passwordObj);
     },
 
-    createAdmin: function (user) {
-        const schema = Joi.object({
-            name: Joi.object({
-                firstName: Joi.string().required().min(3).max(50),
-                lastName: Joi.string().required().min(3).max(50),
-                middleName: Joi.string().min(3).max(50),
-            }),
-            displayName: Joi.string(),
-            phone: phoneSchema.required(),
-            email: emailSchema.required(),
-            role: Joi.string().equal('Admin'),
-            lenderId: Joi.objectId(),
-        });
-
-        return schema.validate(user);
-    },
-
     createSettings: function (settings) {
         const schema = Joi.object({
             segments: Joi.array()

@@ -5,7 +5,9 @@ const logger = require('../utils/logger')('verifyToken.js');
 
 function verifyToken(req, res, next) {
     try {
-        const token = req.header('auth-token') || req.header('Authorization');
+        const [scheme, token] = req.header('auth-token').split(' ') || req.header('Authorization').split(' ');
+
+        if(scheme !== 'Bearer') return res.status(401).send('Invalid token provided.');
 
         if (!token)
             return res.status(401).send('Access Denied. No token provided.');

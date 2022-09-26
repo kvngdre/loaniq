@@ -61,11 +61,12 @@ const validators = {
             case "Admin": 
                 return (function(user) {
                     const schema = Joi.object({
+                        lenderId: Joi.objectId(),
                         name: nameSchema.required(),
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().required(),
+                        role: Joi.string().equal('Admin').required(),
                     });
                     return schema.validate(user);
 
@@ -78,7 +79,7 @@ const validators = {
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().required(),
+                        role: Joi.string().equal('Credit').required(),
                         segments: segmentSchema.required(),
                 
                     });
@@ -93,7 +94,7 @@ const validators = {
                         displayName: Joi.string(),
                         phone: phoneSchema,
                         email: emailSchema,
-                        role: Joi.string().required(),
+                        role: Joi.string().equal('Operations').required(),
                     });
                     return schema.validate(user);
 
@@ -106,7 +107,7 @@ const validators = {
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().required(),
+                        role: Joi.string().equal('Loan Agent').required(),
                         segments: segmentSchema.required(),
                         target: Joi.number().required(),
                         achieved: Joi.number(),

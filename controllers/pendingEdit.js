@@ -221,14 +221,6 @@ const ctrlFuncs = {
             const pendingCustomerEdit = await PendingEdit.aggregate([
                 {
                     $lookup: {
-                        from: 'customers',
-                        localField: 'docId',
-                        foreignField: '_id',
-                        as: 'customer',
-                    },
-                },
-                {
-                    $lookup: {
                         from: 'users',
                         localField: 'userId',
                         foreignField: '_id',
@@ -243,6 +235,14 @@ const ctrlFuncs = {
                             ? { $ne: null }
                             : mongoose.Types.ObjectId(user.id),
                         type: 'Customer',
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'docId',
+                        foreignField: '_id',
+                        as: 'customer',
                     },
                 },
                 {
@@ -435,7 +435,7 @@ const ctrlFuncs = {
             };
         } catch (exception) {
             logger.error({
-                method: 'updateStatus',
+                method: 'update',
                 message: exception.message,
                 meta: exception.stack,
             });
