@@ -14,7 +14,7 @@ function errorHandler(err, req, res, next) {
         return res.status(err.statusCode).send(err.message);
     }
 
-    console.log(err.message, err.stack);
+    debug(err)
     res.status(500).send('Internal Server Error.');
 
     next();

@@ -1,11 +1,12 @@
+const { verifyToken } = require('../middleware/verifyJWT');
+const lenderController = require('../controllers/lenderController');
+const authValidators = require('../validators/auth');
+const lenderValidators = require('../validators/lender');
+const paymentController = require('../controllers/payment');
 const router = require('express').Router();
+const settingsController = require('../controllers/settings');
 const userValidators = require('../validators/user');
 const verifyRole = require('../middleware/verifyRole');
-const verifyToken = require('../middleware/verifyToken');
-const lenderValidators = require('../validators/lender');
-const lenderController = require('../controllers/lender');
-const paymentController = require('../controllers/payment');
-const settingsController = require('../controllers/settings');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);
@@ -56,7 +57,7 @@ router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
 });
 
 router.post('/verify', async (req, res) => {
-    const { error } = lenderValidators.verifyReg(req.body);
+    const { error } = authValidators.verify(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const isVerified = await lenderController.verifySignUp(req.body);
@@ -65,24 +66,6 @@ router.post('/verify', async (req, res) => {
 
     return res.status(200).send(isVerified);
 });
-
-router.post('/login', async (req, res) => {
-    const { error } = lenderValidators.login(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const lender = await lenderController.login(
-        req.body.email,
-        req.body.password
-    );
-    if (lender.hasOwnProperty('errorCode'))
-        return res.status(lender.errorCode).send(lender.message);
-
-    return res.status(200).send(lender);
-});
-
-router.post('/logout', (req, res) => {
-    return res.sendStatus(204);
-})
 
 router.post('/password', async (req, res) => {
     const { error } = lenderValidators.changePassword(req.body);
@@ -242,11 +225,6 @@ router.post(
     }
 );
 
-router.post('/token', async (req, res) => {
-    const refreshToken = req.header('x-auth-token');
-
-    const token = await lenderController.getToken(refreshToken);
-});
 
 router.post('/forms/:id', async (req, res) => {
     const response = await lenderController.guestLoanReq(req.body);

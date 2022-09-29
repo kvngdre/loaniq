@@ -10,7 +10,7 @@ const userController = require('../../controllers/user');
 const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const logger = require('../../utils/logger')('loanManager.js');
-const customerController = require('../../controllers/customer');
+const customerController = require('../../controllers/customerController');
 const PendingEditController = require('../../controllers/pendingEdit');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 

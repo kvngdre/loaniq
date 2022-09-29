@@ -1,7 +1,6 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const redisService = require('../services/redis');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const schemaOptions = { timestamps: true, versionKey: false };
@@ -162,6 +161,11 @@ const lenderSchema = new mongoose.Schema(
             type: String,
             default: 'Africa/Lagos',
         },
+
+        refreshTokens: {
+            type: [String],
+            default: null
+        }
     },
     schemaOptions
 );
@@ -171,39 +175,40 @@ lenderSchema.plugin(AutoIncrement, { inc_field: 'urlId' });
 lenderSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
-            id: this._id,
+            id: this._id.toString(),
             lenderId: this._id,
             email: this.email,
             active: this.active,
             emailVerified: this.emailVerified,
             role: this.role,
-            balance: this.balance,
             lastLoginTime: this.lastLoginTime,
         },
-        config.get('jwt.secret'),
+        config.get('jwt.secret.access'),
         {
-            expiresIn: '10m',
-            issuer: config.get('jwt.issuer')
+            expiresIn: parseInt(config.get('jwt.access_time')),
+            issuer: config.get('jwt.issuer'),
         }
     );
 };
 
-lenderSchema.methods.generateRefreshToken = function () {
-    
-    return jwt.sign(
+lenderSchema.methods.generateRefreshToken = async function () {
+    const refreshToken =  jwt.sign(
         {
-            id: this._id,
-            email: this.email,
-            type: config.get('jwt.refresh'),
+            id: this._id.toString(),
         },
-        config.get('jwt.secret'),
+        config.get('jwt.secret.refresh'),
         {
-            audience: 'API',
-            expiresIn: config.get('jwt.refresh_time'),
-            issuer: config.get('jwt.issuer')
-
+            audience: config.get('jwt.audience'),
+            expiresIn: parseInt(config.get('jwt.refresh_time')),
+            issuer: config.get('jwt.issuer'),
         }
     );
+    
+    this.refreshTokens.push(refreshToken);
+
+    this.save();
+
+    return refreshToken;
 };
 
 const Lender = mongoose.model('Lender', lenderSchema);

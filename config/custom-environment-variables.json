@@ -1,25 +1,13 @@
 {
+    "crypto": {
+        "initVector": "INIT_VECTOR",
+        "secret_key": "SECURITY_KEY"
+    },
     "db": {
         "dev_database_uri": "DEV_DATABASE_URI",
         "test_database_uri": "TEST_DATABASE_URI",
         "prod_database_uri": "PROD_DATABASE_URI",
         "database_password": "DATABASE_PASSWORD"
-    },
-    "jwt": {
-        "secret": "JWT_PRIVATE_KEY",
-        "access": "JWT_ACCESS",
-        "access_time": "JWT_ACCESS_TIME",
-        "refresh": "JWT_REFRESH",
-        "refresh_time": "JWT_REFRESH_TIME",
-        "audience": "JWT_AUDIENCE",
-        "issuer": "JWT_ISSUER"
-    },
-    "salt_rounds": "SALT",
-    "mail": {
-        "password": "USER_EMAIL_PASSWORD"
-    },
-    "paystack": {
-        "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
     },
     "flutterwave": {
         "flw_public_key": "FLW_PUBLIC_KEY",
@@ -27,8 +15,25 @@
         "flw_encryption_key": "FLW_ENCRYPTION_KEY",
         "flw_webhook_hash": "FLW_WEBHOOK_HASH"
     },
-    "crypto": {
-        "initVector": "INIT_VECTOR",
-        "secret_key": "SECURITY_KEY"
-    }
+    "jwt": {
+        "secret": {
+            "access": "JWT_ACCESS_KEY",
+            "refresh": "JWT_REFRESH_KEY"
+        },
+        "access_time": "JWT_ACCESS_TIME",
+        "refresh_time": "JWT_REFRESH_TIME",
+        "audience": "JWT_AUDIENCE",
+        "issuer": "JWT_ISSUER"
+    },
+    "mail": {
+        "password": "USER_EMAIL_PASSWORD"
+    },
+    "paystack": {
+        "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
+    },
+    "redis": {
+        "host": "REDIS_HOST",
+        "port": "REDIS_PORT"
+    },
+    "salt_rounds": "SALT"
 }

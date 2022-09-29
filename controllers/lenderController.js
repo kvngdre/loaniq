@@ -17,7 +17,7 @@ const ctrlFuncs = {
         try {
             const encryptedPassword = await bcrypt.hash(
                 payload.password,
-                config.get('salt_rounds')
+                parseInt(config.get('salt_rounds'))
             );
             payload.password = encryptedPassword;
 
@@ -41,7 +41,7 @@ const ctrlFuncs = {
 
             return {
                 message: 'Account created and OTP has been sent to your email.',
-                data: _.omit(lender._doc, ['otp', 'password']),
+                data: _.omit(lender._doc, ['otp', 'password', 'refreshTokens']),
             };
         } catch (exception) {
             logger.error({
@@ -144,7 +144,7 @@ const ctrlFuncs = {
 
     verifySignUp: async function (payload) {
         try {
-            const lender = await Lender.findOne({ email: payload.email });
+            const lender = await Lender.findOne({ email: payload.email }, { refreshTokens: 0 });
             if (!lender)
                 return {
                     errorCode: 401,
@@ -163,7 +163,7 @@ const ctrlFuncs = {
                 };
 
             if (lender.emailVerified)
-                return { errorCode: 409, message: 'Email has been verified.' };
+                return { errorCode: 409, message: 'Account has been verified.' };
 
             if (
                 Date.now() > lender.otp.expires ||
@@ -237,10 +237,10 @@ const ctrlFuncs = {
             await lender.updateOne({ lastLoginTime: new Date() });
 
             lender._doc.accessToken = lender.generateAccessToken();
-            lender._doc.refreshToken = lender.generateRefreshToken();
+            lender._doc.refreshToken = await lender.generateRefreshToken();
 
             return {
-                message: 'Login Successful.',
+                message: 'Login success.',
                 data: _.omit(lender._doc, ['password', 'otp']),
             };
         } catch (exception) {
@@ -385,9 +385,10 @@ const ctrlFuncs = {
             if (!lender)
                 return { errorCode: 404, message: 'Lender not found.' };
 
+                
             return {
                 message: 'Success',
-                balance: lender.balance,
+                data: lender.balance,
             };
         } catch (exception) {
             logger.error({

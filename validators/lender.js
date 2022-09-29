@@ -12,6 +12,11 @@ const addressSchema = Joi.string().min(10).max(70).messages({
     'string.max': `Company address is too long.`,
 });
 
+const emailSchema = Joi.string().email().min(10).max(50).messages({
+    'string.min': `Invalid email address.`,
+    'string.max': `Invalid email address.`,
+});
+
 const cacNumberSchema = Joi.string()
     .pattern(/^RC[0-9]{3,8}/)
     .invalid('RC0000 RC000')
@@ -28,11 +33,6 @@ const phoneSchema = Joi.string()
         'string.pattern.base':
             'Invalid phone number, please include international dialling code.',
     });
-
-const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': `Invalid email address.`,
-    'string.max': `Invalid email address.`,
-});
 
 const passwordSchema = joiPassword
     .string()
@@ -51,10 +51,6 @@ const passwordSchema = joiPassword
             '{#label} should contain at least {#min} numbers.',
         'password.noWhiteSpaces': '{#label} should not contain white spaces.',
     });
-
-const otpSchema = Joi.string()
-    .pattern(/^[0-9]{8}$/)
-    .messages({ 'string.pattern.base': 'Invalid OTP' });
 
 const supportSchema = Joi.object({
     email: emailSchema.required(),
@@ -100,40 +96,6 @@ const validators = {
         });
 
         return schema.validate(lender);
-    },
-
-    verifyReg: function (lender) {
-        const schema = Joi.object({
-            email: emailSchema.required(),
-            otp: otpSchema.required(),
-            password: Joi.string().max(40).required(),
-        });
-
-        return schema.validate(lender);
-    },
-
-    login: function (lender) {
-        const schema = Joi.object({
-            email: emailSchema.required(),
-            password: Joi.string().max(40).required(),
-        });
-
-        return schema.validate(lender);
-    },
-
-    changePassword: function (passwordObj) {
-        const schema = Joi.object({
-            otp: otpSchema.when('currentPassword', {
-                not: Joi.exist(),
-                then: Joi.required(),
-                otherwise: Joi.optional(),
-            }),
-            email: emailSchema.required(),
-            currentPassword: Joi.string().max(40),
-            newPassword: passwordSchema.required(),
-        });
-
-        return schema.validate(passwordObj);
     },
 
     createSettings: function (settings) {

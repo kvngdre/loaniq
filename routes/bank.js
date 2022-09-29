@@ -1,8 +1,8 @@
-const router = require('express').Router();
-const bankController = require('../controllers/bank');
-const verifyRole = require('../middleware/verifyRole');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken } = require('../middleware/verifyJWT');
+const bankController = require('../controllers/bankController');
 const bankValidators = require('../validators/bank');
+const router = require('express').Router();
+const verifyRole = require('../middleware/verifyRole');
 
 router.post('/', verifyToken, verifyRole(['Lender', 'Admin', 'Master']), async (req, res) => {
     const { error } = bankValidators.validateCreation(req.body);

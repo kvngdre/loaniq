@@ -1,10 +1,10 @@
-const router = require('express').Router();
 const concatErrorMsg = require('../utils/concatMsg');
+const customerController = require('../controllers/customerController');
+const customerValidators = require('../validators/customer');
+const router = require('express').Router();
+const uploadMultipleFiles = require('../middleware/fileUpload');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const customerValidators = require('../validators/customer');
-const customerController = require('../controllers/customer');
-const uploadMultipleFiles = require('../middleware/fileUpload');
 
 router.post(
     '/',
