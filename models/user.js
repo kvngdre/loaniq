@@ -1,3 +1,4 @@
+const { roles } = require('../utils/constants');
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -36,10 +37,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: function () {
-                return this.name.first.concat(
-                    this.name.middle ? ` ${this.name.middle}` : '',
-                    ` ${this.name.last}`
-                );
+                return this.name.first.concat(` ${this.name.last}`);
             },
         },
 
@@ -96,13 +94,7 @@ const userSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            enum: [
-                'Admin',
-                'Credit',
-                'Master',
-                'Loan Agent',
-                'Operations',
-            ],
+            enum: Object.values(roles),
             required: true,
         },
 
@@ -135,7 +127,6 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.virtual('fullName').get(function() {
-    console.log(this)
     return this.name.first.concat(
         this.name.middle ? ` ${this.name.middle}` : '',
         ` ${this.name.last}`
@@ -153,7 +144,6 @@ userSchema.methods.generateToken = function () {
             active: this.active,
             emailVerified: this.emailVerified,
             timeZone: this.timeZone,
-            lastLoginTime: this.lastLoginTime,
         },
         config.get('jwt.secret'), {expiresIn: '8h'}
     );

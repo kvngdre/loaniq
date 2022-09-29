@@ -2,7 +2,7 @@ const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/user');
-const userController = require('../controllers/user');
+const userController = require('../controllers/userController');
 
 router.post(
     '/',

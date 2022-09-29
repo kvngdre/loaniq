@@ -4,13 +4,13 @@ const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
 const generateOTP = require('../utils/generateOTP');
 const Lender = require('../models/lender');
-const loanController = require('./loan');
+const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
 const sendOTPMail = require('../utils/mailer');
 const Settings = require('../models/settings');
-const txnController = require('./transaction');
+const txnController = require('./transactionController');
 const User = require('../models/user');
-const userController = require('./user');
+const userController = require('./userController');
 
 const ctrlFuncs = {
     signUp: async function (payload) {

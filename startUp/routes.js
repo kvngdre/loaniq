@@ -1,13 +1,16 @@
 const authRouter = require('../routes/auth');
-const banksRouter = require('../routes/bank');
+const banksRouter = require('../routes/bankRoutes');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const corsOptions = require('../config/corsOptions');
+const credentials = require('../middleware/credentials');
 const customerRouter = require('../routes/customer');
 const errorHandler = require('../middleware/errorHandler');
 const express = require('express');
 const helmet = require('helmet');
-const lenderRouter = require('../routes/lender');
+const lenderRouter = require('../routes/lenderRoutes');
 const loanRouter = require('../routes/loan');
+const morgan = require('morgan');
 const originRouter = require('../routes/origin');
 const pendingEditRouter = require('../routes/pendingEdit');
 const refreshTokenRouter = require('../routes/refreshTokenRoutes');
@@ -17,19 +20,13 @@ const transactionRouter = require('../routes/transaction');
 const userRouter = require('../routes/user');
 
 module.exports = function (app) {
-    // Cross Origin Resource Sharing
-    app.use(cors());
-
-
+    // middleware
+    app.use(morgan('dev'));
+    app.use(credentials);
+    app.use(cors(corsOptions));
     app.use(helmet());
-
-    // built-in middleware for json
     app.use(express.json());
-
-    // built-in middleware to handle urlencoded form data
-    app.use(express.urlencoded({ extended: true }));
-
-    // 
+    app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser());
 
     // Route handlers

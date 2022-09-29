@@ -6,12 +6,12 @@ const Origin = require('../../models/origin');
 const Segment = require('../../models/segment');
 const Customer = require('../../models/customer');
 const PendingEdit = require('../../models/pendingEdit');
-const userController = require('../../controllers/user');
+const userController = require('../../controllers/userController');
 const updateLoanStatus = require('../../utils/loanStatus');
 const pickRandomUser = require('../../utils/pickRandomUser');
 const logger = require('../../utils/logger')('loanManager.js');
 const customerController = require('../../controllers/customerController');
-const PendingEditController = require('../../controllers/pendingEdit');
+const PendingEditController = require('../../controllers/pendingEditController');
 const convertToDotNotation = require('../../utils/convertToDotNotation');
 
 const manager = {

@@ -1,12 +1,12 @@
-const { verifyToken } = require('../middleware/verifyJWT');
 const lenderController = require('../controllers/lenderController');
 const authValidators = require('../validators/auth');
 const lenderValidators = require('../validators/lender');
-const paymentController = require('../controllers/payment');
+const paymentController = require('../controllers/paymentController');
 const router = require('express').Router();
-const settingsController = require('../controllers/settings');
+const settingsController = require('../controllers/settingsController');
 const userValidators = require('../validators/user');
 const verifyRole = require('../middleware/verifyRole');
+const verifyToken = require('../middleware/verifyToken');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);

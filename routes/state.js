@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const debug = require('debug')('app:stateRoutes');
 const verifyRole = require('../middleware/verifyRole');
-const stateController = require('../controllers/state');
+const stateController = require('../controllers/stateController');
 const verifyToken = require('../middleware/verifyToken');
 const stateValidators = require('../validators/state');
 

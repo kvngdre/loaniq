@@ -1,18 +1,18 @@
-const Lender = require('../models/lender');
-const User = require('../models/user');
+const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const config = require('config');
-const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger')('authCtrl.js');
 const debug = require('debug')('app:authCtrl');
-const _ = require('lodash');
+const Lender = require('../models/lender');
+const logger = require('../utils/logger')('authCtrl.js');
 const ServerError = require('../errors/serverError');
+const User = require('../models/user');
 
-async function login(type, email, password, res) {
+async function login(type, email, password, cookies, res) {
     try {
         if (type === 'lenders') {
             var foundUser = await Lender.findOne({ email });
         } else {
+            // type is equal to users
             var foundUser = await User.findOne({ email });
         }
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
@@ -24,10 +24,11 @@ async function login(type, email, password, res) {
             (foundUser.lastLoginTime === null || !foundUser.emailVerified) &&
             !foundUser.active
         ) {
+            // new unverified user
             return {
                 message: 'success',
                 new: true,
-                data: _.omit(foundUser._doc, ['password', 'otp']),
+                data: _.omit(foundUser._doc, ['password', 'otp', 'refreshTokens']),
             };
         }
 
@@ -38,24 +39,50 @@ async function login(type, email, password, res) {
             );
 
         const accessToken = foundUser.generateAccessToken();
-        const refreshToken = await foundUser.generateRefreshToken();
+        const newRefreshToken = foundUser.generateRefreshToken();
+
+        if (cookies?.jwt) {
+            // If found jwt cookie, del from db and clear cookie.
+            foundUser.refreshTokens = foundUser.refreshTokens.filter(
+                (rt) => rt !== cookies.jwt
+            );
+            // TODO: uncomment secure
+            res.clearCookie('jwt', {
+                httpOnly: true,
+                sameSite: 'None',
+                // secure: true,
+            });
+        }
 
         await foundUser.updateOne({
             lastLoginTime: new Date(),
-            $push: { refreshToken: refreshToken },
+            $push: { refreshTokens: newRefreshToken },
         });
 
+        // foundUser.lastLoginTime = new Date();
+        // foundUser.refreshTokens.push(newRefreshToken);
+        // await foundUser.save();
+
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
-        res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: expires });
-        const currentUser = {
-            ..._.omit(foundUser._doc, ['password', 'otp', 'refreshTokens']),
-            accessToken,
-        };
+        // TODO: uncomment secure in prod
+        res.cookie('jwt', newRefreshToken, {
+            httpOnly: true,
+            sameSite: 'None',
+            // secure: true,
+            maxAge: expires,
+        });
 
         return {
             message: 'Login success.',
             new: false,
-            data: currentUser,
+            data: {
+                user: _.omit(foundUser._doc, [
+                    'password',
+                    'otp',
+                    'refreshTokens',
+                ]),
+                accessToken,
+            },
         };
     } catch (exception) {
         logger.error({
@@ -85,21 +112,28 @@ async function logout(type, cookies, res) {
             );
 
         if (!foundUser) {
-            const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
-            res.clearCookie('jwt', { httpOnly: true, maxAge: expires });
+            // TODO: uncomment secure
+            res.clearCookie('jwt', {
+                httpOnly: true,
+                sameSite: 'None',
+                // secure: true,
+            });
 
             return new ServerError(204);
         }
 
         // deleting refresh token from user refresh tokens
-        const index = foundUser.refreshTokens.findIndex(token => token === refreshToken);
-        foundUser.refreshTokens.splice(index, 1);
-
+        foundUser.refreshTokens = foundUser.refreshTokens.filter(
+            (rt) => rt !== refreshToken
+        );
         await foundUser.save();
 
-        // TODO: add the secure: true to cookie options in prod. only serves on https
-        const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
-        res.clearCookie('jwt', { httpOnly: true, maxAge: expires });
+        // TODO: uncomment secure
+        res.clearCookie('jwt', {
+            httpOnly: true,
+            sameSite: 'None',
+            // secure: true,
+        });
 
         return {
             message: 'logged out',

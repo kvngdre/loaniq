@@ -9,7 +9,13 @@ router.post('/:type/login', async (req, res) => {
     const { error } = authValidators.login(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const response = await authController.login(type, req.body.email, req.body.password, res);
+    const response = await authController.login(
+        type,
+        req.body.email,
+        req.body.password,
+        req.cookies,
+        res
+    );
     if (response.hasOwnProperty('errorCode'))
         return res.status(response.errorCode).send(response.message);
 

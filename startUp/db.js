@@ -1,6 +1,6 @@
 const config = require('config');
-const mongoose = require('mongoose');
 const debug = require('debug')('app:db');
+const mongoose = require('mongoose');
 
 function connectDB() {
     let databaseURI = null;
@@ -17,7 +17,10 @@ function connectDB() {
             );
 
     mongoose
-        .connect(databaseURI)
+        .connect(databaseURI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        })
         .then(() => debug('Connected to MongoDB.'))
         .catch((error) => debug(`Failed to connect to MongoDB: ${error}`));
 }

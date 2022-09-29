@@ -2,7 +2,7 @@ const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const pendingEditValidators = require('../validators/pendingEdit');
-const pendingEditController = require('../controllers/pendingEdit');
+const pendingEditController = require('../controllers/pendingEditController');
 
 router.post(
     '/',

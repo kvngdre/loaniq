@@ -2,6 +2,7 @@ const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
+const { roles } = require('../utils/constants');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -75,7 +76,7 @@ const lenderSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            default: 'Lender',
+            default: roles.lender,
         },
 
         balance: {
@@ -181,18 +182,18 @@ lenderSchema.methods.generateAccessToken = function () {
             active: this.active,
             emailVerified: this.emailVerified,
             role: this.role,
-            lastLoginTime: this.lastLoginTime,
         },
         config.get('jwt.secret.access'),
-        {
+        {   
+            audience: config.get('jwt.audience'),
             expiresIn: parseInt(config.get('jwt.access_time')),
             issuer: config.get('jwt.issuer'),
         }
     );
 };
 
-lenderSchema.methods.generateRefreshToken = async function () {
-    const refreshToken =  jwt.sign(
+lenderSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
         {
             id: this._id.toString(),
         },
@@ -203,12 +204,6 @@ lenderSchema.methods.generateRefreshToken = async function () {
             issuer: config.get('jwt.issuer'),
         }
     );
-    
-    this.refreshTokens.push(refreshToken);
-
-    this.save();
-
-    return refreshToken;
 };
 
 const Lender = mongoose.model('Lender', lenderSchema);

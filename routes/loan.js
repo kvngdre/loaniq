@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const router = require('express').Router();
 const concatErrorMsg = require('../utils/concatMsg');
-const loanController = require('../controllers/loan');
+const loanController = require('../controllers/loanController');
 const verifyRole = require('../middleware/verifyRole');
 const { loanValidators } = require('../validators/loan');
 const verifyToken = require('../middleware/verifyToken');

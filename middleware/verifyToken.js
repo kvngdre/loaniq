@@ -5,21 +5,33 @@ const logger = require('../utils/logger')('verifyToken.js');
 
 function verifyToken(req, res, next) {
     try {
-        // const [scheme, token] = req.header('auth-token').split(' ') || req.header('Authorization').split(' ');
-        const token = req.header('auth-token') || req.header('Authorization')
-
-        // if(scheme !== 'Bearer') return res.status(401).send('Invalid token provided.');
-
+        // const token = req.header('auth-token') || req.header('Authorization')
+        const authHeader =
+            req.header('auth-token') || req.header('Authorization');
+        if (!authHeader) return res.sendStatus(401);
+        
+        const [scheme, token] = authHeader.split(' ');
+        if (scheme !== 'Bearer') return res.sendStatus(401);
         if (!token)
             return res.status(401).send('Access Denied. No token provided.');
 
-        const isVerified = jwt.verify(token, config.get('jwt.secret.access'));
+        const decoded = jwt.verify(token, config.get('jwt.secret.access'));
+        if (
+            decoded.iss !== config.get('jwt.issuer') ||
+            decoded.aud !== config.get('jwt.audience')
+        ) {
+            return res.status(403).send('Invalid token provided.');
+        }
 
-        req.user = isVerified;
+        req.user = decoded;
 
         next();
     } catch (exception) {
-        logger.error({method: 'verifyToken', message: exception.message, meta: exception.stack });
+        logger.error({
+            method: 'verifyToken',
+            message: exception.message,
+            meta: exception.stack,
+        });
         debug(exception.message);
         return res.status(403).send('Invalid token provided.');
     }

@@ -5,7 +5,7 @@ const Loan = require('../models/loan');
 const originController = require('./origin');
 const Customer = require('../models/customer');
 const debug = require('debug')('app:customerCtrl');
-const PendingEditController = require('./pendingEdit');
+const PendingEditController = require('./pendingEditController');
 const logger = require('../utils/logger')('customerCtrl.js');
 const convertToDotNotation = require('../utils/convertToDotNotation');
 

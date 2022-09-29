@@ -2,7 +2,7 @@ const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const transactionValidators = require('../validators/transaction');
-const transactionController = require('../controllers/transaction');
+const transactionController = require('../controllers/transactionController');
 
 router.post('/', async (req, res) => {
     const newTransaction = await transactionController.create(req.body);
