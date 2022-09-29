@@ -70,31 +70,9 @@ router.patch(
     }
 );
 
-router.post('/verify', async (req, res) => {
-    const { error } = userValidators.validateUserVerification(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const response = await userController.verifyUser(req.body);
-    if (response.hasOwnProperty('errorCode'))
-        return res.status(response.errorCode).send(response.message);
-
-    return res.status(200).send(response);
-});
-
-router.post('/login', async (req, res) => {
-    const { error } = userValidators.validateLogin(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const response = await userController.login(req.body.email, req.body.password);
-    if (response.hasOwnProperty('errorCode'))
-        return res.status(response.errorCode).send(response.message);
-
-    return res.status(200).send(response);
-});
-
 router.post('/password', async (req, res) => {
-    const { error } = userValidators.validateChangePassword(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    // const { error } = userValidators.validateChangePassword(req.body);
+    // if (error) return res.status(400).send(error.details[0].message);
 
     const response = await userController.changePassword(
         req.body.email,

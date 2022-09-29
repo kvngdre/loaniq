@@ -5,9 +5,9 @@ const logger = require('../utils/logger')('verifyToken.js');
 
 function verifyToken(req, res, next) {
     try {
-        // const token = req.header('auth-token') || req.header('Authorization')
+        // const token = req.header('authorization') || req.header('Authorization')
         const authHeader =
-            req.header('auth-token') || req.header('Authorization');
+            req.header('authorization') || req.header('Authorization');
         if (!authHeader) return res.sendStatus(401);
         
         const [scheme, token] = authHeader.split(' ');

@@ -1,6 +1,7 @@
+const { roles } = require('../utils/constants');
 const concatErrorMsg = require('../utils/concatMsg');
 const customerController = require('../controllers/customerController');
-const customerValidators = require('../validators/customer');
+const customerValidators = require('../validators/customerValidator');
 const router = require('express').Router();
 const uploadMultipleFiles = require('../middleware/fileUpload');
 const verifyRole = require('../middleware/verifyRole');
@@ -9,11 +10,10 @@ const verifyToken = require('../middleware/verifyToken');
 router.post(
     '/',
     verifyToken,
-    verifyRole(['Admin', 'Credit', 'Loan Agent']),
+    verifyRole([roles.admin, roles.credit, roles.agent, roles.operations, roles.master]),
     uploadMultipleFiles,
     async (req, res) => {
         // TODO: add to pending for agent
-        // TODO: pass the lender id from guest request
         const { error } = customerValidators.create(req.body);
         if (error) {
             const errorResponse = concatErrorMsg(
@@ -34,7 +34,6 @@ router.post(
 router.post(
     '/all',
     verifyToken,
-    verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const customers = await customerController.getAll(req.user, req.body);
         if (customers.hasOwnProperty('errorCode'))
@@ -47,7 +46,6 @@ router.post(
 router.get(
     '/:id',
     verifyToken,
-    verifyRole(['Lender', 'Admin', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const customer = await customerController.getOne(
             req.params.id,
@@ -79,7 +77,7 @@ router.post(
 router.patch(
     '/:id',
     verifyToken,
-    verifyRole(['Admin', 'Credit', 'Loan Agent']),
+    verifyRole([roles.admin, roles.credit, roles.agent, roles.operations, roles.master]),
     async (req, res) => {
         if (Object.entries(req.body).length == 0) return res.sendStatus(400);
 

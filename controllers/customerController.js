@@ -1,13 +1,15 @@
 const _ = require('lodash');
-const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
-const Loan = require('../models/loan');
-const originController = require('./origin');
+const { roles } = require('../utils/constants');
+const convertToDotNotation = require('../utils/convertToDotNotation');
 const Customer = require('../models/customer');
 const debug = require('debug')('app:customerCtrl');
-const PendingEditController = require('./pendingEditController');
+const Loan = require('../models/loan');
 const logger = require('../utils/logger')('customerCtrl.js');
-const convertToDotNotation = require('../utils/convertToDotNotation');
+const mongoose = require('mongoose');
+const originController = require('./origin');
+const PendingEditController = require('./pendingEditController');
+const ServerError = require('../errors/serverError');
 
 const ctrlFuncs = {
     create: async function (user, payload) {
@@ -26,8 +28,13 @@ const ctrlFuncs = {
 
             let customer = await Customer.findOne(queryParams);
 
-            if (customer) return { errorCode: 409, message: 'Customer exists' };
-            if (!customer) customer = new Customer(payload);
+            // Customer found for lender.
+            if (customer !== null)
+                return new ServerError(
+                    409,
+                    'Customer with this IPPIS already exist.'
+                );
+            else customer = new Customer(payload);
             // else {
             //     // Update info
             //     // TODO: do a redirect
@@ -43,6 +50,7 @@ const ctrlFuncs = {
             customer.addLender(user.lenderId);
 
             // TODO: uncomment this later
+            // TODO: api call to deduct
             // const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
             // if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
             // customer.netPay.value = originCopy.netPays[0];
@@ -54,7 +62,11 @@ const ctrlFuncs = {
                 data: customer,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'create',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
@@ -62,21 +74,18 @@ const ctrlFuncs = {
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
-                return {
-                    errorCode: 409,
-                    message: field + ' has already been taken.',
-                };
+                return new ServerError(409, field + ' already in use');
             }
 
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return {
-                    errorCode: 400,
-                    message: exception.errors[field].message.replace('Path', ''),
-                };
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
             }
 
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -84,7 +93,8 @@ const ctrlFuncs = {
         try {
             let customers = [];
 
-            if (user.role === 'Loan Agent') {
+            // if loan agent
+            if (user.role === roles.agent) {
                 result = await Loan.aggregate([
                     {
                         $match: {
@@ -122,6 +132,7 @@ const ctrlFuncs = {
                     customers.push(customer.customers[0]);
                 }
             } else {
+                // user not a loan agent
                 const queryParams = Object.assign(
                     { lenders: user.lenderId },
                     _.omit(filters, [
@@ -184,16 +195,20 @@ const ctrlFuncs = {
             }
 
             if (customers.length == 0)
-                return { errorCode: 404, message: 'No customers found.' };
+                return new ServerError(404, 'No customers found');
 
             return {
-                message: 'Success',
+                message: 'success',
                 data: customers,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getAll',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -203,7 +218,7 @@ const ctrlFuncs = {
                 ? { _id: id, lenders: user.lenderId }
                 : { 'employmentInfo.ippis': id, lenders: user.lenderId };
 
-            const customer = await Customer.findOne(queryParams);
+            const customer = await Customer.findOne(queryParams).exec();
             if (!customer)
                 return { errorCode: 404, message: 'Customer not found.' };
 

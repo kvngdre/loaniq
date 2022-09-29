@@ -33,4 +33,18 @@ router.get('/:type/logout', async (req, res) => {
     return res.status(204).send(response);
 });
 
+router.post('/:type/verify', async (req, res) => {
+    const type = req.params.type;
+    if (!['lenders', 'users'].includes(type)) return res.sendStatus(400);
+
+    const { error } = authValidators.verify(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const isVerified = await authController.verifySignUp(type, req.body.email, req.body.password, req.body.otp);
+    if (isVerified.hasOwnProperty('errorCode'))
+        return res.status(isVerified.errorCode).send(isVerified.message);
+
+    return res.status(200).send(isVerified);
+});
+
 module.exports = router;

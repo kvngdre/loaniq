@@ -1,13 +1,13 @@
-const Bank = require('../models/bank');
+const Bank = require('../models/bankModel');
 const debug = require('debug')('app:bankModel');
 const logger = require('../utils/logger')('bankCtrl.js');
+const ServerError = require('../errors/serverError');
 
-const CtrlFuncs = {
+module.exports = {
     /**
      * Creates a new bank.
      * @param {string} name The name of the bank.
      * @param {string} code The sort code of the bank.
-     * @returns {{message: string, data: Object}} The new bank object
      */
     create: async function (name, code) {
         try {
@@ -19,23 +19,24 @@ const CtrlFuncs = {
             await newBank.save();
 
             return {
-                message: 'Bank created.',
+                message: 'Bank created',
                 data: newBank,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'create',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
 
-                return {
-                    errorCode: 409,
-                    message: field + ' has already been taken.',
-                };
+                return new ServerError(409, field + ' already in use');
             }
 
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -47,72 +48,81 @@ const CtrlFuncs = {
     getOne: async function (id) {
         try {
             const bank = await Bank.findById(id);
-            if (!bank)
-                return { errorCode: 404, message: 'Bank does not exist.' };
+            if (!bank) return new ServerError(404, 'Bank not found');
 
             return {
-                message: 'Success',
+                message: 'success',
                 data: bank,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getOne',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
-    getAll: async function (queryParams = {}) {
+    getAll: async function () {
         try {
-            const banks = await Bank.find(queryParams);
+            const banks = await Bank.find();
             if (banks.length === 0)
-                return { errorCode: 404, message: 'No banks found.' };
+                return new ServerError(404, 'Banks not found');
 
             return {
-                message: 'Success',
+                message: 'success',
                 data: banks,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getAll',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
-    update: async function (id, requestBody) {
+    update: async function (id, alteration) {
         try {
-            const bank = await Bank.findByIdAndUpdate(
-                { _id: id },
-                requestBody,
-                { new: true }
-            );
-            if (!bank) return { errorCode: 404, message: 'Bank not found.' };
+            const bank = await Bank.findByIdAndUpdate(id, alteration, {
+                new: true,
+            });
 
             return {
-                message: 'Bank Updated.',
+                message: 'Bank updated',
                 data: bank,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     delete: async function (id) {
         try {
-            const bank = await Bank.findByIdAndRemove(id);
-            if (!bank) return { errorCode: 404, message: 'Bank not found.' };
+            const deletedBank = await Bank.findByIdAndRemove(id);
 
             return {
-                message: 'Bank Deleted.',
-                data: bank,
+                message: 'Bank deleted',
+                data: deletedBank,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 };
-
-module.exports = CtrlFuncs;

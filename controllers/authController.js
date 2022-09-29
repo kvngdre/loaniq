@@ -28,7 +28,11 @@ async function login(type, email, password, cookies, res) {
             return {
                 message: 'success',
                 new: true,
-                data: _.omit(foundUser._doc, ['password', 'otp', 'refreshTokens']),
+                data: _.omit(foundUser._doc, [
+                    'password',
+                    'otp',
+                    'refreshTokens',
+                ]),
             };
         }
 
@@ -58,10 +62,6 @@ async function login(type, email, password, cookies, res) {
             lastLoginTime: new Date(),
             $push: { refreshTokens: newRefreshToken },
         });
-
-        // foundUser.lastLoginTime = new Date();
-        // foundUser.refreshTokens.push(newRefreshToken);
-        // await foundUser.save();
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
@@ -149,7 +149,87 @@ async function logout(type, cookies, res) {
     }
 }
 
+async function verifySignUp(type, email, password, otp, cookie) {
+    try {
+        if (type === 'lenders') {
+            var foundUser = await Lender.findOne({ email });
+        } else {
+            // type is equal to users
+            var foundUser = await User.findOne({ email });
+        }
+        console.log(foundUser)
+        if (!foundUser) return new ServerError(401, 'Invalid credentials');
+
+        const isMatch = await bcrypt.compare(password, foundUser.password);
+        if (!isMatch) return new ServerError(401, 'Invalid credentials');
+
+        if (foundUser.emailVerified)
+            return new ServerError(409, 'Account has already been verified');
+
+        if (Date.now() > foundUser.otp.expires || otp !== foundUser.otp.OTP) {
+            // OTP not valid or expired.
+            return new ServerError(401, 'Invalid OTP');
+        }
+
+        const accessToken = foundUser.generateAccessToken();
+        const newRefreshToken = foundUser.generateRefreshToken();
+
+        if (cookies?.jwt) {
+            // If found jwt cookie, del from db and clear cookie.
+            foundUser.refreshTokens = foundUser.refreshTokens.filter(
+                (rt) => rt !== cookies.jwt
+            );
+            // TODO: uncomment secure
+            res.clearCookie('jwt', {
+                httpOnly: true,
+                sameSite: 'None',
+                // secure: true,
+            });
+        }
+
+        await foundUser.updateOne({
+            emailVerified: true,
+            'otp.OTP': null,
+            active: true,
+            lastLoginTime: new Date(),
+            $push: { refreshTokens: newRefreshToken },
+        });
+
+        const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
+        // TODO: uncomment secure in prod
+        res.cookie('jwt', newRefreshToken, {
+            httpOnly: true,
+            sameSite: 'None',
+            // secure: true,
+            maxAge: expires,
+        });
+
+
+        return {
+            message: 'Email verified and account activated',
+            new: false,
+            data: {
+                user: _.omit(foundUser._doc, [
+                    'password',
+                    'otp',
+                    'refreshTokens',
+                ]),
+                accessToken,
+            },
+        };
+    } catch (exception) {
+        logger.error({
+            method: 'verifySignUp',
+            message: exception.message,
+            meta: exception.stack,
+        });
+        debug(exception);
+        return { errorCode: 500, message: 'Something went wrong.' };
+    }
+}
+
 module.exports = {
     login,
     logout,
+    verifySignUp,
 };

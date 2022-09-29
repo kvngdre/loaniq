@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
 const bankNameSchema = Joi.string().min(8).max(20).messages({
-    'string.min': 'Bank name should be at least {#limit} characters long.',
-    'string.max': 'Bank name can not be at more than {#limit} characters long.',
+    'string.min': 'Bank name too short.',
+    'string.max': 'Bank name too long.',
 });
 
 const bankCodeSchema = Joi.string()
@@ -16,7 +16,7 @@ const bankCodeSchema = Joi.string()
     });
 
 const validators = {
-    validateCreation: function (bank) {
+    create: function (bank) {
         const schema = Joi.object({
             name: bankNameSchema.required(),
             code: bankCodeSchema.required(),
@@ -25,7 +25,7 @@ const validators = {
         return schema.validate(bank);
     },
 
-    validateEdit: function (bank) {
+    update: function (bank) {
         const schema = Joi.object({
             name: bankNameSchema,
             code: bankCodeSchema,

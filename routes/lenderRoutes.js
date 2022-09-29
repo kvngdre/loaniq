@@ -1,5 +1,5 @@
+const { roles } = require('../utils/constants');
 const lenderController = require('../controllers/lenderController');
-const authValidators = require('../validators/auth');
 const lenderValidators = require('../validators/lender');
 const paymentController = require('../controllers/paymentController');
 const router = require('express').Router();
@@ -9,7 +9,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
 router.post('/', async (req, res) => {
-    const { error } = lenderValidators.create(req.body);
+    const { error } = lenderValidators.signUp(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const lender = await lenderController.signUp(req.body);
@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
     return res.status(201).send(lender);
 });
 
-router.get('/', verifyToken, verifyRole('Master'), async (req, res) => {
+router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
     const lenders = await lenderController.getAll();
     if (lenders.hasOwnProperty('errorCode'))
         return res.status(lenders.errorCode).send(lenders.message);
@@ -31,7 +31,7 @@ router.get('/', verifyToken, verifyRole('Master'), async (req, res) => {
 router.get(
     '/:id?',
     verifyToken,
-    verifyRole(['Lender', 'Master']),
+    verifyRole([roles.lender, roles.master]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -43,7 +43,7 @@ router.get(
     }
 );
 
-router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
+router.patch('/:id?', verifyToken, verifyRole(roles.lender), async (req, res) => {
     const { error } = lenderValidators.update(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -54,17 +54,6 @@ router.patch('/:id?', verifyToken, verifyRole('Lender'), async (req, res) => {
         return res.status(404).send(lender.message);
 
     return res.status(200).send(lender);
-});
-
-router.post('/verify', async (req, res) => {
-    const { error } = authValidators.verify(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const isVerified = await lenderController.verifySignUp(req.body);
-    if (isVerified.hasOwnProperty('errorCode'))
-        return res.status(400).send(isVerified.message);
-
-    return res.status(200).send(isVerified);
 });
 
 router.post('/password', async (req, res) => {
@@ -86,7 +75,7 @@ router.post('/password', async (req, res) => {
 router.post(
     '/admin/new',
     verifyToken,
-    verifyRole('Lender'),
+    verifyRole(roles.lender),
     async (req, res) => {
         const { error } = userValidators.validateSignUp(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -102,7 +91,7 @@ router.post(
 router.post(
     '/settings',
     verifyToken,
-    verifyRole(['Lender', 'Master']),
+    verifyRole([roles.lender, roles.master]),
     async (req, res) => {
         const { value, error } = lenderValidators.createSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -118,7 +107,7 @@ router.post(
 router.get(
     '/settings/:id?',
     verifyToken,
-    verifyRole(['Lender', 'Master']),
+    verifyRole([roles.lender, roles.master]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -130,7 +119,7 @@ router.get(
     }
 );
 
-router.get('/settings', verifyToken, verifyRole('Master'), async (req, res) => {
+router.get('/settings', verifyToken, verifyRole(roles.master), async (req, res) => {
     const settings = await settingsController.getAll(req.user);
     if (settings.hasOwnProperty('errorCode'))
         return res.status(settings.errorCode).send(settings.message);
@@ -141,7 +130,7 @@ router.get('/settings', verifyToken, verifyRole('Master'), async (req, res) => {
 router.patch(
     '/settings/:id?',
     verifyToken,
-    verifyRole(['Lender', 'Master']),
+    verifyRole([roles.lender, roles.master]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -157,7 +146,7 @@ router.patch(
 );
 
 router.post('/otp', async (req, res) => {
-    const { error } = lenderValidators.otp(req.body);
+    const { error } = lenderValidators.email(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const otp = await lenderController.sendOTP(req.body.email);
@@ -170,7 +159,7 @@ router.post('/otp', async (req, res) => {
 router.get(
     '/balance/:id?',
     verifyToken,
-    verifyRole(['Admin', 'Lender', 'Master']),
+    verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -185,7 +174,7 @@ router.get(
 router.post(
     '/fund/:id?',
     verifyToken,
-    verifyRole(['Admin', 'Lender', 'Master']),
+    verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {
         const { error } = lenderValidators.fundAccount(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -206,7 +195,7 @@ router.post(
 router.post(
     '/deactivate/:id?',
     verifyToken,
-    verifyRole(['Lender', 'Master']),
+    verifyRole([roles.lender, roles.master]),
     async (req, res) => {
         const { error } = lenderValidators.deactivate(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -225,7 +214,6 @@ router.post(
     }
 );
 
-
 router.post('/forms/:id', async (req, res) => {
     const response = await lenderController.guestLoanReq(req.body);
 });
@@ -234,7 +222,7 @@ router.get('/:lenderId/support');
 router.post(
     '/reactivate/:id?',
     verifyToken,
-    verifyRole('Master'),
+    verifyRole(roles.master),
     async (req, res) => {}
 );
 

@@ -141,62 +141,7 @@ const ctrlFuncs = {
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
-
-    verifySignUp: async function (payload) {
-        try {
-            const lender = await Lender.findOne({ email: payload.email }, { refreshTokens: 0 });
-            if (!lender)
-                return {
-                    errorCode: 401,
-                    message: 'Invalid email or password.',
-                };
-
-            // Comparing passwords.
-            const isMatch = await bcrypt.compare(
-                payload.password,
-                lender.password
-            );
-            if (!isMatch)
-                return {
-                    errorCode: 401,
-                    message: 'Incorrect email or password.',
-                };
-
-            if (lender.emailVerified)
-                return { errorCode: 409, message: 'Account has been verified.' };
-
-            if (
-                Date.now() > lender.otp.expires ||
-                payload.otp !== lender.otp.OTP
-            )
-                return { errorCode: 401, message: 'Invalid OTP.' };
-
-            lender.set({
-                emailVerified: true,
-                'otp.OTP': null,
-                active: true,
-                lastLoginTime: new Date(),
-            });
-
-            await lender.save();
-
-            lender._doc.token = lender.generateAccessToken();
-
-            return {
-                message: 'Email verified and account activated.',
-                data: _.omit(lender._doc, ['password', 'otp']),
-            };
-        } catch (exception) {
-            logger.error({
-                method: 'verifySignUp',
-                message: exception.message,
-                meta: exception.stack,
-            });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
+    
     login: async function (email, password) {
         try {
             const lender = await Lender.findOne({ email });

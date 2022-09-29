@@ -1,6 +1,6 @@
 const { roles } = require('../utils/constants');
 const bankController = require('../controllers/bankController');
-const bankValidators = require('../validators/bank');
+const bankValidators = require('../validators/bankValidator');
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
@@ -10,7 +10,7 @@ router.post(
     verifyToken,
     verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {
-        const { error } = bankValidators.validateCreation(req.body);
+        const { error } = bankValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const newBank = await bankController.create(
@@ -45,7 +45,7 @@ router.patch(
     verifyToken,
     verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {
-        const { error } = bankValidators.validateEdit(req.body);
+        const { error } = bankValidators.update(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const bank = await bankController.update(req.params.id, req.body);

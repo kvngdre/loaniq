@@ -5,7 +5,7 @@ const loanController = require('../controllers/loanController');
 const verifyRole = require('../middleware/verifyRole');
 const { loanValidators } = require('../validators/loan');
 const verifyToken = require('../middleware/verifyToken');
-const customerValidators = require('../validators/customer');
+const customerValidators = require('../validators/customerValidator');
 
 router.post(
     '/new/loan-request',

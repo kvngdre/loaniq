@@ -66,7 +66,7 @@ const supportSchema = Joi.object({
 });
 
 const validators = {
-    create: function (lender) {
+    signUp: function (lender) {
         const schema = Joi.object({
             companyName: companyNameSchema.required(),
             companyAddress: addressSchema.required(),
@@ -152,12 +152,27 @@ const validators = {
         return schema.validate(settings);
     },
 
-    otp: function (email) {
+    email: function (email) {
         const schema = Joi.object({
             email: emailSchema.required(),
         });
 
         return schema.validate(email);
+    },
+
+    changePassword: function (passwordObj) {
+        const schema = Joi.object({
+            otp: otpSchema.when('currentPassword', {
+                not: Joi.exist(),
+                then: Joi.required(),
+                otherwise: Joi.optional(),
+            }),
+            email: emailSchema.required(),
+            currentPassword: Joi.string().max(255),
+            newPassword: passwordSchema.required(),
+        });
+
+        return schema.validate(passwordObj);
     },
 
     fundAccount: function (payload) {
@@ -173,7 +188,7 @@ const validators = {
 
     deactivate: function (lender) {
         const schema = Joi.object({
-            password: Joi.string(),
+            password: Joi.string().max(255),
         });
 
         return schema.validate(lender);
