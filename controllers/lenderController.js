@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { roles } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
@@ -7,9 +8,8 @@ const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
 const Segment = require('../models/segment');
-const sendOTPMail = require('../utils/mailer');
+const mailer = require('../utils/mailer');
 const ServerError = require('../errors/serverError');
-const txnController = require('./transactionController');
 const User = require('../models/userModel');
 const flattenObject = require('../utils/convertToDotNotation');
 
@@ -39,25 +39,30 @@ module.exports = {
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
-                return new ServerError(409, field + ' has already been taken')
+                return new ServerError(409, field + ' has already been taken');
             }
 
             // validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return new ServerError(400, exception.errors[field].message.replace('path', ''));
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('path', '')
+                );
             }
 
-            return new ServerError(500, 'Something went wrong');new ServerError(500, 'Something went wrong');
+            return new ServerError(500, 'Something went wrong');
+            new ServerError(500, 'Something went wrong');
         }
     },
 
-    verify: async function(id, otp) {
-        try{
-            if(!otp.match(/^[0-9]{8}$/)) return new ServerError(400, 'Invalid OTP');
-            
+    verify: async function (id, otp) {
+        try {
+            if (!otp.match(/^[0-9]{8}$/))
+                return new ServerError(400, 'Invalid OTP');
+
             const lender = await Lender.findById(id);
-            if(!lender) return new ServerError(404, 'Lender not found');
+            if (!lender) return new ServerError(404, 'Lender not found');
 
             if (Date.now() > lender.otp.expires || otp !== lender.otp.OTP) {
                 // OTP not valid or expired.
@@ -71,9 +76,9 @@ module.exports = {
 
             return {
                 message: 'Email has been verified',
-                data: lender
-            }
-        }catch(exception) {
+                data: lender,
+            };
+        } catch (exception) {
             logger.error({
                 method: 'getAll',
                 message: exception.message,
@@ -82,7 +87,6 @@ module.exports = {
             debug(exception);
             return new ServerError(500, 'Something went wrong');
         }
-
     },
 
     getAll: async function () {
@@ -109,8 +113,7 @@ module.exports = {
     getOne: async function (id) {
         try {
             const lender = await Lender.findById(id, { otp: 0 });
-            if (!lender)
-                return new ServerError(404, 'Lender not found.');
+            if (!lender) return new ServerError(404, 'Lender not found.');
 
             return {
                 message: 'Success',
@@ -131,9 +134,8 @@ module.exports = {
         try {
             alteration = flattenObject(alteration);
 
-            const lender = await Lender.findById(id, { otp: 0});
-            if (!lender)
-                return new ServerError(404, 'Lender not found');
+            const lender = await Lender.findById(id, { otp: 0 });
+            if (!lender) return new ServerError(404, 'Lender not found');
 
             lender.set(alteration);
             await lender.save();
@@ -153,19 +155,22 @@ module.exports = {
             // validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return new ServerError(400, exception.errors[field].message.replace('path', ''))
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('path', '')
+                );
             }
 
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 
-    updateSettings: async function(id, payload) {
+    updateSettings: async function (id, payload) {
         try {
             // payload = convertToDotNotation(payload);
             const lender = await Lender.findById(id);
             if (!lender) return new ServerError(404, 'Lender not found');
-            
+
             if (payload.segment) {
                 const isMatch = (segment) => segment.id === payload.segment.id;
 
@@ -177,10 +182,12 @@ module.exports = {
                             settings.segments[index]['useDefault'] = false;
                         settings.segments[index][key] = payload.segment[key];
                     });
-                    
                 } else {
                     // segment not found, push new segment parameters
-                    const segment = await Segment.findOne({ _id: payload.segment.id, active: true });
+                    const segment = await Segment.findOne({
+                        _id: payload.segment.id,
+                        active: true,
+                    });
                     // check if segment exists.
                     if (!segment)
                         return new ServerError(404, 'Segment Id not valid');
@@ -202,52 +209,60 @@ module.exports = {
                 data: lender,
             };
         } catch (exception) {
-            logger.error({method: 'updateSettings', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'updateSettings',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            
-            // duplicate error 
+
+            // duplicate error
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
-                
+
                 return new ServerError(409, field + ' is already in use');
             }
 
             // validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return new ServerError(400, exception.errors[field].message.replace('path', ''));
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('path', '')
+                );
             }
 
             return new ServerError(500, 'Something went wrong');
         }
     },
-    
-    sendOTP: async function (email, template) {
-        try {
-            const lender = await Lender.findOneAndUpdate(
-                { email: email },
-                { otp: generateOTP() },
-                { new: true }
-            ).select('email otp');
-            if (!lender)
-                return { errorCode: 404, message: 'Lender not found.' };
 
-            const mailResponse = await sendOTPMail(
-                email,
+    sendOTP: async function (id) {
+        try {
+            // TODO: add email template.
+            const lender = await Lender.findById(id).select('email otp');
+            if (!lender) return new ServerError(404, 'Lender not found');
+
+            lender.set({
+                otp: generateOtp()
+            });
+            const response = await mailer(
+                lender.email,
                 lender.companyName,
                 lender.otp.OTP
             );
-            if (mailResponse instanceof Error) {
-                debug(`Error sending OTP: ${mailResponse.message}`);
-                return { errorCode: 502, message: 'Error sending OTP.' };
+            if (response instanceof Error) {
+                debug(`Error sending OTP: ${response.message}`);
+                return new ServerError(424, 'Error sending OTP');
             }
 
+            await lender.save();
+
             return {
-                message: 'OTP has been sent to your email.',
+                message: 'OTP has been sent to your email',
                 data: {
-                    otp: lender.otp.OTP,
                     email: lender.email,
+                    otp: lender.otp.OTP,
                 },
             };
         } catch (exception) {
@@ -257,7 +272,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -268,14 +283,11 @@ module.exports = {
      */
     getBalance: async function (id) {
         try {
-            const lender = await Lender.findById(id).select([
-                'companyName',
-                'balance',
-            ]);
-            if (!lender)
-                return { errorCode: 404, message: 'Lender not found.' };
+            const lender = await Lender.findById(id).select(
+                'companyName balance'
+            );
+            if (!lender) return new ServerError(404, 'Lender not found');
 
-                
             return {
                 message: 'Success',
                 data: lender.balance,
@@ -287,7 +299,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -297,27 +309,24 @@ module.exports = {
 
             const isMatch = await bcrypt.compare(password, lender.password);
             if (!isMatch)
-                return {
-                    errorCode: 401,
-                    message: 'Password is incorrect.',
-                };
+                return new ServerError(401, 'Password is incorrect');
 
-            if (user.role !== 'Master') {
+            
+            if (user.role !== roles.master) {
+                // send a deactivation email request
                 // TODO: Create template for deactivation.
-                const mailResponse = await sendOTPMail(
+                const mailResponse = await mailer(
                     config.get('support.email'), // apexxia support
-                    lender.companyName
+                    lender.companyName,
+                    user.fullName,
                 );
                 if (mailResponse instanceof Error) {
                     debug(`Error sending OTP: ${mailResponse.message}`);
-                    return {
-                        errorCode: 502,
-                        message: 'Error sending deactivation request.',
-                    };
+                    return new ServerError(424, 'Error sending deactivation email request');
                 }
 
                 return {
-                    message: 'Sent deactivation request.',
+                    message: 'Deactivation has been sent. We would get in touch with you shortly.',
                 };
             } else {
                 await User.updateMany(
@@ -328,9 +337,10 @@ module.exports = {
                 lender.set({ active: false });
 
                 await lender.save();
+                // TODO: Send account deactivated to lender
 
                 return {
-                    message: 'Account Deactivated.',
+                    message: 'Account deactivated',
                 };
             }
         } catch (exception) {
@@ -340,7 +350,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 

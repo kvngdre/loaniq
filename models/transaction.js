@@ -16,7 +16,6 @@ const transactionSchema = new mongoose.Schema(
 
         provider: {
             type: String,
-            required: true,
         },
 
         status: {
@@ -35,7 +34,7 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
 
-        description: {
+        desc: {
             type: String,
             default: null,
         },
@@ -45,7 +44,7 @@ const transactionSchema = new mongoose.Schema(
             default: null,
         },
 
-        bankName: {
+        bank: {
             type: String,
             default: null,
         },
@@ -67,6 +66,7 @@ const transactionSchema = new mongoose.Schema(
 
         fee: {
             type: Number,
+            default: null,
         },
 
         balance: {

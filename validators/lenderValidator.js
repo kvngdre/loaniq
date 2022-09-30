@@ -93,33 +93,6 @@ const validators = {
         return schema.validate(lender);
     },
 
-    createSettings: function (settings) {
-        const schema = Joi.object({
-            segments: Joi.array()
-                .items(
-                    Joi.object().keys({
-                        id: Joi.objectId().required(),
-                        minLoanAmount: Joi.number().required(),
-                        maxLoanAmount: Joi.number().required(),
-                        minTenor: Joi.number().required(),
-                        maxTenor: Joi.number().required(),
-                        maxDti: Joi.number(),
-                    })
-                )
-                .min(1),
-
-            loanParams: Joi.object({
-                interestRate: Joi.number(),
-                upfrontFeePercent: Joi.number().required(),
-                transferFee: Joi.number().required(),
-                minNetPay: Joi.number().required(),
-                maxDti: Joi.number().required(),
-            }),
-        });
-
-        return schema.validate(settings);
-    },
-
     updateSettings: function (settings) {
         const schema = Joi.object({
             segment: Joi.object({
@@ -160,14 +133,6 @@ const validators = {
         });
 
         return schema.validate(payload);
-    },
-
-    deactivate: function (lender) {
-        const schema = Joi.object({
-            password: Joi.string().max(255),
-        });
-
-        return schema.validate(lender);
     },
 };
 
