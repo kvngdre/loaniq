@@ -1,29 +1,30 @@
+const { roles } = require('../utils/constants');
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const userValidators = require('../validators/user');
+const userValidators = require('../validators/userValidator');
 const userController = require('../controllers/userController');
 
 router.post(
     '/',
     verifyToken,
-    verifyRole(['Lender', 'Admin']),
+    verifyRole([roles.admin, roles.lender]),
     async (req, res) => {
-        const { error } = userValidators.validateSignUp(req.body);
+        const { error } = userValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const user = await userController.create(req.body, req.user);
-        if (user.hasOwnProperty('errorCode'))
-            return res.status(user.errorCode).send(user.message);
+        const newUser = await userController.create(req.body, req.user);
+        if (newUser.hasOwnProperty('errorCode'))
+            return res.status(newUser.errorCode).send(newUser.message);
 
-        return res.status(201).send(user);
+        return res.status(201).send(newUser);
     }
 );
 
 router.get(
     '/',
     verifyToken,
-    verifyRole(['Lender', 'Admin']),
+    verifyRole([roles.admin, roles.lender]),
     async (req, res) => {
         const users = await userController.getAll(req.user.lenderId);
         if (users.hasOwnProperty('errorCode'))
@@ -36,7 +37,7 @@ router.get(
 router.get(
     '/:id?',
     verifyToken,
-    verifyRole(['Lender', 'Admin']),
+    verifyRole([roles.admin, roles.lender]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -53,7 +54,6 @@ router.get(
 router.patch(
     '/:id?',
     verifyToken,
-    verifyRole(['Admin', 'Credit', 'Operations', 'Loan Agent', 'Master']),
     async (req, res) => {
         const { error } = userValidators.validateEdit(req.body);
         if (error) return res.status(400).send(error.details[0].message);

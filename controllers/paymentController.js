@@ -1,4 +1,4 @@
-const Lender = require('../models/lender');
+const Lender = require('../models/lenderModel');
 const paystackService = require('../services/paystack');
 const flutterwaveService = require('../services/flutterwave');
 

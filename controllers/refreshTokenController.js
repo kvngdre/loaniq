@@ -1,10 +1,10 @@
 const config = require('config');
 const debug = require('debug')('app:refreshTokenCtrl');
 const jwt = require('jsonwebtoken');
-const Lender = require('../models/lender');
+const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('refreshTokenCtrl.js');
 const ServerError = require('../errors/serverError');
-const User = require('../models/user');
+const User = require('../models/userModel');
 
 async function handleRefreshToken(type, cookies, res) {
     try {

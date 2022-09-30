@@ -1,6 +1,5 @@
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
-const { joiPassword } = require('joi-password');
 
 const companyNameSchema = Joi.string().min(10).max(50).messages({
     'string.min': `Company name is too short.`,
@@ -34,23 +33,9 @@ const phoneSchema = Joi.string()
             'Invalid phone number, please include international dialling code.',
     });
 
-const passwordSchema = joiPassword
-    .string()
-    .minOfUppercase(1)
-    .minOfSpecialCharacters(2)
-    .minOfNumeric(2)
-    .noWhiteSpaces()
-    .min(6)
-    .max(40)
-    .messages({
-        'password.minOfUppercase':
-            '{#label} should contain at least {#min} uppercase character.',
-        'password.minOfSpecialCharacters':
-            '{#label} should contain at least {#min} special characters.',
-        'password.minOfNumeric':
-            '{#label} should contain at least {#min} numbers.',
-        'password.noWhiteSpaces': '{#label} should not contain white spaces.',
-    });
+const categorySchema = Joi.string().valid('MFB', 'Finance House', 'Money Lender').messages({
+    'any.only': 'Not a valid category'
+});
 
 const supportSchema = Joi.object({
     email: emailSchema.required(),
@@ -65,19 +50,29 @@ const supportSchema = Joi.object({
         .required(),
 });
 
+const socialSchema = Joi.object({
+    twitter: Joi.string(),
+    instagram: Joi.string(),
+    facebook: Joi.string(),
+    whatsapp: Joi.string(),
+    youtube: Joi.string(),
+    tiktok: Joi.string(),
+});
+
+
 const validators = {
-    signUp: function (lender) {
+    create: function (lender) {
         const schema = Joi.object({
+            logo: Joi.string(),
             companyName: companyNameSchema.required(),
             companyAddress: addressSchema.required(),
             cacNumber: cacNumberSchema,
-            category: Joi.string(),
+            category: categorySchema.required(),
             phone: phoneSchema.required(),
             email: emailSchema.required(),
-            password: passwordSchema.required(),
             website: Joi.string(),
             support: supportSchema,
-            timeZone: Joi.string(),
+            social: socialSchema,
         });
 
         return schema.validate(lender, { abortEarly: false });
@@ -88,11 +83,11 @@ const validators = {
             companyName: companyNameSchema,
             companyAddress: addressSchema,
             cacNumber: cacNumberSchema,
-            category: Joi.string(),
+            category: categorySchema,
             phone: phoneSchema,
             website: Joi.string(),
             support: supportSchema,
-            timeZone: Joi.string(),
+            social: socialSchema,
         });
 
         return schema.validate(lender);
@@ -109,9 +104,6 @@ const validators = {
                         minTenor: Joi.number().required(),
                         maxTenor: Joi.number().required(),
                         maxDti: Joi.number(),
-                        useDefault: Joi.boolean().default((parent) =>
-                            parent.maxDti ? false : true
-                        ),
                     })
                 )
                 .min(1),
@@ -132,15 +124,22 @@ const validators = {
         const schema = Joi.object({
             segment: Joi.object({
                 id: Joi.objectId().required(),
+                interestRate: Joi.number(),
+                minNetPay: Joi.number(),
                 minLoanAmount: Joi.number(),
                 maxLoanAmount: Joi.number(),
                 minTenor: Joi.number(),
                 maxTenor: Joi.number(),
                 maxDti: Joi.number(),
-                useDefault: Joi.boolean(),
+                transferFee: Joi.number(),
+                upfrontFeePercent: Joi.number(),
             }),
 
             loanParams: Joi.object({
+                minLoanAmount: Joi.number(),
+                maxLoanAmount: Joi.number(),
+                minTenor: Joi.number(),
+                maxTenor: Joi.number(),
                 interestRate: Joi.number(),
                 upfrontFeePercent: Joi.number(),
                 transferFee: Joi.number(),
@@ -150,29 +149,6 @@ const validators = {
         });
 
         return schema.validate(settings);
-    },
-
-    email: function (email) {
-        const schema = Joi.object({
-            email: emailSchema.required(),
-        });
-
-        return schema.validate(email);
-    },
-
-    changePassword: function (passwordObj) {
-        const schema = Joi.object({
-            otp: otpSchema.when('currentPassword', {
-                not: Joi.exist(),
-                then: Joi.required(),
-                otherwise: Joi.optional(),
-            }),
-            email: emailSchema.required(),
-            currentPassword: Joi.string().max(255),
-            newPassword: passwordSchema.required(),
-        });
-
-        return schema.validate(passwordObj);
     },
 
     fundAccount: function (payload) {

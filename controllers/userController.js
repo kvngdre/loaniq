@@ -1,13 +1,14 @@
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const config = require('config');
-const User = require('../models/user');
+const User = require('../models/userModel');
 const debug = require('debug')('app:userCtrl');
 const sendOTPMail = require('../utils/mailer');
 const Segment = require('../models/segment');
 const generateOTP = require('../utils/generateOTP');
 const logger = require('../utils/logger')('userCtrl.js');
 const generateRandomPassword = require('../utils/generatePassword');
+const ServerError = require('../errors/serverError');
 
 const userCtrlFuncs = {
     /**
@@ -24,7 +25,7 @@ const userCtrlFuncs = {
             
             switch (payload.role) {
                 case 'Admin':
-                    if (user.role !== 'Lender') return 401;
+                    if (user.role !== 'Lender') return new ServerError(401, 'Unauthorized');
 
                     // Encrypting password
                     var temporaryPassword = generateRandomPassword();
@@ -47,20 +48,13 @@ const userCtrlFuncs = {
                     break;
 
                 case 'Credit':
-                    // Encrypting password
-                    var temporaryPassword = generateRandomPassword();
-                    var encryptedPassword = await bcrypt.hash(
-                        temporaryPassword,
-                        rounds
-                    );
-
                     var newUser = new User({
                         lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
-                        password: encryptedPassword,
+                        password: generateRandomPassword(),
                         otp: generateOTP(),
                         role: payload.role,
                         segments:

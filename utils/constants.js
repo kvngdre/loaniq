@@ -8,13 +8,13 @@ module.exports = {
         'Widower',
     ],
     roles: {
-        // support: 'Support',
         admin: 'Admin',
         agent: 'Loan Agent',
         credit: 'Credit',
-        lender: 'Lender',
         master: 'Master',
         operations: 'Operations',
+        owner: 'Owner',
+        // support: 'Support',
     },
     relationships: [
         'Daughter',
@@ -35,4 +35,5 @@ module.exports = {
         'National ID card',
         "Driver's license",
     ],
+    
 };

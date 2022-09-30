@@ -8,6 +8,10 @@ const schemaOptions = { timestamps: true, versionKey: false };
 
 const lenderSchema = new mongoose.Schema(
     {
+        logo: {
+            type: String
+        },
+        
         companyName: {
             type: String,
             trim: true,
@@ -54,14 +58,7 @@ const lenderSchema = new mongoose.Schema(
 
         active: {
             type: Boolean,
-            default: false,
-        },
-
-        password: {
-            type: String,
-            minLength: 6,
-            maxLength: 1024,
-            required: true,
+            default: true,
         },
 
         otp: {
@@ -72,11 +69,6 @@ const lenderSchema = new mongoose.Schema(
             expires: {
                 type: Number,
             },
-        },
-
-        role: {
-            type: String,
-            default: roles.lender,
         },
 
         balance: {
@@ -153,74 +145,106 @@ const lenderSchema = new mongoose.Schema(
             default: 0,
         },
 
-        lastLoginTime: {
-            type: Date,
-            default: null,
+        loanParams: {
+            minLoanAmount: {
+                type: Number,
+                default: null,
+            },
+
+            maxLoanAmount: {
+                type: Number,
+                default: null,
+            },
+
+            minTenor: {
+                type: Number,
+                default: null,
+            },
+
+            maxTenor: {
+                type: Number,
+                default: null,
+            },
+            
+            interestRate: {
+                type: Number,
+                default: null,
+            },
+
+            upfrontFeePercent: {
+                type: Number,
+                default: null,
+            },
+
+            transferFee: {
+                type: Number,
+                default: null,
+            },
+
+            minNetPay: {
+                type: Number,
+                default: null,
+            },
+
+            maxDti: {
+                type: Number,
+                default: null,
+            },
         },
 
-        timeZone: {
-            type: String,
-            default: 'Africa/Lagos',
-        },
-
-        refreshTokens: {
-            type: [
-                {
-                    token: {
-                        type: String,
-                    },
-                    exp: {
-                        type: Number,
-                    },
+        segments: [
+            {
+                id: {
+                    type: String,
+                    unique: true,
+                    sparse: true
                 },
-            ],
-            default: null,
-        },
+
+                minLoanAmount: {
+                    type: Number,
+                },
+
+                maxLoanAmount: {
+                    type: Number,
+                },
+
+                minTenor: {
+                    type: Number,
+                },
+
+                maxTenor: {
+                    type: Number,
+                },
+                
+                interestRate: {
+                    type: Number,
+                },
+    
+                upfrontFeePercent: {
+                    type: Number,
+                },
+    
+                transferFee: {
+                    type: Number,
+                },
+    
+                minNetPay: {
+                    type: Number,
+                },
+    
+                maxDti: {
+                    type: Number,
+                },
+
+            },
+        ],
+
+
     },
     schemaOptions
 );
 
 lenderSchema.plugin(AutoIncrement, { inc_field: 'urlId' });
-
-lenderSchema.methods.generateAccessToken = function () {
-    return jwt.sign(
-        {
-            id: this._id.toString(),
-            lenderId: this._id.toString(),
-            email: this.email,
-            active: this.active,
-            emailVerified: this.emailVerified,
-            role: this.role,
-        },
-        config.get('jwt.secret.access'),
-        {
-            audience: config.get('jwt.audience'),
-            expiresIn: parseInt(config.get('jwt.access_time')),
-            issuer: config.get('jwt.issuer'),
-        }
-    );
-};
-
-lenderSchema.methods.generateRefreshToken = function () {
-    const refreshTokenTTL = parseInt(config.get('jwt.refresh_time'));
-    const refreshToken = jwt.sign(
-        {
-            id: this._id.toString(),
-        },
-        config.get('jwt.secret.refresh'),
-        {
-            audience: config.get('jwt.audience'),
-            expiresIn: refreshTokenTTL,
-            issuer: config.get('jwt.issuer'),
-        }
-    );
-    const expires = Date.now() + refreshTokenTTL * 1000;
-
-    return {
-        token: refreshToken,
-        exp: expires,
-    };
-};
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

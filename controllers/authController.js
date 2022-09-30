@@ -2,10 +2,10 @@ const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:authCtrl');
-const Lender = require('../models/lender');
+const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('authCtrl.js');
 const ServerError = require('../errors/serverError');
-const User = require('../models/user');
+const User = require('../models/userModel');
 
 async function login(type, email, password, cookies, res) {
     try {
@@ -13,7 +13,7 @@ async function login(type, email, password, cookies, res) {
             var foundUser = await Lender.findOne({ email });
         } else {
             // type is equal to users
-            var foundUser = await User.findOne({ email });
+            var foundUser = await User.findOne({ email }, { queryName: 0 });
         }
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
 
@@ -36,6 +36,7 @@ async function login(type, email, password, cookies, res) {
             };
         }
 
+        // found user is not active
         if (foundUser.emailVerified && !foundUser.active)
             return new ServerError(
                 403,
@@ -102,12 +103,12 @@ async function logout(type, cookies, res) {
 
         if (type === 'lenders')
             var foundUser = await Lender.findOne(
-                { refreshTokens: refreshToken },
+                { refreshTokens: {$elemMatch: { token: refreshToken }  }},
                 { password: 0, otp: 0 }
             );
         else
             var foundUser = await User.findOne(
-                { refreshTokens: refreshToken },
+                { refreshTokens: {$elemMatch: { token: refreshToken }  }},
                 { password: 0, otp: 0 }
             );
 
@@ -135,6 +136,7 @@ async function logout(type, cookies, res) {
             // secure: true,
         });
 
+        debug('logged out');
         return {
             message: 'logged out',
         };

@@ -1,8 +1,9 @@
 const Joi = require('joi');
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': `Invalid email address.`,
-    'string.max': `Invalid email address.`,
+    'string.min': 'Invalid email address',
+    'string.max': 'Invalid email address',
+    'string.email': 'Please enter a valid email',
 });
 
 const otpSchema = Joi.string()

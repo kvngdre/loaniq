@@ -17,7 +17,7 @@ const refreshTokenRouter = require('../routes/refreshTokenRoutes');
 const segmentRouter = require('../routes/segment');
 const stateRouter = require('../routes/state');
 const transactionRouter = require('../routes/transaction');
-const userRouter = require('../routes/user');
+const userRouter = require('../routes/userRoutes');
 
 module.exports = function (app) {
     // middleware

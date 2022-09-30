@@ -6,7 +6,7 @@ const logger = require('../utils/logger')('pendingEditCtrl.js');
 const mongoose = require('mongoose');
 const PendingEdit = require('../models/pendingEdit');
 const ServerError = require('../errors/serverError');
-const User = require('../models/user');
+const User = require('../models/userModel');
 
 module.exports = {
     create: async function (user, payload) {

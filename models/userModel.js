@@ -1,4 +1,5 @@
 const { roles } = require('../utils/constants');
+const bcrypt = require('bcrypt');
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -55,6 +56,10 @@ const userSchema = new mongoose.Schema(
                     ` ${this.displayName}`
                 );
             },
+        },
+
+        title: {
+            type: String
         },
 
         phone: {
@@ -153,7 +158,19 @@ userSchema.virtual('fullName').get(function () {
     );
 });
 
-userSchema.methods.generateToken = function () {
+userSchema.pre('save', function(next) {
+    try{
+        if(this.isNew) {
+            this.password = bcrypt.hashSync(this.password, parseInt(config.get('salt_rounds')));
+        }
+
+        next();
+    }catch(exception) {
+        next(exception);
+    }
+})
+
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             id: this._id,
@@ -165,7 +182,7 @@ userSchema.methods.generateToken = function () {
             emailVerified: this.emailVerified,
             timeZone: this.timeZone,
         },
-        config.get('jwt.secret'),
+        config.get('jwt.secret.access'),
         {
             audience: config.get('jwt.audience'),
             expiresIn: parseInt(config.get('jwt.access_time')),

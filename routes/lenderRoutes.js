@@ -1,10 +1,9 @@
 const { roles } = require('../utils/constants');
 const lenderController = require('../controllers/lenderController');
-const lenderValidators = require('../validators/lender');
+const lenderValidators = require('../validators/lenderValidator');
 const paymentController = require('../controllers/paymentController');
 const router = require('express').Router();
 const settingsController = require('../controllers/settingsController');
-const userValidators = require('../validators/user');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
@@ -12,13 +11,22 @@ router.post('/', async (req, res) => {
     const { error } = lenderValidators.signUp(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const lender = await lenderController.signUp(req.body);
+    const newLender = await lenderController.create(req.body);
+    if (newLender.hasOwnProperty('errorCode'))
+        return res.status(newLender.errorCode).send(newLender.message);
+
+    return res.status(201).send(newLender);
+});
+
+router.post('/:id/verify', verifyToken, verifyRole([roles.master, roles.owner]), async (req, res) => {
+    const lender = await lenderController.verify(req.params.id, req.otp);
     if (lender.hasOwnProperty('errorCode'))
         return res.status(lender.errorCode).send(lender.message);
 
-    //TODO: generate lender url with auto increment field.
-    return res.status(201).send(lender);
+    return res.status(200).send(lender);
 });
+
+
 
 router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
     const lenders = await lenderController.getAll();
@@ -29,135 +37,55 @@ router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
 });
 
 router.get(
-    '/:id?',
+    '/:id',
     verifyToken,
-    verifyRole([roles.lender, roles.master]),
+    verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        const id = req.params.id !== undefined ? req.params.id : req.user.id;
-
-        const lender = await lenderController.getOne(id);
+        const lender = await lenderController.getOne(req.params.id);
         if (lender.hasOwnProperty('errorCode'))
-            return res.status(404).send(lender.message);
+            return res.status(lender.errorCode).send(lender.message);
 
         return res.status(200).send(lender);
     }
 );
 
-router.patch('/:id?', verifyToken, verifyRole(roles.lender), async (req, res) => {
+router.patch('/:id', verifyToken, verifyRole([roles.master, roles.owner]), async (req, res) => {
     const { error } = lenderValidators.update(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const id = req.params.id !== undefined ? req.params.id : req.user.id;
-
-    const lender = await lenderController.update(id, req.body);
-    if (lender.hasOwnProperty('errorCode'))
-        return res.status(404).send(lender.message);
-
-    return res.status(200).send(lender);
-});
-
-router.post('/password', async (req, res) => {
-    const { error } = lenderValidators.changePassword(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const lender = await lenderController.changePassword(
-        req.body.email,
-        req.body.newPassword,
-        req.body.otp,
-        req.body.currentPassword
-    );
+    const lender = await lenderController.update(req.params.id, req.body);
     if (lender.hasOwnProperty('errorCode'))
         return res.status(lender.errorCode).send(lender.message);
 
     return res.status(200).send(lender);
 });
 
-router.post(
-    '/admin/new',
-    verifyToken,
-    verifyRole(roles.lender),
-    async (req, res) => {
-        const { error } = userValidators.validateSignUp(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-
-        const adminUser = await lenderController.createAdmin(req.body, req.user);
-        if (adminUser.hasOwnProperty('errorCode'))
-            return res.status(adminUser.errorCode).send(adminUser.message);
-
-        return res.status(201).send(adminUser);
-    }
-);
-
-router.post(
-    '/settings',
-    verifyToken,
-    verifyRole([roles.lender, roles.master]),
-    async (req, res) => {
-        const { value, error } = lenderValidators.createSettings(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-
-        const settings = await settingsController.create(req.user, value);
-        if (settings.hasOwnProperty('errorCode'))
-            return res.status(settings.errorCode).send(settings.message);
-
-        return res.status(201).send(settings);
-    }
-);
-
-router.get(
-    '/settings/:id?',
-    verifyToken,
-    verifyRole([roles.lender, roles.master]),
-    async (req, res) => {
-        const id = req.params.id !== undefined ? req.params.id : req.user.id;
-
-        const settings = await settingsController.getOne(id);
-        if (settings.hasOwnProperty('errorCode'))
-            return res.status(settings.errorCode).send(settings.message);
-
-        return res.status(200).send(settings);
-    }
-);
-
-router.get('/settings', verifyToken, verifyRole(roles.master), async (req, res) => {
-    const settings = await settingsController.getAll(req.user);
-    if (settings.hasOwnProperty('errorCode'))
-        return res.status(settings.errorCode).send(settings.message);
-
-    return res.status(200).send(settings);
-});
-
 router.patch(
-    '/settings/:id?',
+    '/:id/settings',
     verifyToken,
     verifyRole([roles.lender, roles.master]),
     async (req, res) => {
-        const id = req.params.id !== undefined ? req.params.id : req.user.id;
-
-        const { value, error } = lenderValidators.updateSettings(req.body);
+        const { error } = lenderValidators.updateSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const settings = await settingsController.update(id, req.body);
-        if (settings.hasOwnProperty('errorCode'))
-            return res.status(settings.errorCode).send(settings.message);
+        const lender = await settingsController.update(req.params.id, req.body);
+        if (lender.hasOwnProperty('errorCode'))
+            return res.status(lender.errorCode).send(lender.message);
 
-        return res.status(200).send(settings);
+        return res.status(200).send(lender);
     }
 );
 
-router.post('/otp', async (req, res) => {
-    const { error } = lenderValidators.email(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+router.get('/:id/otp', async (req, res) => {
+    const response = await lenderController.sendOTP(req.params.id);
+    if (response.hasOwnProperty('errorCode'))
+        return res.status(response.errorCode).send(response.message);
 
-    const otp = await lenderController.sendOTP(req.body.email);
-    if (otp.hasOwnProperty('errorCode'))
-        return res.status(otp.errorCode).send(otp.message);
-
-    return res.status(200).send(otp);
+    return res.status(200).send(response);
 });
 
 router.get(
-    '/balance/:id?',
+    '/:id/balance',
     verifyToken,
     verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {

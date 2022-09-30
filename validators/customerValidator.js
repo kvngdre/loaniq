@@ -59,6 +59,7 @@ const contactSchema = Joi.object({
     email: Joi.string().email().min(10).max(50).messages({
         'string.min': `Invalid email address.`,
         'string.max': `Invalid email address.`,
+        'string.email': 'Please enter a valid email',
     }),
 });
 

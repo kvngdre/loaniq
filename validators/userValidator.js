@@ -3,25 +3,52 @@ const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 const { joiPassword } = require('joi-password');
 
+function isValidDOB(dob, helper) {
+    const dobFormatted = DateTime.fromISO(new Date(dob).toISOString()).toFormat(
+        'yyyy-MM-dd'
+    );
+    const minDob = DateTime.now().minus({ years: 18 }).toFormat('yyyy-MM-dd');
+
+    if (dobFormatted > minDob) return helper.error('date.less');
+
+    return true;
+}
+
 const nameSchema = Joi.object({
-    first: Joi.string().min(3).max(50),
+    first: Joi.string().min(3).max(30).messages({
+        'string.min': `First name is too short.`,
+        'string.max': `first name is too long.`,
+    }),
 
-    last: Joi.string().min(3).max(50),
+    last: Joi.string().min(3).max(30).messages({
+        'string.min': `Surname is too short.`,
+        'string.max': `Surname is too long.`,
+    }),
 
-    middle: Joi.string().min(3).max(50),
+    middle: Joi.string().min(3).max(30).messages({
+        'string.min': `Middle name is too short.`,
+        'string.max': `Middle name is too long.`,
+    }),
 });
+
+const genderSchema = Joi.string().valid('Male', 'Female');
+
+const dateOfBirthSchema = Joi.date()
+    .custom(isValidDOB)
+    .message({ 'date.less': 'Must be 18 years or older.' });
 
 const displayNameSchema = Joi.string();
 
 const phoneSchema = Joi.string()
-    .pattern(/^0([7-9])[0-9]{9}$/)
+    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
     .message({
-        'string.pattern.base': 'Invalid phone number',
+        'string.pattern.base': 'Invalid phone number, please include international dialling code.',
     });
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': `Invalid email address.`,
-    'string.max': `Invalid email address.`,
+    'string.min': 'Invalid email address',
+    'string.max': 'Invalid email address',
+    'string.email': 'Please enter a valid email',
 });
 
 const passwordSchema = joiPassword
@@ -61,11 +88,13 @@ const validators = {
             };
 
         switch (user.role) {
+            case roles.owner:
             case roles.admin:
                 return function (user) {
                     const schema = Joi.object({
                         lenderId: Joi.objectId(),
                         name: nameSchema.required(),
+                        gender: genderSchema.required(),
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
@@ -78,6 +107,7 @@ const validators = {
                 return function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
+                        gender: genderSchema.required(),
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
@@ -91,6 +121,7 @@ const validators = {
                 return function (user) {
                     const schema = Joi.object({
                         name: nameSchema,
+                        gender: genderSchema.required(),
                         displayName: Joi.string(),
                         phone: phoneSchema,
                         email: emailSchema,
@@ -103,6 +134,7 @@ const validators = {
                 return function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
+                        gender: genderSchema.required(),
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
@@ -132,6 +164,7 @@ const validators = {
     update: function (user) {
         const schema = Joi.object({
             name: nameSchema,
+            gender: genderSchema,
             displayName: displayNameSchema,
             phone: phoneSchema,
             role: Joi.string(),

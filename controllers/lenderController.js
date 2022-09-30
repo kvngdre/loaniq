@@ -3,83 +3,91 @@ const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
 const generateOTP = require('../utils/generateOTP');
-const Lender = require('../models/lender');
+const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
+const Segment = require('../models/segment');
 const sendOTPMail = require('../utils/mailer');
-const Settings = require('../models/settings');
+const ServerError = require('../errors/serverError');
 const txnController = require('./transactionController');
-const User = require('../models/user');
-const userController = require('./userController');
+const User = require('../models/userModel');
+const flattenObject = require('../utils/convertToDotNotation');
 
-const ctrlFuncs = {
-    signUp: async function (payload) {
+module.exports = {
+    create: async function (payload) {
         try {
-            const encryptedPassword = await bcrypt.hash(
-                payload.password,
-                parseInt(config.get('salt_rounds'))
-            );
-            payload.password = encryptedPassword;
+            const newLender = new Lender(payload);
+            await newLender.save();
 
-            payload.otp = generateOTP();
-
-            // Sending OTP to email.
-            // const mailResponse = await sendOTPMail(
-            //     payload.email,
-            //     payload.companyName,
-            //     payload.otp.OTP
-            // );
-            // if (mailResponse instanceof Error) {
-            //     debug(`Error sending OTP: ${mailResponse.message}`);
-            //     return { errorCode: 502, message: 'Error sending OTP.' };
-            // }
-
-            const lender = new Lender(payload);
-            await lender.save();
-            await Settings.create({ userId: lender._id, type: 'Lender' });
             // TODO: generate public URL.
 
             return {
-                message: 'Account created and OTP has been sent to your email.',
-                data: _.omit(lender._doc, ['otp', 'password', 'refreshTokens']),
+                message: 'Lender created.',
+                data: newLender,
             };
         } catch (exception) {
             logger.error({
-                method: 'signUp',
+                method: 'create',
                 message: exception.message,
                 meta: exception.stack,
             });
             debug(exception);
 
-            // Duplicate field error.
+            // duplicate field error
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
-                return {
-                    errorCode: 409,
-                    message: field + ' has already been taken.',
-                };
+                return new ServerError(409, field + ' has already been taken')
             }
 
+            // validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return {
-                    errorCode: 400,
-                    message: exception.errors[field].message,
-                };
+                return new ServerError(400, exception.errors[field].message.replace('path', ''));
             }
 
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');new ServerError(500, 'Something went wrong');
         }
+    },
+
+    verify: async function(id, otp) {
+        try{
+            if(!otp.match(/^[0-9]{8}$/)) return new ServerError(400, 'Invalid OTP');
+            
+            const lender = await Lender.findById(id);
+            if(!lender) return new ServerError(404, 'Lender not found');
+
+            if (Date.now() > lender.otp.expires || otp !== lender.otp.OTP) {
+                // OTP not valid or expired.
+                return new ServerError(400, 'Invalid OTP');
+            }
+
+            await lender.updateOne({
+                emailVerified: true,
+                'otp.OTP': null,
+            });
+
+            return {
+                message: 'Email has been verified',
+                data: lender
+            }
+        }catch(exception) {
+            logger.error({
+                method: 'getAll',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+
     },
 
     getAll: async function () {
         try {
-            const lenders = await Lender.find()
-                .select('-password -otp')
-                .sort('companyName');
+            const lenders = await Lender.find().sort('companyName');
             if (lenders.length === 0)
                 return { errorCode: 404, message: 'No lenders found.' };
 
@@ -94,15 +102,15 @@ const ctrlFuncs = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     getOne: async function (id) {
         try {
-            const lender = await Lender.findById(id, { password: 0, otp: 0 });
+            const lender = await Lender.findById(id, { otp: 0 });
             if (!lender)
-                return { errorCode: 404, message: 'Account not found.' };
+                return new ServerError(404, 'Lender not found.');
 
             return {
                 message: 'Success',
@@ -115,21 +123,24 @@ const ctrlFuncs = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     update: async function (id, alteration) {
         try {
-            const lender = await Lender.findByIdAndUpdate(id, alteration, {
-                new: true,
-            });
+            alteration = flattenObject(alteration);
+
+            const lender = await Lender.findById(id, { otp: 0});
             if (!lender)
-                return { errorCode: 404, message: 'Account not found.' };
+                return new ServerError(404, 'Lender not found');
+
+            lender.set(alteration);
+            await lender.save();
 
             return {
                 message: 'Account Updated',
-                data: _.omit(lender._doc, ['otp', 'password']),
+                data: lender,
             };
         } catch (exception) {
             logger.error({
@@ -138,146 +149,80 @@ const ctrlFuncs = {
                 meta: exception.stack,
             });
             debug(exception);
+
+            // validation error
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(400, exception.errors[field].message.replace('path', ''))
+            }
+
             return { errorCode: 500, message: 'Something went wrong.' };
+        }
+    },
+
+    updateSettings: async function(id, payload) {
+        try {
+            // payload = convertToDotNotation(payload);
+            const lender = await Lender.findById(id);
+            if (!lender) return new ServerError(404, 'Lender not found');
+            
+            if (payload.segment) {
+                const isMatch = (segment) => segment.id === payload.segment.id;
+
+                const index = lender.segments.findIndex(isMatch);
+                if (index > -1) {
+                    // segment found, update parameters
+                    Object.keys(payload.segment).forEach((key) => {
+                        if (key === 'maxDti')
+                            settings.segments[index]['useDefault'] = false;
+                        settings.segments[index][key] = payload.segment[key];
+                    });
+                    
+                } else {
+                    // segment not found, push new segment parameters
+                    const segment = await Segment.findOne({ _id: payload.segment.id, active: true });
+                    // check if segment exists.
+                    if (!segment)
+                        return new ServerError(404, 'Segment Id not valid');
+
+                    lender.segments.push(payload.segment);
+                }
+            }
+
+            if (payload.loanParams) {
+                Object.keys(payload.loanParams).forEach((key) => {
+                    lender.loanParams[key] = payload.loanParams[key];
+                });
+            }
+
+            await lender.save();
+
+            return {
+                message: 'Parameters updated.',
+                data: lender,
+            };
+        } catch (exception) {
+            logger.error({method: 'updateSettings', message: exception.message, meta: exception.stack });
+            debug(exception);
+            
+            // duplicate error 
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0];
+                field = field.charAt(0).toUpperCase() + field.slice(1);
+                
+                return new ServerError(409, field + ' is already in use');
+            }
+
+            // validation error
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(400, exception.errors[field].message.replace('path', ''));
+            }
+
+            return new ServerError(500, 'Something went wrong');
         }
     },
     
-    login: async function (email, password) {
-        try {
-            const lender = await Lender.findOne({ email });
-            if (!lender)
-                return {
-                    errorCode: 401,
-                    message: 'Invalid email or password.',
-                };
-
-            const isMatch = await bcrypt.compare(password, lender.password);
-            if (!isMatch)
-                return {
-                    errorCode: 401,
-                    message: 'Invalid email or password.',
-                };
-
-            if (
-                (lender.lastLoginTime === null || !lender.emailVerified) &&
-                !lender.active
-            ) {
-                return {
-                    message: 'New Lender.',
-                    data: _.omit(lender._doc, ['password', 'otp']),
-                };
-            }
-
-            if (
-                lender.lastLoginTime !== null &&
-                lender.emailVerified &&
-                !lender.active
-            )
-                return {
-                    errorCode: 403,
-                    message: 'Account inactive. Contact administrator.',
-                };
-            // TODO: change to contact support
-
-            await lender.updateOne({ lastLoginTime: new Date() });
-
-            lender._doc.accessToken = lender.generateAccessToken();
-            lender._doc.refreshToken = await lender.generateRefreshToken();
-
-            return {
-                message: 'Login success.',
-                data: _.omit(lender._doc, ['password', 'otp']),
-            };
-        } catch (exception) {
-            logger.error({
-                method: 'login',
-                message: exception.message,
-                meta: exception.stack,
-            });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-    changePassword: async function (
-        email,
-        newPassword,
-        otp = null,
-        currentPassword = null
-    ) {
-        try {
-            const lender = await Lender.findOne({ email });
-            if (!lender)
-                return { errorCode: 404, message: 'Account not found.' };
-
-            if (
-                otp &&
-                (Date.now() > lender.otp.expires || otp !== lender.otp.OTP)
-            )
-                return { errorCode: 401, message: 'Invalid OTP.' };
-
-            if (currentPassword) {
-                const isMatch = await bcrypt.compare(
-                    currentPassword,
-                    lender.password
-                );
-                if (!isMatch)
-                    return {
-                        errorCode: 401,
-                        message: 'Password is incorrect.',
-                    };
-
-                if (newPassword === currentPassword)
-                    return {
-                        errorCode: 400,
-                        message: 'New password is too similar to old password.',
-                    };
-            }
-
-            const encryptedPassword = await bcrypt.hash(
-                newPassword,
-                config.get('salt_rounds')
-            );
-
-            await lender.update({
-                'otp.OTP': null,
-                password: encryptedPassword,
-            });
-
-            return {
-                message: 'Password updated.',
-            };
-        } catch (exception) {
-            logger.error({
-                method: 'changePassword',
-                message: exception.message,
-                meta: exception.stack,
-            });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-    createAdmin: async function (payload, user) {
-        try {
-            const adminUser = await userController.create(payload, user);
-            if (adminUser.hasOwnProperty('errorCode')) return adminUser;
-
-            return {
-                message: 'User created. OTP & Password sent to email.',
-                data: adminUser,
-            };
-        } catch (exception) {
-            logger.error({
-                method: 'createAdmin',
-                message: exception.message,
-                meta: exception.stack,
-            });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
     sendOTP: async function (email, template) {
         try {
             const lender = await Lender.findOneAndUpdate(
@@ -427,5 +372,3 @@ const ctrlFuncs = {
         }
     },
 };
-
-module.exports = ctrlFuncs;

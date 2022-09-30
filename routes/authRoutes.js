@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const authValidators = require('../validators/auth');
+const authValidators = require('../validators/authValidator');
 const authController = require('../controllers/authController');
 
 router.post('/:type/login', async (req, res) => {
