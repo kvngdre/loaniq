@@ -279,10 +279,10 @@ loanSchema.pre('save', function (next) {
                 this.params.doe
             );
             this.params.netPay.isValid =
-                this.params.netPay.value >= this.params.minNetPay;
+                this.params.netPay >= this.params.minNetPay;
             this.params.dti = metricFuncs.calcDti(
                 this.repayment,
-                this.params.netPay.value
+                this.params.netPay
             );
         }
 

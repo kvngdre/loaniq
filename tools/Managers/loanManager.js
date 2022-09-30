@@ -4,7 +4,7 @@ const Lender = require('../../models/lender');
 const debug = require('debug')('app:loanMgr');
 const Origin = require('../../models/origin');
 const Segment = require('../../models/segment');
-const Customer = require('../../models/customer');
+const Customer = require('../../models/customerModel');
 const PendingEdit = require('../../models/pendingEdit');
 const userController = require('../../controllers/userController');
 const updateLoanStatus = require('../../utils/loanStatus');
@@ -114,7 +114,7 @@ const manager = {
             // Setting parameters used to evaluate loan
             loanPayload.params = { dob: customer.dateOfBirth };
             loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
-            loanPayload.params.netPay = { value: customer.netPay.value };
+            loanPayload.params.netPay = { value: customer.netPay };
             loanPayload.params.minNetPay = loanParams.minNetPay;
             loanPayload.params.maxDti = loanParams.maxDti;
 

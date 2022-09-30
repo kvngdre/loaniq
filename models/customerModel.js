@@ -1,7 +1,12 @@
+const {
+    relationships,
+    maritalStatus,
+    validIds,
+} = require('../utils/constants');
+const debug = require('debug')('app:customerModel');
 const Loan = require('./loan');
 const mongoose = require('mongoose');
 const Segment = require('./segment');
-const debug = require('debug')('app:customerModel');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -74,7 +79,7 @@ const customerSchema = new mongoose.Schema(
             },
         },
 
-        displayName: {
+        fullName: {
             type: String,
             default: function () {
                 return this.name.first.concat(
@@ -115,14 +120,7 @@ const customerSchema = new mongoose.Schema(
 
         maritalStatus: {
             type: String,
-            enum: [
-                'Single',
-                'Married',
-                'Divorced',
-                'Separated',
-                'Widow',
-                'Widower',
-            ],
+            enum: maritalStatus,
             required: true,
         },
 
@@ -148,13 +146,7 @@ const customerSchema = new mongoose.Schema(
         idCardInfo: {
             idType: {
                 type: String,
-                enum: [
-                    'Voters card',
-                    'International passport',
-                    'Staff ID card',
-                    'National ID card',
-                    "Driver's license",
-                ],
+                enum: validIds,
                 required: true,
             },
 
@@ -193,14 +185,14 @@ const customerSchema = new mongoose.Schema(
                 trim: true,
                 required: true,
                 validate: {
-                    validator: async function (ippisNo) {
+                    validator: async function (value) {
                         const segment = await Segment.findById(
                             this.employmentInfo.segment
                         );
                         if (!segment) throw new Error('Segment not found');
 
-                        const ippisPrefix =
-                            ippisNo.match(/^[A-Z]{2,3}(?=[0-9])/);
+                        const ippisPrefix = value.match(/^[A-Z]{2,3}(?=[0-9])/);
+
                         if (segment.ippisPrefix !== ippisPrefix[0])
                             return false;
 
@@ -235,18 +227,7 @@ const customerSchema = new mongoose.Schema(
 
             relationship: {
                 type: String,
-                enum: [
-                    'Daughter',
-                    'Brother',
-                    'Cousin',
-                    'Father',
-                    'Mother',
-                    'Nephew',
-                    'Sister',
-                    'Spouse',
-                    'Niece',
-                    'Son',
-                ],
+                enum: relationships,
                 required: true,
             },
         },
@@ -263,11 +244,6 @@ const customerSchema = new mongoose.Schema(
                 type: String,
                 trim: true,
                 required: true,
-            },
-
-            isValidAccountNumber: {
-                type: Boolean,
-                default: false, //TODO: should this be false or null?
             },
 
             bank: {
@@ -287,21 +263,18 @@ const customerSchema = new mongoose.Schema(
         // below are set programmatically. No user can edit.
         netPay: {
             // TODO: should this just copy the net pay array from origin?
-            value: {
-                type: Number,
-                default: 80000.0,
-            },
-
-            updatedAt: {
-                type: Date,
-                default: new Date(),
-            },
-            // TODO: read from origin collection.
+            type: Number,
+            default: 80_000.27,
         },
 
         bvnValid: {
             type: Boolean,
             default: false,
+        },
+
+        isValidAccNum: {
+            type: Boolean,
+            default: null,
         },
 
         lenders: {
@@ -322,7 +295,7 @@ customerSchema.methods.validateSegment = async function () {
         if (segment.ippisPrefix !== ippisPrefix[0])
             return {
                 error: {
-                    message: 'IPPIS Number does not match segment selected.',
+                    message: 'IPPIS number does not match segment selected.',
                 },
             };
 
@@ -348,7 +321,7 @@ customerSchema.methods.removeLender = function (lender) {
 customerSchema.pre('save', async function (next) {
     const loanEditTrigger = ['dateOfBirth', 'employmentInfo.dateOfEnlistment'];
 
-    if (this.modifiedPaths().some((path) => loanEditTrigger.includes(path))) {
+    if (!this.isNew && this.modifiedPaths().some((path) => loanEditTrigger.includes(path))) {
         console.log('triggered');
 
         const loans = await Loan.find({

@@ -61,7 +61,7 @@ router.get(
 router.post(
     '/customer-booking',
     verifyToken,
-    verifyRole(['Loan Agent']),
+    verifyRole(roles.operations),
     async (req, res) => {
         const result = await customerController.fetchCustomerCreation(
             req.user,
@@ -77,7 +77,7 @@ router.post(
 router.patch(
     '/:id',
     verifyToken,
-    verifyRole([roles.admin, roles.credit, roles.agent, roles.operations, roles.master]),
+    verifyRole([roles.lender, roles.credit, roles.agent, roles.operations, roles.master]),
     async (req, res) => {
         if (Object.entries(req.body).length == 0) return res.sendStatus(400);
 
@@ -99,7 +99,7 @@ router.patch(
 router.delete(
     '/:id',
     verifyToken,
-    verifyRole(['Lender', 'Admin']),
+    verifyRole([roles.admin, roles.lender, roles.master]),
     async (req, res) => {
         const response = await customerController.delete(
             req.user,

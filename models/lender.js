@@ -129,11 +129,11 @@ const lenderSchema = new mongoose.Schema(
                 type: String,
                 default: null,
             },
-            whatsApp: {
+            whatsapp: {
                 type: String,
                 default: null,
             },
-            YouTube: {
+            youtube: {
                 type: String,
                 default: null,
             },
@@ -164,9 +164,18 @@ const lenderSchema = new mongoose.Schema(
         },
 
         refreshTokens: {
-            type: [String],
-            default: null
-        }
+            type: [
+                {
+                    token: {
+                        type: String,
+                    },
+                    exp: {
+                        type: Number,
+                    },
+                },
+            ],
+            default: null,
+        },
     },
     schemaOptions
 );
@@ -177,14 +186,14 @@ lenderSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             id: this._id.toString(),
-            lenderId: this._id,
+            lenderId: this._id.toString(),
             email: this.email,
             active: this.active,
             emailVerified: this.emailVerified,
             role: this.role,
         },
         config.get('jwt.secret.access'),
-        {   
+        {
             audience: config.get('jwt.audience'),
             expiresIn: parseInt(config.get('jwt.access_time')),
             issuer: config.get('jwt.issuer'),
@@ -193,17 +202,24 @@ lenderSchema.methods.generateAccessToken = function () {
 };
 
 lenderSchema.methods.generateRefreshToken = function () {
-    return jwt.sign(
+    const refreshTokenTTL = parseInt(config.get('jwt.refresh_time'));
+    const refreshToken = jwt.sign(
         {
             id: this._id.toString(),
         },
         config.get('jwt.secret.refresh'),
         {
             audience: config.get('jwt.audience'),
-            expiresIn: parseInt(config.get('jwt.refresh_time')),
+            expiresIn: refreshTokenTTL,
             issuer: config.get('jwt.issuer'),
         }
     );
+    const expires = Date.now() + refreshTokenTTL * 1000;
+
+    return {
+        token: refreshToken,
+        exp: expires,
+    };
 };
 
 const Lender = mongoose.model('Lender', lenderSchema);

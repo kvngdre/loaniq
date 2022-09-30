@@ -3,7 +3,12 @@ const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-const schemaOptions = { timestamps: true, versionKey: false, toJSON: {virtuals: true}, id: false };
+const schemaOptions = {
+    timestamps: true,
+    versionKey: false,
+    toJSON: { virtuals: true },
+    id: false,
+};
 
 const userSchema = new mongoose.Schema(
     {
@@ -29,7 +34,7 @@ const userSchema = new mongoose.Schema(
                 minLength: 3,
                 maxLength: 50,
                 trim: true,
-                default: null
+                default: null,
             },
         },
 
@@ -46,9 +51,10 @@ const userSchema = new mongoose.Schema(
             default: function () {
                 return this.name.first.concat(
                     this.name.middle ? ` ${this.name.middle}` : '',
-                    ` ${this.name.last}`, ` ${this.displayName}`
-                )
-            }
+                    ` ${this.name.last}`,
+                    ` ${this.displayName}`
+                );
+            },
         },
 
         phone: {
@@ -122,16 +128,30 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: 'Africa/Lagos',
         },
+
+        refreshTokens: {
+            type: [
+                {
+                    token: {
+                        type: String,
+                    },
+                    exp: {
+                        type: Number,
+                    },
+                },
+            ],
+            default: null,
+        },
     },
     schemaOptions
 );
 
-userSchema.virtual('fullName').get(function() {
+userSchema.virtual('fullName').get(function () {
     return this.name.first.concat(
         this.name.middle ? ` ${this.name.middle}` : '',
         ` ${this.name.last}`
     );
-})
+});
 
 userSchema.methods.generateToken = function () {
     return jwt.sign(
@@ -145,8 +165,34 @@ userSchema.methods.generateToken = function () {
             emailVerified: this.emailVerified,
             timeZone: this.timeZone,
         },
-        config.get('jwt.secret'), {expiresIn: '8h'}
+        config.get('jwt.secret'),
+        {
+            audience: config.get('jwt.audience'),
+            expiresIn: parseInt(config.get('jwt.access_time')),
+            issuer: config.get('jwt.issuer'),
+        }
     );
+};
+
+userSchema.methods.generateRefreshToken = function () {
+    const refreshTokenTTL = parseInt(config.get('jwt.refresh_time'));
+    const refreshToken = jwt.sign(
+        {
+            id: this._id.toString(),
+        },
+        config.get('jwt.secret.refresh'),
+        {
+            audience: config.get('jwt.audience'),
+            expiresIn: refreshTokenTTL,
+            issuer: config.get('jwt.issuer'),
+        }
+    );
+    const expires = Date.now() + refreshTokenTTL * 1000;
+
+    return {
+        token: refreshToken,
+        exp: expires,
+    };
 };
 
 const User = mongoose.model('User', userSchema);

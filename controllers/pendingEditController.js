@@ -1,13 +1,14 @@
-const mongoose = require('mongoose');
-const Loan = require('../models/loan');
-const User = require('../models/user');
-const Customer = require('../models/customer');
-const PendingEdit = require('../models/pendingEdit');
+const Customer = require('../models/customerModel');
 const debug = require('debug')('app:pendingEditCtrl');
 const flattenObject = require('../utils/convertToDotNotation');
+const Loan = require('../models/loan');
 const logger = require('../utils/logger')('pendingEditCtrl.js');
+const mongoose = require('mongoose');
+const PendingEdit = require('../models/pendingEdit');
+const ServerError = require('../errors/serverError');
+const User = require('../models/user');
 
-const ctrlFuncs = {
+module.exports = {
     create: async function (user, payload) {
         try {
             const newPendingEdit = new PendingEdit({
@@ -17,7 +18,7 @@ const ctrlFuncs = {
                 type: payload.type,
                 modifiedBy: {
                     id: user.id,
-                    name: user.fullName,
+                    name: user.fullName || user.id,
                     role: user.role,
                     timestamp: new Date(),
                 },
@@ -38,15 +39,12 @@ const ctrlFuncs = {
             });
             debug(exception);
 
-            // Validation errors
+            // if exception is a validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return {
-                    errorCode: 400,
-                    message: exception.errors[field].message.replace('Path', ''),
-                };
+                return new ServerError(400, exception.errors[field].message.replace('Path', ''));
             }
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -484,5 +482,3 @@ const ctrlFuncs = {
         }
     },
 };
-
-module.exports = ctrlFuncs;

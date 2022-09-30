@@ -2,7 +2,7 @@ const _ = require('lodash');
 const { DateTime } = require('luxon');
 const { roles } = require('../utils/constants');
 const convertToDotNotation = require('../utils/convertToDotNotation');
-const Customer = require('../models/customer');
+const Customer = require('../models/customerModel');
 const debug = require('debug')('app:customerCtrl');
 const Loan = require('../models/loan');
 const logger = require('../utils/logger')('customerCtrl.js');
@@ -11,7 +11,7 @@ const originController = require('./origin');
 const PendingEditController = require('./pendingEditController');
 const ServerError = require('../errors/serverError');
 
-const ctrlFuncs = {
+module.exports = {
     create: async function (user, payload) {
         try {
             // TODO: uncomment this later
@@ -53,7 +53,7 @@ const ctrlFuncs = {
             // TODO: api call to deduct
             // const originCopy = await originController.getOne({ippis: payload.employmentInfo.ippis});
             // if(originCopy.hasOwnProperty('errorCode')) return { errorCode: 404, message: 'Could not find Origin copy.'};
-            // customer.netPay.value = originCopy.netPays[0];
+            // customer.netPay = originCopy.netPays[0];
 
             await customer.save();
 
@@ -143,7 +143,7 @@ const ctrlFuncs = {
                         'states',
                     ])
                 );
-
+                console.log(queryParams);
                 // String Filter - displayName
                 if (filters.name)
                     queryParams.displayName = new RegExp(filters.name, 'i');
@@ -154,15 +154,13 @@ const ctrlFuncs = {
 
                 // Number Filter - Net Pay
                 if (filters.netPay?.min)
-                    queryParams['netPay.value'] = {
+                    queryParams.netPay = {
                         $gte: filters.netPay.min,
                     };
                 if (filters.netPay?.max) {
-                    const target = queryParams['netPay.value']
-                        ? queryParams['netPay.value']
-                        : {};
+                    const target = queryParams.netPay ? queryParams.netPay : {};
 
-                    queryParams['netPay.value'] = Object.assign(target, {
+                    queryParams.netPay = Object.assign(target, {
                         $lte: filters.netPay.max,
                     });
                 }
@@ -188,8 +186,8 @@ const ctrlFuncs = {
                             .toUTC(),
                     });
                 }
-
-                customers = await Customer.find(queryParams)
+                console.log(queryParams);
+                customers = await Customer.find(queryParams, { lenders: 0 })
                     .populate('employmentInfo.segment')
                     .sort('-createdAt'); // descending order
             }
@@ -218,18 +216,22 @@ const ctrlFuncs = {
                 ? { _id: id, lenders: user.lenderId }
                 : { 'employmentInfo.ippis': id, lenders: user.lenderId };
 
-            const customer = await Customer.findOne(queryParams).exec();
-            if (!customer)
-                return { errorCode: 404, message: 'Customer not found.' };
+            const foundCustomer = await Customer.findOne(queryParams);
+            if (!foundCustomer)
+                return new ServerError(404, 'Customer not found');
 
             return {
                 message: 'Success',
-                data: customer,
+                data: foundCustomer,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'getOne',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -240,22 +242,20 @@ const ctrlFuncs = {
             const queryParams = { _id: id, lenders: user.lenderId };
 
             const customer = await Customer.findOne(queryParams);
-            if (!customer)
-                return { errorCode: 404, message: 'Customer not found.' };
+            if (!customer) return new ServerError(404, 'Customer not found');
 
-            if (user.role !== 'Admin') {
+            // If not operations, submit pending
+            if (user.role !== roles.operations) {
                 const newPendingEdit = await PendingEditController.create(
                     user,
-                    id,
-                    'Customer',
-                    alteration
+                    { docId: id, type: 'Customer', alteration }
                 );
-                if (newPendingEdit.errorCode) {
+                if (newPendingEdit instanceof ServerError) {
                     debug(newPendingEdit);
-                    return {
-                        errorCode: 500,
-                        message: 'Failed to create pending edit.',
-                    };
+                    return new ServerError(
+                        500,
+                        'Failed to create change request'
+                    );
                 }
 
                 return {
@@ -282,21 +282,18 @@ const ctrlFuncs = {
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
-                return {
-                    errorCode: 409,
-                    message: field + ' has already been taken.',
-                };
+                new ServerError(409, field + ' already in use');
             }
 
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return {
-                    errorCode: 400,
-                    message: exception.errors[field].message,
-                };
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
             }
 
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -367,23 +364,25 @@ const ctrlFuncs = {
                 ? { _id: id, lenders: user.lenderId }
                 : { 'employmentInfo.ippis': id, lenders: user.lenderId };
 
-            const customer = await Customer.findOne(queryParams);
-            if (!customer)
-                return { errorCode: 404, message: 'Customer not found.' };
+            const deletedCustomer = await Customer.findOne(queryParams);
+            if (!deletedCustomer)
+                return new ServerError(404, 'Customer not found');
 
-            customer.removeLender(user.lenderId);
+            deletedCustomer.removeLender(user.lenderId);
 
-            await customer.save();
+            await deletedCustomer.save();
 
             return {
                 message: 'Customer has been deleted.',
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 };
-
-module.exports = ctrlFuncs;

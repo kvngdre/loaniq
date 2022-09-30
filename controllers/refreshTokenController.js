@@ -19,12 +19,12 @@ async function handleRefreshToken(type, cookies, res) {
 
         if (type === 'lenders')
             var foundUser = await Lender.findOne(
-                { refreshTokens: refreshToken },
+                { refreshTokens: {$elemMatch: { token: refreshToken }  }},
                 { password: 0, otp: 0 }
             );
         else
             var foundUser = await User.findOne(
-                { refreshTokens: refreshToken },
+                { refreshTokens: {$elemMatch: { token: refreshToken } }},
                 { password: 0, otp: 0 }
             );
 
@@ -52,7 +52,7 @@ async function handleRefreshToken(type, cookies, res) {
         }
 
         foundUser.refreshTokens = foundUser.refreshTokens.filter(
-            (rt) => rt !== refreshToken
+            (rt) => rt.token !== refreshToken && Date.now() < rt.exp
         );
         await foundUser.save();
 
@@ -77,7 +77,7 @@ async function handleRefreshToken(type, cookies, res) {
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure
-        res.cookie('jwt', newRefreshToken, { 
+        res.cookie('jwt', newRefreshToken.token, { 
             httpOnly: true, 
             sameSite: 'None', 
             // secure: true, 

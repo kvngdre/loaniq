@@ -48,7 +48,7 @@ async function login(type, email, password, cookies, res) {
         if (cookies?.jwt) {
             // If found jwt cookie, del from db and clear cookie.
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
-                (rt) => rt !== cookies.jwt
+                (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
             // TODO: uncomment secure
             res.clearCookie('jwt', {
@@ -65,7 +65,7 @@ async function login(type, email, password, cookies, res) {
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
-        res.cookie('jwt', newRefreshToken, {
+        res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
             // secure: true,
@@ -122,9 +122,9 @@ async function logout(type, cookies, res) {
             return new ServerError(204);
         }
 
-        // deleting refresh token from user refresh tokens
+        // deleting refresh token from user refresh tokens on db
         foundUser.refreshTokens = foundUser.refreshTokens.filter(
-            (rt) => rt !== refreshToken
+            (rt) => rt.token !== refreshToken && Date.now() < rt.exp
         );
         await foundUser.save();
 
@@ -157,7 +157,6 @@ async function verifySignUp(type, email, password, otp, cookie) {
             // type is equal to users
             var foundUser = await User.findOne({ email });
         }
-        console.log(foundUser)
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
 
         const isMatch = await bcrypt.compare(password, foundUser.password);
@@ -177,7 +176,7 @@ async function verifySignUp(type, email, password, otp, cookie) {
         if (cookies?.jwt) {
             // If found jwt cookie, del from db and clear cookie.
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
-                (rt) => rt !== cookies.jwt
+                (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
             // TODO: uncomment secure
             res.clearCookie('jwt', {
@@ -197,7 +196,7 @@ async function verifySignUp(type, email, password, otp, cookie) {
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
-        res.cookie('jwt', newRefreshToken, {
+        res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
             // secure: true,

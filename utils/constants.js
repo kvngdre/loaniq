@@ -1,4 +1,12 @@
 module.exports = {
+    maritalStatus: [
+        'Single',
+        'Married',
+        'Divorced',
+        'Separated',
+        'Widow',
+        'Widower',
+    ],
     roles: {
         // support: 'Support',
         admin: 'Admin',
@@ -8,4 +16,23 @@ module.exports = {
         master: 'Master',
         operations: 'Operations',
     },
+    relationships: [
+        'Daughter',
+        'Brother',
+        'Cousin',
+        'Father',
+        'Mother',
+        'Nephew',
+        'Sister',
+        'Spouse',
+        'Niece',
+        'Son',
+    ],
+    validIds: [
+        'Voters card',
+        'International passport',
+        'Staff ID card',
+        'National ID card',
+        "Driver's license",
+    ],
 };
