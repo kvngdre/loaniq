@@ -35,7 +35,7 @@ router.post(
     }
 );
 
-router.get('/', verifyToken, verifyRole([roles.master, roles.owner]), async (req, res) => {
+router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
     const lenders = await lenderController.getAll();
     if (lenders.hasOwnProperty('errorCode'))
         return res.status(lenders.errorCode).send(lenders.message);

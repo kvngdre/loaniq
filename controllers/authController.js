@@ -101,7 +101,7 @@ async function login(email, password, cookies, res) {
     }
 }
 
-async function logout(type, cookies, res) {
+async function logout(cookies, res) {
     try {
         if (!cookies?.jwt) return new ServerError(204);
         const refreshToken = cookies.jwt;
