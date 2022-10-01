@@ -1,38 +1,30 @@
 const _ = require('lodash');
+const { roles } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const User = require('../models/userModel');
 const debug = require('debug')('app:userCtrl');
-const sendOTPMail = require('../utils/mailer');
+const mailer = require('../utils/mailer');
 const Segment = require('../models/segment');
 const generateOTP = require('../utils/generateOTP');
 const logger = require('../utils/logger')('userCtrl.js');
-const generateRandomPassword = require('../utils/generatePassword');
+const generatePassword = require('../utils/generatePassword');
 const ServerError = require('../errors/serverError');
 
 const userCtrlFuncs = {
     /**
      *  function creates a user.
-     * @param {string} role
      * @param {object} payload
      * @param {object} user
      * @returns A new user.
      */
     create: async function (payload, user) {
         try {
-            const rounds = config.get('salt_rounds');
             const allSegments = await Segment.find().select('_id');
-            
             switch (payload.role) {
-                case 'Admin':
-                    if (user.role !== 'Lender') return new ServerError(401, 'Unauthorized');
-
-                    // Encrypting password
-                    var temporaryPassword = generateRandomPassword();
-                    var encryptedTempPassword = await bcrypt.hash(
-                        temporaryPassword,
-                        rounds
-                    );
+                case roles.admin:
+                    if (user.role !== roles.owner) return new ServerError(401, 'Unauthorized');
+                    var temporaryPassword = generatePassword();
 
                     var newUser = new User({
                         lenderId: user.id,
@@ -40,21 +32,23 @@ const userCtrlFuncs = {
                         displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
-                        password: encryptedTempPassword,
+                        password: temporaryPassword,
                         otp: generateOTP(),
                         role: payload.role,
                         timeZone: payload.timeZone,
                     });
                     break;
 
-                case 'Credit':
+                case roles.credit:
+                    var temporaryPassword = generatePassword();
+
                     var newUser = new User({
                         lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
-                        password: generateRandomPassword(),
+                        password: temporaryPassword,
                         otp: generateOTP(),
                         role: payload.role,
                         segments:
@@ -65,32 +59,24 @@ const userCtrlFuncs = {
                     });
                     break;
 
-                case 'Operations':
-                    var temporaryPassword = generateRandomPassword();
-                    var encryptedPassword = await bcrypt.hash(
-                        temporaryPassword,
-                        rounds
-                    );
-
+                case roles.operations:
+                    var temporaryPassword = generatePassword();
+                    
                     var newUser = new User({
                         lenderId: user.lenderId,
                         name: payload.name,
                         displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
-                        password: encryptedPassword,
+                        password: temporaryPassword,
                         otp: generateOTP(),
                         role: payload.role,
                         timeZone: payload.timeZone,
                     });
                     break;
 
-                case 'Loan Agent':
-                    var temporaryPassword = generateRandomPassword();
-                    var encryptedPassword = await bcrypt.hash(
-                        temporaryPassword,
-                        rounds
-                    );
+                case roles.agent:
+                    var temporaryPassword = generatePassword();
 
                     var newUser = new User({
                         lenderId: user.lenderId,
@@ -98,7 +84,7 @@ const userCtrlFuncs = {
                         displayName: payload.displayName,
                         phone: payload.phone,
                         email: payload.email,
-                        password: encryptedPassword,
+                        password: temporaryPassword,
                         otp: generateOTP(),
                         role: payload.role,
                         segments:
@@ -112,17 +98,17 @@ const userCtrlFuncs = {
             }
 
             await newUser.save();
-            newUser.password = temporaryPassword;
+            // newUser.password = temporaryPassword;
 
             // Sending OTP & Password to user email.
-            const mailResponse = await sendOTPMail(
+            const response = await mailer(
                 payload.email,
                 payload.name.firstName,
                 newUser.otp.OTP,
                 temporaryPassword
             );
-            if (mailResponse instanceof Error) {
-                debug(`Error OTP: ${mailResponse.message}`);
+            if (response instanceof Error) {
+                debug(`Error OTP: ${response.message}`);
                 return { errorCode: 502, message: 'Error sending OTP & password.' };
             }
 
@@ -277,7 +263,7 @@ const userCtrlFuncs = {
             ).select('email otp');
             if (!user) return { errorCode: 404, message: 'User document not found.' };
 
-            const mailResponse = await sendOTPMail(
+            const mailResponse = await mailer(
                 email,
                 user.name.firstName,
                 user.otp.OTP

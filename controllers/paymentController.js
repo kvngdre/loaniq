@@ -1,81 +1,74 @@
+const debug = require('debug')('app:paymentCtrl');
 const flwService = require('../services/flutterwave');
-const Lender = require('../models/lenderModel');
+const logger = require('../utils/logger')('paymentCtrl.js');
 const ServerError = require('../errors/serverError');
 const skService = require('../services/paystack');
 const Transaction = require('../models/transaction');
 
 /**
- * Generates a payment link based on user choice.
+ * Generates a payment link.
  * @param {Object} params - Function parameters
- * @property {string} params.id - The user's id.
- * @property {string} params.email - The user's email
  * @property {number} params.amount - The amount the user wishes to fund.
- * @property {number} [params.choice=0] - Paystack = 0; Flutterwave = 1.
+ * @property {Object} params.customer - customer details.
+ * @property {Object} customer.name - customer name.
+ * @property {Object} customer.email - customer email.
+ * @property {Object} customer.phonenumber - customer phone number.
  * @returns {Object} Returns a payment link from either Paystack or Flutterwave.
  */
 async function getPaymentLink(params) {
     try {
-        const id = params.id;
-        const email = params.email;
-        const amount = params.amount;
-        let choice = params.choice !== undefined ? params.choice : 0;
-        let response = null;
-
-        const lender = await Lender.findById(id);
-        if (!lender) return new ServerError(404, 'Lender not found');
+        const { lenderId, balance, amount, customer } = params;
 
         // get paystack link
-        if (choice === 0)
-            response = await skService.getPaymentLink({ amount, email });
+        // if (defaultOption === 0)
+        let response = await skService.getPaymentLink({
+            amount,
+            email: customer.email,
+        });
+        let gateway = 'Paystack';
 
         // if failure getting paystack fall back to flutterwave
-        if (
-            response.status !== 200 ||
-            response instanceof Error ||
-            choice === 1
-        ) {
+        if (response.status !== 200 || response instanceof Error) {
+            gateway = 'Flutterwave';
             response = await flwService.getPaymentLink({
                 amount,
-                customerDetails: {
-                    name: lender.companyName,
-                    email,
-                    phonenumber: lender.phone,
-                },
+                customerDetails: customer,
             });
         }
 
+        // if both fail
         if (response.status !== 200 || response instanceof Error)
             return new ServerError(424, 'Error initializing transaction.');
 
         const newTransaction = new Transaction({
-            lenderId: lender._id.toString(),
-            provider: choice ? 'Flutterwave' : 'Paystack',
+            lenderId,
+            provider: gateway,
             status: 'Pending',
             reference: response.data.data.reference,
             category: 'Credit',
             amount: amount,
-            balance: lender.balance,
+            balance: balance,
         });
 
         await newTransaction.save();
 
         return {
-            message: 'Transaction initialized.',
+            message: 'Transaction initialized',
             data: {
                 reference: response.data.data.reference,
-                paymentLink:
+                url:
                     response.data.data.authorization_url ||
                     response.data.data.link,
             },
         };
     } catch (exception) {
         logger.error({
-            method: getPaymentLink,
+            method: 'getPaymentLink',
             message: exception.message,
             meta: exception.stack,
         });
         debug(exception);
-        return { errorCode: 500, message: 'Something went wrong' };
+        return new ServerError(500, 'Something went wrong');
     }
 }
 

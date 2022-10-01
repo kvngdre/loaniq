@@ -1,29 +1,64 @@
 const _ = require('lodash');
+const { getPaymentLink } = require('../controllers/paymentController');
 const { roles } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
+const flattenObject = require('../utils/convertToDotNotation');
 const generateOTP = require('../utils/generateOTP');
+const generatePassword = require('../utils/generatePassword');
 const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
-const Segment = require('../models/segment');
 const mailer = require('../utils/mailer');
+const Settings = require('../models/settings');
+const Segment = require('../models/segment');
 const ServerError = require('../errors/serverError');
 const User = require('../models/userModel');
-const flattenObject = require('../utils/convertToDotNotation');
 
 module.exports = {
     create: async function (payload) {
         try {
-            const newLender = new Lender(payload);
-            await newLender.save();
-
             // TODO: generate public URL.
+            const newLender = new Lender(payload.lender);
+            const newUser = new User({
+                lenderId: newLender._id.toString(),
+                name: payload.user.name,
+                email: payload.user.email,
+                password: generatePassword(),
+                role: roles.owner,
+                otp: generateOTP(),
+            });
+            const settings = new Settings({
+                userId: newUser._id,
+            });
+            // Sending OTP & Password to user email.
+            const response = await mailer(
+                newUser.email,
+                newUser.name.firstName,
+                newUser.otp.OTP,
+                newUser.password
+            );
+            if (response instanceof Error) {
+                debug(`Error OTP: ${response.message}`);
+                return new ServerError(424, 'Failed to create account. Error sending OTP & password');
+            }
+
+            await newLender.save();
+            await newUser.save();
+            await settings.save();
 
             return {
-                message: 'Lender created.',
-                data: newLender,
+                message: 'Lender created. Password & OTP sent to user email.',
+                data: {
+                    lender: newLender,
+                    user: _.omit(newUser._doc, [
+                        'password',
+                        'otp',
+                        'queryName',
+                        'refreshTokens',
+                    ]),
+                },
             };
         } catch (exception) {
             logger.error({
@@ -47,40 +82,44 @@ module.exports = {
                 const field = Object.keys(exception.errors)[0];
                 return new ServerError(
                     400,
-                    exception.errors[field].message.replace('path', '')
+                    exception.errors[field].message.replace('Path', '')
                 );
             }
 
             return new ServerError(500, 'Something went wrong');
-            new ServerError(500, 'Something went wrong');
         }
     },
 
-    verify: async function (id, otp) {
+    activate: async function (id, payload) {
         try {
-            if (!otp.match(/^[0-9]{8}$/))
-                return new ServerError(400, 'Invalid OTP');
+            const { cacNumber, otp, support } = payload;
 
             const lender = await Lender.findById(id);
-            if (!lender) return new ServerError(404, 'Lender not found');
+            if (!lender) return new ServerError(404, 'Tenant not found');
 
-            if (Date.now() > lender.otp.expires || otp !== lender.otp.OTP) {
+            if (Date.now() > lender.otp.exp || otp !== lender.otp.OTP) {
                 // OTP not valid or expired.
                 return new ServerError(400, 'Invalid OTP');
             }
 
-            await lender.updateOne({
+            lender.set({
                 emailVerified: true,
+                active: true,
                 'otp.OTP': null,
+                'otp.exp': null,
+                cacNumber,
+                support
             });
 
+            await lender.save();
+
             return {
-                message: 'Email has been verified',
-                data: lender,
+                message: 'Tenant has been activated',
+                data: _.omit(lender._doc, ['otp']),
             };
         } catch (exception) {
             logger.error({
-                method: 'getAll',
+                method: 'activate',
                 message: exception.message,
                 meta: exception.stack,
             });
@@ -93,10 +132,10 @@ module.exports = {
         try {
             const lenders = await Lender.find().sort('companyName');
             if (lenders.length === 0)
-                return { errorCode: 404, message: 'No lenders found.' };
+                return { errorCode: 404, message: 'Tenants not found' };
 
             return {
-                message: 'Success',
+                message: 'success',
                 data: lenders,
             };
         } catch (exception) {
@@ -161,7 +200,7 @@ module.exports = {
                 );
             }
 
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return { errorCode: 500, message: 'Something went wrong' };
         }
     },
 
@@ -169,7 +208,7 @@ module.exports = {
         try {
             // payload = convertToDotNotation(payload);
             const lender = await Lender.findById(id);
-            if (!lender) return new ServerError(404, 'Lender not found');
+            if (!lender) return new ServerError(404, 'Tenant not found');
 
             if (payload.segment) {
                 const isMatch = (segment) => segment.id === payload.segment.id;
@@ -178,9 +217,7 @@ module.exports = {
                 if (index > -1) {
                     // segment found, update parameters
                     Object.keys(payload.segment).forEach((key) => {
-                        if (key === 'maxDti')
-                            settings.segments[index]['useDefault'] = false;
-                        settings.segments[index][key] = payload.segment[key];
+                        lender.segments[index][key] = payload.segment[key];
                     });
                 } else {
                     // segment not found, push new segment parameters
@@ -206,7 +243,7 @@ module.exports = {
 
             return {
                 message: 'Parameters updated.',
-                data: lender,
+                data: _.omit(lender._doc, ['otp'])
             };
         } catch (exception) {
             logger.error({
@@ -221,7 +258,7 @@ module.exports = {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
 
-                return new ServerError(409, field + ' is already in use');
+                return new ServerError(409, 'Duplicate' + field);
             }
 
             // validation error
@@ -237,20 +274,66 @@ module.exports = {
         }
     },
 
-    sendOTP: async function (id) {
+    genPublicUrl: async function (id, ) {
+        try{
+            const lender = await Lender.findById(id);
+            if(!lender) return new ServerError(404, 'Tenant not found.');
+            if(!lender.active) return new ServerError(403, 'Tenant is yet to be activated.');
+
+        }catch(exception) {
+
+        }
+
+    },
+
+    fundWallet: async function(id, amount) {
+        try{
+            const lender = await Lender.findById(id);
+            if(!lender) return new ServerError(404, 'Tenant not found.');
+            if(!lender.active) return new ServerError(403, 'Tenant is yet to be activated');
+
+            const link = await getPaymentLink({
+                lenderId: lender._id.toString(),
+                balance: lender.balance,
+                amount,
+                customer: {
+                    name: lender.companyName,
+                    email: lender.email,
+                    phonenumber: lender.phone,
+                }
+            });
+            if(link instanceof ServerError) return new ServerError(424, 'Failed to initialize transaction');
+
+            return {
+                message: 'success',
+                data: link.data
+            };
+        }catch(exception) {
+            logger.error({
+                method: 'fundWallet',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    sendOtp: async function (id) {
         try {
             // TODO: add email template.
-            const lender = await Lender.findById(id).select('email otp');
-            if (!lender) return new ServerError(404, 'Lender not found');
+            const lender = await Lender.findById(id);
+            if (!lender) return new ServerError(404, 'Tenant not found');
 
             lender.set({
-                otp: generateOtp()
+                otp: generateOTP(),
             });
             const response = await mailer(
                 lender.email,
                 lender.companyName,
                 lender.otp.OTP
             );
+            console.log(response);
             if (response instanceof Error) {
                 debug(`Error sending OTP: ${response.message}`);
                 return new ServerError(424, 'Error sending OTP');
@@ -259,7 +342,7 @@ module.exports = {
             await lender.save();
 
             return {
-                message: 'OTP has been sent to your email',
+                message: 'OTP sent to tenant email',
                 data: {
                     email: lender.email,
                     otp: lender.otp.OTP,
@@ -286,11 +369,13 @@ module.exports = {
             const lender = await Lender.findById(id).select(
                 'companyName balance'
             );
-            if (!lender) return new ServerError(404, 'Lender not found');
+            if (!lender) return new ServerError(404, 'Tenant not found');
 
             return {
-                message: 'Success',
-                data: lender.balance,
+                message: 'success',
+                data: {
+                    balance: lender.balance
+                },
             };
         } catch (exception) {
             logger.error({
@@ -308,25 +393,27 @@ module.exports = {
             const lender = await Lender.findById(id);
 
             const isMatch = await bcrypt.compare(password, lender.password);
-            if (!isMatch)
-                return new ServerError(401, 'Password is incorrect');
+            if (!isMatch) return new ServerError(401, 'Password is incorrect');
 
-            
             if (user.role !== roles.master) {
                 // send a deactivation email request
                 // TODO: Create template for deactivation.
-                const mailResponse = await mailer(
+                const response = await mailer(
                     config.get('support.email'), // apexxia support
                     lender.companyName,
-                    user.fullName,
+                    user.fullName
                 );
-                if (mailResponse instanceof Error) {
-                    debug(`Error sending OTP: ${mailResponse.message}`);
-                    return new ServerError(424, 'Error sending deactivation email request');
+                if (response instanceof Error) {
+                    debug(`Error sending OTP: ${response.message}`);
+                    return new ServerError(
+                        424,
+                        'Error sending deactivation email request'
+                    );
                 }
 
                 return {
-                    message: 'Deactivation has been sent. We would get in touch with you shortly.',
+                    message:
+                        'Deactivation has been sent. We would get in touch with you shortly.',
                 };
             } else {
                 await User.updateMany(

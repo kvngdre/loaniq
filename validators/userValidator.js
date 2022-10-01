@@ -19,12 +19,10 @@ const nameSchema = Joi.object({
         'string.min': `First name is too short.`,
         'string.max': `first name is too long.`,
     }),
-
     last: Joi.string().min(3).max(30).messages({
         'string.min': `Surname is too short.`,
         'string.max': `Surname is too long.`,
     }),
-
     middle: Joi.string().min(3).max(30).messages({
         'string.min': `Middle name is too short.`,
         'string.max': `Middle name is too long.`,
@@ -33,7 +31,16 @@ const nameSchema = Joi.object({
 
 const genderSchema = Joi.string().valid('Male', 'Female');
 
-const dateOfBirthSchema = Joi.date()
+const jobTitleSchema = Joi.string().min(2).max(50).messages({
+    'string.min': `Job title is too short.`,
+    'string.max': `Job title is too long.`,
+})
+
+const dobSchema = Joi.object({
+    day: Joi.number().min(1).max(31).required,
+    month: Joi.number().min(1).max(12).required(),
+    year: Joi.number().min(1970).max(new Date().getFullYear())
+})
     .custom(isValidDOB)
     .message({ 'date.less': 'Must be 18 years or older.' });
 
@@ -83,74 +90,92 @@ const validators = {
         if (!user.role)
             return {
                 error: {
-                    details: [{ message: 'Role is required.' }],
+                    details: [{ message: 'Role is required' }],
                 },
             };
 
         switch (user.role) {
             case roles.owner:
             case roles.admin:
-                return function (user) {
+                return (function (user) {
                     const schema = Joi.object({
-                        lenderId: Joi.objectId(),
+                        lenderId: Joi.objectId().required(),
                         name: nameSchema.required(),
+                        title: jobTitleSchema,
                         gender: genderSchema.required(),
+                        dob: dobSchema,
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().equal('Admin').required(),
+                        role: Joi.string().valid(roles.admin, roles.owner).required(),
                     });
                     return schema.validate(user);
-                }.call(this, user);
+                }).call(this, user);
 
             case roles.credit:
-                return function (user) {
+                return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
+                        title: jobTitleSchema,
                         gender: genderSchema.required(),
+                        dob: dobSchema,
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().equal('Credit').required(),
+                        role: Joi.string().valid(roles.credit).required(),
                         segments: segmentSchema.required(),
                     });
                     return schema.validate(user);
-                }.call(this, user);
+                }).call(this, user);
 
             case roles.operations:
-                return function (user) {
+                return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema,
+                        title: jobTitleSchema,
                         gender: genderSchema.required(),
+                        dob: dobSchema,
                         displayName: Joi.string(),
                         phone: phoneSchema,
                         email: emailSchema,
-                        role: Joi.string().equal('Operations').required(),
+                        role: Joi.string().valid(roles.operations).required(),
                     });
                     return schema.validate(user);
-                }.call(this, user);
+                }).call(this, user);
 
             case roles.agent:
-                return function (user) {
+                return (function (user) {
                     const schema = Joi.object({
                         name: nameSchema.required(),
+                        title: jobTitleSchema,
                         gender: genderSchema.required(),
+                        dob: dobSchema,
                         displayName: Joi.string(),
                         phone: phoneSchema.required(),
                         email: emailSchema.required(),
-                        role: Joi.string().equal('Loan Agent').required(),
+                        role: Joi.string().valid(roles.agent).required(),
                         segments: segmentSchema.required(),
                         target: Joi.number().required(),
                         achieved: Joi.number(),
                     });
                     return schema.validate(user);
-                }.call(this, user);
+                }).call(this, user);
 
-            case 'Jk':
-                return function () {
-                    console.log('in here');
-                    return 'I returned';
-                }.call(this);
+            case roles.master:
+                return (function (user) {
+                    const schema = Joi.object({
+                        lenderId: Joi.objectId().required(),
+                        name: nameSchema.required(),
+                        title: jobTitleSchema,
+                        gender: genderSchema.required(),
+                        dob: dobSchema,
+                        displayName: Joi.string(),
+                        phone: phoneSchema.required(),
+                        email: emailSchema.required(),
+                        role: Joi.string().valid(roles.admin, roles.owner).required(),
+                    });
+                    return schema.validate(user);
+                }).call(this, user);
 
             default:
                 return {

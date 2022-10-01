@@ -22,7 +22,6 @@ function verifyToken(req, res, next) {
         ) {
             return res.status(403).send('Invalid token provided.');
         }
-
         req.user = decoded;
 
         next();
@@ -33,7 +32,7 @@ function verifyToken(req, res, next) {
             meta: exception.stack,
         });
         debug(exception.message);
-        return res.status(403).send('Invalid token provided.');
+        return res.status(403).send(exception.message);
     }
 }
 

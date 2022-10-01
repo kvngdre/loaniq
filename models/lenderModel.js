@@ -19,17 +19,24 @@ const lenderSchema = new mongoose.Schema(
         },
 
         companyAddress: {
-            type: String,
-            trim: true,
-            minLength: 10,
-            maxLength: 255,
-            required: true,
+            address: {
+                type: String,
+                trim: true,
+                required: true
+            },
+            lga: {
+                type: String,
+                required: true
+            },
+            state: {
+                type: String,
+                required: true
+            },
         },
 
         cacNumber: {
             type: String,
             unique: true,
-            required: true,
         },
 
         category: {
@@ -58,16 +65,18 @@ const lenderSchema = new mongoose.Schema(
 
         active: {
             type: Boolean,
-            default: true,
+            default: false,
         },
 
         otp: {
             OTP: {
                 type: String,
+                default: null
             },
 
-            expires: {
+            exp: {
                 type: Number,
+                default: null
             },
         },
 
@@ -99,7 +108,7 @@ const lenderSchema = new mongoose.Schema(
             email: {
                 type: String,
                 trim: true,
-                required: true,
+                default: null
             },
 
             phone: {

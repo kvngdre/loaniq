@@ -84,7 +84,7 @@ const sendMail = async function(userEmailAddress, name, generatedOTP, tempPasswo
     }; 
 
     try{
-        await transporter.sendMail(mailOptions);
+        return await transporter.sendMail(mailOptions);
 
     }catch(exception) {
         debug(exception);

@@ -6,19 +6,24 @@ const companyNameSchema = Joi.string().min(10).max(50).messages({
     'string.max': `Company name is too long.`,
 });
 
-const addressSchema = Joi.string().min(10).max(70).messages({
-    'string.min': `Company address is too short.`,
-    'string.max': `Company address is too long.`,
+const addressSchema = Joi.object({
+    address: Joi.string().min(9).max(70).messages({
+        'string.min': `Street name is too short.`,
+        'string.max': `Street name is too long.`,
+    }),
+    lga: Joi.string(),
+    state: Joi.string(),
 });
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': `Invalid email address.`,
-    'string.max': `Invalid email address.`,
+    'string.min': 'Invalid email address',
+    'string.max': 'Invalid email address',
+    'string.email': 'Please enter a valid email',
 });
 
 const cacNumberSchema = Joi.string()
     .pattern(/^RC[0-9]{3,8}/)
-    .invalid('RC0000 RC000')
+    .invalid('RC0000', 'RC000')
     .messages({
         'any.invalid': 'Invalid CAC number',
         'string.pattern.base': 'CAC number must begin with "RC".',
@@ -33,12 +38,14 @@ const phoneSchema = Joi.string()
             'Invalid phone number, please include international dialling code.',
     });
 
-const categorySchema = Joi.string().valid('MFB', 'Finance House', 'Money Lender').messages({
-    'any.only': 'Not a valid category'
-});
+const categorySchema = Joi.string()
+    .valid('MFB', 'Finance House', 'Money Lender')
+    .messages({
+        'any.only': 'Not a valid category',
+    });
 
 const supportSchema = Joi.object({
-    email: emailSchema.required(),
+    email: emailSchema,
     phone: Joi.string()
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .messages({
@@ -46,8 +53,7 @@ const supportSchema = Joi.object({
             'string.max': 'Phone number is too long.',
             'string.pattern.base':
                 'Invalid support phone number, please include international dialling code.',
-        })
-        .required(),
+        }),
 });
 
 const socialSchema = Joi.object({
@@ -59,27 +65,79 @@ const socialSchema = Joi.object({
     tiktok: Joi.string(),
 });
 
+const nameSchema = Joi.object({
+    first: Joi.string().min(3).max(30).messages({
+        'string.min': `First name is too short.`,
+        'string.max': `first name is too long.`,
+    }),
+    last: Joi.string().min(3).max(30).messages({
+        'string.min': `Surname is too short.`,
+        'string.max': `Surname is too long.`,
+    }),
+    middle: Joi.string().min(3).max(30).messages({
+        'string.min': `Middle name is too short.`,
+        'string.max': `Middle name is too long.`,
+    }),
+});
+
+const otpSchema = Joi.string()
+    .pattern(/^[0-9]{8}$/)
+    .messages({ 'string.pattern.base': 'Invalid OTP' });
 
 const validators = {
-    create: function (lender) {
+    create: function (payload) {
         const schema = Joi.object({
-            logo: Joi.string(),
-            companyName: companyNameSchema.required(),
-            companyAddress: addressSchema.required(),
-            cacNumber: cacNumberSchema,
-            category: categorySchema.required(),
-            phone: phoneSchema.required(),
-            email: emailSchema.required(),
-            website: Joi.string(),
-            support: supportSchema,
-            social: socialSchema,
+            lender: {
+                companyName: companyNameSchema.required(),
+                companyAddress: addressSchema.required(),
+                // cacNumber: cacNumberSchema,
+                category: categorySchema.required(),
+                phone: phoneSchema.required(),
+                email: emailSchema.required(),
+                website: Joi.string(),
+                // support: supportSchema,
+                // social: socialSchema,
+            },
+            user: {
+                name: nameSchema.required(),
+                email: Joi.string()
+                    .email()
+                    .min(10)
+                    .max(50)
+                    .messages({
+                        'string.min': 'Invalid email address.',
+                        'string.max': 'Invalid email address.',
+                        'string.email': 'Please enter a valid user email',
+                    })
+                    .required(),
+                phone: Joi.string()
+                    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
+                    .messages({
+                        'string.min': 'Invalid phone number.',
+                        'string.max': 'Phone number is too long.',
+                        'string.pattern.base':
+                            'Invalid user phone number, please include international dialling code.',
+                    })
+                    .required(),
+            },
         });
 
-        return schema.validate(lender, { abortEarly: false });
+        return schema.validate(payload, { abortEarly: false });
+    },
+
+    activate: function (lender) {
+        const schema = Joi.object({
+            otp: otpSchema.required(),
+            cacNumber: cacNumberSchema.required(),
+            support: supportSchema.required(),
+        });
+
+        return schema.validate(lender);
     },
 
     update: function (lender) {
         const schema = Joi.object({
+            logo: Joi.string(),
             companyName: companyNameSchema,
             companyAddress: addressSchema,
             cacNumber: cacNumberSchema,
@@ -126,10 +184,9 @@ const validators = {
 
     fundAccount: function (payload) {
         const schema = Joi.object({
-            amount: Joi.number().precision(2).min(100.0).required().messages({
-                'number.min': 'Minimum amount is 100.00.',
+            amount: Joi.number().precision(2).min(500).required().messages({
+                'number.min': 'Minimum amount is 500.00.',
             }),
-            choice: Joi.number().min(0).max(1),
         });
 
         return schema.validate(payload);

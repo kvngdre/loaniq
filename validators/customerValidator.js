@@ -90,7 +90,7 @@ const employmentSchema = Joi.object({
 
 const bvnSchema = Joi.string()
     .pattern(/^22[0-9]{9}$/)
-    .message({ 'string.pattern.base': 'Invalid BVN.' });
+    .message({ 'string.pattern.base': 'Invalid BVN' });
 
 const idSchema = Joi.object({
     idType: Joi.string().valid(
@@ -102,7 +102,7 @@ const idSchema = Joi.object({
     ),
     idNumber: Joi.string()
         .pattern(/^([a-zA-Z]{2,7})?.[0-9]{3,11}$/)
-        .messages({ 'string.pattern.base': 'Invalid ID number.' }),
+        .messages({ 'string.pattern.base': 'Invalid ID number' }),
 });
 
 const nokSchema = Joi.object({
@@ -115,15 +115,15 @@ const nokSchema = Joi.object({
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .message({
             'string.pattern.base':
-                'Invalid next of kin phone number, please include international dialing code.',
+                'Invalid next of kin phone number, please include international dialling code',
         }),
     relationship: Joi.string(),
 });
 
 const accountInfoSchema = Joi.object({
     accountName: Joi.string().min(10).max(70).messages({
-        'string.min': `Account name is too short.`,
-        'string.max': `Account name is too long.`,
+        'string.min': 'Account name is too short',
+        'string.max': 'Account name is too long',
     }),
     accountNumber: Joi.string()
         .pattern(/^[0-9]{10}$/)

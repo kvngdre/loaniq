@@ -8,7 +8,7 @@ const userController = require('../controllers/userController');
 router.post(
     '/',
     verifyToken,
-    verifyRole([roles.admin, roles.lender]),
+    verifyRole([roles.admin, roles.owner]),
     async (req, res) => {
         const { error } = userValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -24,7 +24,7 @@ router.post(
 router.get(
     '/',
     verifyToken,
-    verifyRole([roles.admin, roles.lender]),
+    verifyRole([roles.admin, roles.owner]),
     async (req, res) => {
         const users = await userController.getAll(req.user.lenderId);
         if (users.hasOwnProperty('errorCode'))
@@ -37,7 +37,7 @@ router.get(
 router.get(
     '/:id?',
     verifyToken,
-    verifyRole([roles.admin, roles.lender]),
+    verifyRole([roles.admin, roles.owner]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
@@ -51,24 +51,20 @@ router.get(
     }
 );
 
-router.patch(
-    '/:id?',
-    verifyToken,
-    async (req, res) => {
-        const { error } = userValidators.validateEdit(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
+router.patch('/:id?', verifyToken, async (req, res) => {
+    const { error } = userValidators.validateEdit(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
-        const id = req.params.id !== undefined ? req.params.id : req.user.id;
+    const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
-        const user = await userController.update(id, req.body, {
-            lenderId: req.user.lenderId,
-        });
-        if (user.hasOwnProperty('errorCode'))
-            return res.status(user.errorCode).send(user.message);
+    const user = await userController.update(id, req.body, {
+        lenderId: req.user.lenderId,
+    });
+    if (user.hasOwnProperty('errorCode'))
+        return res.status(user.errorCode).send(user.message);
 
-        return res.status(200).send(user);
-    }
-);
+    return res.status(200).send(user);
+});
 
 router.post('/password', async (req, res) => {
     // const { error } = userValidators.validateChangePassword(req.body);

@@ -2,15 +2,11 @@ const router = require('express').Router();
 const authValidators = require('../validators/authValidator');
 const authController = require('../controllers/authController');
 
-router.post('/:type/login', async (req, res) => {
-    const type = req.params.type;
-    if (!['lenders', 'users'].includes(type)) return res.sendStatus(400);
-
+router.post('/login', async (req, res) => {
     const { error } = authValidators.login(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const response = await authController.login(
-        type,
         req.body.email,
         req.body.password,
         req.cookies,
@@ -22,25 +18,25 @@ router.post('/:type/login', async (req, res) => {
     return res.status(200).send(response);
 });
 
-router.get('/:type/logout', async (req, res) => {
-    const type = req.params.type;
-    if (!['lenders', 'users'].includes(type)) return res.sendStatus(400);
-
-    const response = await authController.logout(type, req.cookies, res);
+router.get('/logout', async (req, res) => {
+    const response = await authController.logout(req.cookies, res);
     if (response.hasOwnProperty('errorCode'))
         return res.status(response.errorCode).send(response.message);
 
     return res.status(204).send(response);
 });
 
-router.post('/:type/verify', async (req, res) => {
-    const type = req.params.type;
-    if (!['lenders', 'users'].includes(type)) return res.sendStatus(400);
-
+router.post('/verify', async (req, res) => {
     const { error } = authValidators.verify(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const isVerified = await authController.verifySignUp(type, req.body.email, req.body.password, req.body.otp);
+    const isVerified = await authController.verifySignUp(
+        req.body.email,
+        req.body.password,
+        req.body.otp,
+        req.cookies,
+        res
+    );
     if (isVerified.hasOwnProperty('errorCode'))
         return res.status(isVerified.errorCode).send(isVerified.message);
 

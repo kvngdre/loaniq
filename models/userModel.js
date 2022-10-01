@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
             },
         },
 
+        title: {
+            type: String,
+            minLength: 2,
+            maxLength: 50,
+        },
+
         queryName: {
             type: String,
             default: function () {
@@ -58,8 +64,8 @@ const userSchema = new mongoose.Schema(
             },
         },
 
-        title: {
-            type: String
+        dob: {
+            type: Date
         },
 
         phone: {
@@ -158,22 +164,24 @@ userSchema.virtual('fullName').get(function () {
     );
 });
 
-userSchema.pre('save', function(next) {
-    try{
-        if(this.isNew) {
-            this.password = bcrypt.hashSync(this.password, parseInt(config.get('salt_rounds')));
-        }
+userSchema.pre('save', function (next) {
+    try {
+        if (this.isNew)
+            this.password = bcrypt.hashSync(
+                this.password,
+                parseInt(config.get('salt_rounds'))
+            );
 
         next();
-    }catch(exception) {
+    } catch (exception) {
         next(exception);
     }
-})
+});
 
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
-            id: this._id,
+            id: this._id.toString(),
             lenderId: this.lenderId,
             fullName: this.fullName,
             email: this.email,

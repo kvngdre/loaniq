@@ -7,14 +7,9 @@ const logger = require('../utils/logger')('authCtrl.js');
 const ServerError = require('../errors/serverError');
 const User = require('../models/userModel');
 
-async function login(type, email, password, cookies, res) {
+async function login(email, password, cookies, res) {
     try {
-        if (type === 'lenders') {
-            var foundUser = await Lender.findOne({ email });
-        } else {
-            // type is equal to users
-            var foundUser = await User.findOne({ email }, { queryName: 0 });
-        }
+        const foundUser = await User.findOne({ email }, { queryName: 0 });
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
 
         const isMatch = await bcrypt.compare(password, foundUser.password);
@@ -51,6 +46,16 @@ async function login(type, email, password, cookies, res) {
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
                 (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
+
+            // token reuse detected, delete all refresh tokens.
+            const foundToken = await User.findOne({
+                refreshTokens: { $elemMatch: { token: cookies.jwt } },
+            });
+            if (!foundToken) {
+                foundUser.refreshTokens = [];
+                await foundUser.save();
+            }
+
             // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
@@ -101,17 +106,10 @@ async function logout(type, cookies, res) {
         if (!cookies?.jwt) return new ServerError(204);
         const refreshToken = cookies.jwt;
 
-        if (type === 'lenders')
-            var foundUser = await Lender.findOne(
-                { refreshTokens: {$elemMatch: { token: refreshToken }  }},
-                { password: 0, otp: 0 }
-            );
-        else
-            var foundUser = await User.findOne(
-                { refreshTokens: {$elemMatch: { token: refreshToken }  }},
-                { password: 0, otp: 0 }
-            );
-
+        const foundUser = await User.findOne(
+            { refreshTokens: { $elemMatch: { token: refreshToken } } },
+            { password: 0, otp: 0 }
+        );
         if (!foundUser) {
             // TODO: uncomment secure
             res.clearCookie('jwt', {
@@ -120,6 +118,7 @@ async function logout(type, cookies, res) {
                 // secure: true,
             });
 
+            debug('no user found to logout');
             return new ServerError(204);
         }
 
@@ -151,14 +150,9 @@ async function logout(type, cookies, res) {
     }
 }
 
-async function verifySignUp(type, email, password, otp, cookie) {
+async function verifySignUp(email, password, otp, cookies, res) {
     try {
-        if (type === 'lenders') {
-            var foundUser = await Lender.findOne({ email });
-        } else {
-            // type is equal to users
-            var foundUser = await User.findOne({ email });
-        }
+        const foundUser = await User.findOne({ email });
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
 
         const isMatch = await bcrypt.compare(password, foundUser.password);
@@ -166,8 +160,8 @@ async function verifySignUp(type, email, password, otp, cookie) {
 
         if (foundUser.emailVerified)
             return new ServerError(409, 'Account has already been verified');
-
-        if (Date.now() > foundUser.otp.expires || otp !== foundUser.otp.OTP) {
+        
+        if (Date.now() > foundUser.otp.exp || otp !== foundUser.otp.OTP) {
             // OTP not valid or expired.
             return new ServerError(401, 'Invalid OTP');
         }
@@ -191,6 +185,7 @@ async function verifySignUp(type, email, password, otp, cookie) {
         await foundUser.updateOne({
             emailVerified: true,
             'otp.OTP': null,
+            'otp.exp': null,
             active: true,
             lastLoginTime: new Date(),
             $push: { refreshTokens: newRefreshToken },
@@ -204,7 +199,6 @@ async function verifySignUp(type, email, password, otp, cookie) {
             // secure: true,
             maxAge: expires,
         });
-
 
         return {
             message: 'Email verified and account activated',

@@ -11,7 +11,7 @@ function generateOTP(expireIn = 5) {
 
     return {
         OTP: otp,
-        expires,
+        exp: expires,
     };
 }
 
