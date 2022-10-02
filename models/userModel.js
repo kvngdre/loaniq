@@ -21,12 +21,14 @@ const userSchema = new mongoose.Schema(
             first: {
                 type: String,
                 trim: true,
+                maxLength: 50,
                 required: true,
             },
 
             last: {
                 type: String,
                 trim: true,
+                maxLength: 50,
                 required: true,
             },
 
@@ -42,15 +44,17 @@ const userSchema = new mongoose.Schema(
         displayName: {
             type: String,
             trim: true,
+            maxLength:50,
             default: function () {
                 return this.name.first.concat(` ${this.name.last}`);
             },
         },
 
-        title: {
+        jobTitle: {
             type: String,
             minLength: 2,
             maxLength: 50,
+            default: null
         },
 
         queryName: {
@@ -65,13 +69,15 @@ const userSchema = new mongoose.Schema(
         },
 
         dob: {
-            type: Date
+            type: String,
+            default: null
         },
 
         phone: {
             type: String,
             unique: true,
             trim: true,
+            required: true
         },
 
         email: {
@@ -94,6 +100,11 @@ const userSchema = new mongoose.Schema(
             required: true,
         },
 
+        resetPwd: {
+            type: Boolean,
+            default: true
+        },
+
         active: {
             type: Boolean,
             default: false,
@@ -102,10 +113,12 @@ const userSchema = new mongoose.Schema(
         otp: {
             OTP: {
                 type: String,
+                default: null
             },
 
-            expires: {
+            exp: {
                 type: Number,
+                default: null
             },
         },
 
@@ -115,19 +128,9 @@ const userSchema = new mongoose.Schema(
             required: true,
         },
 
-        // following fields below are for loan agents
         segments: {
-            type: [mongoose.Schema.Types.ObjectId],
+            type: [mongoose.ObjectId],
             default: null,
-        },
-
-        // TODO: Duration of target?
-        target: {
-            type: Number,
-        },
-
-        achieved: {
-            type: Number,
         },
 
         lastLoginTime: {
@@ -166,12 +169,17 @@ userSchema.virtual('fullName').get(function () {
 
 userSchema.pre('save', function (next) {
     try {
-        if (this.isNew)
+        console.log(this.modifiedPaths())
+        // hashing password
+        if (this.modifiedPaths().includes('password')) {
+            console.log('pwd triggered')
             this.password = bcrypt.hashSync(
                 this.password,
                 parseInt(config.get('salt_rounds'))
             );
+        }
 
+        
         next();
     } catch (exception) {
         next(exception);
@@ -183,11 +191,9 @@ userSchema.methods.generateAccessToken = function () {
         {
             id: this._id.toString(),
             lenderId: this.lenderId,
-            fullName: this.fullName,
             email: this.email,
             role: this.role,
             active: this.active,
-            emailVerified: this.emailVerified,
             timeZone: this.timeZone,
         },
         config.get('jwt.secret.access'),

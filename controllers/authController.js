@@ -2,9 +2,9 @@ const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:authCtrl');
-const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('authCtrl.js');
 const ServerError = require('../errors/serverError');
+const similarity = require('../utils/similarity');
 const User = require('../models/userModel');
 
 async function login(email, password, cookies, res) {
@@ -15,14 +15,15 @@ async function login(email, password, cookies, res) {
         const isMatch = await bcrypt.compare(password, foundUser.password);
         if (!isMatch) return new ServerError(401, 'Invalid credentials');
 
+        // trigger password reset
         if (
-            (foundUser.lastLoginTime === null || !foundUser.emailVerified) &&
+            (foundUser.resetPwd ||
+                foundUser.lastLoginTime === null ||
+                !foundUser.emailVerified) &&
             !foundUser.active
         ) {
-            // new unverified user
             return {
-                message: 'success',
-                new: true,
+                message: 'Password reset triggered',
                 data: _.omit(foundUser._doc, [
                     'password',
                     'otp',
@@ -31,7 +32,7 @@ async function login(email, password, cookies, res) {
             };
         }
 
-        // found user is not active
+        // user is not active
         if (foundUser.emailVerified && !foundUser.active)
             return new ServerError(
                 403,
@@ -42,16 +43,21 @@ async function login(email, password, cookies, res) {
         const newRefreshToken = foundUser.generateRefreshToken();
 
         if (cookies?.jwt) {
-            // If found jwt cookie, del from db and clear cookie.
+            // If found jwt cookie, del from db
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
                 (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
 
-            // token reuse detected, delete all refresh tokens.
-            const foundToken = await User.findOne({
-                refreshTokens: { $elemMatch: { token: cookies.jwt } },
-            });
+            // check for refresh token reuse
+            const foundToken = await User.findOne(
+                {
+                    refreshTokens: { $elemMatch: { token: cookies.jwt } },
+                },
+                { password: 0 }
+            );
             if (!foundToken) {
+                // refresh token reuse detected, delete all refresh tokens.
+                console.log('clearing tokens');
                 foundUser.refreshTokens = [];
                 await foundUser.save();
             }
@@ -64,10 +70,11 @@ async function login(email, password, cookies, res) {
             });
         }
 
-        await foundUser.updateOne({
+        foundUser.refreshTokens.push(newRefreshToken);
+        foundUser.set({
             lastLoginTime: new Date(),
-            $push: { refreshTokens: newRefreshToken },
         });
+        await foundUser.save();
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
@@ -80,7 +87,6 @@ async function login(email, password, cookies, res) {
 
         return {
             message: 'Login success.',
-            new: false,
             data: {
                 user: _.omit(foundUser._doc, [
                     'password',
@@ -111,6 +117,7 @@ async function logout(cookies, res) {
             { password: 0, otp: 0 }
         );
         if (!foundUser) {
+            // cookie found but does not match any user
             // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
@@ -150,27 +157,43 @@ async function logout(cookies, res) {
     }
 }
 
-async function verifySignUp(email, password, otp, cookies, res) {
+async function verifySignUp(
+    email,
+    currentPassword,
+    newPassword,
+    otp,
+    cookies,
+    res
+) {
     try {
         const foundUser = await User.findOne({ email });
         if (!foundUser) return new ServerError(401, 'Invalid credentials');
+        if (!foundUser.resetPwd) return new ServerError(409, 'Account has been activated');
 
-        const isMatch = await bcrypt.compare(password, foundUser.password);
+        const isMatch = await bcrypt.compare(
+            currentPassword,
+            foundUser.password
+        );
         if (!isMatch) return new ServerError(401, 'Invalid credentials');
 
-        if (foundUser.emailVerified)
-            return new ServerError(409, 'Account has already been verified');
-        
-        if (Date.now() > foundUser.otp.exp || otp !== foundUser.otp.OTP) {
-            // OTP not valid or expired.
+        // otp expired or incorrect
+        if (Date.now() > foundUser.otp.exp || otp !== foundUser.otp.OTP)
             return new ServerError(401, 'Invalid OTP');
-        }
+
+        const percentageSimilarity =
+            similarity(newPassword, currentPassword) * 100;
+        const similarityThreshold = parseInt(config.get('max_similarity'));
+        if (percentageSimilarity >= similarityThreshold)
+            return new ServerError(
+                400,
+                'Password is too similar to old password.'
+            );
 
         const accessToken = foundUser.generateAccessToken();
         const newRefreshToken = foundUser.generateRefreshToken();
 
         if (cookies?.jwt) {
-            // If found jwt cookie, del from db and clear cookie.
+            // If found jwt cookie, del from db to reissue a new refresh token
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
                 (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
@@ -182,14 +205,17 @@ async function verifySignUp(email, password, otp, cookies, res) {
             });
         }
 
-        await foundUser.updateOne({
+        foundUser.refreshTokens.push(newRefreshToken);
+        foundUser.set({
             emailVerified: true,
+            password: newPassword,
             'otp.OTP': null,
             'otp.exp': null,
             active: true,
+            resetPwd: false,
             lastLoginTime: new Date(),
-            $push: { refreshTokens: newRefreshToken },
         });
+        await foundUser.save();
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
@@ -214,7 +240,7 @@ async function verifySignUp(email, password, otp, cookies, res) {
         };
     } catch (exception) {
         logger.error({
-            method: 'verifySignUp',
+            method: 'verify_sign_up',
             message: exception.message,
             meta: exception.stack,
         });
@@ -223,8 +249,58 @@ async function verifySignUp(email, password, otp, cookies, res) {
     }
 }
 
+async function signOutAllDevices(id, cookies, res) {
+    try {
+        if (!cookies?.jwt) return new ServerError(204);
+        const refreshToken = cookies.jwt;
+
+        const foundUser = await User.findOne(
+            { refreshTokens: { $elemMatch: { token: refreshToken } } },
+            { password: 0, otp: 0 }
+        );
+        if (!foundUser) {
+            // TODO: uncomment secure
+            res.clearCookie('jwt', {
+                httpOnly: true,
+                sameSite: 'None',
+                // secure: true,
+            });
+
+            debug('no user found to logout');
+            return new ServerError(204);
+        }
+
+        // deleting refresh token from user refresh tokens on db
+        foundUser.refreshTokens = foundUser.refreshTokens.filter(
+            (rt) => rt.token !== refreshToken && Date.now() < rt.exp
+        );
+        await foundUser.save();
+
+        // TODO: uncomment secure
+        res.clearCookie('jwt', {
+            httpOnly: true,
+            sameSite: 'None',
+            // secure: true,
+        });
+
+        debug('logged out');
+        return {
+            message: 'logged out',
+        };
+    } catch (exception) {
+        logger.error({
+            method: 'sign_out_all_devices',
+            message: exception.message,
+            meta: exception.stack,
+        });
+        debug(exception);
+        return new ServerError(500, 'Something went wrong');
+    }
+}
+
 module.exports = {
     login,
     logout,
     verifySignUp,
+    signOutAllDevices,
 };

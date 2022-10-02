@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const { DateTime } = require('luxon');
 const { roles } = require('../utils/constants');
-const convertToDotNotation = require('../utils/convertToDotNotation');
+const convertToDotNotation = require('../utils/flattenObj');
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:customerCtrl');
 const Loan = require('../models/loan');
@@ -146,7 +146,7 @@ module.exports = {
                 console.log(queryParams);
                 // String Filter - displayName
                 if (filters.name)
-                    queryParams.displayName = new RegExp(filters.name, 'i');
+                    queryParams.fullName = new RegExp(filters.name, 'i');
 
                 // String Filter - state
                 if (filters.states)

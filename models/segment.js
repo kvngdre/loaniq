@@ -22,6 +22,11 @@ const segmentSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true
+    },
+
+    active: {
+        type: Boolean,
+        default: true
     }
 
 }, schemaOptions)

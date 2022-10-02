@@ -1,6 +1,6 @@
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:pendingEditCtrl');
-const flattenObject = require('../utils/convertToDotNotation');
+const flattenObject = require('../utils/flattenObj');
 const Loan = require('../models/loan');
 const logger = require('../utils/logger')('pendingEditCtrl.js');
 const mongoose = require('mongoose');

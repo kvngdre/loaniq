@@ -23,7 +23,7 @@ router.get('/logout', async (req, res) => {
     if (response.hasOwnProperty('errorCode'))
         return res.status(response.errorCode).send(response.message);
 
-    return res.status(204).send(response);
+    return res.status(204).send(response.message);
 });
 
 router.post('/verify', async (req, res) => {
@@ -32,7 +32,8 @@ router.post('/verify', async (req, res) => {
 
     const isVerified = await authController.verifySignUp(
         req.body.email,
-        req.body.password,
+        req.body.currentPassword,
+        req.body.newPassword,
         req.body.otp,
         req.cookies,
         res

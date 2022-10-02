@@ -35,8 +35,14 @@ router.post(
     }
 );
 
+/**
+ * @queryParam name Filter by name.
+ * @queryParam min Filter by min balance.
+ * @queryParam max Filter by max balance.
+ * @queryParam sort Field to sort by. Defaults to 'company name'.
+ */
 router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
-    const lenders = await lenderController.getAll();
+    const lenders = await lenderController.getAll(req.query);
     if (lenders.hasOwnProperty('errorCode'))
         return res.status(lenders.errorCode).send(lenders.message);
 
@@ -51,7 +57,7 @@ router.get(
         const lenderId =
             req.params.id !== undefined ? req.params.id : req.user.lenderId;
         
-        const response = await lenderController.sendOtp(lenderId);
+        const response = await lenderController.requestOtp(lenderId);
         if (response.hasOwnProperty('errorCode'))
             return res.status(response.errorCode).send(response.message);
 

@@ -4,9 +4,8 @@ const { roles } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
-const flattenObject = require('../utils/convertToDotNotation');
+const flattenObject = require('../utils/flattenObj');
 const generateOTP = require('../utils/generateOTP');
-const generatePassword = require('../utils/generatePassword');
 const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
@@ -17,36 +16,80 @@ const ServerError = require('../errors/serverError');
 const User = require('../models/userModel');
 
 module.exports = {
-    create: async function (payload) {
+    create: async (payload) => {
         try {
             // TODO: generate public URL.
             const newLender = new Lender(payload.lender);
+            const randomPwd = Math.random().toString(36).substring(2, 8);
             const newUser = new User({
                 lenderId: newLender._id.toString(),
                 name: payload.user.name,
                 email: payload.user.email,
-                password: generatePassword(),
+                phone: payload.phone,
+                password: randomPwd,
                 role: roles.owner,
                 otp: generateOTP(),
             });
+
             const settings = new Settings({
                 userId: newUser._id,
             });
+
+            // validating lender
+            const lenderError = newLender.validateSync();
+            if (lenderError) {
+                const msg =
+                    lenderError.errors[Object.keys(lenderError.errors)[0]]
+                        .message;
+                return new ServerError(400, msg);
+            }
+
+            // validating user
+            const userError = newUser.validateSync();
+            if (userError) {
+                const msg =
+                    userError.errors[Object.keys(userError.errors)[0]].message;
+                return new ServerError(400, msg);
+            }
+
+            // validating user settings
+            const settingsError = settings.validateSync();
+            if (settingsError) {
+                const msg =
+                    settingsError.errors[Object.keys(settingsError.errors)[0]]
+                        .message;
+                return new ServerError(400, msg);
+            }   
+
+            await newLender.save();
+            await newUser.save();
+            await settings.save();
+
+            //TODO: email template
             // Sending OTP & Password to user email.
             const response = await mailer(
                 newUser.email,
                 newUser.name.firstName,
                 newUser.otp.OTP,
-                newUser.password
+                randomPwd
             );
             if (response instanceof Error) {
-                debug(`Error OTP: ${response.message}`);
-                return new ServerError(424, 'Failed to create account. Error sending OTP & password');
-            }
+                // delete record if mail fails to send
+                await newLender.delete();
+                await newUser.delete();
+                await settings.delete();
 
-            await newLender.save();
-            await newUser.save();
-            await settings.save();
+                logger.error({
+                    method: 'create',
+                    message: response.message,
+                    meta: response.stack,
+                });
+                debug(response.message);
+                return new ServerError(
+                    424,
+                    'Failed to create account. Error sending OTP & password'
+                );
+            }
 
             return {
                 message: 'Lender created. Password & OTP sent to user email.',
@@ -90,7 +133,7 @@ module.exports = {
         }
     },
 
-    activate: async function (id, payload) {
+    activate: async (id, payload) => {
         try {
             const { cacNumber, otp, support } = payload;
 
@@ -108,7 +151,7 @@ module.exports = {
                 'otp.OTP': null,
                 'otp.exp': null,
                 cacNumber,
-                support
+                support,
             });
 
             await lender.save();
@@ -128,9 +171,21 @@ module.exports = {
         }
     },
 
-    getAll: async function () {
+    getAll: async (filters) => {
         try {
-            const lenders = await Lender.find().sort('companyName');
+            const queryParams = {};
+            const sortBy = filters?.sort ? filters.sort : 'companyName';
+            if (filters?.name)
+                queryParams.companyName = new RegExp(filters.name, 'i');
+            if (filters?.min) queryParams.balance = { $gte: filters.min };
+            if (filters?.max) {
+                const target = queryParams.balance ? queryParams.balance : {};
+                queryParams.balance = Object.assign(target, {
+                    $lte: filters.max,
+                });
+            }
+
+            const lenders = await Lender.find(queryParams).sort(sortBy);
             if (lenders.length === 0)
                 return { errorCode: 404, message: 'Tenants not found' };
 
@@ -149,7 +204,7 @@ module.exports = {
         }
     },
 
-    getOne: async function (id) {
+    getOne: async (id) => {
         try {
             const lender = await Lender.findById(id, { otp: 0 });
             if (!lender) return new ServerError(404, 'Lender not found.');
@@ -169,7 +224,7 @@ module.exports = {
         }
     },
 
-    update: async function (id, alteration) {
+    update: async (id, alteration) => {
         try {
             alteration = flattenObject(alteration);
 
@@ -204,7 +259,7 @@ module.exports = {
         }
     },
 
-    updateSettings: async function (id, payload) {
+    updateSettings: async (id, payload) => {
         try {
             // payload = convertToDotNotation(payload);
             const lender = await Lender.findById(id);
@@ -243,7 +298,7 @@ module.exports = {
 
             return {
                 message: 'Parameters updated.',
-                data: _.omit(lender._doc, ['otp'])
+                data: _.omit(lender._doc, ['otp']),
             };
         } catch (exception) {
             logger.error({
@@ -274,23 +329,21 @@ module.exports = {
         }
     },
 
-    genPublicUrl: async function (id, ) {
-        try{
+    genPublicUrl: async (id) => {
+        try {
             const lender = await Lender.findById(id);
-            if(!lender) return new ServerError(404, 'Tenant not found.');
-            if(!lender.active) return new ServerError(403, 'Tenant is yet to be activated.');
-
-        }catch(exception) {
-
-        }
-
+            if (!lender) return new ServerError(404, 'Tenant not found.');
+            if (!lender.active)
+                return new ServerError(403, 'Tenant is yet to be activated.');
+        } catch (exception) {}
     },
 
-    fundWallet: async function(id, amount) {
-        try{
+    fundWallet: async (id, amount) => {
+        try {
             const lender = await Lender.findById(id);
-            if(!lender) return new ServerError(404, 'Tenant not found.');
-            if(!lender.active) return new ServerError(403, 'Tenant is yet to be activated');
+            if (!lender) return new ServerError(404, 'Tenant not found');
+            if (!lender.active)
+                return new ServerError(403, 'Tenant is yet to be activated');
 
             const link = await getPaymentLink({
                 lenderId: lender._id.toString(),
@@ -300,15 +353,16 @@ module.exports = {
                     name: lender.companyName,
                     email: lender.email,
                     phonenumber: lender.phone,
-                }
+                },
             });
-            if(link instanceof ServerError) return new ServerError(424, 'Failed to initialize transaction');
+            if (link instanceof ServerError)
+                return new ServerError(424, 'Failed to initialize transaction');
 
             return {
                 message: 'success',
-                data: link.data
+                data: link.data,
             };
-        }catch(exception) {
+        } catch (exception) {
             logger.error({
                 method: 'fundWallet',
                 message: exception.message,
@@ -319,7 +373,7 @@ module.exports = {
         }
     },
 
-    sendOtp: async function (id) {
+    requestOtp: async (id) => {
         try {
             // TODO: add email template.
             const lender = await Lender.findById(id);
@@ -364,7 +418,7 @@ module.exports = {
      * @param {string} id Identifier for lender.
      * @returns
      */
-    getBalance: async function (id) {
+    getBalance: async (id) => {
         try {
             const lender = await Lender.findById(id).select(
                 'companyName balance'
@@ -374,7 +428,7 @@ module.exports = {
             return {
                 message: 'success',
                 data: {
-                    balance: lender.balance
+                    balance: lender.balance,
                 },
             };
         } catch (exception) {
@@ -388,7 +442,7 @@ module.exports = {
         }
     },
 
-    deactivate: async function (id, user, password) {
+    deactivate: async (id, user, password) => {
         try {
             const lender = await Lender.findById(id);
 
@@ -441,7 +495,7 @@ module.exports = {
         }
     },
 
-    guestLoanReq: async function (payload) {
+    guestLoanReq: async (payload) => {
         try {
             const lender = await Lender.findOne({ id });
 

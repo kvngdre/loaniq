@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const debug = require('debug')('app:segmentRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const segmentValidators = require('../validators/segment');
@@ -19,14 +18,6 @@ router.post('/', verifyToken, verifyRole(['Master']), async (req, res) => {
 router.get(
     '/',
     verifyToken,
-    verifyRole([
-        'Master',
-        'Lender',
-        'Admin',
-        'Credit',
-        'Operations',
-        'Loan Agent',
-    ]),
     async (req, res) => {
         const segments = await segmentController.getAll();
         if (segments.length === 0) return res.status(404).send('No segments.');

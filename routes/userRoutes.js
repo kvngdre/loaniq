@@ -4,103 +4,148 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/userValidator');
 const userController = require('../controllers/userController');
+const ServerError = require('../errors/serverError');
 
 router.post(
     '/',
     verifyToken,
-    verifyRole([roles.admin, roles.owner]),
+    verifyRole([roles.admin, roles.owner, roles.master]),
     async (req, res) => {
         const { error } = userValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const newUser = await userController.create(req.body, req.user);
-        if (newUser.hasOwnProperty('errorCode'))
+        const newUser = await userController.create(req.user, req.body);
+        if (newUser instanceof ServerError)
             return res.status(newUser.errorCode).send(newUser.message);
 
         return res.status(201).send(newUser);
     }
 );
 
-router.get(
-    '/',
-    verifyToken,
-    verifyRole([roles.admin, roles.owner]),
-    async (req, res) => {
-        const users = await userController.getAll(req.user.lenderId);
-        if (users.hasOwnProperty('errorCode'))
-            return res.status(users.errorCode).send(users.message);
+/**
+ * @queryParam name Filter by name.
+ * @queryParam lenderId Filter by lender.
+ * @queryParam role Filter by role.
+ * @queryParam sort Field to sort by. Defaults to 'first name'.
+ */
+router.get('/', verifyToken, async (req, res) => {
+    const users = await userController.getAll(req.user, req.query);
+    if (users instanceof ServerError)
+        return res.status(users.errorCode).send(users.message);
 
-        return res.status(200).send(users);
-    }
-);
+    return res.status(200).send(users);
+});
 
+/**
+ * @queryParam email The user's email.
+ */
+router.get('/otp', async (req, res) => {
+    const response = await userController.requestOtp(req.query.email);
+    if (response instanceof ServerError)
+        return res.status(response.errorCode).send(response.message);
+
+    return res.status(200).send(response);
+});
+
+/**
+ * @urlParam {string} id The id of the user.
+ */
 router.get(
-    '/:id?',
+    '/:id',
     verifyToken,
-    verifyRole([roles.admin, roles.owner]),
+    verifyRole([roles.admin, roles.owner, roles.master]),
     async (req, res) => {
         const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
-        const user = await userController.getOne(id, {
-            lenderId: req.user.lenderId,
-        });
-        if (user.hasOwnProperty('errorCode'))
+        const user = await userController.getOne(req.params.id, req.user);
+        if (user instanceof ServerError)
             return res.status(user.errorCode).send(user.message);
 
         return res.status(200).send(user);
     }
 );
 
+/**
+ * @urlParam {string} id The id of the user.
+ */
 router.patch('/:id?', verifyToken, async (req, res) => {
-    const { error } = userValidators.validateEdit(req.body);
+    const { error } = userValidators.update(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const id = req.params.id !== undefined ? req.params.id : req.user.id;
 
-    const user = await userController.update(id, req.body, {
-        lenderId: req.user.lenderId,
-    });
-    if (user.hasOwnProperty('errorCode'))
+    const user = await userController.update(id, req.user, req.body);
+    if (user instanceof ServerError)
         return res.status(user.errorCode).send(user.message);
 
     return res.status(200).send(user);
 });
 
-router.post('/password', async (req, res) => {
-    // const { error } = userValidators.validateChangePassword(req.body);
-    // if (error) return res.status(400).send(error.details[0].message);
-
-    const response = await userController.changePassword(
-        req.body.email,
-        req.body.newPassword,
-        req.body.otp,
-        req.body.currentPassword
-    );
-    if (response.hasOwnProperty('errorCode'))
-        return res.status(response.errorCode).send(response.message);
-
-    return res.status(200).send(response);
-});
-
-router.post('/otp', async (req, res) => {
-    const { error } = userValidators.validateEmail(req.body);
+router.post('/change-password', verifyToken, async (req, res) => {
+    const { error } = userValidators.password(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const response = await userController.sendOTP(
-        req.body.email,
-        req.body.name
-    );
-    if (response.hasOwnProperty('errorCode'))
+    const response = await userController.changePassword(req.user, req.body);
+    if (response instanceof ServerError)
         return res.status(response.errorCode).send(response.message);
 
     return res.status(200).send(response);
 });
 
-// router.delete('/:id', verifyToken, verifyRole('Admin'),  async (req, res) => {
-//     const user = await userController.delete(req.params.id);
-//     if(user instanceof Error) return res.status(401).send(user.message);
+/**
+ * @urlParam {string} id The id of the user.
+ */
+router.get(
+    '/reset-password/:id',
+    verifyToken,
+    verifyRole([roles.admin, roles.owner, roles.master]),
+    async (req, res) => {
+        const user = await userController.resetPassword(req.params.id);
+        if (user instanceof ServerError)
+            return res.status(user.errorCode).send(user.message);
 
-//     return res.status(204).send(user);
-// })
+        return res.status(200).send(user);
+    }
+);
+
+/**
+ * @urlParam {string} id The id of the user.
+ */
+router.post(
+    '/deactivate/:id',
+    verifyToken,
+    verifyRole([roles.admin, roles.owner, roles.master]),
+    async (req, res) => {
+        const user = await userController.deactivate(
+            req.params.id,
+            req.user,
+            req.body.password
+        );
+        if (user instanceof ServerError)
+            return res.status(user.errorCode).send(user.message);
+
+        return res.status(200).send(user);
+    }
+);
+
+/**
+ * @urlParam {string} id The id of the user.
+ */
+router.delete(
+    '/:id',
+    verifyToken,
+    verifyRole([roles.owner, roles.master]),
+    async (req, res) => {
+        const deletedUser = await userController.delete(
+            req.params.id,
+            req.user,
+            req.body.password
+        );
+        if (deletedUser instanceof Error)
+            return res.status(deletedUser.errorCode).send(deletedUser.message);
+
+        return res.status(204).send(deletedUser);
+    }
+);
 
 module.exports = router;

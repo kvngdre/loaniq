@@ -1,6 +1,6 @@
 const nodeCron = require('node-cron');
 const deleteApprovedPendingDocs = require('../controllers/pendingEditController');
-const { closeExpiringLoans } = require('../tools/Managers/loanManager');
+const { closeExpiringLoans } = require('../tools/loanManager');
 
 
 function print() {

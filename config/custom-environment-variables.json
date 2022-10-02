@@ -28,6 +28,7 @@
     "mail": {
         "password": "USER_EMAIL_PASSWORD"
     },
+    "max_similarity": "MAX_SIMILARITY",
     "paystack": {
         "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
     },

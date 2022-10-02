@@ -9,7 +9,7 @@ function verifyToken(req, res, next) {
         const authHeader =
             req.header('authorization') || req.header('Authorization');
         if (!authHeader) return res.sendStatus(401);
-        
+
         const [scheme, token] = authHeader.split(' ');
         if (scheme !== 'Bearer') return res.sendStatus(401);
         if (!token)
