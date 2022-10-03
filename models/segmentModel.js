@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-
-const schemaOptions = {timestamps: true};
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const segmentSchema = new mongoose.Schema({
     code: {
@@ -15,7 +14,7 @@ const segmentSchema = new mongoose.Schema({
     ippisPrefix: {
         type: String,
         trim: true,
-        required: true
+        required: true,
     },
 
     name: {

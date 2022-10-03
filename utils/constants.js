@@ -28,6 +28,12 @@ module.exports = {
         'Niece',
         'Son',
     ],
+    sort_fields: {
+        'asc': 'createdAt',
+        'desc': '-createdAt',
+        'first': 'name.first',
+        'last': 'name.last'
+    },
     validIds: [
         'Voters card',
         'International passport',

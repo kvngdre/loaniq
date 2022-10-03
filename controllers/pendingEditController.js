@@ -1,10 +1,10 @@
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:pendingEditCtrl');
 const flattenObject = require('../utils/flattenObj');
-const Loan = require('../models/loan');
+const Loan = require('../models/loanModel');
 const logger = require('../utils/logger')('pendingEditCtrl.js');
 const mongoose = require('mongoose');
-const PendingEdit = require('../models/pendingEdit');
+const PendingEdit = require('../models/pendingEditModel');
 const ServerError = require('../errors/serverError');
 const User = require('../models/userModel');
 

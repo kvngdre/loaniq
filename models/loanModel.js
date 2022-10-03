@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const Metrics = require('../utils/LoanParams');
 const logger = require('../utils/logger')('loanModel.js');
+const ServerError = require('../errors/serverError');
 
-const metricFuncs = new Metrics();
+// const metricFuncs = new Metrics();
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -11,6 +12,11 @@ const loanSchema = new mongoose.Schema(
         amount: {
             type: Number,
             required: true,
+        },
+
+        recommendedAmount: {
+            type: Number,
+            default: (self = this) => self.amount,
         },
 
         amountInWords: {
@@ -25,21 +31,15 @@ const loanSchema = new mongoose.Schema(
             required: true,
         },
 
+        recommendedTenor: {
+            type: Number,
+            default: (self = this) => self.tenor,
+        },
+
         loanType: {
             type: String,
             enum: ['New', 'Top Up'],
             default: 'New',
-        },
-        // End of the line where the user[loan agent] can edit.
-
-        recommendedAmount: {
-            type: Number,
-            default: (self = this) => self.amount,
-        },
-
-        recommendedTenor: {
-            type: Number,
-            default: (self = this) => self.tenor,
         },
 
         status: {
@@ -82,27 +82,7 @@ const loanSchema = new mongoose.Schema(
                 'Failed to provide valid documentation',
             ],
         },
-        // End of the line where credit user can edit.
 
-        loanAgent: mongoose.Schema.Types.ObjectId,
-
-        interestRate: {
-            type: Number,
-            required: true,
-        },
-
-        upfrontFeePercent: {
-            type: Number,
-            require: true,
-        },
-
-        transferFee: {
-            type: Number,
-            required: true,
-        },
-        // End of the line where admin user can edit
-
-        // Below are set programmatically, no user can edit.
         upfrontFee: {
             type: Number,
         },
@@ -115,12 +95,102 @@ const loanSchema = new mongoose.Schema(
             type: Number,
         },
 
+        dti: {
+            type: Number,
+            default: null,
+        },
+
         netValue: {
             type: Number,
             default: null,
         },
 
-        dateApprovedOrDenied: {
+        lenderId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
+
+        customer: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
+
+        creditUser: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
+
+        // agent: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     required: true,
+        // },
+
+        active: {
+            type: Boolean,
+            default: false,
+        },
+
+        booked: {
+            type: Boolean,
+        },
+
+        disbursed: {
+            type: Boolean,
+            default: false,
+        },
+
+        params: {
+            interestRate: {
+                type: Number,
+                required: true,
+            },
+
+            upfrontFeePercent: {
+                type: Number,
+                require: true,
+            },
+
+            transferFee: {
+                type: Number,
+                required: true,
+            },
+
+            birthDate: {
+                type: Date,
+                default: null,
+            },
+
+            age: {
+                type: Number,
+                default: null,
+            },
+
+            hireDate: {
+                type: Date,
+                default: null,
+            },
+
+            serviceLength: {
+                type: Number,
+                default: null,
+            },
+
+            maxDti: {
+                type: Number,
+                required: true,
+            },
+
+            netPay: {
+                type: Number,
+            },
+
+            minNetPay: {
+                type: Number,
+                required: true,
+            },
+        },
+
+        approveDenyDate: {
             type: Date,
         },
 
@@ -130,96 +200,6 @@ const loanSchema = new mongoose.Schema(
 
         maturityDate: {
             type: String,
-        },
-
-        customer: mongoose.Schema.Types.ObjectId,
-
-        creditOfficer: mongoose.Schema.Types.ObjectId,
-
-        lenderId: mongoose.Schema.Types.ObjectId,
-
-        active: {
-            type: Boolean,
-            default: false,
-        },
-
-        booked: {
-            type: Boolean,
-            default: false,
-        },
-
-        disbursed: {
-            type: Boolean,
-            default: false,
-        },
-
-        params: {
-            // Date of Birth
-            dob: {
-                type: Date,
-                default: null,
-            },
-
-            age: {
-                isValid: {
-                    type: Boolean,
-                    default: null,
-                },
-
-                age: {
-                    type: Number,
-                    default: null,
-                },
-            },
-
-            // Date of Enlistment
-            doe: {
-                type: Date,
-                default: null,
-            },
-
-            serviceLength: {
-                isValid: {
-                    type: Boolean,
-                    default: null,
-                },
-
-                yearsServed: {
-                    type: Number,
-                    default: null,
-                },
-            },
-
-            netPay: {
-                isValid: {
-                    type: Boolean,
-                },
-
-                value: {
-                    type: Number,
-                },
-            },
-
-            // TODO: should this be moved to the customer model?
-            netPayConsistency: {
-                type: Boolean,
-                default: null,
-            },
-
-            dti: {
-                type: Number,
-                default: null,
-            },
-
-            maxDti: {
-                type: Number,
-                default: null,
-            },
-
-            minNetPay: {
-                type: Number,
-                default: null,
-            },
         },
     },
     schemaOptions
@@ -288,8 +268,12 @@ loanSchema.pre('save', function (next) {
 
         next();
     } catch (exception) {
-        logger.error({method: 'loan_pre_save', message: exception.message, meta: exception.meta });
-        next({ errorCode: 500, message: 'Something went wrong' });
+        logger.error({
+            method: 'loan_pre_save',
+            message: exception.message,
+            meta: exception.meta,
+        });
+        next(new ServerError(500, 'Something went wrong'));
     }
 });
 

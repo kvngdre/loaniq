@@ -7,7 +7,7 @@ const generateOTP = require('../utils/generateOTP');
 const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('userCtrl.js');
 const mailer = require('../utils/mailer');
-const Segment = require('../models/segment');
+const Segment = require('../models/segmentModel');
 const Settings = require('../models/settings');
 const ServerError = require('../errors/serverError');
 const similarity = require('../utils/similarity');
@@ -22,12 +22,9 @@ module.exports = {
      */
     create: async (user, payload) => {
         try {
-            const lender = await Lender.findById(user.lenderId).select(
-                'active'
-            );
-            if (!lender) return new ServerError(404, 'Tenant not found.');
-            if (!lender.active)
-                return new ServerError(403, 'Tenant is yet to be activated');
+            const lender = await Lender.findOne({ _id: user.lenderId, active: true });
+            // tenant inactive
+            if (!lender) return new ServerError(403, 'Tenant is yet to be activated');
 
             // only owners can create admins
             if (payload.role === roles.admin && user.role !== roles.owner)
@@ -136,6 +133,15 @@ module.exports = {
 
             return new ServerError(500, 'Something went wrong');
         }
+    },
+
+    uploadImage: async () => {
+        try{
+
+        }catch(exception) {
+            return new ServerError(500, 'Something went wrong');
+        }
+
     },
 
     getAll: async (user, filters) => {
@@ -291,6 +297,7 @@ module.exports = {
 
             foundUser.set({
                 password: newPassword,
+                refreshTokens: []
             });
             await foundUser.save();
 

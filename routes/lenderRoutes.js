@@ -4,13 +4,14 @@ const lenderValidators = require('../validators/lenderValidator');
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const ServerError = require('../errors/serverError');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const newLender = await lenderController.create(req.body);
-    if (newLender.hasOwnProperty('errorCode'))
+    if (newLender instanceof ServerError)
         return res.status(newLender.errorCode).send(newLender.message);
 
     return res.status(201).send(newLender);
@@ -28,7 +29,7 @@ router.post(
         if (error) return res.status(400).send(error.details[0].message);
 
         const lender = await lenderController.activate(lenderId, req.body);
-        if (lender.hasOwnProperty('errorCode'))
+        if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
         return res.status(200).send(lender);
@@ -43,7 +44,7 @@ router.post(
  */
 router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
     const lenders = await lenderController.getAll(req.query);
-    if (lenders.hasOwnProperty('errorCode'))
+    if (lenders instanceof ServerError)
         return res.status(lenders.errorCode).send(lenders.message);
 
     return res.status(200).send(lenders);
@@ -58,7 +59,7 @@ router.get(
             req.params.id !== undefined ? req.params.id : req.user.lenderId;
         
         const response = await lenderController.requestOtp(lenderId);
-        if (response.hasOwnProperty('errorCode'))
+        if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
 
         return res.status(200).send(response);
@@ -74,7 +75,7 @@ router.get(
             req.params.id !== undefined ? req.params.id : req.user.lenderId;
 
         const balance = await lenderController.getBalance(lenderId);
-        if (balance.hasOwnProperty('errorCode'))
+        if (balance instanceof ServerError)
             return res.status(balance.errorCode).send(balance.message);
 
         return res.status(200).send(balance);
@@ -90,7 +91,7 @@ router.get(
             req.params.id !== undefined ? req.params.id : req.user.lenderId;
 
         const lender = await lenderController.getOne(lenderId);
-        if (lender.hasOwnProperty('errorCode'))
+        if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
         return res.status(200).send(lender);
@@ -112,7 +113,7 @@ router.patch(
             lenderId,
             req.body
         );
-        if (lender.hasOwnProperty('errorCode'))
+        if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
         return res.status(200).send(lender);
@@ -131,7 +132,7 @@ router.patch(
         if (error) return res.status(400).send(error.details[0].message);
 
         const lender = await lenderController.update(lenderId, req.body);
-        if (lender.hasOwnProperty('errorCode'))
+        if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
         return res.status(200).send(lender);
@@ -150,7 +151,7 @@ router.post(
         if (error) return res.status(400).send(error.details[0].message);
 
         const response = await lenderController.fundWallet(lenderId, req.body.amount);
-        if (response.hasOwnProperty('errorCode'))
+        if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
 
         return res.status(200).send(response);
@@ -170,7 +171,7 @@ router.post(
             req.user,
             req.body.password
         );
-        if (response.hasOwnProperty('errorCode'))
+        if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
 
         return res.status(200).send(response);

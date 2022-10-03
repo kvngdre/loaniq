@@ -11,12 +11,13 @@ const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
 const mailer = require('../utils/mailer');
 const Settings = require('../models/settings');
-const Segment = require('../models/segment');
+const Segment = require('../models/segmentModel');
 const ServerError = require('../errors/serverError');
 const User = require('../models/userModel');
 
 module.exports = {
     create: async (payload) => {
+        
         try {
             // TODO: generate public URL.
             const newLender = new Lender(payload.lender);
@@ -25,7 +26,7 @@ module.exports = {
                 lenderId: newLender._id.toString(),
                 name: payload.user.name,
                 email: payload.user.email,
-                phone: payload.phone,
+                phone: payload.user.phone,
                 password: randomPwd,
                 role: roles.owner,
                 otp: generateOTP(),
@@ -43,6 +44,7 @@ module.exports = {
                         .message;
                 return new ServerError(400, msg);
             }
+            
 
             // validating user
             const userError = newUser.validateSync();
@@ -51,7 +53,7 @@ module.exports = {
                     userError.errors[Object.keys(userError.errors)[0]].message;
                 return new ServerError(400, msg);
             }
-
+            console.log('here')
             // validating user settings
             const settingsError = settings.validateSync();
             if (settingsError) {

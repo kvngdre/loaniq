@@ -1,16 +1,14 @@
 class FileUploadError extends Error {
      /**
      * Creates a new file upload error
-     * @param {Number} status Http status code
-     * @param {String} message Error message
+     * @param {number} status Http status code
+     * @param {string} message Error message
      */
     constructor(status, message) {
         super();
 
         this.message = message;
-        
-        this.statusCode = status;
-
+        this.code = status;
         this.name = this.constructor.name;
 
         Error?.captureStackTrace(this, this.constructor);

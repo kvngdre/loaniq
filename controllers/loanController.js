@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
-const Loan = require('../models/loan');
+const Loan = require('../models/loanModel');
 const debug = require('debug')('app:loanCtrl');
 const Customer = require('../models/customerModel');
 const settingsController = require('./settingsController');

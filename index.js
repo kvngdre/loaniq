@@ -9,9 +9,9 @@ const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
 const { encryptQueryParams, decryptQueryParams } = require('./utils/generateURL');
 
-const edata = encryptQueryParams(1);
-console.log(edata)
-console.log(decryptQueryParams(edata))
+// const edata = encryptQueryParams(1);
+// console.log(edata)
+// console.log(decryptQueryParams(edata))
 
 // const {
 //     firebaseConfig,

@@ -5,6 +5,7 @@ const verifyToken = require('../middleware/verifyToken');
 const userValidators = require('../validators/userValidator');
 const userController = require('../controllers/userController');
 const ServerError = require('../errors/serverError');
+const upload = require('../middleware/fileUpload');
 
 router.post(
     '/',
@@ -21,6 +22,11 @@ router.post(
         return res.status(201).send(newUser);
     }
 );
+
+router.post('/upload-photo', upload.single('photo'), async (req, res) => {
+    console.log(req.file)
+    return res.status(200).send('Image uploaded')
+});
 
 /**
  * @queryParam name Filter by name.

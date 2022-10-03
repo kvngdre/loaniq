@@ -1,8 +1,5 @@
-const config = require('config');
-const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
-const { roles } = require('../utils/constants');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

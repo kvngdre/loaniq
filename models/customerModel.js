@@ -4,54 +4,28 @@ const {
     validIds,
 } = require('../utils/constants');
 const debug = require('debug')('app:customerModel');
-const Loan = require('./loan');
+const Loan = require('./loanModel');
+const logger = require('../utils/logger')('customerModel.js');
 const mongoose = require('mongoose');
-const Segment = require('./segment');
+const Segment = require('./segmentModel');
+const ServerError = require('../errors/serverError');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
-const addressSchema = {
-    street: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        required: true,
-    },
-
-    state: {
-        type: String,
-        required: true,
-    },
-
-    stateCode: {
-        type: String,
-        uppercase: true,
-        required: true,
-    },
-
-    lga: {
-        type: String,
-        required: true,
-    },
-
-    geo: {
-        type: String,
-        required: true,
-    },
-};
-
 const customerSchema = new mongoose.Schema(
     {
-        passport: {
-            path: {
-                type: String,
-                default: null,
-            },
+        lenderId: {
+            type: String,
+            required: true,
+        },
 
-            originalName: {
-                type: String,
-                default: null,
-            },
+        passport: {
+            type: String,
+            default: null,
+        },
+        idCard: {
+            type: String,
+            default: null,
         },
 
         name: {
@@ -95,27 +69,53 @@ const customerSchema = new mongoose.Schema(
             required: true,
         },
 
-        // TODO: work on exception return
-        dateOfBirth: {
+        birthDate: {
             type: Date,
             required: true,
         },
 
-        residentialAddress: addressSchema,
-
-        contactInfo: {
-            phone: {
+        residentialAddress: {
+            address: {
                 type: String,
                 trim: true,
+                maxLength: 255,
+                lowercase: true,
                 required: true,
             },
 
-            email: {
+            state: {
                 type: String,
-                lowercase: true,
-                trim: true,
-                default: null,
+                required: true,
             },
+
+            stateCode: {
+                type: String,
+                uppercase: true,
+                required: true,
+            },
+
+            lga: {
+                type: String,
+                required: true,
+            },
+
+            geo: {
+                type: String,
+                required: true,
+            },
+        },
+
+        phone: {
+            type: String,
+            trim: true,
+            required: true,
+        },
+
+        email: {
+            type: String,
+            lowercase: true,
+            trim: true,
+            default: null,
         },
 
         maritalStatus: {
@@ -126,40 +126,46 @@ const customerSchema = new mongoose.Schema(
 
         bvn: {
             type: String,
-            unique: true,
             trim: true,
             required: true,
         },
 
-        idCard: {
-            path: {
-                type: String,
-                default: null,
-            },
+        ippis: {
+            type: String,
+            uppercase: true,
+            trim: true,
+            required: true,
+            validate: {
+                validator: async function (value) {
+                    const segment = await Segment.findOne({
+                        code: this.employer.segment,
+                    });
+                    if (!segment) throw new Error('Segment not found');
 
-            originalName: {
-                type: String,
-                default: null,
-            },
-        },
+                    const ippisPrefix = value.match(/^[A-Z]{2,3}(?=[0-9])/);
+                    if (segment.ippisPrefix !== ippisPrefix[0]) return false;
 
-        idCardInfo: {
-            idType: {
-                type: String,
-                enum: validIds,
-                required: true,
-            },
-
-            idNumber: {
-                type: String,
-                minLength: 4,
-                maxLength: 50,
-                trim: true,
-                required: true,
+                    return true;
+                },
+                message: 'IPPIS number does not match segment selected',
             },
         },
 
-        employmentInfo: {
+        idType: {
+            type: String,
+            enum: validIds,
+            required: true,
+        },
+
+        idNo: {
+            type: String,
+            minLength: 4,
+            maxLength: 50,
+            trim: true,
+            required: true,
+        },
+
+        employer: {
             name: {
                 type: String,
                 minLength: 3,
@@ -168,43 +174,38 @@ const customerSchema = new mongoose.Schema(
                 required: true,
             },
 
-            depart: {
+            command: {
                 type: String,
                 trim: true,
+                default: null,
             },
 
             segment: {
-                type: mongoose.Schema.Types.ObjectId,
+                type: String,
                 required: true,
             },
 
-            ippis: {
-                type: String,
-                uppercase: true,
-                unique: true,
-                trim: true,
-                required: true,
-                validate: {
-                    validator: async function (value) {
-                        const segment = await Segment.findById(
-                            this.employmentInfo.segment
-                        );
-                        if (!segment) throw new Error('Segment not found');
+            location: {
+                address: {
+                    type: String,
+                    trim: true,
+                    maxLength: 255,
+                    lowercase: true,
+                    required: true,
+                },
 
-                        const ippisPrefix = value.match(/^[A-Z]{2,3}(?=[0-9])/);
+                state: {
+                    type: String,
+                    required: true,
+                },
 
-                        if (segment.ippisPrefix !== ippisPrefix[0])
-                            return false;
-
-                        return true;
-                    },
-                    message: 'IPPIS Number does not match segment selected',
+                lga: {
+                    type: String,
+                    required: true,
                 },
             },
 
-            companyLocation: addressSchema,
-
-            dateOfEnlistment: {
+            hireDate: {
                 type: Date,
                 required: true,
             },
@@ -217,7 +218,24 @@ const customerSchema = new mongoose.Schema(
                 required: true,
             },
 
-            address: addressSchema,
+            address: {
+                address: {
+                    type: String,
+                    trim: true,
+                    maxLength: 255,
+                    lowercase: true,
+                    required: true,
+                },
+
+                state: {
+                    type: String,
+                    required: true,
+                },
+                lga: {
+                    type: String,
+                    required: true,
+                },
+            },
 
             phone: {
                 type: String,
@@ -232,66 +250,63 @@ const customerSchema = new mongoose.Schema(
             },
         },
 
-        accountInfo: {
-            accountName: {
+        accountName: {
+            type: String,
+            lowercase: true,
+            required: true,
+            trim: true,
+        },
+
+        accountNo: {
+            type: String,
+            trim: true,
+            required: true,
+        },
+
+        bank: {
+            name: {
                 type: String,
-                lowercase: true,
                 required: true,
-                trim: true,
             },
 
-            accountNumber: {
+            code: {
                 type: String,
-                trim: true,
+                maxLength: 6,
                 required: true,
-            },
-
-            bank: {
-                name: {
-                    type: String,
-                    required: true,
-                },
-
-                code: {
-                    type: String,
-                    maxLength: 6,
-                    required: true,
-                },
             },
         },
 
         // below are set programmatically. No user can edit.
         netPay: {
-            // TODO: should this just copy the net pay array from origin?
             type: Number,
             default: 80_000.27,
         },
 
-        bvnValid: {
+        validBvn: {
             type: Boolean,
-            default: false,
         },
 
-        isValidAccNum: {
+        validAccNo: {
             type: Boolean,
-            default: null,
         },
 
-        lenders: {
-            type: [String],
+        agent: {
+            type: String,
             default: null,
         },
     },
     schemaOptions
 );
 
+// compound index on lender id, ippis, and bvn
+customerSchema.index({ lenderId: 1, ippis: 1, bvn: 1 }, { unique: true });
+
 customerSchema.methods.validateSegment = async function () {
     try {
-        const segment = await Segment.findById(this.employmentInfo.segment);
+        const segment = await Segment.findOne({ code: this.employer.segment });
         if (!segment) return { error: { message: 'Segment not found' } };
 
-        const ippisPrefix =
-            this.employmentInfo.ippis.match(/^[A-Z]{2,3}(?=[0-9])/); // matches only the letters prefix
+        const ippisPrefix = this.ippis.match(/^[A-Z]{2,3}(?=[0-9])/); // matches only the letters prefix
         if (segment.ippisPrefix !== ippisPrefix[0])
             return {
                 error: {
@@ -306,40 +321,41 @@ customerSchema.methods.validateSegment = async function () {
     }
 };
 
-customerSchema.methods.addLender = function (lender) {
-    const lenders = new Set(this.lenders);
-    lenders.add(lender);
-    this.lenders = Array.from(lenders);
-};
-
-customerSchema.methods.removeLender = function (lender) {
-    const lenders = new Set(this.lenders);
-    lenders.delete(lender);
-    this.lenders = Array.from(lenders);
-};
-
 customerSchema.pre('save', async function (next) {
-    const loanEditTrigger = ['dateOfBirth', 'employmentInfo.dateOfEnlistment'];
+    try {
+        const loanEditTrigger = ['birthDate', 'employer.hireDate'];
+        if (
+            !this.isNew &&
+            this.modifiedPaths().some((path) => loanEditTrigger.includes(path))
+        ) {
+            console.log('triggered');
 
-    if (!this.isNew && this.modifiedPaths().some((path) => loanEditTrigger.includes(path))) {
-        console.log('triggered');
-
-        const loans = await Loan.find({
-            customer: this._id,
-            status: 'Pending',
-        });
-        if (loans.length > 0) {
-            loans.forEach(async (loan) => {
-                loan.set({ 'params.dob': this.dateOfBirth });
-                loan.set({
-                    'params.doe': this.employmentInfo.dateOfEnlistment,
-                });
-                await loan.save();
+            const foundLoans = await Loan.find({
+                lenderId: this.lenderId,
+                customer: this._id,
+                status: 'Pending',
             });
-        }
-    }
+            if (foundLoans.length > 0) {
+                foundLoans.forEach(async (loan) => {
+                    loan.set({
+                        'params.birthDate': this.birthDate,
+                        'params.hireDate': this.employer.hireDate,
+                    });
 
-    next();
+                    await loan.save();
+                });
+            }
+        }
+
+        next();
+    } catch (exception) {
+        logger.error({
+            method: 'customer_pre_save',
+            message: exception.message,
+            meta: exception.meta,
+        });
+        next(new ServerError(500, 'Something went wrong'));
+    }
 });
 
 const Customer = mongoose.model('Customer', customerSchema);

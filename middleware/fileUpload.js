@@ -1,51 +1,67 @@
-const path = require('path');
-const multer = require('multer');
 const { FileUploadError } = require('../errors/fileUploadError');
-
+const multer = require('multer');
+const path = require('path');
 
 const multiplier = 5;
 const ONE_MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
     destination: (request, file, callback) => {
-        if(file.fieldname === 'passport') callback(null, `./apex_app/uploads/customers/passports`)
-
-        else if(file.fieldname === 'idCard') callback(null, `./apex_app/uploads/customers/idCards`)
-
-        else if(file.fieldname === 'profile picture') callback(null, `./uploads/users`)
+        if (file.fieldname === 'passport')
+            callback(null, `./uploads/customers/passports`);
+        else if (file.fieldname === 'idCard')
+            callback(null, `./uploads/customers/idCards`);
+        else if (file.fieldname === 'photo') callback(null, `./uploads/users`);
     },
 
     filename: (request, file, callback) => {
         //TODO: uncomment actual change
-        // if(file.fieldname === 'profile picture'){
-        //     return callback(null, `${request.body.phone}-${request.body.name.firstName}-${Date.now()}${path.extname(file.originalname)}`)
-        // }
-        // console.log(request);
+        if (file.fieldname === 'photo')
+            return callback(
+                null,
+                `${request.body?.email}--${Date.now()}${path.extname(
+                    file.originalname
+                )}`
+            );
 
-        callback(null, `${Date.now()}${path.extname(file.originalname)}`)
-        // callback(null, `${request.body.name.firstName + ' ' + request.body.name.lastName}-${request.body.employmentInfo.ippis}-${Date.now()}${path.extname(file.originalname)}`);
-    }
-})
+        // console.log('multer request', request);
+
+        // callback(null, `${Date.now()}${path.extname(file.originalname)}`)
+        callback(
+            null,
+            `${request.body?.name?.first + ' ' + request.body?.name?.last}-${
+                request.body?.employmentInfo?.ippis
+            }--${Date.now()}${path.extname(file.originalname)}`
+        );
+    },
+});
 
 const upload = multer({
     storage,
 
     limits: {
-        fileSize: ONE_MEGABYTE * multiplier,  // 5MB
+        fileSize: ONE_MEGABYTE * multiplier, // 5MB
     },
 
     fileFilter: (request, file, callback) => {
         const fileExtension = path.extname(file.originalname);
 
-        if( (['.jpg', '.jpeg', '.png'].includes(fileExtension)) 
-            && 
-            (['image/jpg', 'image/jpeg', 'image/png'].includes(file.mimetype))
-          ) {
-            return callback(null, true)
+        if (
+            ['.jpg', '.jpeg', '.png'].includes(fileExtension) &&
+            ['image/jpg', 'image/jpeg', 'image/png'].includes(file.mimetype)
+        ) {
+            return callback(null, true);
         }
 
-        callback(new FileUploadError(400, 'Only images with format jpeg or png are allowed'), false)
-    }
-})
+        callback(
+            new FileUploadError(
+                400,
+                'Only images with format jpeg or png are allowed'
+            ),
+            false
+        );
+    },
+});
 
-module.exports = upload.fields([{name: 'passport'}, {name: 'idCard'}])
+// .fields([{name: 'passport'}, {name: 'idCard'}])
+module.exports = upload;

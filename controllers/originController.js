@@ -212,4 +212,39 @@ const origin = {
     },
 };
 
+// const foundOrigin = await Origin.findOne({ ippis: ippis, bvn: foundCustomer.bvn });
+//             if(foundOrigin) {
+//                 const { accountNumber, bank, command, dateOfBirth, dateOfEnlistment, netPays } = foundOrigin;
+//                 if(accountNumber !== null && accountNumber.length == 10) foundCustomer.accountInfo.accountNumber = accountNumber;
+//                 if(bank !== null) foundCustomer.accountInfo.bank = bank;
+//                 if(command !== null) foundCustomer.employmentInfo.command = command;
+//                 // if(dateOfBirth !== null) foundCustomer.dateOfBirth = dateOfBirth;
+//                 // if(dateOfEnlistment !== null) foundCustomer.employmentInfo.dateOfEnlistment = dateOfEnlistment;
+//                 if(netPays.at(-1) !== null) foundCustomer.netPay = netPays.at(-1);
+//             }else{
+//                 logger.info({
+//                     method: 'create',
+//                     message: 'customer not found in origin',
+//                     meta: foundCustomer
+//                 });
+//                 debug('Failed to find origin');
+//             }
+//             const foundOrigin = await Origin.findOne({ ippis: ippis, bvn: foundCustomer.bvn });
+//             if(foundOrigin) {
+//                 const { accountNumber, bank, command, dateOfBirth, dateOfEnlistment, netPays } = foundOrigin;
+//                 if(accountNumber !== null && accountNumber.length == 10) foundCustomer.accountInfo.accountNumber = accountNumber;
+//                 if(bank !== null) foundCustomer.accountInfo.bank = bank;
+//                 if(command !== null) foundCustomer.employmentInfo.command = command;
+//                 // if(dateOfBirth !== null) foundCustomer.dateOfBirth = dateOfBirth;
+//                 // if(dateOfEnlistment !== null) foundCustomer.employmentInfo.dateOfEnlistment = dateOfEnlistment;
+//                 if(netPays.at(-1) !== null) foundCustomer.netPay = netPays.at(-1);
+//             }else{
+//                 logger.info({
+//                     method: 'create',
+//                     message: 'customer not found in origin',
+//                     meta: foundCustomer
+//                 });
+//                 debug('Failed to find origin');
+//             }
+
 module.exports = origin;

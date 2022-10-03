@@ -1,4 +1,4 @@
-const Segment = require('../models/segment');
+const Segment = require('../models/segmentModel');
 const debug = require('debug')('app:segmentCtrl');
 
 const segment = {  

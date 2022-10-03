@@ -9,9 +9,9 @@ function errorHandler(err, req, res, next) {
         return res.status(400).send('Error in request JSON.');
     }
 
-    if (err.name === 'FileUploadError') {
+    if (err instanceof FileUploadError) {
         debug(err);
-        return res.status(err.statusCode).send(err.message);
+        return res.status(err.code).send(err.message);
     }
 
     debug(err)

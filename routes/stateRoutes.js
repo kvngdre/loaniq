@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const debug = require('debug')('app:stateRoutes');
 const verifyRole = require('../middleware/verifyRole');
 const stateController = require('../controllers/stateController');
 const verifyToken = require('../middleware/verifyToken');
@@ -19,15 +18,6 @@ router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
 
 router.get(
     '/',
-    verifyToken,
-    verifyRole([
-        'Master',
-        'Lender',
-        'Admin',
-        'Credit',
-        'Operations',
-        'Loan Agent',
-    ]),
     async (req, res) => {
         const states = await stateController.getAll();
         if (states.length === 0)

@@ -1,54 +1,58 @@
-class Params {
-    calcUpfrontFee(loanAmount, upfrontFeePercent) {
-        const upfrontFee = loanAmount * upfrontFeePercent;
-        return upfrontFee.toFixed(2);
-    };
+function getAge(dob) {
+    const dobMs = dob.getTime();
+    const diff = Date.now() - dobMs;
+    const age = new Date(diff).getUTCFullYear() - 1970;
 
-    calcRepayment(recommendedAmount, interestRate, recommendedTenor) {
-        const repayment =  (recommendedAmount * interestRate) + (recommendedAmount / recommendedTenor);
-        return repayment.toFixed(2);
-    };
+    return age;
+}
 
-    calcTotalRepayment(repayment, loanTenor) {
-        const totalRepayment = repayment * loanTenor;
-        return (totalRepayment).toFixed(2);
-    };
+function getDti(repayment, netPay) {
+    const dti = repayment / netPay;
+    console.log(dti);
 
-    calcNetValue(loanAmount, upfrontFee, transferFee) {
-        const netValue = (loanAmount - upfrontFee) - transferFee;
-        if(netValue >= loanAmount) throw new Error('Error: Net value should not be greater than loan amount.');
+    return dti.toFixed(4);
+}
 
-        return netValue.toFixed(2);
-    };
+function getNetValue(loanAmount, upfrontFee, transferFee) {
+    const netValue = loanAmount - upfrontFee - transferFee;
+    if (netValue >= loanAmount)
+        throw new Error(
+            'Error: Net value should not be greater than loan amount.'
+        );
 
-    calcDti(repayment, netPay) {
-        const dti = repayment / netPay;
-        console.log(dti)
-        
-        return (dti).toFixed(4) ;
-    };
+    return netValue.toFixed(2);
+}
 
-    age(dob) {
-        const dobMs = dob.getTime();
-        const diff = Date.now() - dobMs;
-        const age = new Date(diff).getUTCFullYear() - 1970;
+function getRepayment(recommendedAmount, interestRate, recommendedTenor) {
+    const repayment =
+        recommendedAmount * interestRate + recommendedAmount / recommendedTenor;
+    return repayment.toFixed(2);
+}
 
-        return { 
-            isValid: (age >= 21 && age <= 58), 
-            age 
-        };
-    };
+function getServiceLength(doe) {
+    const doeMs = doe.getTime();
+    const diff = Date.now() - doeMs;
+    const serviceLength = new Date(diff).getUTCFullYear() - 1970;
 
-    serviceLength(doe) {
-        const doeMs = doe.getTime();
-        const diff = Date.now() - doeMs;
-        const serviceLength = new Date(diff).getUTCFullYear() - 1970;
+    return serviceLength;
+}
 
-        return { 
-            isValid: serviceLength <= 33, 
-            yearsServed: serviceLength 
-        };
-    };
+function getTotalRepayment(repayment, loanTenor) {
+    const totalRepayment = repayment * loanTenor;
+    return totalRepayment.toFixed(2);
+}
+
+function getUpfrontFee(loanAmount, upfrontFeePercent) {
+    const upfrontFee = loanAmount * upfrontFeePercent;
+    return upfrontFee.toFixed(2);
+}
+
+module.exports = {
+    getAge,
+    getDti,
+    getNetValue,
+    getRepayment,
+    getServiceLength,
+    getTotalRepayment,
+    getUpfrontFee,
 };
-
-module.exports = Params;

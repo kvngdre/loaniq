@@ -4,13 +4,13 @@ const Customer = require('../models/customerModel');
 const customerController = require('../controllers/customerController');
 const debug = require('debug')('app:loanMgr');
 const Lender = require('../models/lenderModel');
-const Loan = require('../models/loan');
+const Loan = require('../models/loanModel');
 const logger = require('../utils/logger')('loanManager.js');
 const Origin = require('../models/origin');
-const PendingEdit = require('../models/pendingEdit');
+const PendingEdit = require('../models/pendingEditModel');
 const PendingEditController = require('../controllers/pendingEditController');
 const pickRandomUser = require('../utils/pickRandomUser');
-const Segment = require('../models/segment');
+const Segment = require('../models/segmentModel');
 const updateLoanStatus = require('../utils/loanStatus');
 const userController = require('../controllers/userController');
 

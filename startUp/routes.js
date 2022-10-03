@@ -15,7 +15,7 @@ const originRouter = require('../routes/origin');
 const pendingEditRouter = require('../routes/pendingEdit');
 const refreshTokenRouter = require('../routes/refreshTokenRoutes');
 const segmentRouter = require('../routes/segment');
-const stateRouter = require('../routes/state');
+const stateRouter = require('../routes/stateRoutes');
 const transactionRouter = require('../routes/transaction');
 const userRouter = require('../routes/userRoutes');
 

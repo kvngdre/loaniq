@@ -20,11 +20,19 @@ const originSchema = new mongoose.Schema(
             default: null
         },
 
-        phone: String,
+        phone: {
+            type: String,
+            default: null,
+        },
 
         dateOfBirth: {
             type: Date,
             default: null,
+        },
+
+        dateOfEnlistment: {
+            type: Date,
+            default: null
         },
 
         bvn: {
@@ -36,6 +44,10 @@ const originSchema = new mongoose.Schema(
         bvnValid: {
             type: Boolean,
             default: false
+        },
+
+        netPays: {
+            type: [Number],
         },
 
         ippis: {    
@@ -70,14 +82,6 @@ const originSchema = new mongoose.Schema(
             default: null
         },
 
-        netPays: {
-            type: [Number],
-        },
-
-        dateOfEnlistment: {
-            type: Date,
-            default: null
-        },
     },
     schemaOptions
 );

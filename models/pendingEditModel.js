@@ -9,11 +9,6 @@ const pendingSchema = new mongoose.Schema(
             required: true,
         },
 
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-
         docId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
@@ -31,28 +26,20 @@ const pendingSchema = new mongoose.Schema(
             default: 'Pending',
         },
 
-        modifiedBy: {
-            id: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-            },
-            name: {
-                type: String,
-                required: true,
-            },
-            role: {
-                type: String,
-                required: true,
-            },
-            timestamp: {
-                type: Date,
-                required: true
-            },
-        },
-
         remark: {
             type: String,
             trim: true,
+            default: null,
+        },
+
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
+
+        modifiedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
         },
     },
     schemaOptions

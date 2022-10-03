@@ -24,7 +24,7 @@ router.post(
     }
 );
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', async (req, res) => {
     const banks = await bankController.getAll();
     if (banks.hasOwnProperty('errorCode'))
         return res.status(banks.errorCode).send(banks.message);

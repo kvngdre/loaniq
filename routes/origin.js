@@ -3,7 +3,7 @@ const concatErrorMsg = require('../utils/concatMsg');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 const originValidators = require('../validators/origin');
-const originController = require('../controllers/origin');
+const originController = require('../controllers/originController');
 
 router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
     const { error } = originValidators.create(req.body);
