@@ -30,11 +30,13 @@ const nameSchema = Joi.object({
 
 const genderSchema = Joi.string().valid('Male', 'Female').messages({
     'any.only': 'Invalid gender',
+    'any.required': 'Gender is required',
 });
 
-const birthDateSchema = Joi.date()
-    .custom(isValidDOB)
-    .message({ 'date.less': 'Must be 18 years or older.' });
+const birthDateSchema = Joi.date().custom(isValidDOB).message({
+    'date.less': 'Must be 18 years or older.',
+    'any.required': 'Birth date is required',
+});
 
 const phoneSchema = Joi.string()
     .min(13)
@@ -45,48 +47,54 @@ const phoneSchema = Joi.string()
         'string.max': 'Phone number is too long.',
         'string.pattern.base':
             'Invalid phone number, please include international dialling code.',
+        'any.required': 'Phone number is required',
     });
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
     'string.min': 'Invalid email address.',
     'string.max': 'Invalid email address.',
     'string.email': 'Please enter a valid email',
+    'any.required': 'Email address is required',
 });
 
 const ippisSchema = Joi.string()
     .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
     .uppercase()
-    .messages({ 'string.pattern.base': 'Invalid IPPIS number.' });
+    .messages({
+        'string.pattern.base': 'Invalid IPPIS number.',
+        'any.required': 'Ippis number is required',
+    });
 
 const employerSchema = Joi.object({
     name: Joi.string().min(2).max(70).messages({
         'string.min': 'Employer name is not valid.',
         'string.max': 'Employer name is too long.',
+        'any.required': 'Employer name is required',
     }),
     command: Joi.string().min(3).max(50).messages({
         'string.min': 'Command is not valid.',
         'string.max': 'Command is too long.',
+        'any.required': 'Command is required',
     }),
-    segment: Joi.string()
-        .min(1)
-        .max(10)
-        .required()
-        .messages({
-            'string.min': 'Invalid segment.',
-            'string.max': 'Invalid segment',
-        })
-        .uppercase(),
-    companyLocation: Joi.object({
+    segment: Joi.objectId().messages({
+        'any.required': 'Segment is required',
+    }),
+    location: Joi.object({
         address: Joi.string()
             .min(5)
             .max(100)
             .messages({
                 'string.min': 'Address is too short.',
                 'string.max': 'Address is too long.',
+                'any.required': 'Employer address is required',
             })
             .required(),
-        state: Joi.string().required(),
-        lga: Joi.string().required(),
+        state: Joi.string().messages({
+            'any.required': 'Employer state is required',
+        }),
+        lga: Joi.string().messages({
+            'any.required': 'Employer L.G.A is required',
+        }),
     }),
     hireDate: Joi.date()
         .min(
@@ -97,67 +105,95 @@ const employerSchema = Joi.object({
                 },
             })
         )
-        // TODO: Improve on this error message
-        .message({ 'date.min': 'Invalid Date of Enlistment.' }),
+        .message({
+            'date.min': 'Hire date is not valid',
+            'any.required': 'Hire date is required',
+        }),
 });
 
 const bvnSchema = Joi.string()
     .pattern(/^22[0-9]{9}$/)
-    .message({ 'string.pattern.base': 'Invalid BVN' });
+    .message({
+        'string.pattern.base': 'Invalid BVN',
+        'any.required': 'BVN is required',
+    });
 
-const idTypeSchema = Joi.string().valid(
-    'Voters card',
-    'International passport',
-    'Staff ID card',
-    'National ID card',
-    "Driver's license"
-);
+const idTypeSchema = Joi.string()
+    .valid(
+        'Voters card',
+        'International passport',
+        'Staff ID card',
+        'National ID card',
+        "Driver's license"
+    )
+    .messages({
+        'any.only': 'ID type is not valid',
+        'any.required': 'ID type is required',
+    });
 const idNoSchema = Joi.string()
     .pattern(/^([a-zA-Z]{2,7})?.[0-9]{3,11}$/)
-    .messages({ 'string.pattern.base': 'Invalid ID number' });
+    .messages({
+        'string.pattern.base': 'Invalid ID number',
+        'any.required': 'ID card number is required',
+    });
 
 const nokSchema = Joi.object({
     fullName: Joi.string().min(10).max(70).messages({
         'string.min': 'Next of kin name is too short.',
         'string.max': 'Next of kin name is too long.',
+        'any.required': 'Full name of next of kin is required',
     }),
-    address: Joi.object({
+    location: Joi.object({
         address: Joi.string()
             .min(9)
             .max(100)
             .messages({
                 'string.min': 'Next of kin address is too short.',
                 'string.max': 'Next of kin address is too long.',
+                'any.required': 'Next of kin address is required',
             })
             .required(),
-        state: Joi.string().required(),
-        lga: Joi.string().required(),
+        state: Joi.string().messages({
+            'any.required': 'Next of kin state is required',
+        }),
+        lga: Joi.string().messages({
+            'any.required': 'Next of kin L.G.A is required',
+        }),
     }),
     phone: Joi.string()
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .message({
             'string.pattern.base':
                 'Invalid next of kin phone number, please include international dialling code',
+            'any.required': 'Next of kin phone number is required',
         }),
-    relationship: Joi.string(),
+    relationship: Joi.string().messages({
+        'any.required': 'Relationship to next of kin is required',
+    }),
 });
 
 const accountNameSchema = Joi.string().min(8).max(100).messages({
     'string.min': 'Account name is not valid',
     'string.max': 'Account name is too long',
+    'any.required': 'Account name is required',
 });
 const accountNoSchema = Joi.string()
     .pattern(/^[0-9]{10}$/)
-    .message({
+    .messages({
         'string.pattern.base': 'Invalid account number.',
+        'any.required': 'Account number is required',
     });
-const bankSchema = {
-    name: Joi.string(),
-    code: Joi.string(),
-};
+const bankSchema = Joi.object({
+    name: Joi.string().messages({
+        'any.required': 'Bank name is required',
+    }),
+    code: Joi.string().messages({
+        'any.required': 'Bank code is required',
+    }),
+});
 
-const netPaySchema = Joi.object({
-    value: Joi.number().precision(2),
+const netPaySchema = Joi.number().precision(2).messages({
+    'any.required': 'Net pay is required',
 });
 
 const validators = {
@@ -165,22 +201,44 @@ const validators = {
         const schema = Joi.alternatives().try(
             Joi.objectId().required(),
             Joi.object({
-                name: nameSchema.required(),
+                name: Joi.object({
+                    first: Joi.string().min(3).max(30).required().messages({
+                        'string.min': 'First name is too short.',
+                        'string.max': 'first name is too long.',
+                        'any.required': 'First name is required',
+                    }),
+                    last: Joi.string().min(3).max(30).required().messages({
+                        'string.min': 'Surname is too short.',
+                        'string.max': 'Surname is too long.',
+                        'any.required': 'Surname is required',
+                    }),
+                    middle: Joi.string().min(3).max(30).messages({
+                        'string.min': 'Middle name is too short.',
+                        'string.max': 'Middle name is too long.',
+                    }),
+                }),
                 gender: genderSchema.required(),
                 birthDate: birthDateSchema.required(),
                 residentialAddress: Joi.object({
                     address: Joi.string()
                         .min(9)
-                        .max(70)
+                        .max(70).required()
                         .messages({
                             'string.min': 'Address is too short.',
                             'string.max': 'Address is too long.',
-                        })
-                        .required(),
-                    state: Joi.string().required(),
-                    stateCode: Joi.string().length(2).required(),
-                    lga: Joi.string().required(),
-                    geo: Joi.string().required(),
+                        }),
+                    state: Joi.string().required().messages({
+                        'any.required': 'Employer state is required',
+                    }),
+                    stateCode: Joi.string().length(2).required().messages({
+                        'any.required': 'State code is required',
+                    }),
+                    lga: Joi.string().required().messages({
+                        'any.required': 'L.G.A is required',
+                    }),
+                    geo: Joi.string().required().messages({
+                        'any.required': 'Geo-political zone is required',
+                    }),
                 }),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
@@ -189,11 +247,97 @@ const validators = {
                 ippis: ippisSchema.required(),
                 idType: idTypeSchema.required(),
                 idNo: idNoSchema.required(),
-                employer: employerSchema.required(),
-                nok: nokSchema.required(),
+                employer: Joi.object({
+                    name: Joi.string().min(2).max(70).required().messages({
+                        'string.min': 'Employer name is not valid.',
+                        'string.max': 'Employer name is too long.',
+                        'any.required': 'Employer name is required',
+                    }),
+                    command: Joi.string().min(3).max(50).messages({
+                        'string.min': 'Command is not valid.',
+                        'string.max': 'Command is too long.',
+                        'any.required': 'Command is required',
+                    }),
+                    segment: Joi.objectId().required().messages({
+                        'any.required': 'Segment is required',
+                    }),
+                    location: Joi.object({
+                        address: Joi.string()
+                            .min(5)
+                            .max(100)
+                            .required()
+                            .messages({
+                                'string.min': 'Address is too short.',
+                                'string.max': 'Address is too long.',
+                                'any.required': 'Employer address is required',
+                            }),
+                        state: Joi.string().required().messages({
+                            'any.required': 'Employer state is required',
+                        }),
+                        lga: Joi.string().required().messages({
+                            'any.required': 'Employer L.G.A is required',
+                        }),
+                    }),
+                    hireDate: Joi.date()
+                        .min(
+                            Joi.ref('...birthDate', {
+                                adjust: (value) => {
+                                    value.setFullYear(value.getFullYear() + 18);
+                                    return value;
+                                },
+                            })
+                        )
+                        .required()
+                        .messages({
+                            'date.min': 'Hire date is not valid',
+                            'any.required': 'Hire date is required',
+                        }),
+                }),
+                nok: Joi.object({
+                    fullName: Joi.string().min(10).max(70).required().messages({
+                        'string.min': 'Next of kin name is too short.',
+                        'string.max': 'Next of kin name is too long.',
+                        'any.required': 'Full name of next of kin is required',
+                    }),
+                    location: Joi.object({
+                        address: Joi.string()
+                            .min(9)
+                            .max(100)
+                            .required()
+                            .messages({
+                                'string.min': 'Next of kin address is too short.',
+                                'string.max': 'Next of kin address is too long.',
+                                'any.required': 'Next of kin address is required',
+                            }),
+                        state: Joi.string().required().messages({
+                            'any.required': 'Next of kin state is required',
+                        }),
+                        lga: Joi.string().required().messages({
+                            'any.required': 'Next of kin L.G.A is required',
+                        }),
+                    }),
+                    phone: Joi.string()
+                        .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
+                        .required()
+                        .messages({
+                            'string.pattern.base':
+                                'Invalid next of kin phone number, please include international dialling code',
+                            'any.required': 'Next of kin phone number is required',
+                        }),
+                    relationship: Joi.string().required().messages({
+                        'any.required': 'Relationship to next of kin is required',
+                    }),
+                }),
                 accountName: accountNameSchema.required(),
                 accountNo: accountNoSchema.required(),
-                bank: bankSchema.required(),
+                bank: Joi.object({
+                    name: Joi.string().required().messages({
+                        'any.required': 'Bank name is required',
+                    }),
+                    code: Joi.string().required().messages({
+                        'any.required': 'Bank code is required',
+                    }),
+                }),
                 netPay: netPaySchema.required(),
             })
         );
@@ -207,14 +351,10 @@ const validators = {
             gender: genderSchema,
             birthDate: birthDateSchema,
             residentialAddress: Joi.object({
-                address: Joi.string()
-                    .min(9)
-                    .max(70)
-                    .messages({
-                        'string.min': 'Address is too short.',
-                        'string.max': 'Address is too long.',
-                    })
-                    ,
+                address: Joi.string().min(9).max(70).messages({
+                    'string.min': 'Address is too short.',
+                    'string.max': 'Address is too long.',
+                }),
                 state: Joi.string(),
                 stateCode: Joi.string().length(2),
                 lga: Joi.string(),

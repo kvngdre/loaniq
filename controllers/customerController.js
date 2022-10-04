@@ -34,18 +34,18 @@ module.exports = {
             newCustomer.lenderId = user.lenderId;
 
             // run validations
-            newCustomer.validateSegment();
+            // newCustomer.validateSegment();
             const error = newCustomer.validateSync();
             if (error) {
                 const msg = error.errors[Object.keys(error.errors)[0]].message;
                 return new ServerError(400, msg);
             }
 
-            await foundCustomer.save();
+            await newCustomer.save();
 
             return {
                 message: 'Customer Created.',
-                data: foundCustomer,
+                data: newCustomer,
             };
         } catch (exception) {
             logger.error({
@@ -56,6 +56,7 @@ module.exports = {
             debug(exception);
             if (exception.name === 'MongoServerError') {
                 let field = Object.keys(exception.keyPattern)[0];
+                console.log('000---==', field);
                 field = field.replace('employer.', '');
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
@@ -203,6 +204,7 @@ module.exports = {
                     docId: foundCustomer._id,
                     type: 'Customer',
                     modifiedBy: user.id,
+                    alteration,
                 });
 
                 const error = newPendingEdit.validateSync();

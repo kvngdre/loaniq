@@ -32,9 +32,5 @@
     "paystack": {
         "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
     },
-    "redis": {
-        "host": "REDIS_HOST",
-        "port": "REDIS_PORT"
-    },
     "salt_rounds": "SALT"
 }

@@ -4,18 +4,22 @@ const { DateTime } = require('luxon');
 const Loan = require('../models/loanModel');
 const debug = require('debug')('app:loanCtrl');
 const Customer = require('../models/customerModel');
-const settingsController = require('./settingsController');
+const Segment = require('../models/segmentModel');
+const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('loanCtrl.js');
 const loanManager = require('../tools/loanManager');
-const { LoanRequestValidators } = require('../validators/loan');
+const { LoanRequestValidator } = require('../validators/loanValidator');
+const ServerError = require('../errors/serverError');
 
 // Get Loan Validators.
 async function getValidator(user, segmentId) {
     try {
-        const settings = await settingsController.getOne(user.lenderId);
-        if (settings.hasOwnProperty('errorCode')) {
+        const lender = await Lender.findById(user.lenderId).populate({path: 'segments.id', model: Segment});
+        console.log(lender);
+        if(!lender) {
             logger.error({
-                message: 'Failed to find lender settings.',
+                method: 'get_validator',
+                message: 'Lender not found',
                 meta: {
                     lender: user.lenderId,
                     user: user.id,
@@ -23,34 +27,37 @@ async function getValidator(user, segmentId) {
                     email: user.email,
                 },
             });
-            throw new Error(settings.message);
+            return new ServerError(404, 'Lender not found');
         }
-        const {
-            data: { loanParams, segments },
-        } = settings;
+        const { segments } = lender;
 
-        const { minLoanAmount, maxLoanAmount, minTenor, maxTenor, maxDti } =
-            segments.find((segment) => segment.id === segmentId);
+        const foundSegment = segments.find((segment) => segment.id === segmentId);
+        if(!foundSegment) return new ServerError(404, 'Segment configuration not found');
 
-        // Segment specific maxDti
-        loanParams.maxDti = maxDti;
-        const loanReqValidator = new LoanRequestValidators(
-            loanParams.minNetPay,
-            minLoanAmount,
-            maxLoanAmount,
-            minTenor,
-            maxTenor
+        const isNull = (key) => foundSegment[key] === null;
+        if(Object.keys(foundSegment).some(isNull)) return new ServerError(424, 'Missing some segment parameters.')
+        
+        const loanValidator = new LoanRequestValidator(
+            foundSegment.minNetPay,
+            foundSegment.minLoanAmount,
+            foundSegment.maxLoanAmount,
+            foundSegment.minTenor,
+            foundSegment.maxTenor,
+            foundSegment.interestRate,
+            foundSegment.upfrontFeePercent,
+            foundSegment.transferFee,
+            foundSegment.maxDti,
         );
 
-        return { loanParams, loanReqValidator };
+        return { loanValidator };
     } catch (exception) {
         logger.error({
-            method: 'getValidator',
+            method: 'get_validator',
             message: exception.message,
             meta: exception.stack,
         });
         debug(exception);
-        return exception;
+        return new ServerError(500, 'Error fetching segment parameters.');
     }
 }
 
@@ -69,27 +76,18 @@ const loans = {
 
             const validator = await getValidator(
                 user,
-                payload.customer.employmentInfo.segment.toString()
+                payload.customer.employer.segment
             );
-            if (validator instanceof Error) {
-                logger.error({
-                    message: 'Error fetching loan and segment configurations.',
-                    meta: {
-                        userId: user.id || 'guest',
-                        lenderId: user.lenderId,
-                    },
-                });
-                return {
-                    errorCode: 424,
-                    message: 'Unable to fetch loan and segment configurations.',
-                };
-            }
+            if (validator instanceof ServerError) return validator;
 
             const { loanParams, loanReqValidator } = validator;
+            
+            // validating the loan object
+            const { value, error } = loanReqValidator.create(payload.loan);
+            if (error) return new ServerError(400, error.details[0].message);
 
-            const { error } = loanReqValidator.create(payload.loan);
-            if (error)
-                return { errorCode: 400, message: error.details[0].message };
+            console.log(value);
+            return
 
             const response = await loanManager.createLoanRequest(
                 user,
@@ -106,7 +104,7 @@ const loans = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -119,52 +117,47 @@ const loans = {
                 queryParams.loanAgent = user.id;
                 loans = await loanManager.getAll(queryParams);
             } else {
-                queryParams = Object.assign(
-                    queryParams,
-                    _.omit(filters, ['date', 'amount', 'tenor'])
-                );
-
-                // Date Filter - createdAt
-                if (filters.date?.start)
+                // date filter - createdAt
+                if (filters?.start)
                     queryParams.createdAt = {
-                        $gte: DateTime.fromJSDate(new Date(filters.date.start))
+                        $gte: DateTime.fromJSDate(new Date(filters.start))
                             .setZone(user.timeZone)
                             .toUTC(),
                     };
-                if (filters.date?.end) {
+                if (filters?.end) {
                     const target = queryParams.createdAt
                         ? queryParams.createdAt
                         : {};
                     queryParams.createdAt = Object.assign(target, {
-                        $lte: DateTime.fromJSDate(new Date(filters.date.end))
+                        $lte: DateTime.fromJSDate(new Date(filters.end))
                             .setZone(user.timeZone)
                             .toUTC(),
                     });
                 }
 
-                // Number Filter - amount
-                if (filters.amount?.min)
+                // number filter - recommended amount
+                if (filters?.minA)
                     queryParams.recommendedAmount = {
-                        $gte: filters.amount.min,
+                        $gte: filters.minA,
                     };
-                if (filters.amount?.max) {
+                if (filters?.maxA) {
                     const target = queryParams.recommendedAmount
                         ? queryParams.recommendedAmount
                         : {};
                     queryParams.recommendedAmount = Object.assign(target, {
-                        $lte: filters.amount.max,
+                        $lte: filters.maxA,
                     });
                 }
 
-                //
-                if (filters.tenor?.min)
-                    queryParams.recommendedTenor = { $gte: filters.tenor.min };
-                if (filters.tenor?.max) {
+                // number filter - recommended tenor
+                if (filters?.minT)
+                    queryParams.recommendedTenor = { $gte: filters.minT };
+                if (filters?.maxT) {
                     const target = queryParams.recommendedTenor
                         ? queryParams.recommendedTenor
                         : {};
                     queryParams.recommendedTenor = Object.assign(target, {
-                        $lte: filters.tenor.max,
+                        $lte: filters.maxT,
                     });
                 }
 
@@ -173,9 +166,9 @@ const loans = {
 
             return loans;
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'get_all', message: exception.message, meta: exception.stack });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 

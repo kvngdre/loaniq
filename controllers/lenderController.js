@@ -17,7 +17,6 @@ const User = require('../models/userModel');
 
 module.exports = {
     create: async (payload) => {
-        
         try {
             // TODO: generate public URL.
             const newLender = new Lender(payload.lender);
@@ -44,7 +43,6 @@ module.exports = {
                         .message;
                 return new ServerError(400, msg);
             }
-            
 
             // validating user
             const userError = newUser.validateSync();
@@ -53,7 +51,7 @@ module.exports = {
                     userError.errors[Object.keys(userError.errors)[0]].message;
                 return new ServerError(400, msg);
             }
-            console.log('here')
+
             // validating user settings
             const settingsError = settings.validateSync();
             if (settingsError) {
@@ -61,7 +59,7 @@ module.exports = {
                     settingsError.errors[Object.keys(settingsError.errors)[0]]
                         .message;
                 return new ServerError(400, msg);
-            }   
+            }
 
             await newLender.save();
             await newUser.save();
@@ -71,7 +69,7 @@ module.exports = {
             // Sending OTP & Password to user email.
             const response = await mailer(
                 newUser.email,
-                newUser.name.firstName,
+                newUser.name.first,
                 newUser.otp.OTP,
                 randomPwd
             );
@@ -278,13 +276,13 @@ module.exports = {
                     });
                 } else {
                     // segment not found, push new segment parameters
-                    const segment = await Segment.findOne({
+                    const foundSegment = await Segment.findOne({
                         _id: payload.segment.id,
                         active: true,
                     });
                     // check if segment exists.
-                    if (!segment)
-                        return new ServerError(404, 'Segment Id not valid');
+                    if (!foundSegment)
+                        return new ServerError(404, 'Segment not found');
 
                     lender.segments.push(payload.segment);
                 }

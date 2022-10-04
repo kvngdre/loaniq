@@ -81,8 +81,8 @@ router.delete(
     verifyRole([roles.admin, roles.owner, roles.operations, roles.master]),
     async (req, res) => {
         const response = await customerController.delete(
+            req.params.id,
             req.user,
-            req.params.id
         );
         if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);

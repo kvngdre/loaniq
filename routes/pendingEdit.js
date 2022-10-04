@@ -1,13 +1,12 @@
 const router = require('express').Router();
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const pendingEditValidators = require('../validators/pendingEdit');
+const pendingEditValidators = require('../validators/pendingEditValidator');
 const pendingEditController = require('../controllers/pendingEditController');
 
 router.post(
     '/',
     verifyToken,
-    verifyRole(['Admin', 'Operations', 'Credit', 'Loan Agent']),
     async (req, res) => {
         const { error } = pendingEditValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);

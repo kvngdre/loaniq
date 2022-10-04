@@ -201,45 +201,54 @@ const lenderSchema = new mongoose.Schema(
         segments: [
             {
                 id: {
-                    type: String,
+                    type: mongoose.Schema.Types.ObjectId,
                     unique: true,
                     sparse: true
                 },
 
                 minLoanAmount: {
                     type: Number,
+                    default: null,
                 },
 
                 maxLoanAmount: {
                     type: Number,
+                    default: null,
                 },
 
                 minTenor: {
                     type: Number,
+                    default: null,
                 },
 
                 maxTenor: {
                     type: Number,
+                    default: null,
                 },
                 
                 interestRate: {
                     type: Number,
+                    default: null,
                 },
     
                 upfrontFeePercent: {
                     type: Number,
+                    default: null,
                 },
     
                 transferFee: {
                     type: Number,
+                    default: null,
                 },
     
                 minNetPay: {
                     type: Number,
+                    default: null,
                 },
     
                 maxDti: {
                     type: Number,
+                    default: null,
                 },
 
             },

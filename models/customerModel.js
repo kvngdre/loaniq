@@ -137,10 +137,8 @@ const customerSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: async function (value) {
-                    const segment = await Segment.findOne({
-                        code: this.employer.segment,
-                    });
-                    if (!segment) throw new Error('Segment not found');
+                    const segment = await Segment.findOne({ _id: this.employer.segment, active: true });
+                    if (!segment) return new ServerError('Segment not found');
 
                     const ippisPrefix = value.match(/^[A-Z]{2,3}(?=[0-9])/);
                     if (segment.ippisPrefix !== ippisPrefix[0]) return false;
@@ -218,7 +216,7 @@ const customerSchema = new mongoose.Schema(
                 required: true,
             },
 
-            address: {
+            location: {
                 address: {
                     type: String,
                     trim: true,
@@ -299,7 +297,7 @@ const customerSchema = new mongoose.Schema(
 );
 
 // compound index on lender id, ippis, and bvn
-customerSchema.index({ lenderId: 1, ippis: 1, bvn: 1 }, { unique: true });
+customerSchema.index({ ippis: 1, bvn: 1, accountNo: 1 }, { unique: true, partialFilterExpression: { $eq: this.hospital_id} });
 
 customerSchema.methods.validateSegment = async function () {
     try {

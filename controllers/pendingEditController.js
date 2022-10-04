@@ -1,3 +1,4 @@
+const { roles } = require('../utils/constants');
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:pendingEditCtrl');
 const flattenObject = require('../utils/flattenObj');
@@ -13,15 +14,10 @@ module.exports = {
         try {
             const newPendingEdit = new PendingEdit({
                 lenderId: user.lenderId,
-                userId: user.id,
                 docId: payload.docId,
                 type: payload.type,
-                modifiedBy: {
-                    id: user.id,
-                    name: user.fullName || user.id,
-                    role: user.role,
-                    timestamp: new Date(),
-                },
+                createdBy: user.id,
+                modifiedBy: user.id,
                 alteration: payload.alteration,
             });
 
@@ -42,7 +38,10 @@ module.exports = {
             // if exception is a validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return new ServerError(400, exception.errors[field].message.replace('Path', ''));
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
             }
             return new ServerError(500, 'Something went wrong');
         }
@@ -54,7 +53,9 @@ module.exports = {
                 {
                     $match: {
                         lenderId: user.lenderId,
-                        userId: ['Admin', 'Operations'].includes(user.role)
+                        createdBy: ![roles.agent, roles.credit].includes(
+                            user.role
+                        )
                             ? { $ne: null }
                             : mongoose.Types.ObjectId(user.id),
                         type: 'Customer',
@@ -71,16 +72,23 @@ module.exports = {
                 {
                     $lookup: {
                         from: 'users',
-                        localField: 'userId',
+                        localField: 'createdBy',
                         foreignField: '_id',
-                        as: 'user',
+                        as: 'createdBy',
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'modifiedBy',
+                        foreignField: '_id',
+                        as: 'modifiedBy',
                     },
                 },
                 {
                     $project: {
                         _id: 1,
                         lenderId: 1,
-                        userId: 1,
                         docId: 1,
                         type: 1,
                         status: 1,
@@ -103,21 +111,22 @@ module.exports = {
                                 lang: 'js',
                             },
                         },
-                        user: { name: 1, fullName: 1, displayName: 1, role: 1 },
+                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
                     },
                 },
             ]).exec();
 
             let pipeline$Match = null;
             if (user.role === 'Credit') {
-                // Fetch loans assigned to credit user for review.
+                // Fetch loans assigned to credit user.
                 pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
                         type: 'Loan',
                         loan: {
                             $elemMatch: {
-                                creditOfficer: mongoose.Types.ObjectId(user.id),
+                                creditUser: mongoose.Types.ObjectId(user.id),
                             },
                         },
                     },
@@ -127,10 +136,11 @@ module.exports = {
                 pipeline$Match = {
                     $match: {
                         lenderId: user.lenderId,
-                        userId:
-                            user.role === 'Admin'
-                                ? { $ne: null }
-                                : mongoose.Types.ObjectId(user.id),
+                        createdBy: ![roles.agent, roles.operations].includes(
+                            user.role
+                        )
+                            ? { $ne: null }
+                            : mongoose.Types.ObjectId(user.id),
                         type: 'Loan',
                     },
                 };
@@ -150,16 +160,24 @@ module.exports = {
                 {
                     $lookup: {
                         from: 'users',
-                        localField: 'userId',
+                        localField: 'createdBy',
                         foreignField: '_id',
-                        as: 'user',
+                        as: 'createdBy',
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'modifiedBy',
+                        foreignField: '_id',
+                        as: 'modifiedBy',
                     },
                 },
                 {
                     $project: {
                         _id: 1,
                         lenderId: 1,
-                        userId: 1,
+                        createdBy: 1,
                         docId: 1,
                         type: 1,
                         status: 1,
@@ -183,16 +201,17 @@ module.exports = {
                                 lang: 'js',
                             },
                         },
-                        user: { name: 1, fullName: 1, displayName: 1, role: 1 },
+                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
                     },
                 },
             ]).exec();
 
             const pendingEdits = [...customerEdits, ...loanEdits];
             if (pendingEdits.length === 0)
-                return { errorCode: 404, message: 'No pending edits.' };
+                return new ServerError(404, 'No pending edits');
 
-            // sort in descending order
+            // sort in descending order by createdAt field
             pendingEdits.sort((a, b) => {
                 if (a.createdAt > b.createdAt) return -1;
                 if (a.createdAt < b.createdAt) return 1;
@@ -205,31 +224,33 @@ module.exports = {
             };
         } catch (exception) {
             logger.error({
-                method: 'getAll',
+                method: 'get_all',
                 message: exception.message,
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     getOne: async function (id, user) {
         try {
-            const pendingCustomerEdit = await PendingEdit.aggregate([
+            const customerEdit = await PendingEdit.aggregate([
                 {
                     $lookup: {
                         from: 'users',
-                        localField: 'userId',
+                        localField: 'createdBy',
                         foreignField: '_id',
-                        as: 'user',
+                        as: 'createdBy',
                     },
                 },
                 {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
                         lenderId: user.lenderId,
-                        userId: ['Admin', 'Operations'].includes(user.role)
+                        createdBy: ![roles.agent, roles.credit].includes(
+                            user.role
+                        )
                             ? { $ne: null }
                             : mongoose.Types.ObjectId(user.id),
                         type: 'Customer',
@@ -244,11 +265,19 @@ module.exports = {
                     },
                 },
                 {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'modifiedBy',
+                        foreignField: '_id',
+                        as: 'modifiedBy',
+                    },
+                },
+                {
                     $project: {
                         _id: 1,
                         lenderId: 1,
                         docId: 1,
-                        userId: 1,
+                        createdBy: 1,
                         type: 1,
                         alteration: 1,
                         status: 1,
@@ -270,7 +299,8 @@ module.exports = {
                                 lang: 'js',
                             },
                         },
-                        user: { name: 1, fullName: 1, displayName: 1, role: 1 },
+                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
                     },
                 },
             ]).exec();
@@ -284,9 +314,9 @@ module.exports = {
                             lenderId: user.lenderId,
                             status: 'Pending',
                             type: 'Loan',
-                            loanData: {
+                            loan: {
                                 $elemMatch: {
-                                    creditOfficer: mongoose.Types.ObjectId(
+                                    creditUser: mongoose.Types.ObjectId(
                                         user.id
                                     ),
                                 },
@@ -298,10 +328,12 @@ module.exports = {
                         $match: {
                             _id: mongoose.Types.ObjectId(id),
                             lenderId: user.lenderId,
-                            userId:
-                                user.role === 'Admin'
-                                    ? { $ne: null }
-                                    : mongoose.Types.ObjectId(user.id),
+                            createdBy: ![
+                                roles.agent,
+                                roles.operations,
+                            ].includes(user.role)
+                                ? { $ne: null }
+                                : mongoose.Types.ObjectId(user.id),
                             status: 'Pending',
                             type: 'Loan',
                         },
@@ -352,84 +384,93 @@ module.exports = {
                                     lang: 'js',
                                 },
                             },
-                            user: {
-                                name: 1,
-                                fullName: 1,
-                                displayName: 1,
-                                role: 1,
-                            },
+                            createdBy: { fullName: 1, jobTitle: 1, role: 1 },
+                            modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
                         },
                     },
                 ]).exec();
 
-                return loanEdit;
+                return {
+                    message: 'success',
+                    data: loanEdit,
+                };
             }
 
             return {
-                message: 'Success',
+                message: 'success',
                 data: customerEdit,
             };
         } catch (exception) {
             logger.error({
-                method: 'getOne',
+                method: 'get_one',
                 message: exception.message,
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     update: async function (id, user, payload) {
         try {
-            const queryParams = { _id: id, userId: user.id };
+            const queryParams = ![roles.credit, roles.operations].includes(
+                user.role
+            )
+                ? { _id: id, createdBy: user.id }
+                : { _id: id };
 
-            const pendingEdit = await PendingEdit.findOne(queryParams);
-            if (!pendingEdit)
-                return { errorCode: 404, message: 'Document not found.' };
-            if (pendingEdit.status !== 'Pending')
-                return {
-                    errorCode: 403,
-                    message: 'Cannot modify a reviewed document.',
-                };
+            const foundEditRequest = await PendingEdit.findOne(queryParams);
+            if (!foundEditRequest)
+                return new ServerError(404, 'Edit request not found');
+            if (foundEditRequest.status !== 'Pending')
+                return new ServerError(403, 'Cannot perform update operation');
 
             payload = flattenObject(payload);
 
             // User role is loan agent
             if (user.role === 'Loan Agent') {
-                pendingEdit.set(payload);
-                pendingEdit.modifiedBy = {
-                    id: user.id,
-                    name: user.fullName,
-                    role: user.role,
-                    // timestamp: new Date(),
-                };
+                foundEditRequest.set(payload);
+                foundEditRequest.modifiedBy = user.id;
 
-                await pendingEdit.save();
+                await foundEditRequest.save();
                 return {
-                    message: 'Document updated.',
-                    data: pendingEdit,
+                    message: 'Request has been updated',
+                    data: foundEditRequest,
                 };
             }
 
             if (payload.status === 'Approved') {
-                if (pendingEdit.type === 'Customer') {
+                if (foundEditRequest.type === 'Customer') {
                     // TODO: call the controllers in case of error
-                    const customer = await Customer.findById(pendingEdit.docId);
+                    const foundCustomer = await Customer.findById(
+                        foundEditRequest.docId
+                    );
+                    if (!foundCustomer)
+                        return new ServerError(
+                            404,
+                            'Operation failed. Customer not found.'
+                        );
 
-                    customer.set(pendingEdit.alteration);
-                    await customer.save();
+                    foundCustomer.set(foundEditRequest.alteration);
+                    await foundCustomer.save();
                 } else {
-                    const loan = await Loan.findById(pendingEdit.docId);
-                    loan.set(pendingEdit.alteration);
+                    const foundLoan = await Loan.findById(
+                        foundEditRequest.docId
+                    );
+                    if (!foundLoan)
+                        return new ServerError(
+                            404,
+                            'Operation failed. Loan not found.'
+                        );
 
-                    await loan.save();
+                    foundLoan.set(foundEditRequest.alteration);
+                    await foundLoan.save();
                 }
             }
-            pendingEdit.set(payload);
+            foundEditRequest.set(payload);
             return {
-                message: 'Updated.',
-                data: pendingEdit,
+                message: 'Request has been pdated.',
+                data: foundEditRequest,
             };
         } catch (exception) {
             logger.error({
@@ -442,34 +483,36 @@ module.exports = {
             // Validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                exception.errors[field].message.replace('Path', '')
-                const errorMessage = exception.errors[field].message.replace('modifiedBy', '')
-                return {
-                    errorCode: 400,
-                    message: errorMessage,
-                };
+                exception.errors[field].message.replace('Path', '');
+                const errorMessage = exception.errors[field].message.replace(
+                    'modifiedBy',
+                    ''
+                );
+                return new ServerError(400, errorMessage);
             }
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
     delete: async function (id, user) {
         try {
-            const queryParams = { _id: id, userId: user.id };
+            const queryParams = ![roles.credit, roles.operations].includes(
+                user.role
+            )
+                ? { _id: id, createdBy: user.id }
+                : { _id: id };
 
-            const pendingEdit = await PendingEdit.findOne(queryParams);
-            if (!pendingEdit)
-                return { errorCode: 404, message: 'No document found.' };
-            if (pendingEdit.status !== 'Pending')
-                return {
-                    errorCode: 403,
-                    message: 'Cannot delete a reviewed document.',
-                };
+            const foundPendingEdit = await PendingEdit.findOne(queryParams);
+            if (!foundPendingEdit)
+                return new ServerError(404, 'Edit request not found');
+            if (foundPendingEdit.status !== 'Pending')
+                return new ServerError(403, 'Cannot perform delete operation');
 
-            await pendingEdit.delete();
+            await foundPendingEdit.delete();
 
             return {
                 message: 'Document deleted.',
+                data: foundPendingEdit,
             };
         } catch (exception) {
             logger.error({
@@ -478,7 +521,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 };

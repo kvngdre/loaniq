@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
-const Metrics = require('../utils/LoanParams');
+const {
+    calcAge,
+    calcDti,
+    calcNetValue,
+    calcRepayment,
+    calcServiceLength,
+    calcTotalRepayment,
+    calcUpfrontFee,
+} = require('../utils/LoanParams');
 const logger = require('../utils/logger')('loanModel.js');
 const ServerError = require('../errors/serverError');
-
-// const metricFuncs = new Metrics();
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -155,6 +161,16 @@ const loanSchema = new mongoose.Schema(
                 required: true,
             },
 
+            maxDti: {
+                type: Number,
+                required: true,
+            },
+
+            minNetPay: {
+                type: Number,
+                required: true,
+            },
+
             birthDate: {
                 type: Date,
                 default: null,
@@ -175,18 +191,8 @@ const loanSchema = new mongoose.Schema(
                 default: null,
             },
 
-            maxDti: {
-                type: Number,
-                required: true,
-            },
-
             netPay: {
                 type: Number,
-            },
-
-            minNetPay: {
-                type: Number,
-                required: true,
             },
         },
 
@@ -216,51 +222,48 @@ loanSchema.pre('save', function (next) {
             this.recommendedTenor = this.tenor;
         }
 
-        const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
-
         // setting loan metrics
+        const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
         if (
             this.modifiedPaths().some((path) =>
                 loanMetricsTriggers.includes(path)
             )
         ) {
             console.log('yes');
-            this.upfrontFee = metricFuncs.calcUpfrontFee(
+            this.upfrontFee = calcUpfrontFee(
                 this.recommendedAmount,
-                this.upfrontFeePercent
+                this.params.upfrontFeePercent
             );
-            this.repayment = metricFuncs.calcRepayment(
+
+            this.repayment = calcRepayment(
                 this.recommendedAmount,
-                this.interestRate,
+                this.params.interestRate,
                 this.recommendedTenor
             );
-            this.totalRepayment = metricFuncs.calcTotalRepayment(
+
+            this.totalRepayment = calcTotalRepayment(
                 this.repayment,
                 this.recommendedTenor
             );
-            this.netValue = metricFuncs.calcNetValue(
+
+            this.netValue = calcNetValue(
                 this.recommendedAmount,
                 this.upfrontFee,
-                this.transferFee
+                this.params.transferFee
             );
         }
 
-        const validationMetricTrigger = ['repayment', 'params'];
-
-        // setting validation metics
+        // updating params
+        const paramsUpdateTrigger = ['repayment', 'params'];
         if (
             this.modifiedPaths().some((path) =>
-                validationMetricTrigger.includes(path)
+                paramsUpdateTrigger.includes(path)
             )
         ) {
             console.log('I dey here');
-            this.params.age = metricFuncs.age(this.params.dob);
-            this.params.serviceLength = metricFuncs.serviceLength(
-                this.params.doe
-            );
-            this.params.netPay.isValid =
-                this.params.netPay >= this.params.minNetPay;
-            this.params.dti = metricFuncs.calcDti(
+            this.params.age = calcAge(this.params.birthDate);
+            this.params.serviceLength = calcServiceLength(this.params.hireDate);
+            this.dti = calcDti(
                 this.repayment,
                 this.params.netPay
             );
