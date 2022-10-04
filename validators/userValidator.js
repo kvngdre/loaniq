@@ -4,27 +4,32 @@ Joi.objectId = require('joi-objectid')(Joi);
 const { joiPassword } = require('joi-password');
 
 const nameSchema = Joi.object({
-    first: Joi.string().min(3).max(30).messages({
-        'string.min': 'First name is too short.',
+    first: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid first name',
         'string.max': 'First name is too long.',
+        'any.required': 'First name is required',
     }),
-    last: Joi.string().min(3).max(30).messages({
-        'string.min': 'Surname is too short.',
+    last: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid surname',
         'string.max': 'Surname is too long.',
+        'any.required': 'Surname is required',
     }),
-    middle: Joi.string().min(3).max(30).messages({
-        'string.min': 'Middle name is too short.',
+    middle: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid middle name',
         'string.max': 'Middle name is too long.',
+        'any.required': 'Middle name is required',
     }),
 });
 
 const genderSchema = Joi.string().valid('Male', 'Female').messages({
     'any.only': 'Invalid gender',
+    'any.required': 'gender is required',
 });
 
 const jobTitleSchema = Joi.string().min(2).max(50).messages({
     'string.min': 'Job title is too short',
     'string.max': 'Job title is too long',
+    'any.required': 'Job title is required',
 });
 
 // TODO: ask if front end would do the validation logic
@@ -56,12 +61,14 @@ const phoneSchema = Joi.string()
     .message({
         'string.pattern.base':
             'Invalid phone number, please include international dialling code.',
+            'any.required': 'Phone number is required',
     });
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': 'Invalid email address',
-    'string.max': 'Invalid email address',
+    'string.min': 'Invalid email',
+    'string.max': 'Invalid email',
     'string.email': 'Please enter a valid email',
+    'any.required': 'Email is required',
 });
 
 const passwordSchema = joiPassword
@@ -80,6 +87,7 @@ const passwordSchema = joiPassword
         'password.minOfNumeric':
             'Password should contain at least {#min} numbers.',
         'password.noWhiteSpaces': 'Password should not contain white spaces.',
+        'any.required': 'Password is required',
     });
 
 const otpSchema = Joi.string()
@@ -88,7 +96,9 @@ const otpSchema = Joi.string()
 
 const segmentSchema = Joi.alternatives().try(
     Joi.array().items(Joi.objectId).min(1),
-    Joi.string().valid('all')
+    Joi.string().valid('all').messages({
+        'any.required': 'Segments is required',
+    })
 );
 
 const roleSchema = Joi.string()
@@ -101,13 +111,30 @@ const roleSchema = Joi.string()
     )
     .messages({
         'any.only': 'User role is not valid',
+        'any.required': 'User role is required',
     });
 
 const validators = {
     create: function (user) {
         if ([roles.agent, roles.credit].includes(user.role)) {
             const schema = Joi.object({
-                name: nameSchema.required(),
+                name: Joi.object({
+                    first: Joi.string().min(2).max(255).required().messages({
+                        'string.min': 'Invalid first name',
+                        'string.max': 'First name is too long.',
+                        'any.required': 'First name is required',
+                    }),
+                    last: Joi.string().min(2).max(255).required().messages({
+                        'string.min': 'Invalid surname',
+                        'string.max': 'Surname is too long.',
+                        'any.required': 'Surname is required',
+                    }),
+                    middle: Joi.string().min(2).max(255).required().messages({
+                        'string.min': 'Invalid middle name',
+                        'string.max': 'Middle name is too long.',
+                        'any.required': 'Middle name is required',
+                    }),
+                }),
                 jobTitle: jobTitleSchema,
                 gender: genderSchema.required(),
                 dob: dobSchema,
@@ -121,7 +148,23 @@ const validators = {
             return schema.validate(user);
         }
         const schema = Joi.object({
-            name: nameSchema.required(),
+            name: Joi.object({
+                first: Joi.string().min(2).max(255).required().messages({
+                    'string.min': 'Invalid first name',
+                    'string.max': 'First name is too long.',
+                    'any.required': 'First name is required',
+                }),
+                last: Joi.string().min(2).max(255).required().messages({
+                    'string.min': 'Invalid surname',
+                    'string.max': 'Surname is too long.',
+                    'any.required': 'Surname is required',
+                }),
+                middle: Joi.string().min(2).max(255).required().messages({
+                    'string.min': 'Invalid middle name',
+                    'string.max': 'Middle name is too long.',
+                    'any.required': 'Middle name is required',
+                }),
+            }),
             jobTitle: jobTitleSchema,
             gender: genderSchema.required(),
             dob: dobSchema,
@@ -161,7 +204,8 @@ const validators = {
             currentPassword: Joi.string()
                 .max(1024)
                 .messages({
-                    'string.max': 'Password is too long',
+                    'string.max': 'Invalid Password',
+                    'any.required': 'Current password is required',
                 })
                 .required(),
             newPassword: passwordSchema.required(),
@@ -176,7 +220,8 @@ const validators = {
             currentPassword: Joi.string()
                 .max(1024)
                 .messages({
-                    'string.max': 'Password is too long',
+                    'string.max': 'Invalid Password',
+                    'any.required': 'Current password is required',
                 })
                 .required(),
             newPassword: passwordSchema.required(),

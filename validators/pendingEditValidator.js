@@ -5,9 +5,15 @@ Joi.objectId = require('joi-objectid')(Joi);
 const validators = {
     create: function (obj) {
         const schema = Joi.object({
-            docId: Joi.objectId().required(),
-            type: Joi.string().valid('Customer', 'Loan').required(),
-            alteration: Joi.object().required(),
+            docId: Joi.objectId().required().messages({
+                'any.required': 'Document Id is required',
+            }),
+            type: Joi.string().valid('Customer', 'Loan').required().messages({
+                'any.required': 'Document type is required',
+            }),
+            alteration: Joi.object().required().messages({
+                'any.required': 'Alteration is required',
+            }),
         });
 
         return schema.validate(obj);

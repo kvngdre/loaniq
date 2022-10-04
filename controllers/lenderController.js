@@ -10,9 +10,9 @@ const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
 const mailer = require('../utils/mailer');
-const Settings = require('../models/settings');
 const Segment = require('../models/segmentModel');
 const ServerError = require('../errors/serverError');
+const Settings = require('../models/settings');
 const User = require('../models/userModel');
 
 module.exports = {

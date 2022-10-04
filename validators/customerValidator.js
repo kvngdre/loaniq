@@ -1,5 +1,5 @@
-const Joi = require('joi');
 const { DateTime } = require('luxon');
+const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
 function isValidDOB(dob, helper) {
@@ -220,13 +220,10 @@ const validators = {
                 gender: genderSchema.required(),
                 birthDate: birthDateSchema.required(),
                 residentialAddress: Joi.object({
-                    address: Joi.string()
-                        .min(9)
-                        .max(70).required()
-                        .messages({
-                            'string.min': 'Address is too short.',
-                            'string.max': 'Address is too long.',
-                        }),
+                    address: Joi.string().min(9).max(70).required().messages({
+                        'string.min': 'Address is too short.',
+                        'string.max': 'Address is too long.',
+                    }),
                     state: Joi.string().required().messages({
                         'any.required': 'Employer state is required',
                     }),
@@ -305,9 +302,12 @@ const validators = {
                             .max(100)
                             .required()
                             .messages({
-                                'string.min': 'Next of kin address is too short.',
-                                'string.max': 'Next of kin address is too long.',
-                                'any.required': 'Next of kin address is required',
+                                'string.min':
+                                    'Next of kin address is too short.',
+                                'string.max':
+                                    'Next of kin address is too long.',
+                                'any.required':
+                                    'Next of kin address is required',
                             }),
                         state: Joi.string().required().messages({
                             'any.required': 'Next of kin state is required',
@@ -322,10 +322,12 @@ const validators = {
                         .messages({
                             'string.pattern.base':
                                 'Invalid next of kin phone number, please include international dialling code',
-                            'any.required': 'Next of kin phone number is required',
+                            'any.required':
+                                'Next of kin phone number is required',
                         }),
                     relationship: Joi.string().required().messages({
-                        'any.required': 'Relationship to next of kin is required',
+                        'any.required':
+                            'Relationship to next of kin is required',
                     }),
                 }),
                 accountName: accountNameSchema.required(),

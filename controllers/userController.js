@@ -22,9 +22,13 @@ module.exports = {
      */
     create: async (user, payload) => {
         try {
-            const lender = await Lender.findOne({ _id: user.lenderId, active: true });
+            const lender = await Lender.findOne({
+                _id: user.lenderId,
+                active: true,
+            });
             // tenant inactive
-            if (!lender) return new ServerError(403, 'Tenant is yet to be activated');
+            if (!lender)
+                return new ServerError(403, 'Tenant is yet to be activated');
 
             // only owners can create admins
             if (payload.role === roles.admin && user.role !== roles.owner)
@@ -81,7 +85,7 @@ module.exports = {
                 // delete record if mail fails to send
                 await newUser.delete();
                 await settings.delete();
-                
+
                 logger.error({
                     method: 'create',
                     message: response.message,
@@ -136,12 +140,10 @@ module.exports = {
     },
 
     uploadImage: async () => {
-        try{
-
-        }catch(exception) {
+        try {
+        } catch (exception) {
             return new ServerError(500, 'Something went wrong');
         }
-
     },
 
     getAll: async (user, filters) => {
@@ -297,7 +299,7 @@ module.exports = {
 
             foundUser.set({
                 password: newPassword,
-                refreshTokens: []
+                refreshTokens: [],
             });
             await foundUser.save();
 

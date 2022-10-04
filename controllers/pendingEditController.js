@@ -7,10 +7,9 @@ const logger = require('../utils/logger')('pendingEditCtrl.js');
 const mongoose = require('mongoose');
 const PendingEdit = require('../models/pendingEditModel');
 const ServerError = require('../errors/serverError');
-const User = require('../models/userModel');
 
 module.exports = {
-    create: async function (user, payload) {
+    create: async (user, payload) => {
         try {
             const newPendingEdit = new PendingEdit({
                 lenderId: user.lenderId,
@@ -34,20 +33,19 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-
-            // if exception is a validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                return new ServerError(
-                    400,
-                    exception.errors[field].message.replace('Path', '')
+                const errorMsg = exception.errors[field].message.replace(
+                    'Path',
+                    ''
                 );
+                return new ServerError(400, errorMsg);
             }
             return new ServerError(500, 'Something went wrong');
         }
     },
 
-    getAll: async function (user) {
+    getAll: async (user) => {
         try {
             const customerEdits = await PendingEdit.aggregate([
                 {
@@ -90,50 +88,57 @@ module.exports = {
                         _id: 1,
                         lenderId: 1,
                         docId: 1,
+                        createdBy: 1,
+                        modifiedBy: 1,
                         type: 1,
                         status: 1,
+                        remark: 1,
                         createdAt: 1,
                         updatedAt: 1,
                         alteration: 1,
                         state: {
                             $function: {
                                 body: function (alteration, self) {
-                                    const fieldsToProject = {};
+                                    try {
+                                        const fieldsToProject = {};
 
-                                    Object.keys(alteration).forEach(
-                                        (key) =>
-                                            (fieldsToProject[key] =
-                                                self[0][key])
-                                    );
-                                    return fieldsToProject;
+                                        Object.keys(alteration).forEach(
+                                            (key) =>
+                                                (fieldsToProject[key] =
+                                                    self[0][key])
+                                        );
+                                        return fieldsToProject;
+                                    } catch (err) {
+                                        return { error: 'Document not found.' };
+                                    }
                                 },
                                 args: ['$alteration', '$customer'],
                                 lang: 'js',
                             },
                         },
-                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
-                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        createdBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
+                        modifiedBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
                     },
                 },
             ]).exec();
 
-            let pipeline$Match = null;
-            if (user.role === 'Credit') {
-                // Fetch loans assigned to credit user.
-                pipeline$Match = {
-                    $match: {
-                        lenderId: user.lenderId,
-                        type: 'Loan',
-                        loan: {
-                            $elemMatch: {
-                                creditUser: mongoose.Types.ObjectId(user.id),
-                            },
-                        },
-                    },
-                };
-            } else {
-                // Fetch all loans or loan edits created by the user.
-                pipeline$Match = {
+            // Aggregation pipeline for fetching pending loan edits.
+            const loanEdits = await PendingEdit.aggregate([
+                {
                     $match: {
                         lenderId: user.lenderId,
                         createdBy: ![roles.agent, roles.operations].includes(
@@ -143,11 +148,7 @@ module.exports = {
                             : mongoose.Types.ObjectId(user.id),
                         type: 'Loan',
                     },
-                };
-            }
-
-            // Aggregation pipeline for fetching pending loan edits.
-            const loanEdits = await PendingEdit.aggregate([
+                },
                 {
                     $lookup: {
                         from: 'loans',
@@ -156,7 +157,6 @@ module.exports = {
                         as: 'loan',
                     },
                 },
-                pipeline$Match,
                 {
                     $lookup: {
                         from: 'users',
@@ -177,32 +177,50 @@ module.exports = {
                     $project: {
                         _id: 1,
                         lenderId: 1,
-                        createdBy: 1,
                         docId: 1,
                         type: 1,
                         status: 1,
+                        remark: 1,
                         createdAt: 1,
                         updatedAt: 1,
                         alteration: 1,
                         state: {
                             $function: {
                                 body: function (alteration, self) {
-                                    const fieldsToProject = {};
+                                    try {
+                                        const fieldsToProject = {};
 
-                                    Object.keys(alteration).forEach(
-                                        (key) =>
-                                            (fieldsToProject[key] =
-                                                self[0][key])
-                                    );
+                                        Object.keys(alteration).forEach(
+                                            (key) =>
+                                                (fieldsToProject[key] =
+                                                    self[0][key])
+                                        );
 
-                                    return fieldsToProject;
+                                        return fieldsToProject;
+                                    } catch (err) {
+                                        return { error: 'Document not found.' };
+                                    }
                                 },
                                 args: ['$alteration', '$loan'],
                                 lang: 'js',
                             },
                         },
-                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
-                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        createdBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
+                        modifiedBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
                     },
                 },
             ]).exec();
@@ -233,17 +251,9 @@ module.exports = {
         }
     },
 
-    getOne: async function (id, user) {
+    getOne: async (id, user) => {
         try {
             const customerEdit = await PendingEdit.aggregate([
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'createdBy',
-                        foreignField: '_id',
-                        as: 'createdBy',
-                    },
-                },
                 {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
@@ -254,6 +264,14 @@ module.exports = {
                             ? { $ne: null }
                             : mongoose.Types.ObjectId(user.id),
                         type: 'Customer',
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'createdBy',
+                        foreignField: '_id',
+                        as: 'createdBy',
                     },
                 },
                 {
@@ -277,56 +295,55 @@ module.exports = {
                         _id: 1,
                         lenderId: 1,
                         docId: 1,
-                        createdBy: 1,
                         type: 1,
-                        alteration: 1,
                         status: 1,
-                        customer: 1,
+                        remark: 1,
+                        alteration: 1,
                         state: {
                             $function: {
                                 body: function (alteration, self) {
-                                    const fieldsToProject = {};
+                                    try {
+                                        const fieldsToProject = {};
 
-                                    Object.keys(alteration).forEach(
-                                        (key) =>
-                                            (fieldsToProject[key] =
-                                                self[0][key])
-                                    );
+                                        Object.keys(alteration).forEach(
+                                            (key) =>
+                                                (fieldsToProject[key] =
+                                                    self[0][key])
+                                        );
 
-                                    return fieldsToProject;
+                                        return fieldsToProject;
+                                    } catch (err) {
+                                        return { error: 'Document not found.' };
+                                    }
                                 },
                                 args: ['$alteration', '$customer'],
                                 lang: 'js',
                             },
                         },
-                        createdBy: { fullName: 1, jobTitle: 1, role: 1 },
-                        modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
+                        createdBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
+                        modifiedBy: {
+                            _id: 1,
+                            name: 1,
+                            displayName: 1,
+                            fullName: 1,
+                            jobTitle: 1,
+                            role: 1,
+                        },
                     },
                 },
             ]).exec();
 
-            if (pendingCustomerEdit.length === 0) {
-                let Pipeline$MatchObject;
-                if (user.role === 'Credit') {
-                    Pipeline$MatchObject = {
+            if (customerEdit.length === 0) {
+                const loanEdit = await PendingEdit.aggregate([
+                    {
                         $match: {
-                            _id: mongoose.Types.ObjectId(id),
-                            lenderId: user.lenderId,
-                            status: 'Pending',
-                            type: 'Loan',
-                            loan: {
-                                $elemMatch: {
-                                    creditUser: mongoose.Types.ObjectId(
-                                        user.id
-                                    ),
-                                },
-                            },
-                        },
-                    };
-                } else {
-                    Pipeline$MatchObject = {
-                        $match: {
-                            _id: mongoose.Types.ObjectId(id),
                             lenderId: user.lenderId,
                             createdBy: ![
                                 roles.agent,
@@ -334,13 +351,9 @@ module.exports = {
                             ].includes(user.role)
                                 ? { $ne: null }
                                 : mongoose.Types.ObjectId(user.id),
-                            status: 'Pending',
                             type: 'Loan',
                         },
-                    };
-                }
-
-                const loanEdit = await PendingEdit.aggregate([
+                    },
                     {
                         $lookup: {
                             from: 'loans',
@@ -349,7 +362,6 @@ module.exports = {
                             as: 'loan',
                         },
                     },
-                    Pipeline$MatchObject,
                     {
                         $lookup: {
                             from: 'users',
@@ -362,30 +374,50 @@ module.exports = {
                         $project: {
                             _id: 1,
                             lenderId: 1,
-                            userId: 1,
                             docId: 1,
                             type: 1,
-                            alteration: 1,
                             status: 1,
-                            loan: {
+                            remark: 1,
+                            alteration: 1,
+                            state: {
                                 $function: {
                                     body: function (alteration, self) {
-                                        const fieldsToProject = {};
+                                        try {
+                                            const fieldsToProject = {};
 
-                                        Object.keys(alteration).forEach(
-                                            (key) =>
-                                                (fieldsToProject[key] =
-                                                    self[0][key])
-                                        );
+                                            Object.keys(alteration).forEach(
+                                                (key) =>
+                                                    (fieldsToProject[key] =
+                                                        self[0][key])
+                                            );
 
-                                        return fieldsToProject;
+                                            return fieldsToProject;
+                                        } catch (err) {
+                                            return {
+                                                error: 'Document not found.',
+                                            };
+                                        }
                                     },
                                     args: ['$alteration', '$loan'],
                                     lang: 'js',
                                 },
                             },
-                            createdBy: { fullName: 1, jobTitle: 1, role: 1 },
-                            modifiedBy: { fullName: 1, jobTitle: 1, role: 1 },
+                            createdBy: {
+                                _id: 1,
+                                name: 1,
+                                displayName: 1,
+                                fullName: 1,
+                                jobTitle: 1,
+                                role: 1,
+                            },
+                            modifiedBy: {
+                                _id: 1,
+                                name: 1,
+                                displayName: 1,
+                                fullName: 1,
+                                jobTitle: 1,
+                                role: 1,
+                            },
                         },
                     },
                 ]).exec();
@@ -411,65 +443,77 @@ module.exports = {
         }
     },
 
-    update: async function (id, user, payload) {
+    update: async (id, user, payload) => {
         try {
-            const queryParams = ![roles.credit, roles.operations].includes(
-                user.role
-            )
-                ? { _id: id, createdBy: user.id }
-                : { _id: id };
+            const queryParams = { _id: id, createdBy: user.id };
 
             const foundEditRequest = await PendingEdit.findOne(queryParams);
             if (!foundEditRequest)
-                return new ServerError(404, 'Edit request not found');
+                return new ServerError(404, 'Edit request document not found');
             if (foundEditRequest.status !== 'Pending')
                 return new ServerError(403, 'Cannot perform update operation');
 
             payload = flattenObject(payload);
 
-            // User role is loan agent
-            if (user.role === 'Loan Agent') {
+            if (![roles.credit, roles.operations].includes(user.role)) {
+                // user role is neither credit nor operations, update alteration only
                 foundEditRequest.set(payload);
                 foundEditRequest.modifiedBy = user.id;
 
                 await foundEditRequest.save();
                 return {
-                    message: 'Request has been updated',
+                    message: 'Edit request has been updated',
                     data: foundEditRequest,
                 };
             }
 
             if (payload.status === 'Approved') {
                 if (foundEditRequest.type === 'Customer') {
-                    // TODO: call the controllers in case of error
                     const foundCustomer = await Customer.findById(
                         foundEditRequest.docId
                     );
                     if (!foundCustomer)
                         return new ServerError(
                             404,
-                            'Operation failed. Customer not found.'
+                            'Operation failed. Customer document not found.'
                         );
 
                     foundCustomer.set(foundEditRequest.alteration);
+
+                    // run customer document validation
+                    const error = foundCustomer.validateSync();
+                    if (error) {
+                        const msg =
+                            error.errors[Object.keys(error.errors)[0]].message;
+                        return new ServerError(400, msg);
+                    }
                     await foundCustomer.save();
                 } else {
+                    // edit request type is 'Loan'
                     const foundLoan = await Loan.findById(
                         foundEditRequest.docId
                     );
                     if (!foundLoan)
                         return new ServerError(
                             404,
-                            'Operation failed. Loan not found.'
+                            'Operation failed. Loan document not found.'
                         );
 
                     foundLoan.set(foundEditRequest.alteration);
+
+                    // run loan document validation
+                    const error = foundLoan.validateSync();
+                    if (error) {
+                        const msg =
+                            error.errors[Object.keys(error.errors)[0]].message;
+                        return new ServerError(400, msg);
+                    }
                     await foundLoan.save();
                 }
             }
             foundEditRequest.set(payload);
             return {
-                message: 'Request has been pdated.',
+                message: 'Edit request has been updated',
                 data: foundEditRequest,
             };
         } catch (exception) {
@@ -479,26 +523,26 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-
-            // Validation error
             if (exception.name === 'ValidationError') {
                 const field = Object.keys(exception.errors)[0];
-                exception.errors[field].message.replace('Path', '');
-                const errorMessage = exception.errors[field].message.replace(
-                    'modifiedBy',
+                const errorMsg = exception.errors[field].message.replace(
+                    'Path',
                     ''
                 );
-                return new ServerError(400, errorMessage);
+                return new ServerError(400, errorMsg);
             }
             return new ServerError(500, 'Something went wrong');
         }
     },
 
-    delete: async function (id, user) {
+    delete: async (id, user) => {
         try {
-            const queryParams = ![roles.credit, roles.operations].includes(
-                user.role
-            )
+            //
+            const queryParams = ![
+                roles.admin,
+                roles.master,
+                roles.owner,
+            ].includes(user.role)
                 ? { _id: id, createdBy: user.id }
                 : { _id: id };
 
@@ -511,7 +555,7 @@ module.exports = {
             await foundPendingEdit.delete();
 
             return {
-                message: 'Document deleted.',
+                message: 'Edit request has been deleted',
                 data: foundPendingEdit,
             };
         } catch (exception) {

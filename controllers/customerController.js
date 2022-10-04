@@ -33,8 +33,7 @@ module.exports = {
             const newCustomer = new Customer(payload);
             newCustomer.lenderId = user.lenderId;
 
-            // run validations
-            // newCustomer.validateSegment();
+            // run new customer document validation
             const error = newCustomer.validateSync();
             if (error) {
                 const msg = error.errors[Object.keys(error.errors)[0]].message;
@@ -85,12 +84,10 @@ module.exports = {
                 case 'desc':
                     var sortBy = sort_fields.desc;
                     break;
-                case 'first':
-                    var sortBy = sort_fields.first;
-                    break;
                 case 'last':
                     var sortBy = sort_fields.last;
                     break;
+                case 'first':
                 default:
                     var sortBy = sort_fields.first;
             }
@@ -231,8 +228,11 @@ module.exports = {
                 data: foundCustomer,
             };
         } catch (exception) {
-            logger.error({method: 'update',
-             message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
 
             // Duplicate field error
@@ -332,7 +332,7 @@ module.exports = {
 
             return {
                 message: 'Customer profile deleted',
-                data: foundCustomer
+                data: foundCustomer,
             };
         } catch (exception) {
             logger.error({

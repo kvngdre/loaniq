@@ -2,9 +2,9 @@ const { roles } = require('../utils/constants');
 const lenderController = require('../controllers/lenderController');
 const lenderValidators = require('../validators/lenderValidator');
 const router = require('express').Router();
+const ServerError = require('../errors/serverError');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const ServerError = require('../errors/serverError');
 
 router.post('/', async (req, res) => {
     const { error } = lenderValidators.create(req.body);
@@ -57,7 +57,7 @@ router.get(
     async (req, res) => {
         const lenderId =
             req.params.id !== undefined ? req.params.id : req.user.lenderId;
-        
+
         const response = await lenderController.requestOtp(lenderId);
         if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
@@ -150,7 +150,10 @@ router.post(
         const { error } = lenderValidators.fundAccount(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const response = await lenderController.fundWallet(lenderId, req.body.amount);
+        const response = await lenderController.fundWallet(
+            lenderId,
+            req.body.amount
+        );
         if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
 

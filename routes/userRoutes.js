@@ -1,11 +1,11 @@
 const { roles } = require('../utils/constants');
 const router = require('express').Router();
-const verifyRole = require('../middleware/verifyRole');
-const verifyToken = require('../middleware/verifyToken');
-const userValidators = require('../validators/userValidator');
-const userController = require('../controllers/userController');
 const ServerError = require('../errors/serverError');
 const upload = require('../middleware/fileUpload');
+const userController = require('../controllers/userController');
+const userValidators = require('../validators/userValidator');
+const verifyRole = require('../middleware/verifyRole');
+const verifyToken = require('../middleware/verifyToken');
 
 router.post(
     '/',
@@ -24,8 +24,8 @@ router.post(
 );
 
 router.post('/upload-photo', upload.single('photo'), async (req, res) => {
-    console.log(req.file)
-    return res.status(200).send('Image uploaded')
+    console.log(req.file);
+    return res.status(200).send('Image uploaded');
 });
 
 /**

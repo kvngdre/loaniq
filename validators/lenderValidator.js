@@ -1,24 +1,31 @@
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
-const companyNameSchema = Joi.string().min(10).max(50).messages({
-    'string.min': `Company name is too short.`,
-    'string.max': `Company name is too long.`,
+const businessNameSchema = Joi.string().max(255).messages({
+    'string.min': 'Business name is required',
+    'string.max': 'Business name is too long',
+    'any.required': 'Business name is required',
 });
 
 const addressSchema = Joi.object({
-    address: Joi.string().min(9).max(70).messages({
-        'string.min': `Street name is too short.`,
-        'string.max': `Street name is too long.`,
+    address: Joi.string().min(2).max(255).messages({
+        'string.min': 'Business address is required',
+        'string.max': 'Business address is too long',
+        'any.required': 'Business address is required',
     }),
-    lga: Joi.string(),
-    state: Joi.string(),
+    lga: Joi.string().messages({
+        'any.required': 'Select L.G.A of business operations',
+    }),
+    state: Joi.string().messages({
+        'any.required': 'Select state of business operations',
+    }),
 });
 
-const emailSchema = Joi.string().email().min(10).max(50).messages({
-    'string.min': 'Invalid email address',
-    'string.max': 'Invalid email address',
-    'string.email': 'Please enter a valid email',
+const emailSchema = Joi.string().email().max(50).messages({
+    'string.min': 'Invalid business email address',
+    'string.max': 'Invalid business email address',
+    'string.email': 'Please enter a valid business email address',
+    'any.required': 'Business email address is required',
 });
 
 const cacNumberSchema = Joi.string()
@@ -27,32 +34,38 @@ const cacNumberSchema = Joi.string()
     .messages({
         'any.invalid': 'Invalid CAC number',
         'string.pattern.base': 'CAC number must begin with "RC".',
+        'any.required': 'CAC number is required',
     });
 
 const phoneSchema = Joi.string()
     .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
     .messages({
-        'string.min': 'Invalid phone number.',
-        'string.max': 'Phone number is too long.',
+        'string.min': 'Invalid business phone number',
+        'string.max': 'Invalid business phone number',
         'string.pattern.base':
-            'Invalid phone number, please include international dialling code.',
+            'Invalid business phone number, please include international dialling code.',
     });
 
 const categorySchema = Joi.string()
     .valid('MFB', 'Finance House', 'Money Lender')
     .messages({
         'any.only': 'Not a valid category',
+        'any.required': 'Please pick a business category'
     });
 
 const supportSchema = Joi.object({
-    email: emailSchema,
+    email: Joi.string().email().max(50).messages({
+        'string.min': 'Invalid support email address',
+        'string.max': 'Invalid support email address',
+        'string.email': 'Please enter a valid support email address',
+        'any.required': 'Support email address is required',
+    }),
     phone: Joi.string()
         .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
         .messages({
-            'string.min': 'Invalid phone number.',
-            'string.max': 'Phone number is too long.',
             'string.pattern.base':
                 'Invalid support phone number, please include international dialling code.',
+                'any.required': 'Support phone number is required',
         }),
 });
 
@@ -66,35 +79,50 @@ const socialSchema = Joi.object({
 });
 
 const nameSchema = Joi.object({
-    first: Joi.string().min(3).max(30).messages({
-        'string.min': `First name is too short.`,
-        'string.max': `first name is too long.`,
+    first: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid first name.',
+        'string.max': 'First name is too long',
+        'any.required': 'First name is required',
     }),
-    last: Joi.string().min(3).max(30).messages({
-        'string.min': `Surname is too short.`,
-        'string.max': `Surname is too long.`,
+    last: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid surname',
+        'string.max': 'Surname is too long',
+        'any.required': 'Surname is required',
     }),
-    middle: Joi.string().min(3).max(30).messages({
-        'string.min': `Middle name is too short.`,
-        'string.max': `Middle name is too long.`,
+    middle: Joi.string().min(2).max(255).messages({
+        'string.min': 'Invalid middle name',
+        'string.max': 'Middle name is too long',
+        'any.required': 'Middle name is required',
     }),
 });
 
 const otpSchema = Joi.string()
     .pattern(/^[0-9]{8}$/)
-    .messages({ 'string.pattern.base': 'Invalid OTP' });
+    .messages({ 'string.pattern.base': 'Invalid OTP',
+    'any.required': 'OTP is required', });
 
 const validators = {
     create: function (payload) {
         const schema = Joi.object({
             lender: {
-                companyName: companyNameSchema.required(),
-                companyAddress: addressSchema.required(),
+                companyName: businessNameSchema.required(),
+                location: Joi.object({
+                    address: Joi.string().min(2).max(255).required().messages({
+                        'string.min': 'Business address is required',
+                        'string.max': 'Business address is too long',
+                        'any.required': 'Business address is required',
+                    }),
+                    lga: Joi.string().required().messages({
+                        'any.required': 'Select L.G.A of business operations',
+                    }),
+                    state: Joi.string().required().messages({
+                        'any.required': 'Select state of business operations',
+                    }),
+                }),
                 // cacNumber: cacNumberSchema,
                 category: categorySchema.required(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
-                website: Joi.string(),
                 // support: supportSchema,
                 // social: socialSchema,
             },
@@ -105,16 +133,17 @@ const validators = {
                     .min(10)
                     .max(50)
                     .messages({
-                        'string.min': 'Invalid email address.',
-                        'string.max': 'Invalid email address.',
-                        'string.email': 'Please enter a valid user email',
+                        'string.min': 'Invalid user email address',
+                        'string.max': 'Invalid user email address',
+                        'string.email': 'Please enter a valid user email address',
+                        'any.required': 'User email address is required',
                     })
                     .required(),
                 phone: Joi.string()
                     .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
                     .messages({
-                        'string.min': 'Invalid phone number.',
-                        'string.max': 'Phone number is too long.',
+                        'string.min': 'Invalid user phone number.',
+                        'string.max': 'Invalid user phone number.',
                         'string.pattern.base':
                             'Invalid user phone number, please include international dialling code.',
                     })
@@ -130,6 +159,9 @@ const validators = {
             otp: otpSchema.required(),
             cacNumber: cacNumberSchema.required(),
             support: supportSchema.required(),
+            // website: Joi.string().required().messages({
+            //     'any.required': 'Business website is required',
+            // }),
         });
 
         return schema.validate(lender);
@@ -138,8 +170,8 @@ const validators = {
     update: function (lender) {
         const schema = Joi.object({
             logo: Joi.string(),
-            companyName: companyNameSchema,
-            companyAddress: addressSchema,
+            businessName: businessNameSchema,
+            location: addressSchema,
             cacNumber: cacNumberSchema,
             category: categorySchema,
             phone: phoneSchema,

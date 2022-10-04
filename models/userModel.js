@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
         displayName: {
             type: String,
             trim: true,
-            maxLength:50,
+            maxLength: 50,
             default: function () {
                 return this.name.first.concat(` ${this.name.last}`);
             },
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             minLength: 2,
             maxLength: 50,
-            default: null
+            default: null,
         },
 
         queryName: {
@@ -70,14 +70,14 @@ const userSchema = new mongoose.Schema(
 
         dob: {
             type: String,
-            default: null
+            default: null,
         },
 
         phone: {
             type: String,
             unique: true,
             trim: true,
-            required: true
+            required: true,
         },
 
         email: {
@@ -102,7 +102,7 @@ const userSchema = new mongoose.Schema(
 
         resetPwd: {
             type: Boolean,
-            default: true
+            default: true,
         },
 
         active: {
@@ -113,12 +113,12 @@ const userSchema = new mongoose.Schema(
         otp: {
             OTP: {
                 type: String,
-                default: null
+                default: null,
             },
 
             exp: {
                 type: Number,
-                default: null
+                default: null,
             },
         },
 
@@ -169,17 +169,16 @@ userSchema.virtual('fullName').get(function () {
 
 userSchema.pre('save', function (next) {
     try {
-        console.log(this.modifiedPaths())
+        console.log(this.modifiedPaths());
         // hashing password
         if (this.modifiedPaths().includes('password')) {
-            console.log('pwd triggered')
+            console.log('pwd triggered');
             this.password = bcrypt.hashSync(
                 this.password,
                 parseInt(config.get('salt_rounds'))
             );
         }
 
-        
         next();
     } catch (exception) {
         next(exception);

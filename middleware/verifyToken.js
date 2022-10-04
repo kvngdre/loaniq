@@ -26,12 +26,12 @@ function verifyToken(req, res, next) {
 
         next();
     } catch (exception) {
-        logger.error({
-            method: 'verifyToken',
-            message: exception.message,
-            meta: exception.stack,
-        });
-        debug(exception.message);
+        // logger.error({
+        //     method: 'verify_tToken',
+        //     message: exception.message,
+        //     meta: exception.stack,
+        // });
+        debug(exception);
         return res.status(403).send(exception.message);
     }
 }

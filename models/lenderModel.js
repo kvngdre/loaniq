@@ -15,7 +15,7 @@ const lenderSchema = new mongoose.Schema(
             required: true,
         },
 
-        companyAddress: {
+        location: {
             address: {
                 type: String,
                 trim: true,
