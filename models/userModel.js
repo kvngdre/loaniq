@@ -169,10 +169,8 @@ userSchema.virtual('fullName').get(function () {
 
 userSchema.pre('save', function (next) {
     try {
-        console.log(this.modifiedPaths());
         // hashing password
         if (this.modifiedPaths().includes('password')) {
-            console.log('pwd triggered');
             this.password = bcrypt.hashSync(
                 this.password,
                 parseInt(config.get('salt_rounds'))

@@ -129,7 +129,7 @@ const validators = {
                         'string.max': 'Surname is too long.',
                         'any.required': 'Surname is required',
                     }),
-                    middle: Joi.string().min(2).max(255).required().messages({
+                    middle: Joi.string().min(2).max(255).messages({
                         'string.min': 'Invalid middle name',
                         'string.max': 'Middle name is too long.',
                         'any.required': 'Middle name is required',
@@ -159,7 +159,7 @@ const validators = {
                     'string.max': 'Surname is too long.',
                     'any.required': 'Surname is required',
                 }),
-                middle: Joi.string().min(2).max(255).required().messages({
+                middle: Joi.string().min(2).max(255).messages({
                     'string.min': 'Invalid middle name',
                     'string.max': 'Middle name is too long.',
                     'any.required': 'Middle name is required',
