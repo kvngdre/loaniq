@@ -264,6 +264,8 @@ module.exports = {
             // payload = convertToDotNotation(payload);
             const lender = await Lender.findById(id);
             if (!lender) return new ServerError(404, 'Tenant not found');
+            if (!lender.active)
+                return new ServerError(403, 'Tenant is yet to be activated.');
 
             if (payload.segment) {
                 const isMatch = (segment) => segment.id === payload.segment.id;

@@ -10,7 +10,6 @@ const express = require('express');
 const helmet = require('helmet');
 const lenderRouter = require('../routes/lenderRoutes');
 const loanRouter = require('../routes/loanRoutes');
-const morgan = require('morgan');
 const originRouter = require('../routes/origin');
 const pendingEditRouter = require('../routes/pendingEditRoutes');
 const refreshTokenRouter = require('../routes/refreshTokenRoutes');
@@ -21,12 +20,11 @@ const userRouter = require('../routes/userRoutes');
 
 module.exports = function (app) {
     // middleware
-    app.use(morgan('dev'));
     app.use(credentials);
     app.use(cors(corsOptions));
     app.use(helmet());
-    app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
+    app.use(express.json());
     app.use(cookieParser());
 
     // Route handlers

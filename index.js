@@ -1,9 +1,9 @@
 require('dotenv').config();
 require('express-async-errors');
-require('./startUp/db')();
 
 const app = require('express')();
 const config = require('config');
+const connectDB = require('./startUp/db')();
 const jobs = require('./jobs/loanJobs');
 const appRoutes = require('./startUp/routes');
 const debug = require('debug')('app:startUp');
