@@ -126,10 +126,10 @@ const loanSchema = new mongoose.Schema(
             required: true,
         },
 
-        // agent: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     required: true,
-        // },
+        agent: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
 
         active: {
             type: Boolean,

@@ -123,6 +123,7 @@ const validators = {
                 category: categorySchema.required(),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
+                website: Joi.string(),
                 // support: supportSchema,
                 // social: socialSchema,
             },

@@ -11,33 +11,22 @@ const loanManager = require('../tools/loanManager');
 const { LoanRequestValidator } = require('../validators/loanValidator');
 const ServerError = require('../errors/serverError');
 
-// Get Loan Validators.
-async function getValidator(user, segmentId) {
+// get loan validator
+async function getValidator(lender, code) {
     try {
-        const lender = await Lender.findById(user.lenderId).populate({path: 'segments.id', model: Segment});
-        console.log(lender);
-        if(!lender) {
-            logger.error({
-                method: 'get_validator',
-                message: 'Lender not found',
-                meta: {
-                    lender: user.lenderId,
-                    user: user.id,
-                    role: user.role,
-                    email: user.email,
-                },
-            });
-            return new ServerError(404, 'Lender not found');
-        }
         const { segments } = lender;
 
-        const foundSegment = segments.find((segment) => segment.id === segmentId);
-        if(!foundSegment) return new ServerError(404, 'Segment configuration not found');
+        const foundSegment = segments.find(
+            (segment) => segment.id.code === code
+        );
+        if (!foundSegment)
+            return new ServerError(404, 'Segment configuration not found');
 
         const isNull = (key) => foundSegment[key] === null;
-        if(Object.keys(foundSegment).some(isNull)) return new ServerError(424, 'Missing some segment parameters.')
-        
-        const loanValidator = new LoanRequestValidator(
+        if (Object.keys(foundSegment).some(isNull))
+            return new ServerError(424, 'Missing some segment parameters.');
+
+        const loanValidators = new LoanRequestValidator(
             foundSegment.minNetPay,
             foundSegment.minLoanAmount,
             foundSegment.maxLoanAmount,
@@ -46,10 +35,10 @@ async function getValidator(user, segmentId) {
             foundSegment.interestRate,
             foundSegment.upfrontFeePercent,
             foundSegment.transferFee,
-            foundSegment.maxDti,
+            foundSegment.maxDti
         );
 
-        return { loanValidator };
+        return { loanValidators };
     } catch (exception) {
         logger.error({
             method: 'get_validator',
@@ -62,32 +51,63 @@ async function getValidator(user, segmentId) {
 }
 
 const loans = {
-    createLoanReq: async function (user, payload) {
+    create: async function (user, payload) {
         try {
-            // if(request.user.role === 'guest') request.user.lenderId = request.params.id;
+            const lender = await Lender.findOne({
+                _id: user.lenderId,
+                active: true,
+            }).populate({
+                path: 'segments.id',
+                model: Segment,
+            });
+            // tenant inactive
+            if (!lender)
+                return new ServerError(403, 'Tenant is yet to be activated');
 
-            if (mongoose.isValidObjectId(payload.customer)) {
-                const customer = await Customer.findById(payload.customer);
-                if (!customer)
-                    return { errorCode: 404, message: 'Customer not found.' };
+            // getting loan validators
+            const loanValidators = await getValidator(lender,payload.customer.employer.segment);
+            if (loanValidators instanceof ServerError) return loanValidators;
 
-                payload.customer = customer._doc;
-            }
-
-            const validator = await getValidator(
-                user,
-                payload.customer.employer.segment
-            );
-            if (validator instanceof ServerError) return validator;
-
-            const { loanParams, loanReqValidator } = validator;
-            
-            // validating the loan object
-            const { value, error } = loanReqValidator.create(payload.loan);
+            // validating loan
+            const { value, error } = loanValidators.create(payload.loan);
             if (error) return new ServerError(400, error.details[0].message);
+            
+            // setting customer
+            payload.customer.lenderId = user.lenderId;
+            const customer = await getCustomerDoc(payload.customer);
 
-            console.log(value);
-            return
+            async function getCustomerDoc(data) {
+                if (mongoose.isValidObjectId(data)) {
+                    //
+                    const foundCustomer = await Customer.findById(data);
+                    if (!foundCustomer)
+                        return new ServerError(404, 'Customer not found');
+
+                    return foundCustomer;
+                }
+                //
+                const foundCustomer = await Customer.findOne({
+                    ippis: data.ippis,
+                    lenderId: data.lenderId,
+                });
+                if (!foundCustomer) {
+                    // customer not found, create new customer
+                    const newCustomer = new Customer(payload.customer);
+
+                    // run new customer document validation
+                    const error = newCustomer.validateSync();
+                    if (error) {
+                        const msg =
+                            error.errors[Object.keys(error.errors)[0]].message;
+                        return new ServerError(400, msg);
+                    }
+
+                    return newCustomer;
+                }
+
+                // customer found
+                return foundCustomer;
+            }
 
             const response = await loanManager.createLoanRequest(
                 user,
@@ -166,7 +186,11 @@ const loans = {
 
             return loans;
         } catch (exception) {
-            logger.error({method: 'get_all', message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'get_all',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return new ServerError(500, 'Something went wrong');
         }

@@ -13,7 +13,7 @@ const schemaOptions = {
 
 const userSchema = new mongoose.Schema(
     {
-        lenderId: {
+        lender: {
             type: String,
         },
 
@@ -187,7 +187,7 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             id: this._id.toString(),
-            lenderId: this.lenderId,
+            lender: this.lender,
             email: this.email,
             role: this.role,
             active: this.active,

@@ -14,7 +14,7 @@ const schemaOptions = { timestamps: true, versionKey: false };
 
 const customerSchema = new mongoose.Schema(
     {
-        lenderId: {
+        lender: {
             type: String,
             required: true,
         },
@@ -287,37 +287,14 @@ const customerSchema = new mongoose.Schema(
         validAccNo: {
             type: Boolean,
         },
-
-        agent: {
-            type: String,
-            default: null,
-        },
     },
     schemaOptions
 );
 
-// compound index on lender id, ippis, and bvn
-customerSchema.index({ ippis: 1, bvn: 1, accountNo: 1 }, { unique: true, partialFilterExpression: { $eq: this.hospital_id} });
-
-customerSchema.methods.validateSegment = async function () {
-    try {
-        const segment = await Segment.findOne({ code: this.employer.segment });
-        if (!segment) return { error: { message: 'Segment not found' } };
-
-        const ippisPrefix = this.ippis.match(/^[A-Z]{2,3}(?=[0-9])/); // matches only the letters prefix
-        if (segment.ippisPrefix !== ippisPrefix[0])
-            return {
-                error: {
-                    message: 'IPPIS number does not match segment selected.',
-                },
-            };
-
-        return true;
-    } catch (exception) {
-        debug(exception);
-        return exception;
-    }
-};
+// creating compound indexes
+customerSchema.index({ ippis: 1, lender: 1, }, { unique: true });
+customerSchema.index({ bvn: 1, lender: 1, }, { unique: true });
+customerSchema.index({ accountNo: 1, lender: 1, }, { unique: true });
 
 customerSchema.pre('save', async function (next) {
     try {
@@ -329,7 +306,6 @@ customerSchema.pre('save', async function (next) {
             console.log('triggered');
 
             const foundLoans = await Loan.find({
-                lenderId: this.lenderId,
                 customer: this._id,
                 status: 'Pending',
             });

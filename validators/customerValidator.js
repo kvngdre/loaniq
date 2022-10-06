@@ -255,7 +255,7 @@ const validators = {
                         'string.max': 'Command is too long.',
                         'any.required': 'Command is required',
                     }),
-                    segment: Joi.objectId().required().messages({
+                    segment: Joi.string().required().messages({
                         'any.required': 'Segment is required',
                     }),
                     location: Joi.object({

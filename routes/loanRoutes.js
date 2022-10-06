@@ -10,7 +10,7 @@ const verifyToken = require('../middleware/verifyToken');
 const customerValidators = require('../validators/customerValidator');
 
 router.post(
-    '/new/loan-request',
+    '/',
     verifyToken,
     async (req, res) => {
         const { error } = customerValidators.create(req.body.customer);
@@ -21,14 +21,13 @@ router.post(
             return res.status(400).send(errorResponse);
         }
 
-        const newLoanRequest = await loanController.createLoanReq(req.user, req.body);
-        if (newLoanRequest instanceof serverError)
-            return res.status(newLoanRequest.errorCode).send(newLoanRequest.message);
+        const newLoan = await loanController.create(req.user, req.body);
+        if (newLoan instanceof ServerError)
+            return res.status(newLoan.errorCode).send(newLoan.message);
 
-        return res.status(200).send(newLoanRequest);
+        return res.status(200).send(newLoan);
     }
 );
-
 
 
 /**
@@ -46,7 +45,7 @@ router.get(
     verifyToken,
     async (req, res) => {
         const loans = await loanController.getAll(req.user, req.query);
-        if (loans instanceof serverError)
+        if (loans instanceof ServerError)
             return res.status(loans.errorCode).send(loans.message);
 
         return res.status(200).send(loans);
@@ -74,7 +73,7 @@ router.patch(
             req.user,
             req.body
         );
-        if (loan instanceof serverError)
+        if (loan instanceof ServerError)
             return res.status(loan.errorCode).send(loan.message);
 
         return res.status(200).send(loan);

@@ -57,15 +57,22 @@ class LoanRequestValidator {
             tenor: this.#tenorSchema.required(),
             loanType: Joi.string().valid('New', 'Top Up').messages({
                 'any.only': 'Invalid loan type',
-            }),
-            creditUser: Joi.objectId(),
-            params: {
+            }).default('New'),
+            credit: Joi.objectId(),
+            agent: Joi.objectId(),
+            params: Joi.object({
+                interestRate: Joi.number(),
+                upfrontFeePercent: Joi.number(),
+                transferFee: Joi.number(),
+                maxDti: Joi.number(),
+                minNetPay: Joi.number(),
+            }).default({
                 interestRate: this.#interestRate,
                 upfrontFeePercent: this.#upfrontFeePercent,
                 transferFee: this.#transferFee,
                 maxDti: this.#maxDti,
-                minNetPay: this.#minNetPay
-            }
+                minNetPay: this.#minNetPay,
+            })
         });
         return schema.validate(loan);
     }
@@ -181,13 +188,13 @@ class LoanRequestValidator {
             loanType: Joi.string().valid('New', 'Top Up').messages({
                 'any.only': 'Invalid loan type',
             }),
-            // customer: Joi.objectId(),
+            customer: Joi.objectId(),
             agent: Joi.objectId(),
             creditUser: Joi.objectId(),
             params: {
-                interestRate: Joi.number(),
-                upfrontFeePercent: Joi.number(),
-                transferFee: Joi.number(),
+                // interestRate: Joi.number(),
+                // upfrontFeePercent: Joi.number(),
+                // transferFee: Joi.number(),
                 netPay: this.#netPaySchema,
             }
         }).min(1);

@@ -23,7 +23,7 @@ module.exports = {
     create: async (user, payload) => {
         try {
             const lender = await Lender.findOne({
-                _id: user.lenderId,
+                _id: user.lender,
                 active: true,
             });
             if (!lender) return new ServerError(404, 'Tenant not found');
@@ -43,7 +43,7 @@ module.exports = {
             );
 
             const newUser = new User(payload);
-            newUser.lenderId = user.lenderId;
+            newUser.lender = user.lender;
             newUser.segments =
                 payload.segments === 'all' ? allSegments : payload.segments;
             const randomPwd = Math.random().toString(36).substring(2, 8);
@@ -150,11 +150,11 @@ module.exports = {
     getAll: async (user, filters) => {
         try {
             const queryParams =
-                user.role === roles.master ? {} : { lenderId: user.lenderId };
+                user.role === roles.master ? {} : { lender: user.lender };
             const sortBy = filters?.sort ? filters.sort : 'name.first';
             if (filters?.name)
                 queryParams.queryName = new RegExp(filters.name, 'i');
-            if (filters?.lenderId) queryParams.lenderId = filters.lenderId;
+            if (filters?.lender) queryParams.lender = filters.lender;
             if (filters?.role) queryParams.role = filters.role;
 
             const foundUsers = await User.find(queryParams, {

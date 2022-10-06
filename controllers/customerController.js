@@ -16,22 +16,15 @@ module.exports = {
     create: async (user, payload) => {
         try {
             const lender = await Lender.findOne({
-                _id: user.lenderId,
+                _id: user.lender,
                 active: true,
             });
             // tenant inactive
             if (!lender)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
-            const foundCustomer = await Customer.findOne({
-                lenderId: user.lenderId,
-                ippis: payload.ippis,
-            });
-            if (foundCustomer)
-                new ServerError(400, 'IPPIS number already in use');
-
+            payload.lender = user.lender;
             const newCustomer = new Customer(payload);
-            newCustomer.lenderId = user.lenderId;
 
             // run new customer document validation
             const error = newCustomer.validateSync();
@@ -53,13 +46,10 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
+            // duplicate field error
             if (exception.name === 'MongoServerError') {
-                let field = Object.keys(exception.keyPattern)[0];
-                console.log('000---==', field);
-                field = field.replace('employer.', '');
-                field = field.charAt(0).toUpperCase() + field.slice(1);
-                if (field === 'Phone') field = 'Phone number';
-
+                let field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                field = field.replace('ACCOUNTNO', 'Account Number');
                 return new ServerError(409, field + ' already in use');
             }
 
@@ -92,7 +82,7 @@ module.exports = {
                     var sortBy = sort_fields.first;
             }
 
-            const queryParams = { lenderId: user.lenderId };
+            const queryParams = { lender: user.lender };
             // filter for agent id if role is agent
             if (user.role === roles.agent) queryParams.agent = user.id;
 
@@ -160,8 +150,8 @@ module.exports = {
     getOne: async function (id, user) {
         try {
             const queryParams = mongoose.isValidObjectId(id)
-                ? { _id: id, lenderId: user.lenderId }
-                : { ippis: id, lenderId: user.lenderId };
+                ? { _id: id, lender: user.lender }
+                : { ippis: id, lender: user.lender };
             if (user.role === roles.agent) queryParams.agent = user.id;
 
             const foundCustomer = await Customer.findOne(queryParams);
@@ -185,8 +175,16 @@ module.exports = {
 
     update: async function (id, user, alteration) {
         try {
+            const lender = await Lender.findOne({
+                _id: user.lender,
+                active: true,
+            });
+            // tenant inactive
+            if (!lender)
+                return new ServerError(403, 'Tenant is yet to be activated');
+
             alteration = flattenObject(alteration);
-            const queryParams = { _id: id, lenderId: user.lenderId };
+            const queryParams = { _id: id, lender: user.lender };
             if (user.role === roles.agent) queryParams.agent = user.id;
 
             const foundCustomer = await Customer.findOne(queryParams);
@@ -196,7 +194,7 @@ module.exports = {
             // user role is not operations, create edit request
             if (user.role !== roles.operations) {
                 const newPendingEdit = new PendingEdit({
-                    lenderId: user.lenderId,
+                    lender: user.lender,
                     createdBy: user.id,
                     docId: foundCustomer._id,
                     type: 'Customer',
@@ -264,7 +262,7 @@ module.exports = {
             const result = await Loan.aggregate([
                 {
                     $match: {
-                        lenderId: mongoose.Types.ObjectId(user.lenderId),
+                        lender: mongoose.Types.ObjectId(user.lender),
                         status: 'Approved',
                         createdAt: { $gte: new Date(fromDate) },
                     },
@@ -321,8 +319,8 @@ module.exports = {
     delete: async function (id, user) {
         try {
             const queryParams = mongoose.isValidObjectId(id)
-                ? { _id: id, lenderId: user.lenderId }
-                : { ippis: id, lenderId: user.lenderId };
+                ? { _id: id, lender: user.lender }
+                : { ippis: id, lender: user.lender };
 
             const foundCustomer = await Customer.findOne(queryParams);
             if (!foundCustomer)

@@ -9,7 +9,7 @@ module.exports = {
     ],
     roles: {
         admin: 'Admin',
-        agent: 'Loan Agent',
+        agent: 'Agent',
         credit: 'Credit',
         master: 'Master',
         operations: 'Operations',
