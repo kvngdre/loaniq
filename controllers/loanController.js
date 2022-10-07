@@ -2,10 +2,11 @@ const _ = require('lodash');
 const { calcAge, calcServiceLength } = require('../utils/LoanParams');
 const { DateTime } = require('luxon');
 const { LoanRequestValidator } = require('../validators/loanValidator');
-const { roles, txnStatus } = require('../utils/constants');
+const { roles, txnStatus, loanStatus } = require('../utils/constants');
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:loanCtrl');
 const Lender = require('../models/lenderModel');
+const flattenObj = require('../utils/flattenObj');
 const Loan = require('../models/loanModel');
 const loanManager = require('../tools/loanManager');
 const logger = require('../utils/logger')('loanCtrl.js');
@@ -119,7 +120,7 @@ module.exports = {
                 return foundCustomer;
             }
 
-            // picking agent
+            // pick agent if not assigned one
             if (!value.agent) value.agent = await pickAgent(customer);
             async function pickAgent(customer) {
                 const foundLoan = await Loan.findOne({
@@ -143,7 +144,7 @@ module.exports = {
             }
             console.log(value.agent);
 
-            // picking credit officer
+            // pick credit officer if not assigned one
             if (!value.creditUser) {
                 const pickedUser = await randomUser(
                     customer.segment,
@@ -213,11 +214,10 @@ module.exports = {
         }
     },
 
-    getAll: async function (user, filters) {
+    getAll: async (user, filters) => {
         try {
+            // initializing query object
             const queryParams = {};
-
-            // initialising query object
             if (user.role === roles.master) {
                 if (filters?.lender) queryParams.lender = filters.lender;
             }else{
@@ -225,51 +225,50 @@ module.exports = {
                 else queryParams['customer.lender'] = user.lender;
             }
 
+            applyFilters();
+            function applyFilters(filters) {
+                // date filter - createdAt
+                if (filters?.start)
+                    queryParams.createdAt = {
+                        $gte: DateTime.fromJSDate(new Date(filters.start))
+                            .setZone(user.timeZone)
+                            .toUTC(),
+                    };
+                if (filters?.end) {
+                    const target = queryParams.createdAt
+                        ? queryParams.createdAt
+                        : {};
+                    queryParams.createdAt = Object.assign(target, {
+                        $lte: DateTime.fromJSDate(new Date(filters.end))
+                            .setZone(user.timeZone)
+                            .toUTC(),
+                    });
+                }
+    
+                // number filter - recommended amount
+                if (filters?.minA)
+                    queryParams.recommendedAmount = { gte: filters.minA  };
+                if (filters?.maxA) {
+                    const target = queryParams.recommendedAmount
+                        ? queryParams.recommendedAmount
+                        : {};
+                    queryParams.recommendedAmount = Object.assign(target, {
+                        $lte: filters.maxA,
+                    });
+                }
+    
+                // number filter - recommended tenor
+                if (filters?.minT)
+                    queryParams.recommendedTenor = { $gte: filters.minT };
+                if (filters?.maxT) {
+                    const target = queryParams.recommendedTenor
+                        ? queryParams.recommendedTenor
+                        : {};
+                    queryParams.recommendedTenor = Object.assign(target, {
+                        $lte: filters.maxT,
+                    });
+                }
 
-            
-            
-            // date filter - createdAt
-            if (filters?.start)
-                queryParams.createdAt = {
-                    $gte: DateTime.fromJSDate(new Date(filters.start))
-                        .setZone(user.timeZone)
-                        .toUTC(),
-                };
-            if (filters?.end) {
-                const target = queryParams.createdAt
-                    ? queryParams.createdAt
-                    : {};
-                queryParams.createdAt = Object.assign(target, {
-                    $lte: DateTime.fromJSDate(new Date(filters.end))
-                        .setZone(user.timeZone)
-                        .toUTC(),
-                });
-            }
-
-            // number filter - recommended amount
-            if (filters?.minA)
-                queryParams.recommendedAmount = {
-                    $gte: filters.minA,
-                };
-            if (filters?.maxA) {
-                const target = queryParams.recommendedAmount
-                    ? queryParams.recommendedAmount
-                    : {};
-                queryParams.recommendedAmount = Object.assign(target, {
-                    $lte: filters.maxA,
-                });
-            }
-
-            // number filter - recommended tenor
-            if (filters?.minT)
-                queryParams.recommendedTenor = { $gte: filters.minT };
-            if (filters?.maxT) {
-                const target = queryParams.recommendedTenor
-                    ? queryParams.recommendedTenor
-                    : {};
-                queryParams.recommendedTenor = Object.assign(target, {
-                    $lte: filters.maxT,
-                });
             }
 
             const foundLoans = await Loan.find(queryParams).populate({
@@ -280,7 +279,7 @@ module.exports = {
             if(foundLoans.length == 0) return new ServerError(404, 'Loans not found');
 
             return {
-                message: '',
+                message: 'success',
                 data: foundLoans,
             }
 
@@ -295,68 +294,65 @@ module.exports = {
         }
     },
 
-    getOne: async function (user, id) {
+    getOne: async (id, user) => {
         try {
-            let loan = null;
-            const queryParams = { _id: id, lender: user.lender };
+            const foundLoan = await Loan.findById(id).populate({
+                path: 'customer',
+                model: Customer,
+            });
+            if(!foundLoan) new ServerError(404, 'Loan document not found');
 
-            if (user.role === 'Loan Agent') {
-                queryParams.loanAgent = user.id;
-                loan = await loanManager.getOne(queryParams);
-            } else loan = await loanManager.getOne(queryParams);
-
-            return loan;
+            return {
+                message: 'success',
+                data: foundLoan,
+            };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'get_one', message: exception.message, meta: exception.stack });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
-    update: async function (id, user, payload) {
+    update: async (id, user, payload) => {
         try {
-            const queryParams = {
-                _id: id,
-                lenderId: user.lenderId,
-            };
+            // is tenant active
+            const lender = await Lender.findOne({
+                _id: user.lender,
+                active: true,
+            }).populate({
+                path: 'segments.id',
+                model: Segment,
+            });
+            if (!lender)
+                return new ServerError(403, 'Tenant is yet to be activated');
+
+            // initializing query object
+            const queryParams = { _id: id };
+            if(user.role !== roles.master) queryParams['customer.lender'] = user.lender;
 
             const loan = await Loan.findOne(queryParams).populate({
                 path: 'customer',
                 model: Customer,
             });
-            if (!loan)
-                return { errorCode: 404, message: 'Loan document not found.' };
+            if (!loan) return new ServerError(404, 'Loan document not found');
+            if ([loanStatus.matured, loanStatus.liq].includes(loan.status))
+                return new ServerError(403, 'Cannot modify a matured or liquidated loan.');
 
-            if (['Matured', 'Liquidated'].includes(loan.status))
-                return {
-                    errorCode: 403,
-                    message: 'Cannot edit a matured or liquidated loan.',
-                };
+            // get Validator
+            const {customer: {employer: { segment }}} = loan;
+            const { loanValidators } = await getValidator(lender, segment);
 
-            // Get Validator
-            const {
-                customer: {
-                    employmentInfo: {
-                        segment: { _id },
-                    },
-                },
-            } = loan;
-            const { loanReqValidator } = await getValidator(
-                user,
-                _id.toString()
-            );
+            const { error } = loanValidators.update(payload);
+            if (error) return new ServerError(400, error.details[0].message);
 
-            const { error } = loanReqValidator.update(payload);
-            if (error)
-                return { errorCode: 400, message: error.details[0].message };
-
+            payload = flattenObj(payload);
             const response = await loanManager.update(user, loan, payload);
 
             return response;
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({method: 'update', message: exception.message, meta: exception.stack });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 

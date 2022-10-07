@@ -78,7 +78,7 @@ class LoanRequestValidator {
     }
 
     update(loan) {
-        if(user.role !== roles.credit) {
+        if(user.role === roles.credit) {
             const schema = Joi.object({
                 amount: this.#amountSchema,
                 amountInWords: Joi.string()
@@ -140,7 +140,7 @@ class LoanRequestValidator {
                         'Failed to provide valid documentation'
                     )
                     .messages({
-                        'any.required': 'Remark is required.',
+                        'any.required': 'Remark is required',
                     }),
                 recommendedAmount: Joi.number()
                     .min(this.#minLoanAmount)

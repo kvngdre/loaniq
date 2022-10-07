@@ -1,68 +1,128 @@
+const debug = require('debug')('app:segCtrl');
+const logger = require('../utils/logger')('segCtrl.js');
 const Segment = require('../models/segmentModel');
-const debug = require('debug')('app:segmentCtrl');
+const ServerError = require('../errors/serverError');
 
-const segment = {  
-    create: async function(requestBody) {
-        try{
-            const segmentExists = await Segment.findOne( { code: requestBody.code } );
-            if(segmentExists) throw new Error('Segment already exists.');
-
-            const newSegment = await Segment.create(requestBody);
-
-            return newSegment;
-
-        }catch(exception) {
-            return exception;
-        };
-    },
-
-    getAll: async function() {
-        return await Segment.find();
-    },
-
-    getOne: async function(id) {
-        try{
-            const segment = await Segment.findById(id);
-            if(!segment) return { errorCode: 404, message: 'Segment not found.' };
+module.exports = {
+    create: async (payload) => {
+        try {
+            const newSegment = new Segment(payload);
+            await newSegment.save();
 
             return {
-                message: 'Success',
-                data: segment
+                message: 'Segment created',
+                data: newSegment,
             };
-
-        }catch(exception) {
-            return { errorCode: 500, message: 'Something went wrong.' };
-        };
-    },
-
-    update: async function(id, requestBody) {
-        try{
-            const segment = await Segment.findByIdAndUpdate( {_id: id }, requestBody, {new: true} ).select('-ippisPrefix');
-            if(!segment) {
-                debug(segment);
-                throw new Error('Segment not found.');
-            };
-
-            return segment;
-            
-        }catch(exception) {
-            return exception;
-        };
-    },
-
-    delete: async function(id) {
-        try{
-            const segment = await Segment.findByIdAndDelete(id);
-            if(!segment) throw new Error('User not found.');
-
-            return segment;
-
-        }catch(exception) {
+        } catch (exception) {
+            logger.error({
+                method: 'create',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return exception;
-        };
-    }
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                return new ServerError(409, field + ' already in use');
+            }
 
-}
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
+            }
 
-module.exports = segment;
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    getAll: async (filters) => {
+        try {
+            const queryParams = {};
+            if (filters?.name) queryParams.name = new RegExp(filters.name, 'i');
+
+            const foundSegments = await Segment.find(queryParams).sort('name');
+            if (foundSegments.length === 0)
+                return new ServerError(404, 'No segments found');
+
+            return {
+                message: 'success',
+                data: foundSegments,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'get_all',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    getOne: async (id) => {
+        try {
+            const foundSegment = await Segment.findById(id);
+            if (!foundSegment) return new ServerError(404, 'Segment not found');
+
+            return {
+                message: 'success',
+                data: foundSegment,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'get_one',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    update: async (id, payload) => {
+        try {
+            const foundSegment = await Segment.findById(id);
+            if (!foundSegment) return new ServerError(404, 'Segment not found');
+
+            foundSegment.set(payload);
+            await foundSegment.save();
+
+            return {
+                message: 'Segment Updated',
+                data: foundSegment,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    delete: async function (id) {
+        try {
+            const foundSegment = await Segment.findById(id);
+            if (!foundSegment) return new ServerError(404, 'Segment not found');
+
+            await foundSegment.delete();
+
+            return {
+                message: 'Segment deleted',
+                data: foundSegment,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+};
