@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 const {
-    calcAge,
     calcDti,
     calcNetValue,
     calcRepayment,
-    calcServiceLength,
     calcTotalRepayment,
     calcUpfrontFee,
 } = require('../utils/LoanParams');
+const { loanStatus, loanRemarks } = require('../utils/constants');
 const logger = require('../utils/logger')('loanModel.js');
 const ServerError = require('../errors/serverError');
 
@@ -50,43 +49,13 @@ const loanSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: [
-                'Approved',
-                'Denied',
-                'Pending',
-                'On Hold',
-                'Liquidated',
-                'Discontinued',
-                'Matured',
-            ],
-            default: 'Pending',
+            enum: Object.values(loanStatus),
+            default: loanStatus.pend,
         },
 
         remark: {
             type: String,
-            enum: [
-                'Duplicate request',
-                'Ok for disbursement',
-                'Net pay below threshold',
-                'Inconsistent net pay',
-                'Incorrect IPPIS number',
-                'Confirm recommended loan amount',
-                'Confirm recommended tenor',
-                'Confirm account number',
-                'Confirm BVN',
-                'Confirm BVN and account number',
-                'Age above threshold',
-                'Length of service above threshold',
-                'Bad loan with other institution',
-                'Department not eligible',
-                'Negative net pay',
-                'Not eligible for top up',
-                'High exposure',
-                'Name mismatch',
-                'Net pay not available',
-                'Client discontinued',
-                'Failed to provide valid documentation',
-            ],
+            enum: loanRemarks,
         },
 
         upfrontFee: {
@@ -109,11 +78,6 @@ const loanSchema = new mongoose.Schema(
         netValue: {
             type: Number,
             default: null,
-        },
-
-        lenderId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
         },
 
         customer: {
@@ -171,9 +135,8 @@ const loanSchema = new mongoose.Schema(
                 required: true,
             },
 
-            birthDate: {
-                type: Date,
-                default: null,
+            netPay: {
+                type: Number,
             },
 
             age: {
@@ -181,18 +144,9 @@ const loanSchema = new mongoose.Schema(
                 default: null,
             },
 
-            hireDate: {
-                type: Date,
-                default: null,
-            },
-
-            serviceLength: {
+            serviceLen: {
                 type: Number,
                 default: null,
-            },
-
-            netPay: {
-                type: Number,
             },
         },
 
@@ -213,23 +167,18 @@ const loanSchema = new mongoose.Schema(
 
 loanSchema.pre('save', function (next) {
     try {
-        if (
-            this.modifiedPaths().some((path) =>
-                ['amount', 'tenor'].includes(path)
-            )
-        ) {
+        const isPresent = (path) => ['amount', 'tenor'].includes(path);
+        if (this.modifiedPaths().some(isPresent)) {
             this.recommendedAmount = this.amount;
             this.recommendedTenor = this.tenor;
         }
 
         // setting loan metrics
-        const loanMetricsTriggers = ['recommendedAmount', 'recommendedTenor'];
-        if (
-            this.modifiedPaths().some((path) =>
-                loanMetricsTriggers.includes(path)
-            )
-        ) {
+        const hasTrigger = (path) =>
+            ['recommendedAmount', 'recommendedTenor'].includes(path);
+        if (this.modifiedPaths().some(hasTrigger)) {
             console.log('yes');
+            
             this.upfrontFee = calcUpfrontFee(
                 this.recommendedAmount,
                 this.params.upfrontFeePercent
@@ -241,6 +190,8 @@ loanSchema.pre('save', function (next) {
                 this.recommendedTenor
             );
 
+            this.dti = calcDti(this.repayment, this.params.netPay);
+
             this.totalRepayment = calcTotalRepayment(
                 this.repayment,
                 this.recommendedTenor
@@ -250,22 +201,6 @@ loanSchema.pre('save', function (next) {
                 this.recommendedAmount,
                 this.upfrontFee,
                 this.params.transferFee
-            );
-        }
-
-        // updating params
-        const paramsUpdateTrigger = ['repayment', 'params'];
-        if (
-            this.modifiedPaths().some((path) =>
-                paramsUpdateTrigger.includes(path)
-            )
-        ) {
-            console.log('I dey here');
-            this.params.age = calcAge(this.params.birthDate);
-            this.params.serviceLength = calcServiceLength(this.params.hireDate);
-            this.dti = calcDti(
-                this.repayment,
-                this.params.netPay
             );
         }
 

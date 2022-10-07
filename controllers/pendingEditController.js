@@ -12,7 +12,7 @@ module.exports = {
     create: async (user, payload) => {
         try {
             const newPendingEdit = new PendingEdit({
-                lenderId: user.lenderId,
+                lender: user.lender,
                 docId: payload.docId,
                 type: payload.type,
                 createdBy: user.id,
@@ -50,7 +50,7 @@ module.exports = {
             const customerEdits = await PendingEdit.aggregate([
                 {
                     $match: {
-                        lenderId: user.lenderId,
+                        lender: user.lender,
                         createdBy: ![roles.agent, roles.credit].includes(
                             user.role
                         )
@@ -86,7 +86,7 @@ module.exports = {
                 {
                     $project: {
                         _id: 1,
-                        lenderId: 1,
+                        lender: 1,
                         docId: 1,
                         createdBy: 1,
                         modifiedBy: 1,
@@ -140,7 +140,7 @@ module.exports = {
             const loanEdits = await PendingEdit.aggregate([
                 {
                     $match: {
-                        lenderId: user.lenderId,
+                        lender: user.lender,
                         createdBy: ![roles.agent, roles.operations].includes(
                             user.role
                         )
@@ -176,7 +176,7 @@ module.exports = {
                 {
                     $project: {
                         _id: 1,
-                        lenderId: 1,
+                        lender: 1,
                         docId: 1,
                         type: 1,
                         status: 1,
@@ -257,7 +257,7 @@ module.exports = {
                 {
                     $match: {
                         _id: mongoose.Types.ObjectId(id),
-                        lenderId: user.lenderId,
+                        lender: user.lender,
                         createdBy: ![roles.agent, roles.credit].includes(
                             user.role
                         )
@@ -293,7 +293,7 @@ module.exports = {
                 {
                     $project: {
                         _id: 1,
-                        lenderId: 1,
+                        lender: 1,
                         docId: 1,
                         type: 1,
                         status: 1,
@@ -344,7 +344,7 @@ module.exports = {
                 const loanEdit = await PendingEdit.aggregate([
                     {
                         $match: {
-                            lenderId: user.lenderId,
+                            lender: user.lender,
                             createdBy: ![
                                 roles.agent,
                                 roles.operations,
@@ -373,7 +373,7 @@ module.exports = {
                     {
                         $project: {
                             _id: 1,
-                            lenderId: 1,
+                            lender: 1,
                             docId: 1,
                             type: 1,
                             status: 1,

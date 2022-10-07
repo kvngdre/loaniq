@@ -1,13 +1,14 @@
-const _ = require('lodash');
-const { DateTime } = require('luxon');
+const { roles } = require('../utils/constants');
 const debug = require('debug')('app:txnCtrl');
-const Transaction = require('../models/transaction');
 const logger = require('../utils/logger')('txnCtrl.js');
+const ServerError = require('../errors/serverError');
+const Transaction = require('../models/transactionModel');
 
-const ctrlFuncs = {
-    create: async function (payload) {
+module.exports = {
+    create: async (user, payload) => {
         try {
             const newTransaction = new Transaction(payload);
+            newTransaction.modifiedBy = user.id;
 
             await newTransaction.save();
 
@@ -16,84 +17,113 @@ const ctrlFuncs = {
                 data: newTransaction,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'create',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
-    getOne: async function (id, user) {
+    getAll: async (user, filters) => {
         try {
-            const queryParams = { _id: id, lenderId: user.lenderId };
+            const queryParams =
+                user.role === roles.master ? {} : { lender: user.lender };
 
-            const transaction = await Transaction.findOne(queryParams);
-            if (!transaction)
-                return { errorCode: 404, message: 'Transaction not found.' };
+            if (filters?.type) queryParams.type = filters.type;
+            if (filters?.status) queryParams.status = filters.status;
 
-            return {
-                message: 'Success',
-                data: transaction,
-            };
-        } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
-            debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
-        }
-    },
-
-    getAll: async function (user, filters) {
-        try {
-            let queryParams = { lenderId: user.lenderId };
-
-            queryParams = Object.assign(
-                queryParams,
-                _.omit(filters, ['date', 'amount'])
-            );
-
-            // TODO: should I make the filters a class?
-            // Date Filter - CreatedAt
-            const dateField = 'createdAt';
-            if (filters.date?.start)
-                queryParams[dateField] = {
-                    $gte: DateTime.fromISO(filters.date.start)
-                        .setZone(user.timeZone)
-                        .toUTC(),
-                };
-            if (filters.date?.end) {
-                const target = queryParams[dateField]
-                    ? queryParams[dateField]
-                    : {};
-                queryParams[dateField] = Object.assign(target, {
-                    $lte: DateTime.fromISO(filters.date.end)
-                        .setZone(user.timeZone)
-                        .toUTC(),
-                });
-            }
-
-            // Number Filter - amount
-            if (filters.amount?.min)
-                queryParams.amount = { $gte: filters.amount.min };
-            if (filters.amount?.max) {
+            // Number Filter - amount   `k            if (filters?.min) queryParams.amount = { $gte: filters.min };
+            if (filters?.max) {
                 const target = queryParams.amount ? queryParams.amount : {};
                 queryParams.amount = Object.assign(target, {
-                    $lte: filters.amount.max,
+                    $lte: filters.max,
                 });
             }
 
-            const transactions = await Transaction.find(queryParams);
-            if (transactions.length == 0)
-                return { errorCode: 404, message: 'No transactions found' };
+            const foundTransactions = await Transaction.find(queryParams, {
+                lender: 0,
+            }).sort('-createdAt');
+            if (foundTransactions.length == 0)
+                return new ServerError(404, 'No transactions found');
 
             return {
-                message: 'Success',
-                data: transactions,
+                message: 'success',
+                data: foundTransactions,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'get_all',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
-};
 
-module.exports = ctrlFuncs;
+    getOne: async (id, user) => {
+        try {
+            const foundTransaction = await Transaction.findById(id, {
+                lender: 0,
+            });
+            if (!foundTransaction)
+                return new ServerError(404, 'Transaction not found');
+
+            return {
+                message: 'success',
+                data: foundTransaction,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'get_one',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    update: async (id, user, alteration) => {
+        try {
+            const foundTransaction = await Transaction.findById(id);
+            if (!foundTransaction)
+                return new ServerError(404, 'Transaction not found');
+
+            foundTransaction.set(alteration);
+            foundTransaction.modifiedBy = user.id;
+
+            await foundTransaction.save();
+
+            return {
+                message: 'Transaction updated',
+                data: foundTransaction,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    delete: async () => {
+        try{
+
+        }catch(exception) {
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong'); 
+        }
+    }
+};

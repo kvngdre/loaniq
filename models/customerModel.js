@@ -1,4 +1,6 @@
+const { calcAge, calcServiceLength } = require('../utils/LoanParams');
 const {
+    loanStatus,
     relationships,
     maritalStatus,
     validIds,
@@ -7,10 +9,9 @@ const debug = require('debug')('app:customerModel');
 const Loan = require('./loanModel');
 const logger = require('../utils/logger')('customerModel.js');
 const mongoose = require('mongoose');
+const schemaOptions = { timestamps: true, versionKey: false };
 const Segment = require('./segmentModel');
 const ServerError = require('../errors/serverError');
-
-const schemaOptions = { timestamps: true, versionKey: false };
 
 const customerSchema = new mongoose.Schema(
     {
@@ -137,7 +138,10 @@ const customerSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: async function (value) {
-                    const segment = await Segment.findOne({ _id: this.employer.segment, active: true });
+                    const segment = await Segment.findOne({
+                        _id: this.employer.segment,
+                        active: true,
+                    });
                     if (!segment) return new ServerError('Segment not found');
 
                     const ippisPrefix = value.match(/^[A-Z]{2,3}(?=[0-9])/);
@@ -292,33 +296,28 @@ const customerSchema = new mongoose.Schema(
 );
 
 // creating compound indexes
-customerSchema.index({ ippis: 1, lender: 1, }, { unique: true });
-customerSchema.index({ bvn: 1, lender: 1, }, { unique: true });
-customerSchema.index({ accountNo: 1, lender: 1, }, { unique: true });
+customerSchema.index({ ippis: 1, lender: 1 }, { unique: true });
+customerSchema.index({ bvn: 1, lender: 1 }, { unique: true });
+customerSchema.index({ accountNo: 1, lender: 1 }, { unique: true });
 
 customerSchema.pre('save', async function (next) {
     try {
-        const loanEditTrigger = ['birthDate', 'employer.hireDate'];
-        if (
-            !this.isNew &&
-            this.modifiedPaths().some((path) => loanEditTrigger.includes(path))
-        ) {
+        const isPresent = (path) =>
+            ['birthDate', 'employer.hireDate'].includes(path);
+        if (this.modifiedPaths().some(isPresent)) {
             console.log('triggered');
-
-            const foundLoans = await Loan.find({
-                customer: this._id,
-                status: 'Pending',
-            });
-            if (foundLoans.length > 0) {
-                foundLoans.forEach(async (loan) => {
-                    loan.set({
-                        'params.birthDate': this.birthDate,
-                        'params.hireDate': this.employer.hireDate,
-                    });
-
-                    await loan.save();
-                });
-            }
+            const age = calcAge(this.birthDate);
+            const serviceLen = calcServiceLength(this.employer.hireDate);
+            await Loan.updateMany(
+                {
+                    customer: customer._id,
+                    status: loanStatus.pend,
+                },
+                {
+                    'params.age': age,
+                    'params.serviceLen': serviceLen,
+                }
+            );
         }
 
         next();
@@ -328,6 +327,7 @@ customerSchema.pre('save', async function (next) {
             message: exception.message,
             meta: exception.meta,
         });
+        debug(exception);
         next(new ServerError(500, 'Something went wrong'));
     }
 });

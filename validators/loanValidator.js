@@ -58,7 +58,7 @@ class LoanRequestValidator {
             loanType: Joi.string().valid('New', 'Top Up').messages({
                 'any.only': 'Invalid loan type',
             }).default('New'),
-            credit: Joi.objectId(),
+            creditUser: Joi.objectId(),
             agent: Joi.objectId(),
             params: Joi.object({
                 interestRate: Joi.number(),

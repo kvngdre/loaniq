@@ -129,7 +129,7 @@ const userSchema = new mongoose.Schema(
         },
 
         segments: {
-            type: [mongoose.ObjectId],
+            type: [mongoose.Schema.Types.ObjectId],
             default: null,
         },
 

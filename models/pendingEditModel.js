@@ -4,7 +4,7 @@ const schemaOptions = { strict: false, timestamps: true, versionKey: false };
 
 const pendingSchema = new mongoose.Schema(
     {
-        lenderId: {
+        lender: {
             type: String,
             required: true,
         },

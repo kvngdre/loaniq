@@ -1,31 +1,36 @@
+const { txnStatus } = require('../utils/constants');
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
 const transactionSchema = new mongoose.Schema(
     {
-        lenderId: {
+        lender: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
         },
 
         id: {
             type: String,
-            default: null
+            default: null,
         },
 
-        provider: {
+        gateway: {
             type: String,
+            default: null,
         },
 
         status: {
             type: String,
+            enum: Object.values(txnStatus),
             required: true,
         },
 
         reference: {
             type: String,
             unique: true,
+            default: () => crypto.randomBytes(4).toString('hex'),
         },
 
         category: {
@@ -76,6 +81,11 @@ const transactionSchema = new mongoose.Schema(
 
         paidAt: {
             type: Date,
+            default: null,
+        },
+
+        modifiedBy: {
+            type: mongoose.Schema.Types.ObjectId,
             default: null,
         },
     },

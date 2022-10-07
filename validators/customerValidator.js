@@ -197,10 +197,11 @@ const netPaySchema = Joi.number().precision(2).messages({
 });
 
 const validators = {
-    create: function (customer) {
+    create: function (user, customer) {
         const schema = Joi.alternatives().try(
             Joi.objectId().required(),
             Joi.object({
+                lender: Joi.objectId().default(user.lender),
                 name: Joi.object({
                     first: Joi.string().min(3).max(30).required().messages({
                         'string.min': 'First name is too short.',

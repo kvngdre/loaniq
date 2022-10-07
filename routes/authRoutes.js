@@ -1,6 +1,8 @@
-const router = require('express').Router();
-const authValidators = require('../validators/authValidator');
 const authController = require('../controllers/authController');
+const authValidators = require('../validators/authValidator');
+const router = require('express').Router();
+const ServerError = require('../errors/serverError');
+
 
 router.post('/login', async (req, res) => {
     const { error } = authValidators.login(req.body);
@@ -12,15 +14,15 @@ router.post('/login', async (req, res) => {
         req.cookies,
         res
     );
-    if (response.hasOwnProperty('errorCode'))
+    if (response instanceof ServerError)
         return res.status(response.errorCode).send(response.message);
-
+    
     return res.status(200).send(response);
 });
 
 router.get('/logout', async (req, res) => {
     const response = await authController.logout(req.cookies, res);
-    if (response.hasOwnProperty('errorCode'))
+    if (response instanceof ServerError)
         return res.status(response.errorCode).send(response.message);
 
     return res.status(204).send(response.message);
@@ -38,7 +40,7 @@ router.post('/verify', async (req, res) => {
         req.cookies,
         res
     );
-    if (isVerified.hasOwnProperty('errorCode'))
+    if (isVerified instanceof ServerError)
         return res.status(isVerified.errorCode).send(isVerified.message);
 
     return res.status(200).send(isVerified);

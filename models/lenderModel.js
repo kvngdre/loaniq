@@ -146,9 +146,19 @@ const lenderSchema = new mongoose.Schema(
             default: null,
         },
 
+        lastReqDate: {
+            type: Date,
+            default: null
+        },
+
         requestCount: {
             type: Number,
             default: 0,
+        },
+
+        totalCost: {
+            type: Number,
+            default: 0
         },
 
         loanParams: {

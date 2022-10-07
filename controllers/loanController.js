@@ -1,24 +1,27 @@
 const _ = require('lodash');
-const mongoose = require('mongoose');
+const { calcAge, calcServiceLength } = require('../utils/LoanParams');
 const { DateTime } = require('luxon');
-const Loan = require('../models/loanModel');
-const debug = require('debug')('app:loanCtrl');
-const Customer = require('../models/customerModel');
-const Segment = require('../models/segmentModel');
-const Lender = require('../models/lenderModel');
-const logger = require('../utils/logger')('loanCtrl.js');
-const loanManager = require('../tools/loanManager');
 const { LoanRequestValidator } = require('../validators/loanValidator');
+const { roles, txnStatus } = require('../utils/constants');
+const Customer = require('../models/customerModel');
+const debug = require('debug')('app:loanCtrl');
+const Lender = require('../models/lenderModel');
+const Loan = require('../models/loanModel');
+const loanManager = require('../tools/loanManager');
+const logger = require('../utils/logger')('loanCtrl.js');
+const mongoose = require('mongoose');
+const randomUser = require('../utils/pickRandomUser');
+const Segment = require('../models/segmentModel');
 const ServerError = require('../errors/serverError');
+const Transaction = require('../models/transactionModel');
 
 // get loan validator
-async function getValidator(lender, code) {
+async function getValidator(lender, segment) {
     try {
         const { segments } = lender;
 
-        const foundSegment = segments.find(
-            (segment) => segment.id.code === code
-        );
+        const isMatch = (seg) => seg.id._id.toString() === segment;
+        const foundSegment = segments.find(isMatch);
         if (!foundSegment)
             return new ServerError(404, 'Segment configuration not found');
 
@@ -50,32 +53,39 @@ async function getValidator(lender, code) {
     }
 }
 
-const loans = {
-    create: async function (user, payload) {
+module.exports = {
+    create: async (user, customerData, loanData) => {
         try {
+            // is tenant active
             const lender = await Lender.findOne({
-                _id: user.lenderId,
+                _id: user.lender,
                 active: true,
             }).populate({
                 path: 'segments.id',
                 model: Segment,
             });
-            // tenant inactive
             if (!lender)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
+            //
+            const cost = loanData.amount * config.get('charge.rate');
+            if (lender.balance < cost)
+                new ServerError(402, 'Insufficient wallet balance.');
+
             // getting loan validators
-            const loanValidators = await getValidator(lender,payload.customer.employer.segment);
+            if (user.role === roles.agent) loanData.agent = user.id;
+            const loanValidators = await getValidator(
+                lender,
+                customerData.employer.segment
+            );
             if (loanValidators instanceof ServerError) return loanValidators;
 
             // validating loan
-            const { value, error } = loanValidators.create(payload.loan);
+            const { value, error } = loanValidators.create(loanData);
             if (error) return new ServerError(400, error.details[0].message);
-            
-            // setting customer
-            payload.customer.lenderId = user.lenderId;
-            const customer = await getCustomerDoc(payload.customer);
 
+            // setting customer
+            const customer = await getCustomerDoc(customerData);
             async function getCustomerDoc(data) {
                 if (mongoose.isValidObjectId(data)) {
                     //
@@ -88,38 +98,113 @@ const loans = {
                 //
                 const foundCustomer = await Customer.findOne({
                     ippis: data.ippis,
-                    lenderId: data.lenderId,
+                    lender: data.lender,
                 });
                 if (!foundCustomer) {
                     // customer not found, create new customer
                     const newCustomer = new Customer(payload.customer);
 
                     // run new customer document validation
-                    const error = newCustomer.validateSync();
-                    if (error) {
+                    const customerError = newCustomer.validateSync();
+                    if (customerError) {
                         const msg =
-                            error.errors[Object.keys(error.errors)[0]].message;
+                            customerError.errors[
+                                Object.keys(customerError.errors)[0]
+                            ].message;
                         return new ServerError(400, msg);
                     }
-
                     return newCustomer;
                 }
-
                 // customer found
                 return foundCustomer;
             }
 
-            const response = await loanManager.createLoanRequest(
-                user,
-                loanParams,
-                payload.customer,
-                payload.loan
-            );
+            // picking agent
+            if (!value.agent) value.agent = await pickAgent(customer);
+            async function pickAgent(customer) {
+                const foundLoan = await Loan.findOne({
+                    lender: customer.lender,
+                    customer: customer._id,
+                    active: true,
+                });
+                if (!foundLoan) {
+                    // no active loan found. Pick a pseudo-random agent.
+                    const pickedUser = await randomUser(
+                        customer.lender,
+                        roles.agent,
+                        customer.segment
+                    );
+                    if (pickedUser instanceof Error)
+                        return new ServerError(404, 'Failed to assign agent');
+                    return pickedUser;
+                }
 
-            return response;
+                return foundLoan.agent;
+            }
+            console.log(value.agent);
+
+            // picking credit officer
+            if (!value.creditUser) {
+                const pickedUser = await randomUser(
+                    customer.segment,
+                    roles.credit,
+                    customer.segment
+                );
+                if (pickedUser instanceof Error)
+                    return new ServerError(
+                        404,
+                        'Failed to assign credit officer.'
+                    );
+
+                value.creditUser = pickedUser;
+            }
+            console.log(value.creditUser);
+
+            // setting customer parameters
+            value.customer = customer._id;
+            value.params.netPay = customer.netPay;
+            value.params.age = calcAge(customer.birthDate);
+            value.params.serviceLen = calcServiceLength(customer.hireDate);
+
+            const newLoan = new Loan(value);
+
+            // run new loan document validation
+            const loanError = newLoan.validateSync();
+            if (loanError) {
+                const msg =
+                    loanError.errors[Object.keys(loanError.errors)[0]].message;
+                return new ServerError(400, msg);
+            }
+
+            const newTransaction = new Transaction({
+                lender: customer.lender,
+                status: txnStatus.success,
+                category: 'Debit',
+                desc: 'billed for loan submission',
+                channel: 'app wallet',
+                amount: cost,
+                balance: lender.balance - cost,
+                paidAt: new Date(),
+            });
+
+            await customer.save();
+            await newLoan.save();
+            await newTransaction.save();
+            await lender.updateOne({
+                $inc: { balance: -cost, requestCount: 1, totalCost: cost },
+                lastReqDate: new Date(),
+            });
+
+            return {
+                message: 'Loan created.',
+                data: {
+                    loan: newLoan,
+                    customer: customer,
+                },
+            };
         } catch (exception) {
             logger.error({
-                method: 'createLoanReq',
+                method: 'create_loan',
                 message: exception.message,
                 meta: exception.stack,
             });
@@ -130,61 +215,75 @@ const loans = {
 
     getAll: async function (user, filters) {
         try {
-            let loans = [];
-            let queryParams = { lenderId: user.lenderId };
+            const queryParams = {};
 
-            if (user.role === 'Loan Agent') {
-                queryParams.loanAgent = user.id;
-                loans = await loanManager.getAll(queryParams);
-            } else {
-                // date filter - createdAt
-                if (filters?.start)
-                    queryParams.createdAt = {
-                        $gte: DateTime.fromJSDate(new Date(filters.start))
-                            .setZone(user.timeZone)
-                            .toUTC(),
-                    };
-                if (filters?.end) {
-                    const target = queryParams.createdAt
-                        ? queryParams.createdAt
-                        : {};
-                    queryParams.createdAt = Object.assign(target, {
-                        $lte: DateTime.fromJSDate(new Date(filters.end))
-                            .setZone(user.timeZone)
-                            .toUTC(),
-                    });
-                }
-
-                // number filter - recommended amount
-                if (filters?.minA)
-                    queryParams.recommendedAmount = {
-                        $gte: filters.minA,
-                    };
-                if (filters?.maxA) {
-                    const target = queryParams.recommendedAmount
-                        ? queryParams.recommendedAmount
-                        : {};
-                    queryParams.recommendedAmount = Object.assign(target, {
-                        $lte: filters.maxA,
-                    });
-                }
-
-                // number filter - recommended tenor
-                if (filters?.minT)
-                    queryParams.recommendedTenor = { $gte: filters.minT };
-                if (filters?.maxT) {
-                    const target = queryParams.recommendedTenor
-                        ? queryParams.recommendedTenor
-                        : {};
-                    queryParams.recommendedTenor = Object.assign(target, {
-                        $lte: filters.maxT,
-                    });
-                }
-
-                loans = await loanManager.getAll(queryParams);
+            // initialising query object
+            if (user.role === roles.master) {
+                if (filters?.lender) queryParams.lender = filters.lender;
+            }else{
+                if (user.role === roles.agent) queryParams.agent = user.id;
+                else queryParams['customer.lender'] = user.lender;
             }
 
-            return loans;
+
+            
+            
+            // date filter - createdAt
+            if (filters?.start)
+                queryParams.createdAt = {
+                    $gte: DateTime.fromJSDate(new Date(filters.start))
+                        .setZone(user.timeZone)
+                        .toUTC(),
+                };
+            if (filters?.end) {
+                const target = queryParams.createdAt
+                    ? queryParams.createdAt
+                    : {};
+                queryParams.createdAt = Object.assign(target, {
+                    $lte: DateTime.fromJSDate(new Date(filters.end))
+                        .setZone(user.timeZone)
+                        .toUTC(),
+                });
+            }
+
+            // number filter - recommended amount
+            if (filters?.minA)
+                queryParams.recommendedAmount = {
+                    $gte: filters.minA,
+                };
+            if (filters?.maxA) {
+                const target = queryParams.recommendedAmount
+                    ? queryParams.recommendedAmount
+                    : {};
+                queryParams.recommendedAmount = Object.assign(target, {
+                    $lte: filters.maxA,
+                });
+            }
+
+            // number filter - recommended tenor
+            if (filters?.minT)
+                queryParams.recommendedTenor = { $gte: filters.minT };
+            if (filters?.maxT) {
+                const target = queryParams.recommendedTenor
+                    ? queryParams.recommendedTenor
+                    : {};
+                queryParams.recommendedTenor = Object.assign(target, {
+                    $lte: filters.maxT,
+                });
+            }
+
+            const foundLoans = await Loan.find(queryParams).populate({
+                path: 'customer',
+                model: Customer,
+            }).sort('-createdAt');
+
+            if(foundLoans.length == 0) return new ServerError(404, 'Loans not found');
+
+            return {
+                message: '',
+                data: foundLoans,
+            }
+
         } catch (exception) {
             logger.error({
                 method: 'get_all',
@@ -199,7 +298,7 @@ const loans = {
     getOne: async function (user, id) {
         try {
             let loan = null;
-            const queryParams = { _id: id, lenderId: user.lenderId };
+            const queryParams = { _id: id, lender: user.lender };
 
             if (user.role === 'Loan Agent') {
                 queryParams.loanAgent = user.id;
@@ -316,5 +415,3 @@ const loans = {
         return await loanManager.closeExpiringLoans();
     },
 };
-
-module.exports = loans;

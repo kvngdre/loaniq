@@ -30,7 +30,7 @@ router.post('/upload-photo', upload.single('photo'), async (req, res) => {
 
 /**
  * @queryParam name Filter by name.
- * @queryParam lenderId Filter by lender.
+ * @queryParam lender Filter by lender.
  * @queryParam role Filter by role.
  * @queryParam sort Field to sort by. Defaults to 'first name'.
  */

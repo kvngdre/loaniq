@@ -23,7 +23,6 @@ module.exports = {
             if (!lender)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
-            payload.lender = user.lender;
             const newCustomer = new Customer(payload);
 
             // run new customer document validation

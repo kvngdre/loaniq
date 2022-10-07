@@ -3,7 +3,7 @@ const flwService = require('../services/flutterwave');
 const logger = require('../utils/logger')('paymentCtrl.js');
 const ServerError = require('../errors/serverError');
 const skService = require('../services/paystack');
-const Transaction = require('../models/transaction');
+const Transaction = require('../models/transactionModel');
 
 /**
  * Generates a payment link.

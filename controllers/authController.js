@@ -62,11 +62,10 @@ async function login(email, password, cookies, res) {
                 await foundUser.save();
             }
 
-            // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
         }
 
@@ -77,14 +76,13 @@ async function login(email, password, cookies, res) {
         await foundUser.save();
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
-        // TODO: uncomment secure in prod
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
             maxAge: expires,
         });
-
+        
         return {
             message: 'Login success.',
             data: {
@@ -118,11 +116,10 @@ async function logout(cookies, res) {
         );
         if (!foundUser) {
             // cookie found but does not match any user
-            // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
 
             debug('no user found to logout');
@@ -135,11 +132,10 @@ async function logout(cookies, res) {
         );
         await foundUser.save();
 
-        // TODO: uncomment secure
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
         });
 
         debug('logged out');
@@ -197,11 +193,10 @@ async function verifySignUp(
             foundUser.refreshTokens = foundUser.refreshTokens.filter(
                 (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
             );
-            // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
         }
 
@@ -218,11 +213,10 @@ async function verifySignUp(
         await foundUser.save();
 
         const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
-        // TODO: uncomment secure in prod
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
             maxAge: expires,
         });
 
@@ -259,11 +253,10 @@ async function signOutAllDevices(id, cookies, res) {
             { password: 0, otp: 0 }
         );
         if (!foundUser) {
-            // TODO: uncomment secure
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
 
             debug('no user found to logout');
@@ -276,11 +269,10 @@ async function signOutAllDevices(id, cookies, res) {
         );
         await foundUser.save();
 
-        // TODO: uncomment secure
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
         });
 
         debug('logged out');

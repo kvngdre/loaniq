@@ -22,13 +22,13 @@ router.post(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const id =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
         const { error } = lenderValidators.activate(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const lender = await lenderController.activate(lenderId, req.body);
+        const lender = await lenderController.activate(id, req.body);
         if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
@@ -55,10 +55,10 @@ router.get(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
-        const response = await lenderController.requestOtp(lenderId);
+        const response = await lenderController.requestOtp(lender);
         if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);
 
@@ -71,10 +71,10 @@ router.get(
     verifyToken,
     verifyRole([roles.admin, roles.owner, roles.master]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
-        const balance = await lenderController.getBalance(lenderId);
+        const balance = await lenderController.getBalance(lender);
         if (balance instanceof ServerError)
             return res.status(balance.errorCode).send(balance.message);
 
@@ -87,10 +87,10 @@ router.get(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const id =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
-        const lender = await lenderController.getOne(lenderId);
+        const lender = await lenderController.getOne(id);
         if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
@@ -103,14 +103,14 @@ router.patch(
     verifyToken,
     verifyRole([roles.owner, roles.master, roles.admin]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const id =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
         const { error } = lenderValidators.updateSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const lender = await lenderController.updateSettings(
-            lenderId,
+            id,
             req.body
         );
         if (lender instanceof ServerError)
@@ -125,13 +125,13 @@ router.patch(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const id =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
         const { error } = lenderValidators.update(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const lender = await lenderController.update(lenderId, req.body);
+        const lender = await lenderController.update(id, req.body);
         if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
@@ -144,14 +144,14 @@ router.post(
     verifyToken,
     verifyRole(roles.owner),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
         const { error } = lenderValidators.fundAccount(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
         const response = await lenderController.fundWallet(
-            lenderId,
+            lender,
             req.body.amount
         );
         if (response instanceof ServerError)
@@ -166,11 +166,11 @@ router.post(
     verifyToken,
     verifyRole([roles.owner, roles.master]),
     async (req, res) => {
-        const lenderId =
-            req.params.id !== undefined ? req.params.id : req.user.lenderId;
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
 
         const response = await lenderController.deactivate(
-            lenderId,
+            lender,
             req.user,
             req.body.password
         );

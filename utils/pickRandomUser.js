@@ -1,10 +1,27 @@
+const debug = require('debug')('app:pickRandomUser');
+const logger = require('../utils/logger')('pickRandomUser.js');
 const User = require('../models/userModel');
 
-module.exports = async (lenderId, role, segmentId) => {
-    const users = await User.find( { lenderId, role, active: true, emailVerified: true, segments: segmentId } )
-    const randomIndex = Math.floor(Math.random() * users.length)
-    
-    return users[randomIndex];
-};
+module.exports = async (lender, role, segment) => {
+    try {
+        const foundUsers = await User.find({
+            lender,
+            role,
+            active: true,
+            segments: segment,
+        });
+        if (!foundUsers) throw new Error(`No ${role} users found.`);
 
-// module.exports = pickAgentId;
+        const idx = Math.floor(Math.random() * foundUsers.length);
+        
+        return foundUsers[idx];
+    } catch (exception) {
+        logger.error({
+            method: 'random_user',
+            message: exception.message,
+            meta: exception.stack
+        })
+        debug(exception);
+        return exception;
+    }
+};

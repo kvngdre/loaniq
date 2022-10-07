@@ -1,4 +1,7 @@
 {
+    "charge": {
+        "rate": "RATE"
+    },
     "crypto": {
         "initVector": "INIT_VECTOR",
         "secret_key": "SECURITY_KEY"

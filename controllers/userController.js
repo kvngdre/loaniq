@@ -237,7 +237,7 @@ module.exports = {
             // segment reassignment
             if (alteration?.segments) {
                 // user is neither an admin, master nor owner role
-                // or attempting to assign a segment to none bus.dev roles(credit, loan agent).
+                // or attempting to assign a segment to none bus.dev roles(credit, agent).
                 if (
                     ![roles.credit, roles.agent].includes(foundUser.role) ||
                     ![roles.admin, roles.master, roles.owner].includes(

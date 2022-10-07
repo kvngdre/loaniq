@@ -22,7 +22,7 @@ module.exports = {
             const newLender = new Lender(payload.lender);
             const randomPwd = Math.random().toString(36).substring(2, 8);
             const newUser = new User({
-                lenderId: newLender._id.toString(),
+                lender: newLender._id.toString(),
                 name: payload.user.name,
                 email: payload.user.email,
                 phone: payload.user.phone,
@@ -348,7 +348,7 @@ module.exports = {
                 return new ServerError(403, 'Tenant is yet to be activated');
 
             const link = await getPaymentLink({
-                lenderId: lender._id.toString(),
+                lender: lender._id.toString(),
                 balance: lender.balance,
                 amount,
                 customer: {
@@ -473,7 +473,7 @@ module.exports = {
                 };
             } else {
                 await User.updateMany(
-                    { lenderId: lender._id },
+                    { lender: lender._id.toString() },
                     { active: false }
                 );
 
@@ -503,7 +503,7 @@ module.exports = {
 
             user = {
                 id: payload.customer.employmentInfo.ippis,
-                lenderId: lender._id,
+                lender: lender._id.toString(),
                 role: 'guest',
                 email: payload.customer.contactInfo.email,
             };
