@@ -1,60 +1,66 @@
+const { roles } = require('../utils/constants');
 const router = require('express').Router();
-const verifyRole = require('../middleware/verifyRole');
+const ServerError = require('../errors/serverError');
 const stateController = require('../controllers/stateController');
+const stateValidators = require('../validators/stateValidator');
+const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
-const stateValidators = require('../validators/state');
 
-router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
-    const { error } = stateValidators.validateCreation(req.body);
+router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
+    const { error } = stateValidators.create(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const newState = await stateController.create(req.body);
-    if (newState instanceof Error) {
-        return res.status(400).send(newState.message);
+    if (newState instanceof ServerError) {
+        return res.status(newState.errorCode).send(newState.message);
     }
 
     return res.status(201).send(newState);
 });
 
-router.get(
-    '/',
-    async (req, res) => {
-        const states = await stateController.getAll();
-        if (states.length === 0)
-            return res.status(404).send('No states found.');
+router.get('/', async (req, res) => {
+    const states = await stateController.getAll(req.query);
+    if (states instanceof ServerError)
+        return res.status(states.errorCode).send(states.message);
 
-        return res.status(200).send(states);
-    }
-);
+    return res.status(200).send(states);
+});
 
-router.get(
+router.get('/:id', verifyToken, async (req, res) => {
+    const state = await stateController.getOne(req.params.id);
+    if (state instanceof ServerError)
+        return res.status(state.errorCode).send(state.message);
+
+    return res.status(200).send(state);
+});
+
+router.patch(
     '/:id',
     verifyToken,
-    verifyRole(['Master', 'Admin']),
+    verifyRole(roles.master),
     async (req, res) => {
-        const state = await stateController.get(req.params.id);
-        if (!state) return res.status(404).send(state.message);
+        const { error } = stateValidators.update(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+
+        const state = await stateController.update(req.params.id, req.body);
+        if (state instanceof ServerError)
+            return res.status(state.errorCode).send(state.message);
 
         return res.status(200).send(state);
     }
 );
 
-router.patch('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
-    const { error } = stateValidators.validateEdi(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+router.delete(
+    '/:id',
+    verifyToken,
+    verifyRole(roles.master),
+    async (req, res) => {
+        const state = await stateController.delete(req.params.id);
+        if (state instanceof ServerError)
+            return res.status(state.errorCode).send(state.message);
 
-    const state = await stateController.update(req.params.id, req.body);
-    if (state instanceof Error) return res.status(400).send(state.message);
-
-    return res.status(200).send(state);
-});
-
-router.delete('/:id', verifyToken, verifyRole('Admin'), async (req, res) => {
-    const deletedState = await stateController.delete(req.params.id);
-    if (deletedState instanceof Error)
-        return res.status(401).send(deletedState.message);
-
-    return res.status(200).send(deletedState);
-});
+        return res.status(204).send(state);
+    }
+);
 
 module.exports = router;

@@ -1,4 +1,12 @@
 module.exports = {
+    geoZones: [
+        'North Central',
+        'North East',
+        'North West',
+        'South East',
+        'South South',
+        'South West',
+    ],
     loanStatus: {
         approved: 'Approved',
         deny: 'Denied',
@@ -61,10 +69,10 @@ module.exports = {
         'Son',
     ],
     sort_fields: {
-        'asc': 'createdAt',
-        'desc': '-createdAt',
-        'first': 'name.first',
-        'last': 'name.last'
+        asc: 'createdAt',
+        desc: '-createdAt',
+        first: 'name.first',
+        last: 'name.last',
     },
     txnStatus: {
         abandoned: 'Abandoned',
@@ -79,5 +87,4 @@ module.exports = {
         'National ID card',
         "Driver's license",
     ],
-    
 };

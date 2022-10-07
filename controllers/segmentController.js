@@ -100,6 +100,19 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                return new ServerError(409, field + ' already in use');
+            }
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
+            }
+
             return new ServerError(500, 'Something went wrong');
         }
     },

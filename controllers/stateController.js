@@ -1,68 +1,142 @@
-const State = require('../models/state');
 const debug = require('debug')('app:stateCtrl');
+const logger = require('../utils/logger')('stateCtrl');
+const ServerError = require('../errors/serverError');
+const State = require('../models/stateModel');
 
-const state = {  
-    create: async function(requestBody) {
-        try{
-            const stateExists = await State.findOne( { name: requestBody.name } );
-            if(stateExists) throw new Error('State already exists.');
+module.exports = {
+    create: async (payload) => {
+        try {
+            const newState = new State(payload);
+            await newState.save();
 
-            const newState = await State.create(requestBody);
-
-            return newState;
-
-        }catch(exception) {
-            return exception;
-        };
-    },
-
-    getAll: async function() {
-        return await State.find();
-    },
-
-    get: async function(id) {
-        try{
-            const state = await State.findById(id);
-            if(!state) throw new Error('State not found.');
-
-            return state;
-
-        }catch(exception) {
-            debug(exception);
-            return exception;
-        };
-    },
-
-    update: async function(id, requestBody) {
-        try{
-            const state = await State.findByIdAndUpdate( {_id: id }, requestBody, {new: true} );
-            if(!state) {
-                debug(state);
-                throw new Error('State not found.')
+            return {
+                message: 'State created',
+                data: newState,
             };
+        } catch (exception) {
+            logger.error({
+                method: 'create',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            if (exception.name === 'MongoServerError') {
+                const field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                return new ServerError(409, field + ' already in use');
+            }
 
-            return state;
-            
-        }catch(exception) {
-            return exception;
-        };
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
+            }
+
+            return new ServerError(500, 'Something went wrong');
+        }
     },
 
-    delete: async function(id) {
-        try{
-            const state = await State.findById(id);
-            if(!state) throw new Error('User not found.');
+    getAll: async (filters) => {
+        try {
+            const queryParams = {};
+            if (filters?.name) queryParams.name = new RegExp(filters.name, 'i');
+            if (filters?.lga) queryParams.lgas = new RegExp(filters.lga, 'i');
 
-            await state.deleteOne();
+            const foundStates = await State.find(queryParams).sort('name');
+            if (foundStates.length === 0)
+                return new ServerError(404, 'No states found');
 
-            return state;
-
-        }catch(exception) {
+            return {
+                message: 'success',
+                data: foundStates,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'get_all',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return exception;
-        };
-    }
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
 
-}
+    getOne: async (id) => {
+        try {
+            const foundState = await State.findById(id);
+            if (!foundState) return new ServerError(404, 'State not found');
 
-module.exports = state;
+            return {
+                message: 'success',
+                data: foundState,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'get_one',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    update: async (id, payload) => {
+        try {
+            const foundState = await State.findById(id);
+            if (!foundState) new ServerError(404, 'State not found');
+
+            foundState.set(payload);
+            await foundState.save();
+
+            return {
+                message: 'State updated',
+                data: foundState,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            if (exception.name === 'MongoServerError') {
+                const field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                return new ServerError(409, field + ' already in use');
+            }
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
+            }
+
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    delete: async (id) => {
+        try {
+            const foundState = await State.findById(id);
+            if (!foundState) return new ServerError(404, 'State not found');
+
+            await foundState.delete();
+
+            return {
+                message: 'State deleted',
+                data: foundState,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+};

@@ -12,7 +12,7 @@ router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
 
     const newSegment = await segmentController.create(req.body);
     if (newSegment instanceof ServerError)
-        return res.status(400).send(newSegment.message);
+        return res.status(newSegment.errorCode).send(newSegment.message);
 
     return res.status(201).send(newSegment);
 });
@@ -20,7 +20,7 @@ router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
 router.get('/', verifyToken, async (req, res) => {
     const segments = await segmentController.getAll(req.query);
     if (segments instanceof ServerError)
-        return res.status(404).send('No segments.');
+        return res.status(segments.errorCode).send(segments.message);
 
     return res.status(200).send(segments);
 });
@@ -28,7 +28,7 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
     const segment = await segmentController.get(req.params.id);
     if (segment instanceof ServerError)
-        return res.status(400).send(segment.message);
+        return res.status(segment.errorCode).send(segment.message);
 
     return res.status(200).send(segment);
 });
@@ -43,7 +43,7 @@ router.patch(
 
         const segment = await segmentController.update(req.params.id, req.body);
         if (segment instanceof ServerError)
-            return res.status(400).send(segment.message);
+            return res.status(segment.errorCode).send(segment.message);
 
         return res.status(200).send(segment);
     }
@@ -56,7 +56,7 @@ router.delete(
     async (req, res) => {
         const segment = await segmentController.delete(req.params.id);
         if (segment instanceof ServerError)
-            return res.status(400).send(segment.message);
+            return res.status(segment.errorCode).send(segment.message);
 
         return res.status(204).send(segment);
     }
