@@ -2,11 +2,11 @@ require('dotenv').config();
 require('express-async-errors');
 
 const app = require('express')();
-const config = require('config');
-const connectDB = require('./startUp/db')();
-const jobs = require('./jobs/loanJobs');
 const appRoutes = require('./startUp/routes');
+const config = require('config');
+const connectDB = require('./startUp/db');
 const debug = require('debug')('app:startUp');
+const jobs = require('./jobs/loanJobs');
 const { encryptQueryParams, decryptQueryParams } = require('./utils/generateURL');
 
 // const edata = encryptQueryParams(1);
@@ -20,6 +20,7 @@ const { encryptQueryParams, decryptQueryParams } = require('./utils/generateURL'
 // } = require('./startUp/firebase-cm');
 
 // Setup
+connectDB();
 appRoutes(app);
 // jobs();
 // const fcm_app = initializeApp(firebaseConfig);

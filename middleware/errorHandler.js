@@ -14,6 +14,11 @@ function errorHandler(err, req, res, next) {
         return res.status(err.code).send(err.message);
     }
 
+    if (err instanceof MulterError) {
+        debug(err);
+        return res.status(400).send(`Upload error: ${err.message}`);
+    }
+
     debug(err)
     res.status(500).send('Internal Server Error.');
 
