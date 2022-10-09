@@ -5,7 +5,6 @@ const logger = require('../utils/logger')('verifyToken.js');
 
 function verifyToken(req, res, next) {
     try {
-        // const token = req.header('authorization') || req.header('Authorization')
         const authHeader =
             req.header('authorization') || req.header('Authorization');
         if (!authHeader) return res.sendStatus(401);
@@ -26,11 +25,6 @@ function verifyToken(req, res, next) {
 
         next();
     } catch (exception) {
-        // logger.error({
-        //     method: 'verify_tToken',
-        //     message: exception.message,
-        //     meta: exception.stack,
-        // });
         debug(exception);
         return res.status(403).send(exception.message);
     }

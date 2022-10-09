@@ -25,7 +25,7 @@ router.get('/logout', async (req, res) => {
     if (response instanceof ServerError)
         return res.status(response.errorCode).send(response.message);
 
-    return res.status(204).send(response.message);
+    return res.status(200).send(response.message);
 });
 
 router.post('/verify', async (req, res) => {

@@ -63,6 +63,7 @@ async function login(email, password, cookies, res) {
             }
 
             // TODO: uncomment secure
+            // clear all cookies
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',

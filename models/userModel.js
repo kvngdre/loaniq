@@ -188,7 +188,6 @@ userSchema.methods.generateAccessToken = function () {
         {
             id: this._id.toString(),
             lender: this.lender,
-            email: this.email,
             role: this.role,
             active: this.active,
             timeZone: this.timeZone,
