@@ -8,8 +8,8 @@ const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('userCtrl.js');
 const mailer = require('../utils/mailer');
 const Segment = require('../models/segmentModel');
-const Settings = require('../models/settings');
 const ServerError = require('../errors/serverError');
+const Settings = require('../models/settings');
 const similarity = require('../utils/similarity');
 const User = require('../models/userModel');
 

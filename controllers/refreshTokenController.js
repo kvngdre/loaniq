@@ -13,7 +13,7 @@ async function handleRefreshToken(cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            secure: true,
+            secure: config.get('secureCookie'),
         });
 
         const foundUser = await User.findOne(
@@ -69,7 +69,7 @@ async function handleRefreshToken(cookies, res) {
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            secure: true,
+            secure: config.get('secureCookie'),
             maxAge: expires,
         });
 
