@@ -33,7 +33,7 @@
     },
     "max_similarity": "MAX_SIMILARITY",
     "paystack": {
-        "paystack_secret_key": "PAYSTACK_PRIVATE_KEY"
+        "secret_key": "PAYSTACK_PRIVATE_KEY"
     },
     "salt_rounds": "SALT"
 }

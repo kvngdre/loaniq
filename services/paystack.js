@@ -12,7 +12,7 @@ class PaystackService {
         this.#headers = {
             'Content-Type': 'application/json',
             authorization: `Bearer ${config.get(
-                'paystack.paystack_secret_key'
+                'paystack.secret_key'
             )}`,
         };
         this.#payment_channels = ['card', 'bank', 'ussd', 'bank_transfer'];

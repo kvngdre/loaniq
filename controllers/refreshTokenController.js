@@ -13,7 +13,7 @@ async function handleRefreshToken(cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
         });
 
         const foundUser = await User.findOne(
@@ -69,7 +69,7 @@ async function handleRefreshToken(cookies, res) {
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
             maxAge: expires,
         });
 
@@ -79,7 +79,7 @@ async function handleRefreshToken(cookies, res) {
         };
     } catch (exception) {
         logger.error({
-            method: 'refreshTokenCtrl',
+            method: 'refresh_token_ctrl',
             message: exception.message,
             meta: exception.stack,
         });

@@ -359,8 +359,8 @@ module.exports = {
                 message: 'Success. Password and OTP sent to user email. ',
                 data: _.omit(foundUser._doc, [
                     'resetPwd',
-                    'otp',
-                    'password',
+                    // 'otp',
+                    // 'password',
                     'refreshTokens',
                 ]),
             };

@@ -1,31 +1,13 @@
 class FileUploadError extends Error {
-     /**
-     * Creates a new file upload error
-     * @param {number} status Http status code
-     * @param {string} message Error message
-     */
-    constructor(status, message) {
-        super();
+    constructor(code, message) {
+        super(message);
 
-        this.message = message;
-        this.code = status;
+        this.code = code;
         this.name = this.constructor.name;
 
         Error?.captureStackTrace(this, this.constructor);
     }
 }
 
-// try{
-//     throw new FileUploadError('Destination storage not found.');
-// }catch(e) {
-//     console.log(e instanceof CustomError)
-//     console.log(e.name)
-//     console.log('code===-==-==',e.code)
-//     console.log(e.message)
-//     console.log(e.date)
-//     console.log('stack===------', e.stack)
-// }
 
-module.exports = {
-    FileUploadError
-}
+module.exports = FileUploadError;

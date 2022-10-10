@@ -1,4 +1,4 @@
-const { FileUploadError } = require('../errors/fileUploadError');
+const FileUploadError = require('../errors/fileUploadError');
 const multer = require('multer');
 const path = require('path');
 
@@ -6,32 +6,27 @@ const multiplier = 5;
 const ONE_MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
-    destination: (request, file, callback) => {
+    destination: (req, file, cb) => {
         if (file.fieldname === 'passport')
-            callback(null, `./uploads/customers/passports`);
+            cb(null, `./uploads/customers/passports`);
         else if (file.fieldname === 'idCard')
-            callback(null, `./uploads/customers/idCards`);
-        else if (file.fieldname === 'photo') callback(null, `./uploads/users`);
+            cb(null, `./uploads/customers/idCards`);
+        else if (file.fieldname === 'photo') cb(null, `./uploads/users`);
     },
 
-    filename: (request, file, callback) => {
+    filename: (req, file, cb) => {
         //TODO: uncomment actual change
         if (file.fieldname === 'photo')
-            return callback(
+            return cb(
                 null,
-                `${request.body?.email}--${Date.now()}${path.extname(
+                `${req.user.id}--${Date.now()}${path.extname(
                     file.originalname
                 )}`
             );
 
-        // console.log('multer request', request);
-
-        // callback(null, `${Date.now()}${path.extname(file.originalname)}`)
-        callback(
+        cb(
             null,
-            `${request.body?.name?.first + ' ' + request.body?.name?.last}-${
-                request.body?.employmentInfo?.ippis
-            }--${Date.now()}${path.extname(file.originalname)}`
+            `${req.body?.name?.first}_${req.body?.name?.last}--${req.body?.ippis}--${Date.now()}${path.extname(file.originalname)}`
         );
     },
 });

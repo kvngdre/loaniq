@@ -67,7 +67,7 @@ async function login(email, password, cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
         }
 
@@ -82,7 +82,7 @@ async function login(email, password, cookies, res) {
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
             maxAge: expires,
         });
         
@@ -123,7 +123,7 @@ async function logout(cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
 
             debug('no user found to logout');
@@ -140,7 +140,7 @@ async function logout(cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
         });
 
         debug('logged out');
@@ -202,7 +202,7 @@ async function verifySignUp(
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
         }
 
@@ -223,7 +223,7 @@ async function verifySignUp(
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
             maxAge: expires,
         });
 
@@ -264,7 +264,7 @@ async function signOutAllDevices(id, cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                // secure: true,
+                secure: true,
             });
 
             debug('no user found to logout');
@@ -281,7 +281,7 @@ async function signOutAllDevices(id, cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            // secure: true,
+            secure: true,
         });
 
         debug('logged out');
