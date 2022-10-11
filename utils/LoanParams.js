@@ -1,5 +1,5 @@
 function calcAge(dob) {
-    const dobMs = dob.calcTime();
+    const dobMs = dob.getTime();
     const diff = Date.now() - dobMs;
     const age = new Date(diff).calcUTCFullYear() - 1970;
 
@@ -30,7 +30,7 @@ function calcRepayment(recommendedAmount, interestRate, recommendedTenor) {
 }
 
 function calcServiceLength(doe) {
-    const doeMs = doe.calcTime();
+    const doeMs = doe.getTime();
     const diff = Date.now() - doeMs;
     const serviceLength = new Date(diff).calcUTCFullYear() - 1970;
 
