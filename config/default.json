@@ -6,5 +6,5 @@
     "support": {
         "email": "support@apexxialtd.com"
     },
-    "secure_cookie": true
+    "secure_cookie": false
 }

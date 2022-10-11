@@ -406,6 +406,8 @@ module.exports = {
                 message: 'OTP sent to email',
                 data: {
                     email: foundUser.email,
+                    // TODO: remove otp
+                    otp: foundUser.otp.OTP,
                 },
             };
         } catch (exception) {

@@ -401,6 +401,7 @@ module.exports = {
                 message: 'OTP sent to tenant email',
                 data: {
                     email: lender.email,
+                    // TODO: remove otp
                     otp: lender.otp.OTP,
                 },
             };
