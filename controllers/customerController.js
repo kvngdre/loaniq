@@ -1,14 +1,14 @@
 const _ = require('lodash');
 const { DateTime } = require('luxon');
 const { roles, sort_fields } = require('../utils/constants');
-const flattenObject = require('../utils/flattenObj');
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:customerCtrl');
-const Loan = require('../models/loanModel');
+const flattenObject = require('../utils/flattenObj');
 const Lender = require('../models/lenderModel');
-const Origin = require('../models/origin');
+const Loan = require('../models/loanModel');
 const logger = require('../utils/logger')('customerCtrl.js');
 const mongoose = require('mongoose');
+const Origin = require('../models/origin');
 const PendingEdit = require('../models/pendingEditModel');
 const ServerError = require('../errors/serverError');
 

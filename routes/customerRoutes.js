@@ -8,19 +8,26 @@ const upload = require('../middleware/fileUpload');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
-router.post('/', verifyToken, async (req, res) => {
-    const { value, error } = customerValidators.create(req.user, req.body);
-    if (error) {
-        const errorResponse = concatErrorMsg(error.details[0].context.message);
-        return res.status(400).send(errorResponse);
+router.post(
+    '/',
+    verifyToken,
+    verifyRole([roles.agent, roles.owner, roles.operations, roles.master]),
+    async (req, res) => {
+        const { value, error } = customerValidators.create(req.user, req.body);
+        if (error) {
+            const errorResponse = concatErrorMsg(
+                error.details[0].context.message
+            );
+            return res.status(400).send(errorResponse);
+        }
+
+        const newCustomer = await customerController.create(req.user, value);
+        if (newCustomer instanceof ServerError)
+            return res.status(newCustomer.errorCode).send(newCustomer.message);
+
+        return res.status(201).send(newCustomer);
     }
-
-    const newCustomer = await customerController.create(req.user, value);
-    if (newCustomer instanceof ServerError)
-        return res.status(newCustomer.errorCode).send(newCustomer.message);
-
-    return res.status(201).send(newCustomer);
-});
+);
 
 router.post(
     '/upload-docs',
@@ -82,7 +89,7 @@ router.delete(
     async (req, res) => {
         const response = await customerController.delete(
             req.params.id,
-            req.user,
+            req.user
         );
         if (response instanceof ServerError)
             return res.status(response.errorCode).send(response.message);

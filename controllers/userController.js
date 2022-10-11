@@ -26,9 +26,8 @@ module.exports = {
                 _id: user.lender,
                 active: true,
             });
-            if (!lender) return new ServerError(404, 'Tenant not found');
             // tenant inactive
-            if (!lender.active)
+            if (!lender)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
             // only owners can create admins

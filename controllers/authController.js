@@ -67,7 +67,7 @@ async function login(email, password, cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                secure: config.get('secureCookie'),
+                secure: config.get('secure_cookie'),
             });
         }
 
@@ -82,7 +82,7 @@ async function login(email, password, cookies, res) {
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            secure: config.get('secureCookie'),
+            secure: config.get('secure_cookie'),
             maxAge: expires,
         });
         
@@ -123,7 +123,7 @@ async function logout(cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                secure: config.get('secureCookie'),
+                secure: config.get('secure_cookie'),
             });
 
             debug('no user found to logout');
@@ -140,7 +140,7 @@ async function logout(cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            secure: config.get('secureCookie'),
+            secure: config.get('secure_cookie'),
         });
 
         debug('logged out');
@@ -202,7 +202,7 @@ async function verifySignUp(
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                secure: config.get('secureCookie'),
+                secure: config.get('secure_cookie'),
             });
         }
 
@@ -223,7 +223,7 @@ async function verifySignUp(
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
             sameSite: 'None',
-            secure: config.get('secureCookie'),
+            secure: config.get('secure_cookie'),
             maxAge: expires,
         });
 
@@ -264,7 +264,7 @@ async function signOutAllDevices(id, cookies, res) {
             res.clearCookie('jwt', {
                 httpOnly: true,
                 sameSite: 'None',
-                secure: config.get('secureCookie'),
+                secure: config.get('secure_cookie'),
             });
 
             debug('no user found to logout');
@@ -281,7 +281,7 @@ async function signOutAllDevices(id, cookies, res) {
         res.clearCookie('jwt', {
             httpOnly: true,
             sameSite: 'None',
-            secure: config.get('secureCookie'),
+            secure: config.get('secure_cookie'),
         });
 
         debug('logged out');
