@@ -8,7 +8,6 @@ function calcAge(dob) {
 
 function calcDti(repayment, netPay) {
     const dti = repayment / netPay;
-    console.log(dti);
 
     return dti.toFixed(4);
 }

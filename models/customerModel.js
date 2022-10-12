@@ -310,8 +310,8 @@ customerSchema.pre('save', async function (next) {
             const serviceLen = calcServiceLength(this.employer.hireDate);
             await Loan.updateMany(
                 {
-                    customer: customer._id,
-                    status: loanStatus.pend,
+                    customer: this._id,
+                    status: loanStatus.pending,
                 },
                 {
                     'params.age': age,
