@@ -42,7 +42,7 @@ router.post(
  * @queryParam max Filter by max balance.
  * @queryParam sort Field to sort by. Defaults to 'company name'.
  */
-router.get('/', verifyToken, verifyRole(roles.master), async (req, res) => {
+router.get('/all', verifyToken, verifyRole(roles.master), async (req, res) => {
     const lenders = await lenderController.getAll(req.query);
     if (lenders instanceof ServerError)
         return res.status(lenders.errorCode).send(lenders.message);
