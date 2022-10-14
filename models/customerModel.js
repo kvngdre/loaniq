@@ -1,8 +1,8 @@
 const { calcAge, calcServiceLength } = require('../utils/LoanParams');
 const {
     loanStatus,
-    relationships,
     maritalStatus,
+    relationships,
     validIds,
 } = require('../utils/constants');
 const debug = require('debug')('app:customerModel');

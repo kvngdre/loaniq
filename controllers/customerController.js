@@ -85,45 +85,49 @@ module.exports = {
             // filter for agent id if role is agent
             if (user.role === roles.agent) queryParams.agent = user.id;
 
-            // String Filter - fullName
-            if (filters?.name)
-                queryParams.fullName = new RegExp(filters.name, 'i');
+            // applying filters
+            applyFilters(filters);
+            function applyFilters(filters) {
+                // string filter - fullName
+                if (filters?.name)
+                    queryParams.fullName = new RegExp(filters.name, 'i');
 
-            // Number Filter - Net Pay
-            if (filters?.min) queryParams.netPay = { $gte: filters.min };
-            if (filters?.max) {
-                const target = queryParams.netPay ? queryParams.netPay : {};
-                queryParams.netPay = Object.assign(target, {
-                    $lte: filters.max,
-                });
+                // number filter - net pay
+                if (filters?.min) queryParams.netPay = { $gte: filters.min };
+                if (filters?.max) {
+                    const target = queryParams.netPay ? queryParams.netPay : {};
+                    queryParams.netPay = Object.assign(target, {
+                        $lte: filters.max,
+                    });
+                }
+
+                // string filter - state
+                if (filters?.states)
+                    queryParams['residentialAddress.state'] = filters.states;
+
+                // string filter - segment
+                if (filters.segments)
+                    queryParams['employmentInfo.segment'] = filters.segments;
+
+                // date filter - dateOfBirth
+                if (filters?.minAge)
+                    queryParams.dateOfBirth = {
+                        $gte: DateTime.now()
+                            .minus({ years: filters.minAge })
+                            .toFormat('yyyy-MM-dd'),
+                    };
+                if (filters?.maxAge) {
+                    const target = queryParams.dateOfBirth
+                        ? queryParams.dateOfBirth
+                        : {};
+                    queryParams.dateOfBirth = Object.assign(target, {
+                        $lte: DateTime.now()
+                            .minus({ years: filters.maxAge })
+                            .toFormat('yyyy-MM-dd'),
+                    });
+                }
             }
 
-            // String Filter - state
-            if (filters?.states)
-                queryParams['residentialAddress.state'] = filters.states;
-
-            // String Filter - segment
-            if (filters.segments)
-                queryParams['employmentInfo.segment'] = filters.segments;
-
-            // Date Filter - dateOfBirth
-            if (filters?.minAge)
-                queryParams.dateOfBirth = {
-                    $gte: DateTime.now()
-                        .minus({ years: filters.minAge })
-                        .toFormat('yyyy-MM-dd'),
-                };
-            if (filters?.maxAge) {
-                const target = queryParams.dateOfBirth
-                    ? queryParams.dateOfBirth
-                    : {};
-                queryParams.dateOfBirth = Object.assign(target, {
-                    $lte: DateTime.now()
-                        .minus({ years: filters.maxAge })
-                        .toFormat('yyyy-MM-dd'),
-                });
-            }
-            console.log(queryParams);
             const foundCustomers = await Customer.find(queryParams, {
                 lenders: 0,
             }).sort(sortBy);
@@ -190,8 +194,8 @@ module.exports = {
             if (!foundCustomer)
                 return new ServerError(404, 'Customer not found');
 
-            // user role is not operations, create edit request
             if (user.role !== roles.operations) {
+                // user role is not operations, create edit request
                 const newPendingEdit = new PendingEdit({
                     lender: user.lender,
                     createdBy: user.id,
@@ -212,7 +216,7 @@ module.exports = {
 
                 return {
                     message: 'Edit request submitted. Awaiting review.',
-                    data: newPendingEdit,
+                    // data: newPendingEdit,
                 };
             }
 

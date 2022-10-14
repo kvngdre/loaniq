@@ -11,8 +11,8 @@ const Logger = createLogger({
                     format: 'DD-MM-YYYY HH:mm:ss',
                 }),
                 align(),
-                printf(({ level, label, timestamp, message, meta }) => {
-                    return `[${level}]:[${label}] ${timestamp} ${message} -- ${
+                printf(({ level, label, method, timestamp, message, meta }) => {
+                    return `[${level}]:[${label}] -- ${method} -- ${timestamp} -- ${message} -- ${
                         meta ? JSON.stringify(meta) : ''
                     }`;
                 })
@@ -28,8 +28,8 @@ const Logger = createLogger({
                     format: 'DD-MM-YYYY HH:mm:ss',
                 }),
                 align(),
-                printf(({ level, label, timestamp, method, message, meta }) => {
-                    return `[${level}]:[${label}] ${timestamp} --${method} --${message} --${meta ? JSON.stringify(meta) : ''}`;
+                printf(({ level, label, method, timestamp, message, meta }) => {
+                    return `[${level}]:[${label}] -- ${method} -- ${timestamp} -- ${message} -- ${meta ? JSON.stringify(meta) : ''}`;
                 })
             ),
             // handleExceptions: true,

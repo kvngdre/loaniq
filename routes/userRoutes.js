@@ -8,7 +8,7 @@ const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
 router.post(
-    '/',
+    '/', 
     verifyToken,
     verifyRole([roles.admin, roles.owner, roles.master]),
     async (req, res) => {
