@@ -199,7 +199,7 @@ const validators = {
                 upfrontFeePercent: Joi.number(),
             }),
 
-            loanParams: Joi.object({
+            defaultParams: Joi.object({
                 minLoanAmount: Joi.number(),
                 maxLoanAmount: Joi.number(),
                 minTenor: Joi.number(),

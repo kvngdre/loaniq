@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { calcAge, calcServiceLength } = require('../utils/LoanParams');
+const { calcAge, calcServiceLength } = require('../utils/loanParams');
 const { DateTime } = require('luxon');
 const { LoanRequestValidator } = require('../validators/loanValidator');
 const { roles, txnStatus, loanStatus } = require('../utils/constants');

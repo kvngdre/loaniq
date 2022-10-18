@@ -288,9 +288,9 @@ module.exports = {
                 }
             }
 
-            if (payload.loanParams) {
-                Object.keys(payload.loanParams).forEach((key) => {
-                    lender.loanParams[key] = payload.loanParams[key];
+            if (payload.defaultParams) {
+                Object.keys(payload.defaultParams).forEach((key) => {
+                    lender.defaultParams[key] = payload.defaultParams[key];
                 });
             }
 

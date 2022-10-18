@@ -17,7 +17,7 @@ const userController = require('../controllers/userController');
 const manager = {
     createLoanRequest: async function (
         user,
-        loanParams,
+        defaultParams,
         customerPayload,
         loanPayload
     ) {
@@ -107,16 +107,16 @@ const manager = {
                 loanPayload.creditOfficer = creditOfficer._id;
 
             // Setting loan metrics
-            loanPayload.interestRate = loanParams.interestRate;
-            loanPayload.upfrontFeePercent = loanParams.upfrontFeePercent;
-            loanPayload.transferFee = loanParams.transferFee;
+            loanPayload.interestRate = defaultParams.interestRate;
+            loanPayload.upfrontFeePercent = defaultParams.upfrontFeePercent;
+            loanPayload.transferFee = defaultParams.transferFee;
 
             // Setting parameters used to evaluate loan
             loanPayload.params = { dob: customer.dateOfBirth };
             loanPayload.params.doe = customer.employmentInfo.dateOfEnlistment;
             loanPayload.params.netPay = { value: customer.netPay };
-            loanPayload.params.minNetPay = loanParams.minNetPay;
-            loanPayload.params.maxDti = loanParams.maxDti;
+            loanPayload.params.minNetPay = defaultParams.minNetPay;
+            loanPayload.params.maxDti = defaultParams.maxDti;
 
             // await customer.save();
             const newLoan = await Loan.create(loanPayload);

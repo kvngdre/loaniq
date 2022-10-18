@@ -13,12 +13,12 @@ const ctrlFuncs = {
                 settings.type = 'Lender';
             }
             settings.segments = payload.segments;
-            settings.loanParams = {
-                interestRate: payload.loanParams.interestRate,
-                upfrontFeePercent: payload.loanParams.upfrontFeePercent,
-                transferFee: payload.loanParams.transferFee,
-                minNetPay: payload.loanParams.minNetPay,
-                maxDti: payload.loanParams.maxDti,
+            settings.defaultParams = {
+                interestRate: payload.defaultParams.interestRate,
+                upfrontFeePercent: payload.defaultParams.upfrontFeePercent,
+                transferFee: payload.defaultParams.transferFee,
+                minNetPay: payload.defaultParams.minNetPay,
+                maxDti: payload.defaultParams.maxDti,
             };
 
             await settings.save();
@@ -134,9 +134,9 @@ const ctrlFuncs = {
                 }
             }
 
-            if (payload.loanParams) {
-                Object.keys(payload.loanParams).forEach((key) => {
-                    settings.loanParams[key] = payload.loanParams[key];
+            if (payload.defaultParams) {
+                Object.keys(payload.defaultParams).forEach((key) => {
+                    settings.defaultParams[key] = payload.defaultParams[key];
                 });
             }
 

@@ -161,7 +161,7 @@ const lenderSchema = new mongoose.Schema(
             default: 0
         },
 
-        loanParams: {
+        defaultParams: {
             minLoanAmount: {
                 type: Number,
                 default: null,
