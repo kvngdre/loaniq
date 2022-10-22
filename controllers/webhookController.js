@@ -1,11 +1,12 @@
+const { txnStatus } = require('../utils/constants');
 const config = require('config');
 const crypto = require('crypto');
-const stack = require('../utils/paystack');
-const flw = require('../utils/flutterwave');
-const Lender = require('../models/lenderModel');
 const debug = require('debug')('app:webhookCtrl');
+const flwService = require('../services/flutterwave');
+const Lender = require('../models/lenderModel');
 const logger = require('../utils/logger')('webhookCtrl.js');
-const transactionController = require('./transaction');
+const paystackService = require('../services/paystack');
+const Transaction = require('../models/transactionModel');
 
 const webhooks = {
     paystack: async function (signature, payload) {
@@ -18,9 +19,10 @@ const webhooks = {
                 .update(JSON.stringify(payload))
                 .digest('hex');
 
-            // Authenticate event.
+            // authenticate event.
             if (hash !== signature) {
-                logger.info({
+                logger.error({
+                    method: 'paystack',
                     message: 'hash does not match pay stack signature',
                 });
                 debug('hash does not match pay stack signature');
@@ -29,48 +31,70 @@ const webhooks = {
 
             debug('djsj=========', payload);
 
-            logger.info({ message: 'paystack webhook', meta: payload });
+            logger.info({
+                message: 'received paystack webhook',
+                meta: payload,
+            });
 
-            const transaction = await transactionController.getOne({
+            const queryParams = {
                 reference: payload.data.reference,
                 amount: payload.data.metadata.amount,
-                status: 'Pending',
-            });
-            if (transaction.hasOwnProperty('errorCode')) {
+                status: txnStatus.pending,
+            };
+            const foundTxn = await Transaction.findOne(queryParams);
+            // Transaction not found,
+            if (!foundTxn) {
+                // return 200 to paystack and do not credit wallet
                 logger.error({
+                    method: 'paystack',
                     message: 'Failed to find transaction',
                     meta: {
-                        lender: payload.data.customer.email,
-                        stack: transaction,
+                        queryObj: {
+                            lender: payload.data.customer.email,
+                            ...queryParams,
+                        },
                     },
                 });
                 return 200;
             }
 
-            const {
-                data: { data },
-            } = await stack.verifyTransaction(payload.data.reference);
+            const response = await paystackService.verifyTxn(
+                payload.data.reference
+            );
+            if (response instanceof Error) {
+                logger.error({
+                    method: 'paystack_verify_txn',
+                    message: 'Failed to verify paystack transaction',
+                    meta: { reference: payload.data.reference },
+                });
+                debug('Failed to verify paystack transaction');
+                return 401;
+            }
 
+            // transaction successful
+            // TODO: do truthy check for data.status and payload.status
             if (
                 payload.data.status === 'success' &&
                 data.amount === payload.data.amount &&
                 data.reference === payload.data.reference &&
                 data.customer.email === payload.data.customer.email
             ) {
+                // credit lender wallet
                 const lender = await Lender.findOneAndUpdate(
                     { email: payload.data.customer.email },
                     {
                         $inc: {
-                            balance: transaction.data.amount,
+                            balance: foundTxn.data.amount,
                         },
                         lastCreditDate: new Date(),
                     },
                     { new: true }
-                ).select('-encryptedKey');
+                );
                 if (!lender) {
-                    debug('Failed to credit user.');
+                    debug('Failed to credit lender.');
                     logger.error({
-                        message: 'Failed to credit user.',
+                        method: 'paystack',
+                        message: 'Failed to credit lender wallet.',
                         meta: {
                             email: payload.data.customer.email,
                             amount: transaction.data.amount,
@@ -79,34 +103,38 @@ const webhooks = {
                     return 401;
                 }
 
-                transaction.data.set({
-                    status: 'Successful',
-                    description: payload.data.message || payload.data.status,
+                // update transaction record
+                foundTxn.set({
+                    status: txnStatus.success,
+                    desc: payload.data.message || payload.data.status,
                     channel: payload.data.channel,
                     balance: lender.balance,
-                    bankName: payload.data?.authorization?.bank,
+                    bank: payload.data?.authorization?.bank,
                     cardType: payload.data?.authorization?.card_type,
                     paidAt: payload.data.paid_at,
                 });
-
-                await transaction.data.save();
+                await foundTxn.save();
 
                 return 200;
             } else {
-                transaction.data.set({
-                    status: 'Failed',
-                    description: payload.data.status,
+                // transaction failed, update record.
+                foundTxn.set({
+                    status: txnStatus.failed,
+                    desc: payload.data.status,
                     channel: payload.data.channel,
-                    bankName: payload.data?.authorization?.bank,
+                    bank: payload.data?.authorization?.bank,
                     cardType: payload.data?.authorization?.card_type,
                 });
-
-                await transaction.data.save();
+                await foundTxn.save();
 
                 return 200;
             }
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'paystack',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return 401;
         }
@@ -114,41 +142,55 @@ const webhooks = {
 
     flutterwave: async function (signature, payload) {
         try {
-            // debug('djsj=========', payload);
+            debug('flutterwave', payload);
 
+            // authenticate event
             const secretHash = config.get('flutterwave.flw_webhook_hash');
+            if (signature !== secretHash) {
+                logger.error({
+                    method: 'flutterwave',
+                    message: 'hash does not match flutterwave signature',
+                });
+                debug('hash does not match flutterwave signature');
+                return 401;
+            }
 
-            if (signature !== secretHash) return 401;
-
+            // log event
             logger.info({ message: 'flutterwave webhook', meta: payload });
 
-            const transaction = await transactionController.getOne({
+            const queryParams = {
                 reference: payload.txRef || payload.tx_Ref,
                 amount: payload.amount,
-                status: 'Pending',
-            });
-            if (transaction.hasOwnProperty('errorCode')) {
+                status: txnStatus.pending,
+            };
+            const foundTxn = await Transaction.findOne(queryParams);
+            if (!foundTxn) {
                 logger.error({
-                    message: 'Failed to find Flutterwave transaction.',
+                    method: 'flutterwave',
+                    message: 'Failed to find transaction',
                     meta: {
-                        reference: payload.txRef || payload.tx_Ref,
-                        amount: payload.amount,
-                        status: 'Pending',
+                        queryObj: {
+                            lender: payload.customer.email,
+                            ...queryParams,
+                        },
                     },
                 });
                 return 401;
             }
 
-            const { data } = await flw.verifyTransaction(payload.id);
+            const { data } = await flwService.verifyTxn(payload.id);
             if (!data) {
                 logger.error({
-                    message: 'Failed to verify Flutterwave transaction.',
+                    method: 'flutterwave_verify_txn',
+                    message: 'Failed to verify Flutterwave transaction',
                     meta: { txn_id: payload.id },
                 });
-                debug('Failed to verify Flutterwave transaction.');
+                debug('Failed to verify Flutterwave transaction');
                 return 401;
             }
 
+            // transaction successful
+            // TODO: test webhook
             if (
                 payload.status === 'successful' &&
                 payload.status === data.status &&
@@ -156,56 +198,61 @@ const webhooks = {
                 data.tx_ref === (payload.txRef || payload.tx_Ref) &&
                 data.customer.email === payload.customer.email
             ) {
+                // credit lender wallet
                 const lender = await Lender.findOneAndUpdate(
                     { email: payload.customer.email },
                     {
                         $inc: {
-                            balance: transaction.data.amount,
+                            balance: foundTxn.amount,
                         },
                         lastCreditDate: new Date(),
                     },
                     { new: true }
-                ).select('-encryptedKey');
+                );
                 if (!lender) {
-                    debug('Failed to credit user.');
+                    debug('Failed to credit lender wallet.');
                     logger.error({
-                        message: 'Failed to credit user.',
+                        message: 'Failed to credit lender wallet.',
                         meta: {
                             email: payload.customer.email,
-                            amount: transaction.data.amount,
+                            amount: foundTxn.amount,
                         },
                     });
                     return 401;
                 }
 
-                transaction.data.set({
-                    status: 'Successful',
+                // update transaction record
+                foundTxn.set({
+                    status: txnStatus.success,
                     description: payload.narration || payload.status,
                     channel: payload.payment_type,
                     balance: lender.balance,
-                    bankName: payload?.card?.issuer,
+                    bank: payload?.card?.issuer,
                     cardType: payload?.card?.type,
                     paidAt: new Date(),
                 });
-
-                await transaction.data.save();
+                await foundTxn.save();
 
                 return 200;
             } else {
-                transaction.data.set({
-                    status: 'Failed',
+                // transaction failed, update transaction record
+                foundTxn.set({
+                    status: txnStatus.failed,
                     description: payload.narration || payload.status,
                     channel: payload.payment_type,
-                    bankName: payload?.card?.issuer,
+                    bank: payload?.card?.issuer,
                     cardType: payload?.card?.type,
                 });
-
-                await transaction.data.save();
+                await foundTxn.save();
 
                 return 200;
             }
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'flutterwave',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
             return 401;
         }

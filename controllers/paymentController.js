@@ -17,7 +17,7 @@ const Transaction = require('../models/transactionModel');
  */
 async function getPaymentLink(params) {
     try {
-        const { lenderId, balance, amount, customer } = params;
+        const { lender, balance, amount, customer } = params;
 
         // get paystack link
         // if (defaultOption === 0)
@@ -41,7 +41,7 @@ async function getPaymentLink(params) {
             return new ServerError(424, 'Error initializing transaction.');
 
         const newTransaction = new Transaction({
-            lenderId,
+            lender,
             provider: gateway,
             status: 'Pending',
             reference: response.data.data.reference,
@@ -63,7 +63,7 @@ async function getPaymentLink(params) {
         };
     } catch (exception) {
         logger.error({
-            method: 'getPaymentLink',
+            method: 'get_payment_link',
             message: exception.message,
             meta: exception.stack,
         });

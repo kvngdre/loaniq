@@ -6,6 +6,7 @@ const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
 const flattenObject = require('../utils/flattenObj');
 const generateOTP = require('../utils/generateOTP');
+const generateShortUrl = require('../utils/generateShortUrl');
 const Lender = require('../models/lenderModel');
 const loanController = require('./loanController');
 const logger = require('../utils/logger')('lenderCtrl.js');
@@ -268,10 +269,11 @@ module.exports = {
                 return new ServerError(403, 'Tenant is yet to be activated.');
 
             if (payload.segment) {
-                const isMatch = (segment) => segment.id.toString() === payload.segment.id;
+                const isMatch = (segment) =>
+                    segment.id.toString() === payload.segment.id;
 
                 const index = lender.segments.findIndex(isMatch);
-                console.log(index)
+                console.log(index);
                 if (index > -1) {
                     // segment found, update parameters
                     Object.keys(payload.segment).forEach((key) => {
@@ -279,7 +281,9 @@ module.exports = {
                     });
                 } else {
                     // segment not found, push new segment parameters
-                    const foundSegment = await Segment.findById(payload.segment.id);
+                    const foundSegment = await Segment.findById(
+                        payload.segment.id
+                    );
                     // check if segment exists.
                     if (!foundSegment || !foundSegment.active)
                         return new ServerError(404, 'Segment not found');
@@ -302,7 +306,7 @@ module.exports = {
             };
         } catch (exception) {
             logger.error({
-                method: 'updateSettings',
+                method: 'update_settings',
                 message: exception.message,
                 meta: exception.stack,
             });
@@ -331,11 +335,30 @@ module.exports = {
 
     genPublicUrl: async (id) => {
         try {
-            const lender = await Lender.findById(id);
-            if (!lender) return new ServerError(404, 'Tenant not found.');
-            if (!lender.active)
+            const foundLender = await Lender.findById(id);
+            if (!foundLender) return new ServerError(404, 'Tenant not found.');
+            if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated.');
-        } catch (exception) {}
+
+            const shortUrl = await generateShortUrl();
+            foundLender.set({
+                publicUrl: shortUrl,
+            });
+            await foundLender.save();
+
+            return {
+                message: 'success',
+                data: `http://forms.apexxia.co/${shortUrl}`,
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'gen_public_url',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
     },
 
     fundWallet: async (id, amount) => {
@@ -364,7 +387,7 @@ module.exports = {
             };
         } catch (exception) {
             logger.error({
-                method: 'fundWallet',
+                method: 'fund_wallet',
                 message: exception.message,
                 meta: exception.stack,
             });

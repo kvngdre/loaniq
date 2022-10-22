@@ -11,7 +11,7 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
 
-        id: {
+        txnId: {
             type: String,
             default: null,
         },

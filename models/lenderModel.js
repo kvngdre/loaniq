@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -94,11 +93,8 @@ const lenderSchema = new mongoose.Schema(
             // This should be the short url.
             type: String,
             default: null,
-        },
-
-        urlId: {
-            type: Number,
             unique: true,
+            sparse: true,
         },
 
         support: {
@@ -268,8 +264,6 @@ const lenderSchema = new mongoose.Schema(
     },
     schemaOptions
 );
-
-lenderSchema.plugin(AutoIncrement, { inc_field: 'urlId' });
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

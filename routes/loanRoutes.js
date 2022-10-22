@@ -15,6 +15,7 @@ router.post('/', verifyToken, async (req, res) => {
         req.body.customer
     );
     if (error) {
+        console.log(error);
         const errorResponse = concatErrorMsg(error.details[0].context.message);
         return res.status(400).send(errorResponse);
     }

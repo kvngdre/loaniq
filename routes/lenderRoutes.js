@@ -51,22 +51,6 @@ router.get('/all', verifyToken, verifyRole(roles.master), async (req, res) => {
 });
 
 router.get(
-    '/otp/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
-    async (req, res) => {
-        const lender =
-            req.params.id !== undefined ? req.params.id : req.user.lender;
-
-        const response = await lenderController.requestOtp(lender);
-        if (response instanceof ServerError)
-            return res.status(response.errorCode).send(response.message);
-
-        return res.status(200).send(response);
-    }
-);
-
-router.get(
     '/balance/:id?',
     verifyToken,
     verifyRole([roles.admin, roles.owner, roles.master]),
@@ -83,10 +67,46 @@ router.get(
 );
 
 router.get(
+    '/otp/:id?',
+    verifyToken,
+    verifyRole([roles.master, roles.owner]),
+    async (req, res) => {
+        console.log('here otp')
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
+
+        const response = await lenderController.requestOtp(lender);
+        if (response instanceof ServerError)
+            return res.status(response.errorCode).send(response.message);
+
+        return res.status(200).send(response);
+    }
+);
+
+router.get(
+    '/public-url/:id?',
+    verifyToken,
+    verifyRole([roles.master, roles.owner]),
+    async (req, res) => {
+        console.log('here')
+        const lender =
+            req.params.id !== undefined ? req.params.id : req.user.lender;
+
+        const publicUrl = await lenderController.genPublicUrl(lender);
+        if (publicUrl instanceof ServerError)
+            return res.status(publicUrl.errorCode).send(publicUrl.message);
+
+        return res.status(200).send(publicUrl);
+    }
+);
+
+
+router.get(
     '/:id?',
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
+        console.log('here get')
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
 
@@ -109,10 +129,7 @@ router.patch(
         const { error } = lenderValidators.updateSettings(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const lender = await lenderController.updateSettings(
-            id,
-            req.body
-        );
+        const lender = await lenderController.updateSettings(id, req.body);
         if (lender instanceof ServerError)
             return res.status(lender.errorCode).send(lender.message);
 
@@ -181,7 +198,7 @@ router.post(
     }
 );
 
-router.post('/forms/:id', async (req, res) => {
+router.post('/forms/:shortUrl', async (req, res) => {
     const response = await lenderController.guestLoanReq(req.body);
 });
 router.get('/:id/support');
