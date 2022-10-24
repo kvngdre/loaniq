@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const { loanValidators } = require('../validators/loanValidator');
 const { roles } = require('../utils/constants');
 const concatErrorMsg = require('../utils/concatMsg');
 const customerValidators = require('../validators/customerValidator');
@@ -15,7 +14,7 @@ router.post('/', verifyToken, async (req, res) => {
         req.body.customer
     );
     if (error) {
-        console.log(error);
+        console.log('=========>', error);
         const errorResponse = concatErrorMsg(error.details[0].context.message);
         return res.status(400).send(errorResponse);
     }
@@ -65,7 +64,7 @@ router.delete(
     '/:id',
     verifyToken,
     verifyRole([roles.master, roles.owner]),
-    async (req, reß) => {}
+    async (req, res) => {}
 );
 
 router.post(

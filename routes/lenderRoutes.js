@@ -156,6 +156,11 @@ router.patch(
     }
 );
 
+router.post('/:shortUrl', async (req, res) => {
+    // TODO: loan req
+    const response = await lenderController.guestLoanReq(req.body);
+});
+
 router.post(
     '/fund/:id?',
     verifyToken,
@@ -198,9 +203,7 @@ router.post(
     }
 );
 
-router.post('/forms/:shortUrl', async (req, res) => {
-    const response = await lenderController.guestLoanReq(req.body);
-});
+
 router.get('/:id/support');
 
 router.post(

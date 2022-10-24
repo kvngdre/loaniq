@@ -2,7 +2,7 @@ const ONE_MINUTE_IN_MILLISECONDS = 60_000;
 
 /**
  * Generates a random number of fixed length (8)
- * @param {number} [expireIn=5] OTP life span in minutes.
+ * @param {number} [expireIn=10] OTP life span in minutes.
  * @returns {object} six digit otp string and expiration time.
  */
 function generateOTP(expireIn = 5) {

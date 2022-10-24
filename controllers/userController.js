@@ -75,12 +75,13 @@ module.exports = {
 
             //TODO: email template
             // Sending OTP & Password to user email.
-            const response = await mailer(
-                newUser.email,
-                newUser.name.first,
-                newUser.otp.OTP,
-                randomPwd
-            );
+            const response = await mailer({
+                to: newUser.email,
+                subject: 'One more step',
+                name: newUser.name.first,
+                template: 'new-user',
+                payload: { otp: otp.OTP, password: randomPwd },
+            });
             if (response instanceof Error) {
                 // delete record if mail fails to send
                 await newUser.delete();
@@ -326,15 +327,16 @@ module.exports = {
             if (!foundUser) return new ServerError(404, 'No users found');
 
             const otp = generateOTP();
-            const pwd = Math.random().toString(36).substring(2, 8);
+            const randomPwd = Math.random().toString(36).substring(2, 8);
 
             //TODO: email template
-            const response = await mailer(
-                foundUser.email,
-                foundUser.name.first,
-                otp.OTP,
-                pwd
-            );
+            const response = await mailer({
+                to: foundUser.email,
+                subject: 'Apexxia Password Reset',
+                name: foundUser.name.first,
+                template: 'new-user',
+                payload: { otp: otp.OTP, password: randomPwd },
+            });
             if (response instanceof Error) {
                 logger.error({
                     method: 'request_otp',
@@ -384,11 +386,13 @@ module.exports = {
             const otp = generateOTP();
 
             //TODO: email template
-            const response = await mailer(
-                foundUser.email,
-                foundUser.name.first,
-                otp.OTP
-            );
+                const response = await mailer({
+                to: foundUser.email,
+                subject: 'Your one-time-pin request',
+                name: foundUser.name.first,
+                template: 'otp-request',
+                payload: {otp: otp.OTP,},
+            });
             if (response instanceof Error) {
                 logger.error({
                     method: 'request_otp',

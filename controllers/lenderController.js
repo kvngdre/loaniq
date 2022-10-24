@@ -66,14 +66,14 @@ module.exports = {
             await newUser.save();
             await settings.save();
 
-            //TODO: email template
-            // Sending OTP & Password to user email.
-            const response = await mailer(
-                newUser.email,
-                newUser.name.first,
-                newUser.otp.OTP,
-                randomPwd
-            );
+            // mailing one-time-token and one-time-password
+            const response = await mailer({
+                to: newUser.email,
+                subject: 'Almost there, just one more step',
+                name: newUser.name.first,
+                template: 'new-user',
+                payload: { otp: otp.OTP, password: randomPwd },
+            });
             if (response instanceof Error) {
                 // delete record if mail fails to send
                 await newLender.delete();
@@ -361,6 +361,19 @@ module.exports = {
         }
     },
 
+    getFormData: async () => {
+        try {
+        } catch (exception) {
+            logger.error({
+                method: 'get_form_data',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
     fundWallet: async (id, amount) => {
         try {
             const lender = await Lender.findById(id);
@@ -405,12 +418,15 @@ module.exports = {
             lender.set({
                 otp: generateOTP(),
             });
-            const response = await mailer(
-                lender.email,
-                lender.companyName,
-                lender.otp.OTP
-            );
-            console.log(response);
+
+            // mailing otp
+            const response = await mailer({
+                to: lender.email,
+                subject: 'Your one-time-pin request',
+                name: lender.companyName,
+                template: 'otp-request',
+                payload: { otp: lender.otp.OTP },
+            });
             if (response instanceof Error) {
                 debug(`Error sending OTP: ${response.message}`);
                 return new ServerError(424, 'Error sending OTP');
