@@ -419,7 +419,7 @@ module.exports = {
                 otp: generateOTP(),
             });
 
-            // mailing otp
+            // mailing OTPs
             const response = await mailer({
                 to: lender.email,
                 subject: 'Your one-time-pin request',

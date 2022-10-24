@@ -74,7 +74,7 @@ module.exports = {
             await settings.save();
 
             //TODO: email template
-            // Sending OTP & Password to user email.
+            // mailing OTPs
             const response = await mailer({
                 to: newUser.email,
                 subject: 'One more step',
@@ -330,6 +330,7 @@ module.exports = {
             const randomPwd = Math.random().toString(36).substring(2, 8);
 
             //TODO: email template
+            // mailing OTPs
             const response = await mailer({
                 to: foundUser.email,
                 subject: 'Apexxia Password Reset',
@@ -386,12 +387,13 @@ module.exports = {
             const otp = generateOTP();
 
             //TODO: email template
-                const response = await mailer({
+            // mailing OTP
+            const response = await mailer({
                 to: foundUser.email,
                 subject: 'Your one-time-pin request',
                 name: foundUser.name.first,
                 template: 'otp-request',
-                payload: {otp: otp.OTP,},
+                payload: { otp: otp.OTP },
             });
             if (response instanceof Error) {
                 logger.error({
