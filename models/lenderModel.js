@@ -1,3 +1,5 @@
+const config = require('config');
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 const schemaOptions = { timestamps: true, versionKey: false };
@@ -264,6 +266,19 @@ const lenderSchema = new mongoose.Schema(
     },
     schemaOptions
 );
+
+lenderSchema.methods.generateToken = function () {
+    return jwt.sign({
+        id: this._id.toString(),
+        publicUrl: this.publicUrl,
+    },
+    config.get('jwt.secret.form'),
+    {
+        audience: config.get('jwt.audience.form'),
+        expiresIn: parseInt(config.get('jwt.expTime.form')),
+        issuer: config.get('jwt.issuer')
+    })
+}
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

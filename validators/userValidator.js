@@ -147,6 +147,7 @@ const validators = {
 
             return schema.validate(user);
         }
+        
         const schema = Joi.object({
             name: Joi.object({
                 first: Joi.string().min(2).max(255).required().messages({

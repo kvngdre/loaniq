@@ -66,6 +66,11 @@ router.get(
     }
 );
 
+router.get('/f/:shortUrl', async (req, res) => {
+    // TODO: loan req
+    const lenderData = await lenderController.getOne(req.params.shortUrl);
+});
+
 router.get(
     '/otp/:id?',
     verifyToken,
@@ -88,7 +93,6 @@ router.get(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        console.log('here')
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
 
@@ -100,13 +104,11 @@ router.get(
     }
 );
 
-
 router.get(
     '/:id?',
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        console.log('here get')
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
 
@@ -156,11 +158,6 @@ router.patch(
     }
 );
 
-router.post('/:shortUrl', async (req, res) => {
-    // TODO: loan req
-    const response = await lenderController.guestLoanReq(req.body);
-});
-
 router.post(
     '/fund/:id?',
     verifyToken,
@@ -202,9 +199,6 @@ router.post(
         return res.status(200).send(response);
     }
 );
-
-
-router.get('/:id/support');
 
 router.post(
     '/reactivate/:id?',

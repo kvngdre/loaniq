@@ -22,12 +22,9 @@ module.exports = {
      */
     create: async (user, payload) => {
         try {
-            const lender = await Lender.findOne({
-                _id: user.lender,
-                active: true,
-            });
-            // tenant inactive
-            if (!lender)
+            const foundLender = await Lender.findById(user.lender);
+            if (!foundLender) return new ServerError(404, 'Tenant not found');
+            if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
             // only owners can create admins
@@ -151,11 +148,13 @@ module.exports = {
         try {
             const queryParams =
                 user.role === roles.master ? {} : { lender: user.lender };
-            const sortBy = filters?.sort ? filters.sort : 'name.first';
-            if (filters?.name)
-                queryParams.queryName = new RegExp(filters.name, 'i');
-            if (filters?.lender) queryParams.lender = filters.lender;
-            if (filters?.role) queryParams.role = filters.role;
+            applyFilters(filters);
+            function applyFilters(filters) {
+                if (filters?.name)
+                    queryParams.queryName = new RegExp(filters.name, 'i');
+                if (filters?.lender) queryParams.lender = filters.lender;
+                if (filters?.role) queryParams.role = filters.role;
+            }
 
             const foundUsers = await User.find(queryParams, {
                 password: 0,
@@ -163,7 +162,7 @@ module.exports = {
                 refreshTokens: 0,
                 otp: 0,
                 resetPwd: 0,
-            }).sort(sortBy);
+            }).sort('name.first');
             if (foundUsers.length === 0)
                 return new ServerError(404, 'No users found');
 

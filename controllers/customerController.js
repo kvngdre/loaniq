@@ -15,15 +15,15 @@ const ServerError = require('../errors/serverError');
 module.exports = {
     create: async (user, payload) => {
         try {
-            const lender = await Lender.findOne({
-                _id: user.lender,
-                active: true,
-            });
-            // tenant inactive
-            if (!lender)
+            const foundLender = await Lender.findById(user.lender);
+            if (!foundLender) return new ServerError(404, 'Tenant not found');
+            if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
             const newCustomer = new Customer(payload);
+
+            const err = newCustomer.validateSegment();
+            if(err) return err;
 
             // run new customer document validation
             const error = newCustomer.validateSync();
@@ -66,29 +66,10 @@ module.exports = {
 
     getAll: async (user, filters) => {
         try {
-            switch (filters.sort) {
-                case 'asc':
-                    var sortBy = sort_fields.asc;
-                    break;
-                case 'desc':
-                    var sortBy = sort_fields.desc;
-                    break;
-                case 'last':
-                    var sortBy = sort_fields.last;
-                    break;
-                case 'first':
-                default:
-                    var sortBy = sort_fields.first;
-            }
-
             const queryParams = { lender: user.lender };
-            // filter for agent id if role is agent
-            if (user.role === roles.agent) queryParams.agent = user.id;
 
-            // applying filters
             applyFilters(filters);
             function applyFilters(filters) {
-                // string filter - fullName
                 if (filters?.name)
                     queryParams.fullName = new RegExp(filters.name, 'i');
 
@@ -101,11 +82,9 @@ module.exports = {
                     });
                 }
 
-                // string filter - state
                 if (filters?.states)
                     queryParams['residentialAddress.state'] = filters.states;
 
-                // string filter - segment
                 if (filters.segments)
                     queryParams['employmentInfo.segment'] = filters.segments;
 
@@ -130,7 +109,7 @@ module.exports = {
 
             const foundCustomers = await Customer.find(queryParams, {
                 lenders: 0,
-            }).sort(sortBy);
+            }).sort('name.first');
 
             if (foundCustomers.length == 0)
                 return new ServerError(404, 'No customers found');
@@ -178,15 +157,14 @@ module.exports = {
 
     update: async function (id, user, alteration) {
         try {
-            const lender = await Lender.findOne({
-                _id: user.lender,
-                active: true,
-            });
-            // tenant inactive
-            if (!lender)
+            const foundLender = await Lender.findById(user.lender);
+            if (!foundLender) return new ServerError(404, 'Tenant not found');
+            if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
+            // flatten request body
             alteration = flattenObject(alteration);
+
             const queryParams = { _id: id, lender: user.lender };
             if (user.role === roles.agent) queryParams.agent = user.id;
 
@@ -222,6 +200,10 @@ module.exports = {
 
             // user role is operations, perform update
             foundCustomer.set(alteration);
+
+            const err = foundCustomer.validateSegment();
+            if(err) return err;
+
             await foundCustomer.save();
 
             return {

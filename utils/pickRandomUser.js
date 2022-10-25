@@ -4,23 +4,28 @@ const User = require('../models/userModel');
 
 module.exports = async (lender, role, segment) => {
     try {
-        const foundUsers = await User.find({
-            lender,
-            role,
-            active: true,
-            segments: segment,
-        });
-        if (!foundUsers) throw new Error(`No ${role} users found.`);
+        const foundUsers = await User.find(
+            {
+                lender,
+                role,
+                active: true,
+                resetPwd: false,
+                segments: segment,
+            },
+            { otp: 0, password: 0, refreshTokens: 0, resetPwd: 0 }
+        );
+        if (foundUsers.length === 0) throw new Error(`No ${role} users found`);
 
-        const idx = Math.floor(Math.random() * foundUsers.length);
-        
-        return foundUsers[idx];
+        const randomIdx = Math.floor(Math.random() * foundUsers.length);
+
+        return foundUsers[randomIdx]._id;
+
     } catch (exception) {
         logger.error({
-            method: 'random_user',
+            method: 'pick_random_user',
             message: exception.message,
-            meta: exception.stack
-        })
+            meta: exception.stack,
+        });
         debug(exception);
         return exception;
     }

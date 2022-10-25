@@ -57,6 +57,13 @@ const emailSchema = Joi.string().email().min(10).max(50).messages({
     'any.required': 'Email address is required',
 });
 
+const maritalStatusSchema = Joi.string()
+    .valid('Single', 'Married', 'Divorced', 'Separated', 'Widow', 'Widower')
+    .messages({
+        'any.required': 'Marital status is required',
+        'any.only': 'Invalid marital status',
+    });
+
 const ippisSchema = Joi.string()
     .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
     .uppercase()
@@ -192,8 +199,9 @@ const bankSchema = Joi.object({
     }),
 });
 
-const netPaySchema = Joi.number().precision(2).messages({
+const netPaySchema = Joi.number().min(0).precision(2).messages({
     'any.required': 'Net pay is required',
+    'number.min': 'Net pay cannot be less than zero'
 });
 
 const validators = {
@@ -240,7 +248,7 @@ const validators = {
                 }),
                 phone: phoneSchema.required(),
                 email: emailSchema.required(),
-                maritalStatus: Joi.string().required(),
+                maritalStatus: maritalStatusSchema.required(),
                 bvn: bvnSchema.required(),
                 ippis: ippisSchema.required(),
                 idType: idTypeSchema.required(),
@@ -365,7 +373,7 @@ const validators = {
             }),
             phone: phoneSchema,
             email: emailSchema,
-            maritalStatus: Joi.string(),
+            maritalStatus: maritalStatusSchema,
             bvn: bvnSchema,
             ippis: ippisSchema,
             idType: idTypeSchema,

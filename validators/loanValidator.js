@@ -2,7 +2,7 @@ const { roles } = require('../utils/constants');
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
-class LoanRequestValidator {
+class LoanValidator {
     #minNetPay;
     #minLoanAmount;
     #maxLoanAmount;
@@ -203,20 +203,6 @@ class LoanRequestValidator {
     }
 }
 
-const loanValidators = {
-    validateDisbursement: function (dateTimeObj) {
-        // TODO: finish disbursement
-        const schema = Joi.object({
-            start: Joi.string().required(),
-            end: Joi.date(),
-            disbursed: Joi.boolean(),
-        });
 
-        return schema.validate(dateTimeObj);
-    },
-};
+module.exports = LoanValidator;
 
-module.exports = {
-    LoanRequestValidator,
-    loanValidators,
-};

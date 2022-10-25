@@ -77,7 +77,7 @@ async function login(email, password, cookies, res) {
         });
         await foundUser.save();
 
-        const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
+        const expires = parseInt(config.get('jwt.expTime.refresh')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,
@@ -218,7 +218,7 @@ async function verifySignUp(
         });
         await foundUser.save();
 
-        const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
+        const expires = parseInt(config.get('jwt.expTime.refresh')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure in prod
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,

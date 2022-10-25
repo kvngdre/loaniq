@@ -50,7 +50,7 @@ async function handleRefreshToken(cookies, res) {
         if (
             decoded.id != foundUser._id.toString() ||
             decoded.iss !== config.get('jwt.issuer') ||
-            decoded.aud !== config.get('jwt.audience')
+            decoded.aud !== config.get('jwt.audience.token')
         ) {
             // Not right token or token has been tampered with.
             return new ServerError(403, 'Invalid token');
@@ -64,7 +64,7 @@ async function handleRefreshToken(cookies, res) {
             $push: { refreshTokens: newRefreshToken },
         });
 
-        const expires = parseInt(config.get('jwt.refresh_time')) * 1_000; // convert to milliseconds
+        const expires = parseInt(config.get('jwt.expTime.refresh')) * 1_000; // convert to milliseconds
         // TODO: uncomment secure
         res.cookie('jwt', newRefreshToken.token, {
             httpOnly: true,

@@ -21,11 +21,18 @@
     "jwt": {
         "secret": {
             "access": "JWT_ACCESS_KEY",
-            "refresh": "JWT_REFRESH_KEY"
+            "refresh": "JWT_REFRESH_KEY",
+            "form": "JWT_FORM_KEY"
         },
-        "access_time": "JWT_ACCESS_TIME",
-        "refresh_time": "JWT_REFRESH_TIME",
-        "audience": "JWT_AUDIENCE",
+        "expTime": {
+            "access": "JWT_ACCESS_TIME",
+            "refresh": "JWT_REFRESH_TIME",
+            "form": "JWT_FORM_TIME"
+        },
+        "audience": {
+            "token": "JWT_TOKEN_AUDIENCE",
+            "form": "JWT_FORM_AUDIENCE"
+        },
         "issuer": "JWT_ISSUER"
     },
     "mail": {

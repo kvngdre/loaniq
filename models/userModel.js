@@ -194,22 +194,22 @@ userSchema.methods.generateAccessToken = function () {
         },
         config.get('jwt.secret.access'),
         {
-            audience: config.get('jwt.audience'),
-            expiresIn: parseInt(config.get('jwt.access_time')),
+            audience: config.get('jwt.audience.token'),
+            expiresIn: parseInt(config.get('jwt.expTime.access')),
             issuer: config.get('jwt.issuer'),
         }
     );
 };
 
 userSchema.methods.generateRefreshToken = function () {
-    const refreshTokenTTL = parseInt(config.get('jwt.refresh_time'));
+    const refreshTokenTTL = parseInt(config.get('jwt.expTime.refresh'));
     const refreshToken = jwt.sign(
         {
             id: this._id.toString(),
         },
         config.get('jwt.secret.refresh'),
         {
-            audience: config.get('jwt.audience'),
+            audience: config.get('jwt.audience.token'),
             expiresIn: refreshTokenTTL,
             issuer: config.get('jwt.issuer'),
         }

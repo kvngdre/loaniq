@@ -10,11 +10,12 @@ module.exports = {
     loanStatus: {
         approved: 'Approved',
         deny: 'Denied',
-        pending: 'Pending',
-        hold: 'On Hold',
-        liq: 'Liquidated',
         disc: 'Discontinued',
+        hold: 'On Hold',
+        locked: 'Locked',
+        liquidated: 'Liquidated',
         matured: 'Matured',
+        pending: 'Pending',
     },
     loanRemarks: [
         'Duplicate request',
@@ -68,12 +69,6 @@ module.exports = {
         'Niece',
         'Son',
     ],
-    sort_fields: {
-        asc: 'createdAt',
-        desc: '-createdAt',
-        first: 'name.first',
-        last: 'name.last',
-    },
     txnStatus: {
         abandoned: 'Abandoned',
         failed: 'Failed',
