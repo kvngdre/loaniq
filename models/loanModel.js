@@ -5,7 +5,7 @@ const {
     calcRepayment,
     calcTotalRepayment,
     calcUpfrontFee,
-} = require('../utils/LoanParams');
+} = require('../utils/loanParamFuncs');
 const { loanStatus, loanRemarks } = require('../utils/constants');
 const logger = require('../utils/logger')('loanModel.js');
 const ServerError = require('../errors/serverError');
@@ -50,7 +50,7 @@ const loanSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: Object.values(loanStatus),
-            default: loanStatus.pend,
+            default: loanStatus.pending,
         },
 
         remark: {
@@ -62,6 +62,11 @@ const loanSchema = new mongoose.Schema(
             type: Number,
         },
 
+        netValue: {
+            type: Number,
+            default: null,
+        },
+
         repayment: {
             type: Number,
         },
@@ -71,11 +76,6 @@ const loanSchema = new mongoose.Schema(
         },
 
         dti: {
-            type: Number,
-            default: null,
-        },
-
-        netValue: {
             type: Number,
             default: null,
         },
@@ -100,11 +100,11 @@ const loanSchema = new mongoose.Schema(
             default: false,
         },
 
-        booked: {
+        isBooked: {
             type: Boolean,
         },
 
-        disbursed: {
+        isDisbursed: {
             type: Boolean,
             default: false,
         },
@@ -161,6 +161,11 @@ const loanSchema = new mongoose.Schema(
         maturityDate: {
             type: String,
         },
+
+        isLocked: {
+            type: Boolean,
+            default: false
+        }
     },
     schemaOptions
 );
@@ -184,24 +189,24 @@ loanSchema.pre('save', function (next) {
                 this.params.upfrontFeePercent
             );
 
+            this.netValue = calcNetValue(
+                this.recommendedAmount,
+                this.upfrontFee,
+                this.params.transferFee
+            );
+
             this.repayment = calcRepayment(
                 this.recommendedAmount,
                 this.params.interestRate,
                 this.recommendedTenor
             );
 
-            this.dti = calcDti(this.repayment, this.params.netPay);
-
             this.totalRepayment = calcTotalRepayment(
                 this.repayment,
                 this.recommendedTenor
             );
 
-            this.netValue = calcNetValue(
-                this.recommendedAmount,
-                this.upfrontFee,
-                this.params.transferFee
-            );
+            this.dti = calcDti(this.repayment, this.params.netPay);
         }
 
         next();

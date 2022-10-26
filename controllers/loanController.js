@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { calcAge, calcServiceLength } = require('../utils/loanParams');
+const { calcAge, calcServiceLength } = require('../utils/loanParamFuncs');
 const { DateTime } = require('luxon');
 const { roles, txnStatus, loanStatus } = require('../utils/constants');
 const config = require('config');
@@ -13,10 +13,11 @@ const LoanValidator = require('../validators/loanValidator');
 const logger = require('../utils/logger')('loanCtrl.js');
 const mongoose = require('mongoose');
 const PendingEdit = require('../models/pendingEditModel');
-const randomUser = require('../utils/pickRandomUser');
+const pickRandomUser = require('../utils/pickRandomUser');
 const Segment = require('../models/segmentModel');
 const ServerError = require('../errors/serverError');
 const Transaction = require('../models/transactionModel');
+const { query } = require('express');
 
 // get loan validator
 async function getValidator(lender, segment) {
@@ -52,12 +53,12 @@ async function getValidator(lender, segment) {
             meta: exception.stack,
         });
         debug(exception);
-        return new ServerError(500, 'Error fetching segment parameters.');
+        return exception;
     }
 }
 
 module.exports = {
-    create: async (user, customerData, loanData) => {
+    create: async (user, customerPayload, loanPayload) => {
         try {
             const foundLender = await Lender.findById(user.lender).populate({
                 path: 'segments.id',
@@ -67,67 +68,61 @@ module.exports = {
             if (!foundLender.active)
                 return new ServerError(404, 'Tenant is yet to be activated');
 
-            // calculate cost
-            const cost = loanData.amount * config.get('charge.rate');
-            if (foundLender.balance < cost)
-                new ServerError(402, 'Insufficient wallet balance.');
-
-            // getting loan validators
-            if (user.role === roles.agent) loanData.agent = user.id;
-            const loanValidators = await getValidator(
-                foundLender,
-                customerData.employer.segment
-            );
-            if (loanValidators instanceof ServerError) return loanValidators;
-
-            // validating loan
-            const { value, error } = loanValidators.create(loanData);
-            if (error) return new ServerError(400, error.details[0].message);
-
             // setting customer
-            const customer = await getCustomerDoc(customerData);
-            if(customer instanceof Error) return customer;
-            async function getCustomerDoc(data) {
-                if (mongoose.isValidObjectId(data)) {
-                    //
-                    const foundCustomer = await Customer.findById(data);
+            const customer = await getCustomer(customerPayload);
+            async function getCustomer(payload) {
+                // is mongo object id
+                if (mongoose.isValidObjectId(payload)) {
+                    const foundCustomer = await Customer.findById(payload);
                     if (!foundCustomer)
-                        return new ServerError(404, 'Customer not found');
+                        throw new ServerError(404, 'Customer not found');
 
                     return foundCustomer;
                 }
 
-                // is not an object id
+                // not an object id, check if customer exists
                 const foundCustomer = await Customer.findOne({
-                    ippis: data.ippis,
+                    ippis: payload.ippis,
                     lender: user.lender,
                 });
-                if (!foundCustomer) {
-                    // customer not found, create new customer
-                    const newCustomer = new Customer(customerData);
-
-                    // validate customer segment to match ippis
-                    const error = await newCustomer.validateSegment();
-                    if(error) return error;
-
-                    // run new customer document validation
-                    const customerError = newCustomer.validateSync();
-                    if (customerError) {
-                        const msg =
-                            customerError.errors[
-                                Object.keys(customerError.errors)[0]
-                            ].message;
-                        return new ServerError(400, msg);
-                    }
-                    return newCustomer;
-                }
-                
                 // customer found
-                return foundCustomer;
+                if (foundCustomer) return foundCustomer;
+
+                // customer not found, create new customer
+                const newCustomer = new Customer(payload);
+
+                // run new customer document validation
+                const customerError = newCustomer.validateSync();
+                if (customerError) {
+                    const msg =
+                        customerError.errors[
+                            Object.keys(customerError.errors)[0]
+                        ].message;
+                    throw new ServerError(400, msg);
+                }
+                return newCustomer;
             }
 
+            // getting loan validators
+            if (user.role === roles.agent) loanPayload.agent = user.id;
+            const loanValidators = await getValidator(
+                foundLender,
+                customer.employer.segment
+            );
+            if (loanValidators instanceof Error)
+                return new ServerError(
+                    500,
+                    'Error fetching segment parameters.'
+                );
+
+            // validating loan
+            const { value, error } = loanValidators.create(loanPayload);
+            if (error) return new ServerError(400, error.details[0].message);
+
             // pick agent if not assigned one
-            if (!value.agent) {
+            if (!value.agent) value.agent = await pickAgent();
+            async function pickAgent() {
+                // pick from existing active loan
                 const foundLoan = await Loan.findOne({
                     lender: customer.lender,
                     customer: customer._id,
@@ -136,43 +131,49 @@ module.exports = {
                     path: 'customer',
                     model: Customer,
                 });
+                // loan found
+                if (foundLoan) return foundLoan.agent;
 
-                if (foundLoan) value.agent = foundLoan.agent;
-                else {
-                    // no active loan found. Pick a pseudo-random agent.
-                    const randomAgent = await randomUser(
-                        customer.lender,
-                        roles.agent,
-                        customer.employer.segment
-                    );
-                    if (randomAgent instanceof Error)
-                        return new ServerError(404, 'Error: Failed to assign agent');
-                    
-                    value.agent = randomAgent;
-                }
+                // no active loan. Pick pseudo-random agent.
+                const randomAgent = await pickRandomUser(
+                    customer.lender,
+                    roles.agent,
+                    customer.employer.segment
+                );
+                // no agent user match filter
+                if (!randomAgent)
+                    throw new ServerError(404, 'Error: Failed to assign agent');
+
+                // agent found
+                return randomAgent;
             }
 
-            // pick credit user if not assigned one
-            if (!value.creditUser) {
-                const randomCreditUser = await randomUser(
+            // pick credit user if none assigned
+            if (!value.creditUser) value.creditUser = await pickCreditUser();
+            async function pickCreditUser() {
+                // pick pseudo-random credit user.
+                const randomCreditUser = await pickRandomUser(
                     customer.lender,
                     roles.credit,
                     customer.employer.segment
                 );
-                if (randomCreditUser instanceof Error)
-                    return new ServerError(
+                // no credit user match filter
+                if (!randomCreditUser)
+                    throw new ServerError(
                         404,
                         'Error: Failed to assign credit officer'
                     );
 
-                value.creditUser = randomCreditUser;
+                return randomCreditUser;
             }
 
             // setting customer parameters on loan document
             value.customer = customer._id;
             value.params.netPay = customer.netPay;
             value.params.age = calcAge(customer.birthDate);
-            value.params.serviceLen = calcServiceLength(customer.employer.hireDate);
+            value.params.serviceLen = calcServiceLength(
+                customer.employer.hireDate
+            );
 
             const newLoan = new Loan(value);
 
@@ -184,18 +185,16 @@ module.exports = {
                 return new ServerError(400, msg);
             }
 
-            const customerError = customer.validateSync();
-            if (customerError) {
-                const msg =
-                    loanError.errors[Object.keys(loanError.errors)[0]].message;
-                return new ServerError(400, msg);
-            }
+            // calculate cost
+            const cost = (newLoan.amount * config.get('charge.rate')) / 100;
+            if (foundLender.balance < cost) newLoan.isLocked = true;
+            // new ServerError(402, 'Insufficient wallet balance.');
 
             const newTransaction = new Transaction({
                 lender: customer.lender,
                 status: txnStatus.success,
                 category: 'Debit',
-                desc: 'billed for loan submission',
+                desc: 'billed for loan request',
                 channel: 'app wallet',
                 amount: cost,
                 balance: foundLender.balance - cost,
@@ -224,6 +223,24 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
+
+            // duplicate field error
+            if (exception.name === 'MongoServerError') {
+                let field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                field = field.replace('ACCOUNTNO', 'Account Number');
+                return new ServerError(409, field + ' already in use');
+            }
+
+            if (exception.name === 'ValidationError') {
+                const field = Object.keys(exception.errors)[0];
+                return new ServerError(
+                    400,
+                    exception.errors[field].message.replace('Path', '')
+                );
+            }
+
+            if (exception instanceof ServerError) return exception;
+
             return new ServerError(500, 'Something went wrong');
         }
     },
@@ -239,8 +256,10 @@ module.exports = {
                 else queryParams['customer.lender'] = user.lender;
             }
 
-            applyFilters();
+            applyFilters(filters);
             function applyFilters(filters) {
+                if(filters?.status) queryParams.status = filters.status;
+
                 // date filter - createdAt
                 if (filters?.start)
                     queryParams.createdAt = {
@@ -260,39 +279,52 @@ module.exports = {
                 }
 
                 // number filter - recommended amount
-                if (filters?.minA)
-                    queryParams.recommendedAmount = { gte: filters.minA };
+                if (filters?.minA) 
+                    queryParams.recommendedAmount = { $gte: parseInt(filters.minA) };
                 if (filters?.maxA) {
                     const target = queryParams.recommendedAmount
                         ? queryParams.recommendedAmount
                         : {};
                     queryParams.recommendedAmount = Object.assign(target, {
-                        $lte: filters.maxA,
+                        $lte: parseInt(filters.maxA),
                     });
                 }
-
+                
                 // number filter - recommended tenor
                 if (filters?.minT)
-                    queryParams.recommendedTenor = { $gte: filters.minT };
+                    queryParams.recommendedTenor = { $gte: parseInt(filters.minT) };
                 if (filters?.maxT) {
                     const target = queryParams.recommendedTenor
                         ? queryParams.recommendedTenor
                         : {};
                     queryParams.recommendedTenor = Object.assign(target, {
-                        $lte: filters.maxT,
+                        $lte: parseInt(filters.maxT),
                     });
                 }
             }
-
-            const foundLoans = await Loan.find(queryParams)
-                .populate({
-                    path: 'customer',
-                    model: Customer,
-                })
-                .sort('-createdAt');
-
+            
+            const foundLoans = await Loan.aggregate([
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'customer',
+                        foreignField: '_id',
+                        as: 'customer'
+                    }
+                },
+                {
+                    $match: queryParams
+                },
+                {
+                    $unwind: '$customer'
+                },
+                {
+                    $sort: { createdAt: -1 }
+                }
+            ])
+            
             if (foundLoans.length == 0)
-                return new ServerError(404, 'Loans not found');
+                return new ServerError(404, 'No loans found');
 
             return {
                 message: 'success',
@@ -309,7 +341,7 @@ module.exports = {
         }
     },
 
-    getOne: async (id, user) => {
+    getOne: async (id) => {
         try {
             const foundLoan = await Loan.findById(id).populate({
                 path: 'customer',
@@ -353,10 +385,15 @@ module.exports = {
                 model: Customer,
             });
             if (!foundLoan) return new ServerError(404, 'Document not found');
-            
-            const { liquidated, locked, matured } = loanStatus;
-            if ([liquidated, locked, matured].includes(foundLoan.status))
-                return new ServerError(403, 'Cannot modify loan document.');
+            if (foundLoan.isLocked)
+                return new ServerError(403, 'Loan document is locked');
+
+            const { liquidated, matured } = loanStatus;
+            if ([liquidated, matured].includes(foundLoan.status))
+                return new ServerError(
+                    403,
+                    'Cannot modify a matured or liquidated loan'
+                );
 
             // get Validator
             const { customer } = foundLoan;
@@ -364,8 +401,12 @@ module.exports = {
                 foundLender,
                 customer.employer.segment
             );
-            if (loanValidators instanceof ServerError) return loanValidators;
-            
+            if (loanValidators instanceof Error)
+                return new ServerError(
+                    500,
+                    'Error fetching segment parameters.'
+                );
+
             // validating loan
             const { error } = loanValidators.update(payload);
             if (error) return new ServerError(400, error.details[0].message);
@@ -375,12 +416,15 @@ module.exports = {
 
             // reassign agent or credit user
             if (payload?.agent || payload?.creditUser) {
-                if(![roles.admin, roles.owner, roles.master].includes(user.role))
+                if (
+                    ![roles.admin, roles.owner, roles.master].includes(
+                        user.role
+                    )
+                )
                     return new ServerError(403, 'Cannot reassign personnel');
                 if (payload.creditUser)
                     foundLoan.set({ creditUser: payload.creditUser });
-                if (payload.agent)
-                    foundLoan.set({ agent: payload.agent });
+                if (payload.agent) foundLoan.set({ agent: payload.agent });
             }
 
             // not a credit user, create pending edit.
@@ -412,6 +456,28 @@ module.exports = {
             debug(exception);
             return new ServerError(500, 'Something went wrong');
         }
+    },
+
+    delete: async function(id) {
+        try{
+             const foundLoan = await Loan.findById(id);
+             if(!foundLoan) return new ServerError(404, 'Loan not found');
+
+             foundLoan.delete();
+
+             return {
+                message: 'Loan deleted',
+             }
+        }catch(exception) {
+            logger.error({
+                method: 'delete',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+
     },
 
     getDisbursement: async function (user, requestBody) {

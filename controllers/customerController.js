@@ -22,9 +22,6 @@ module.exports = {
 
             const newCustomer = new Customer(payload);
 
-            const err = newCustomer.validateSegment();
-            if(err) return err;
-
             // run new customer document validation
             const error = newCustomer.validateSync();
             if (error) {
@@ -200,10 +197,6 @@ module.exports = {
 
             // user role is operations, perform update
             foundCustomer.set(alteration);
-
-            const err = foundCustomer.validateSegment();
-            if(err) return err;
-
             await foundCustomer.save();
 
             return {
@@ -220,12 +213,9 @@ module.exports = {
 
             // Duplicate field error
             if (exception.name === 'MongoServerError') {
-                let field = Object.keys(exception.keyPattern)[0];
-                field = field.replace('employer.', '');
-                field = field.charAt(0).toUpperCase() + field.slice(1);
-                if (field === 'Phone') field = 'Phone number';
-
-                new ServerError(409, field + ' already in use');
+                let field = Object.keys(exception.keyPattern)[0].toUpperCase();
+                field = field.replace('ACCOUNTNO', 'Account Number');
+                return new ServerError(409, field + ' already in use');
             }
 
             if (exception.name === 'ValidationError') {

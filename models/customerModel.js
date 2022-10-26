@@ -1,4 +1,4 @@
-const { calcAge, calcServiceLength } = require('../utils/LoanParams');
+const { calcAge, calcServiceLength } = require('../utils/loanParamFuncs');
 const {
     loanStatus,
     maritalStatus,
@@ -136,6 +136,26 @@ const customerSchema = new mongoose.Schema(
             uppercase: true,
             trim: true,
             required: true,
+            validate: {
+                validator: async function (ippis) {
+                    const foundSegment = await Segment.findOne({
+                        _id: this.employer.segment,
+                        active: true,
+                    });
+                    if (!foundSegment)
+                        return new ServerError('Segment not found');
+
+                    const prefixMatch = ippis.match(/^[A-Z]{2,3}(?=[0-9])/);
+                    if (
+                        foundSegment.prefix !==
+                        (prefixMatch == null ? prefixMatch : prefixMatch[0])
+                    )
+                        return false;
+
+                    return true;
+                },
+                message: 'IPPIS number does not match segment selected',
+            },
         },
 
         idType: {
@@ -284,18 +304,6 @@ const customerSchema = new mongoose.Schema(
 customerSchema.index({ ippis: 1, lender: 1 }, { unique: true });
 customerSchema.index({ bvn: 1, lender: 1 }, { unique: true });
 customerSchema.index({ accountNo: 1, lender: 1 }, { unique: true });
-
-customerSchema.methods.validateSegment = async function () {
-    const segment = await Segment.findOne({
-        _id: this.employer.segment,
-        active: true,
-    });
-    if (!segment) return new ServerError('Segment not found');
-    
-    const prefixMatch = this.ippis.match(/^[A-Z]{2,3}(?=[0-9])/);
-    if (!prefixMatch || segment.prefix !== prefixMatch[0])
-        return new ServerError(400, 'IPPIS number does not match segment selected');
-};
 
 customerSchema.pre('save', async function (next) {
     try {

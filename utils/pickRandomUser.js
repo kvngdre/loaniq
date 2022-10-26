@@ -14,10 +14,11 @@ module.exports = async (lender, role, segment) => {
             },
             { otp: 0, password: 0, refreshTokens: 0, resetPwd: 0 }
         );
-        if (foundUsers.length === 0) throw new Error(`No ${role} users found`);
-
+        // no users match filters
+        if (foundUsers.length === 0) return null;
+        
+        // user(s) found
         const randomIdx = Math.floor(Math.random() * foundUsers.length);
-
         return foundUsers[randomIdx]._id;
 
     } catch (exception) {

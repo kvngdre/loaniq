@@ -1,8 +1,9 @@
 class ServerError extends Error {
     constructor(code, msg) {
-        super(msg);
+        super();
         
         this.errorCode = code;
+        this.message = msg;
         this.name = this.constructor.name;
         Error?.captureStackTrace(this, this.constructor);
     }

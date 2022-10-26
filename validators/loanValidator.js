@@ -32,16 +32,16 @@ class LoanValidator {
             .min(this.#minLoanAmount)
             .max(this.#maxLoanAmount)
             .messages({
-                'number.min': `Loan amount must be greater than or equal to ${this.#minLoanAmount.toLocaleString()}.`,
-                'number.max': `Loan amount must be less than or equal to ${this.#maxLoanAmount.toLocaleString()}.`,
+                'number.min': `Loan amount cannot be less than ${this.#minLoanAmount.toLocaleString()}.`,
+                'number.max': `Loan amount cannot be greater than ${this.#maxLoanAmount.toLocaleString()}.`,
                 'any.required': 'Loan amount is required',
             });
         this.#tenorSchema = Joi.number()
             .min(this.#minTenor)
             .max(this.#maxTenor)
             .messages({
-                'number.min': `Loan tenor must be greater than or equal to ${this.#minTenor.toLocaleString()} months.`,
-                'number.max': `Loan tenor must be less than or equal to ${this.#maxTenor.toLocaleString()} months.`,
+                'number.min': `Loan tenor cannot be less than ${this.#minTenor.toLocaleString()} months.`,
+                'number.max': `Loan tenor cannot be greater than ${this.#maxTenor.toLocaleString()} months.`,
                 'any.required': 'Loan tenor is required',
             });
     }
@@ -66,6 +66,7 @@ class LoanValidator {
                 transferFee: Joi.number(),
                 maxDti: Joi.number(),
                 minNetPay: Joi.number(),
+                netPay: this.#netPaySchema
             }).default({
                 interestRate: this.#interestRate,
                 upfrontFeePercent: this.#upfrontFeePercent,

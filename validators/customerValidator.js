@@ -9,7 +9,7 @@ function isValidDOB(dob, helper) {
     const minDob = DateTime.now().minus({ years: 18 }).toFormat('yyyy-MM-dd');
 
     if (dobFormatted > minDob) return helper.error('date.less');
-
+    
     return dob;
 }
 

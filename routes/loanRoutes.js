@@ -14,7 +14,6 @@ router.post('/', verifyToken, async (req, res) => {
         req.body.customer
     );
     if (error) {
-        console.log('=========>', error);
         const errorResponse = concatErrorMsg(error.details[0].context.message);
         return res.status(400).send(errorResponse);
     }
@@ -46,8 +45,9 @@ router.get('/', verifyToken, async (req, res) => {
 
 router.get('/:id', verifyToken, async (req, res) => {
     // TODO: add all
-    const loan = await loanController.getOne(req.user, req.params.id);
-    if (loan instanceof ServerError) return res.status(400).send(loan.message);
+    const loan = await loanController.getOne(req.params.id);
+    if (loan instanceof ServerError)
+        return res.status(loan.errorCode).send(loan.message);
 
     return res.status(200).send(loan);
 });
@@ -64,7 +64,13 @@ router.delete(
     '/:id',
     verifyToken,
     verifyRole([roles.master, roles.owner]),
-    async (req, res) => {}
+    async (req, res) => {
+        const deletedLoan = await loanController.delete(req.params.id);
+        if (deletedLoan instanceof ServerError)
+            return res.status(deletedLoan.errorCode).send(deletedLoan.message);
+
+        return res.status(204).send(deletedLoan);
+    }
 );
 
 router.post(
@@ -72,7 +78,6 @@ router.post(
     verifyToken,
     verifyRole(['Admin', 'Credit']),
     async (req, res) => {
-
         const loans = await loanController.getDisbursement(req.user, req.body);
         if (loans instanceof ServerError)
             return res.status(404).send(loans.message);
