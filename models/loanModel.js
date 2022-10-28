@@ -100,15 +100,6 @@ const loanSchema = new mongoose.Schema(
             default: false,
         },
 
-        isBooked: {
-            type: Boolean,
-        },
-
-        isDisbursed: {
-            type: Boolean,
-            default: false,
-        },
-
         params: {
             interestRate: {
                 type: Number,
@@ -152,20 +143,33 @@ const loanSchema = new mongoose.Schema(
 
         approveDenyDate: {
             type: Date,
+            default: null,
         },
 
         dateLiquidated: {
             type: Date,
+            default: null,
         },
 
         maturityDate: {
             type: String,
+            default: null,
+        },
+
+        isBooked: {
+            type: Boolean,
+            default: false,
+        },
+
+        isDisbursed: {
+            type: Boolean,
+            default: false,
         },
 
         isLocked: {
             type: Boolean,
             default: false
-        }
+        },
     },
     schemaOptions
 );

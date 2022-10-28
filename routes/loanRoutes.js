@@ -43,6 +43,19 @@ router.get('/', verifyToken, async (req, res) => {
     return res.status(200).send(loans);
 });
 
+router.get(
+    '/disburse',
+    verifyToken,
+    verifyRole([roles.admin, roles.credit, roles.master, roles.owner]),
+    async (req, res) => {
+        const loans = await loanController.getDisbursement(req.user, req.query);
+        if (loans instanceof ServerError)
+            return res.status(loans.errorCode).send(loans.message);
+
+        return res.status(200).send(loans);
+    }
+);
+
 router.get('/:id', verifyToken, async (req, res) => {
     // TODO: add all
     const loan = await loanController.getOne(req.params.id);
@@ -70,19 +83,6 @@ router.delete(
             return res.status(deletedLoan.errorCode).send(deletedLoan.message);
 
         return res.status(204).send(deletedLoan);
-    }
-);
-
-router.post(
-    '/disburse',
-    verifyToken,
-    verifyRole(['Admin', 'Credit']),
-    async (req, res) => {
-        const loans = await loanController.getDisbursement(req.user, req.body);
-        if (loans instanceof ServerError)
-            return res.status(404).send(loans.message);
-
-        return res.status(200).send(loans);
     }
 );
 

@@ -285,17 +285,20 @@ module.exports = {
             if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated.');
 
-            if (payload.segment) {
+            if (payload?.segment) {
                 const isMatch = (segment) =>
                     segment.id.toString() === payload.segment.id;
 
                 const index = foundLender.segments.findIndex(isMatch);
                 console.log(index);
+                
                 if (index > -1) {
                     // segment found, update parameters
-                    Object.keys(payload.segment).forEach((key) => {
-                        foundLender.segments[index][key] = payload.segment[key];
-                    });
+                    Object.keys(payload.segment).forEach(
+                        (key) =>
+                            (foundLender.segments[index][key] =
+                                payload.segment[key])
+                    );
                 } else {
                     // segment not found, push new segment parameters
                     const foundSegment = await Segment.findById(

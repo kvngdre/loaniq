@@ -74,7 +74,7 @@ const emailSchema = Joi.string().email().min(10).max(50).messages({
 const passwordSchema = joiPassword
     .string()
     .minOfUppercase(1)
-    .minOfSpecialCharacters(2)
+    .minOfSpecialCharacters(1)
     .minOfNumeric(2)
     .noWhiteSpaces()
     .min(6)

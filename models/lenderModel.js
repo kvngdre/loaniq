@@ -7,9 +7,9 @@ const schemaOptions = { timestamps: true, versionKey: false };
 const lenderSchema = new mongoose.Schema(
     {
         logo: {
-            type: String
+            type: String,
         },
-        
+
         companyName: {
             type: String,
             trim: true,
@@ -20,15 +20,15 @@ const lenderSchema = new mongoose.Schema(
             address: {
                 type: String,
                 trim: true,
-                required: true
+                required: true,
             },
             lga: {
                 type: String,
-                required: true
+                required: true,
             },
             state: {
                 type: String,
-                required: true
+                required: true,
             },
         },
 
@@ -69,12 +69,12 @@ const lenderSchema = new mongoose.Schema(
         otp: {
             OTP: {
                 type: String,
-                default: null
+                default: null,
             },
 
             exp: {
                 type: Number,
-                default: null
+                default: null,
             },
         },
 
@@ -103,7 +103,7 @@ const lenderSchema = new mongoose.Schema(
             email: {
                 type: String,
                 trim: true,
-                default: null
+                default: null,
             },
 
             phone: {
@@ -114,28 +114,64 @@ const lenderSchema = new mongoose.Schema(
 
         social: {
             twitter: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             instagram: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             facebook: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             whatsapp: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             youtube: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             tiktok: {
-                type: String,
-                default: null,
+                url: {
+                    type: String,
+                    default: null,
+                },
+                active: {
+                    type: Boolean,
+                    default: false,
+                },
             },
         },
 
@@ -146,7 +182,7 @@ const lenderSchema = new mongoose.Schema(
 
         lastReqDate: {
             type: Date,
-            default: null
+            default: null,
         },
 
         requestCount: {
@@ -156,7 +192,7 @@ const lenderSchema = new mongoose.Schema(
 
         totalCost: {
             type: Number,
-            default: 0
+            default: 0,
         },
 
         defaultParams: {
@@ -179,7 +215,7 @@ const lenderSchema = new mongoose.Schema(
                 type: Number,
                 default: null,
             },
-            
+
             interestRate: {
                 type: Number,
                 default: null,
@@ -211,7 +247,7 @@ const lenderSchema = new mongoose.Schema(
                 id: {
                     type: mongoose.Schema.Types.ObjectId,
                     unique: true,
-                    sparse: true
+                    sparse: true,
                 },
 
                 minLoanAmount: {
@@ -233,52 +269,51 @@ const lenderSchema = new mongoose.Schema(
                     type: Number,
                     default: null,
                 },
-                
+
                 interestRate: {
                     type: Number,
                     default: null,
                 },
-    
+
                 upfrontFeePercent: {
                     type: Number,
                     default: null,
                 },
-    
+
                 transferFee: {
                     type: Number,
                     default: null,
                 },
-    
+
                 minNetPay: {
                     type: Number,
                     default: null,
                 },
-    
+
                 maxDti: {
                     type: Number,
                     default: null,
                 },
-
             },
         ],
-
-
     },
     schemaOptions
 );
 
 lenderSchema.methods.generateToken = function () {
-    return jwt.sign({
-        id: this._id.toString(),
-        publicUrl: this.publicUrl,
-    },
-    config.get('jwt.secret.form'),
-    {
-        audience: config.get('jwt.audience.form'),
-        expiresIn: parseInt(config.get('jwt.expTime.form')),
-        issuer: config.get('jwt.issuer')
-    })
-}
+    return jwt.sign(
+        {
+            id: this._id.toString(),
+            publicUrl: this.publicUrl,
+        },
+        config.get('jwt.secret.form'),
+        {
+            audience: config.get('jwt.audience.form'),
+            expiresIn: parseInt(config.get('jwt.expTime.form')),
+            issuer: config.get('jwt.issuer'),
+        }
+    );
+};
 
 const Lender = mongoose.model('Lender', lenderSchema);
 

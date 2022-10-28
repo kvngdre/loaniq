@@ -8,7 +8,6 @@ const debug = require('debug')('app:loanCtrl');
 const flattenObj = require('../utils/flattenObj');
 const Lender = require('../models/lenderModel');
 const Loan = require('../models/loanModel');
-const loanManager = require('../tools/loanManager');
 const LoanValidator = require('../validators/loanValidator');
 const logger = require('../utils/logger')('loanCtrl.js');
 const mongoose = require('mongoose');
@@ -17,7 +16,6 @@ const pickRandomUser = require('../utils/pickRandomUser');
 const Segment = require('../models/segmentModel');
 const ServerError = require('../errors/serverError');
 const Transaction = require('../models/transactionModel');
-const { query } = require('express');
 
 // get loan validator
 async function getValidator(lender, segment) {
@@ -258,7 +256,7 @@ module.exports = {
 
             applyFilters(filters);
             function applyFilters(filters) {
-                if(filters?.status) queryParams.status = filters.status;
+                if (filters?.status) queryParams.status = filters.status;
 
                 // date filter - createdAt
                 if (filters?.start)
@@ -279,8 +277,10 @@ module.exports = {
                 }
 
                 // number filter - recommended amount
-                if (filters?.minA) 
-                    queryParams.recommendedAmount = { $gte: parseInt(filters.minA) };
+                if (filters?.minA)
+                    queryParams.recommendedAmount = {
+                        $gte: parseInt(filters.minA),
+                    };
                 if (filters?.maxA) {
                     const target = queryParams.recommendedAmount
                         ? queryParams.recommendedAmount
@@ -289,10 +289,12 @@ module.exports = {
                         $lte: parseInt(filters.maxA),
                     });
                 }
-                
+
                 // number filter - recommended tenor
                 if (filters?.minT)
-                    queryParams.recommendedTenor = { $gte: parseInt(filters.minT) };
+                    queryParams.recommendedTenor = {
+                        $gte: parseInt(filters.minT),
+                    };
                 if (filters?.maxT) {
                     const target = queryParams.recommendedTenor
                         ? queryParams.recommendedTenor
@@ -302,27 +304,27 @@ module.exports = {
                     });
                 }
             }
-            
+
             const foundLoans = await Loan.aggregate([
                 {
                     $lookup: {
                         from: 'customers',
                         localField: 'customer',
                         foreignField: '_id',
-                        as: 'customer'
-                    }
+                        as: 'customer',
+                    },
                 },
                 {
-                    $match: queryParams
+                    $match: queryParams,
                 },
                 {
-                    $unwind: '$customer'
+                    $unwind: '$customer',
                 },
                 {
-                    $sort: { createdAt: -1 }
-                }
-            ])
-            
+                    $sort: { createdAt: -1 },
+                },
+            ]);
+
             if (foundLoans.length == 0)
                 return new ServerError(404, 'No loans found');
 
@@ -374,13 +376,7 @@ module.exports = {
             if (!foundLender.active)
                 return new ServerError(403, 'Tenant is yet to be activated');
 
-            // initializing query object
-            const queryParams =
-                user.role === roles.master
-                    ? { _id: id }
-                    : { _id: id, 'customer.lender': user.lender };
-
-            const foundLoan = await Loan.findOne(queryParams).populate({
+            const foundLoan = await Loan.findById(id).populate({
                 path: 'customer',
                 model: Customer,
             });
@@ -389,7 +385,7 @@ module.exports = {
                 return new ServerError(403, 'Loan document is locked');
 
             const { liquidated, matured } = loanStatus;
-            if ([liquidated, matured].includes(foundLoan.status))
+            if (foundLoan.status === liquidated || foundLoan.status === matured)
                 return new ServerError(
                     403,
                     'Cannot modify a matured or liquidated loan'
@@ -414,17 +410,84 @@ module.exports = {
             payload = flattenObj(payload);
             const response = await loanManager.update(user, foundLoan, payload);
 
+            // alter loan parameters
+            if (payload?.params) {
+                const { master, owner } = roles;
+                if (![master, owner].includes(user.role))
+                    return new ServerError(403, 'Cannot alter loan parameters');
+
+                Object.keys(payload.params).forEach(
+                    (key) => (foundLoan.params[key] = payload.params[key])
+                );
+            }
+
             // reassign agent or credit user
             if (payload?.agent || payload?.creditUser) {
-                if (
-                    ![roles.admin, roles.owner, roles.master].includes(
-                        user.role
-                    )
-                )
+                const { admin, master, owner } = roles;
+                if (![admin, master, owner].includes(user.role))
                     return new ServerError(403, 'Cannot reassign personnel');
+
                 if (payload.creditUser)
                     foundLoan.set({ creditUser: payload.creditUser });
                 if (payload.agent) foundLoan.set({ agent: payload.agent });
+            }
+
+            if (payload?.status) {
+                if (user.role !== roles.credit)
+                    return new ServerError(403, 'Cannot modify loan status');
+
+                updateStatus(foundLoan, payload);
+                function updateStatus(doc, payload) {
+                    const { approved, denied, discntd, liquidated, matured } =
+                        loanStatus;
+                    switch (payload.status) {
+                        case approved:
+                            doc.set({
+                                active: true,
+                                approveDenyDate: new Date(),
+                                maturityDate: DateTime.now()
+                                    .plus({ months: payload.recommendedTenor })
+                                    .toUTC()
+                                    .toFormat('yyyy-MM-dd'),
+                            });
+                            break;
+
+                        case denied:
+                            doc.set({
+                                active: false,
+                                approveDenyDate: new Date(),
+                                isBooked: false,
+                                isDisbursed: false,
+                            });
+                            break;
+
+                        case discntd:
+                            doc.set({
+                                active: false,
+                                isBooked: false,
+                                isDisbursed: false,
+                            });
+                            break;
+
+                        case liquidated:
+                            doc.set({
+                                active: false,
+                                dateLiquidated: new Date(),
+                            });
+                            break;
+
+                        case matured:
+                            doc.set({
+                                active: false,
+                                approveDenyDate:
+                                    payload.approveDenyDate || new Date(),
+                                maturityDate:
+                                    payload.maturityDate || new Date(),
+                                isLocked: true,
+                            });
+                            break;
+                    }
+                }
             }
 
             // not a credit user, create pending edit.
@@ -437,7 +500,6 @@ module.exports = {
                     modifiedBy: user.id,
                     alteration: payload,
                 });
-
                 await newPendingEdit.save();
 
                 return {
@@ -446,7 +508,12 @@ module.exports = {
                 };
             }
 
-            return response;
+            foundLoan.set(payload);
+
+            return {
+                message: 'Loan updated',
+                data: foundLoan,
+            };
         } catch (exception) {
             logger.error({
                 method: 'update',
@@ -458,17 +525,17 @@ module.exports = {
         }
     },
 
-    delete: async function(id) {
-        try{
-             const foundLoan = await Loan.findById(id);
-             if(!foundLoan) return new ServerError(404, 'Loan not found');
+    delete: async function (id) {
+        try {
+            const foundLoan = await Loan.findById(id);
+            if (!foundLoan) return new ServerError(404, 'Loan not found');
 
-             foundLoan.delete();
+            foundLoan.delete();
 
-             return {
+            return {
                 message: 'Loan deleted',
-             }
-        }catch(exception) {
+            };
+        } catch (exception) {
             logger.error({
                 method: 'delete',
                 message: exception.message,
@@ -477,41 +544,108 @@ module.exports = {
             debug(exception);
             return new ServerError(500, 'Something went wrong');
         }
-
     },
 
-    getDisbursement: async function (user, requestBody) {
+    getDisbursement: async function (user, filters) {
         try {
             // TODO: handle end date on the controller function
-            let queryParams = {
-                lenderId: user.lenderId,
+            const queryParams = {
+                ['customer.lender']: user.lender,
                 active: true,
-                disbursed: false,
-                status: 'Approved',
+                isDisbursed: false,
+                status: loanStatus.approved,
             };
 
-            queryParams = Object.assign(
-                queryParams,
-                _.omit(requestBody, ['start', 'end'])
-            );
-            if (requestBody.start)
-                queryParams.createdAt = {
-                    $gte: requestBody.start,
-                    $lt: requestBody.end ? requestBody.end : '2122-01-01',
-                };
+            applyFilters(filters);
+            function applyFilters(filters) {
+                if (filters?.disbursed)
+                    queryParams.isDisbursed = (filters.disbursed === 'true');
 
-            const response = await loanManager.getDisbursement(
-                user,
-                queryParams
-            );
+                // date filter - createdAt
+                if (filters?.start)
+                    queryParams.createdAt = {
+                        $gte: DateTime.fromJSDate(new Date(filters.start))
+                            .setZone(user.timeZone)
+                            .toUTC(),
+                    };
+                if (filters?.end) {
+                    const target = queryParams.createdAt
+                        ? queryParams.createdAt
+                        : {};
+                    queryParams.createdAt = Object.assign(target, {
+                        $lte: DateTime.fromJSDate(new Date(filters.end))
+                            .setZone(user.timeZone)
+                            .toUTC(),
+                    });
+                }
+            }
+
+            const foundLoans = await Loan.aggregate([
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'customer',
+                        foreignField: '_id',
+                        as: 'customer',
+                    },
+                },
+                {
+                    $match: queryParams,
+                },
+                {
+                    $unwind: '$customer',
+                },
+                {
+                    $project: {
+                        _id: true,
+                        createdAt: true,
+                        approveDenyDate: true,
+                        'customer.accountName': true,
+                        recommendedAmount: true,
+                        netValue: true,
+                        'customer.bank.name': true,
+                        'customer.accountNo': true,
+                        'customer.bank.code': true,
+                        'customer.bvn': true,
+                        'customer.ippis': true,
+                    },
+                },
+                {
+                    $replaceRoot: {
+                        newRoot: {
+                            $mergeObjects: [
+                                "$$ROOT",
+                                "$customer"
+                            ]
+                        }
+                    }
+                },
+                {
+                    $unset: 'customer',
+                },
+                {
+                    $sort: { createdAt: -1 },
+                },
+            ]);
+
+            if (foundLoans.length === 0)
+                return new ServerError(
+                    404,
+                    'You have no pending disbursements'
+                );
+
             return {
-                message: 'Success',
-                data: response,
+                message: 'success',
+                data: foundLoans,
             };
         } catch (exception) {
-            logger.error({ message: exception.message, meta: exception.stack });
+            logger.error({
+                method: 'get_disbursement',
+                message: exception.message,
+                meta: exception.stack,
+            });
             debug(exception);
-            return { errorCode: 500, message: 'Something went wrong.' };
+            return new ServerError(500, 'Something went wrong');
         }
     },
 
@@ -531,7 +665,4 @@ module.exports = {
         }
     },
 
-    expiring: async function () {
-        return await loanManager.closeExpiringLoans();
-    },
 };

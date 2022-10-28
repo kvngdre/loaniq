@@ -15,7 +15,17 @@ class LoanValidator {
     #netPaySchema;
     #amountSchema;
     #tenorSchema;
-    constructor(minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor, interestRate, upfrontFeePercent, transferFee, maxDti) {
+    constructor(
+        minNetPay,
+        minLoanAmount,
+        maxLoanAmount,
+        minTenor,
+        maxTenor,
+        interestRate,
+        upfrontFeePercent,
+        transferFee,
+        maxDti
+    ) {
         this.#minNetPay = minNetPay;
         this.#minLoanAmount = minLoanAmount;
         this.#maxLoanAmount = maxLoanAmount;
@@ -25,9 +35,13 @@ class LoanValidator {
         this.#upfrontFeePercent = upfrontFeePercent;
         this.#transferFee = transferFee;
         this.#maxDti = maxDti;
-        this.#netPaySchema = Joi.number().min(this.#minNetPay).messages({
-            'number.min': `Net pay must be greater than or equal to ${this.#minNetPay}.`
-        });
+        this.#netPaySchema = Joi.number()
+            .min(this.#minNetPay)
+            .messages({
+                'number.min': `Net pay must be greater than or equal to ${
+                    this.#minNetPay
+                }.`,
+            });
         this.#amountSchema = Joi.number()
             .min(this.#minLoanAmount)
             .max(this.#maxLoanAmount)
@@ -55,9 +69,12 @@ class LoanValidator {
                 'any.required': 'Amount in words is required',
             }),
             tenor: this.#tenorSchema.required(),
-            loanType: Joi.string().valid('New', 'Top Up').messages({
-                'any.only': 'Invalid loan type',
-            }).default('New'),
+            loanType: Joi.string()
+                .valid('New', 'Top Up')
+                .messages({
+                    'any.only': 'Invalid loan type',
+                })
+                .default('New'),
             creditUser: Joi.objectId(),
             agent: Joi.objectId(),
             params: Joi.object({
@@ -66,22 +83,33 @@ class LoanValidator {
                 transferFee: Joi.number(),
                 maxDti: Joi.number(),
                 minNetPay: Joi.number(),
-                netPay: this.#netPaySchema
+                netPay: this.#netPaySchema,
             }).default({
                 interestRate: this.#interestRate,
                 upfrontFeePercent: this.#upfrontFeePercent,
                 transferFee: this.#transferFee,
                 maxDti: this.#maxDti,
                 minNetPay: this.#minNetPay,
-            })
+            }),
         });
         return schema.validate(loan);
     }
 
     update(loan) {
-        if(user.role === roles.credit) {
+        if (user.role === roles.credit) {
             const schema = Joi.object({
                 amount: this.#amountSchema,
+                recommendedAmount: Joi.number()
+                    .min(this.#minLoanAmount)
+                    .max(this.#maxLoanAmount)
+                    .when('status', {
+                        is: ['Approved', 'Denied', 'On Hold'],
+                        then: Joi.optional(),
+                    })
+                    .messages({
+                        'number.min': `"Recommended amount" must be greater than or equal to ${this.#minLoanAmount.toLocaleString()}.`,
+                        'number.max': `"Recommended amount" must be less than or equal to ${this.#maxLoanAmount.toLocaleString()}.`,
+                    }),
                 amountInWords: Joi.string()
                     .when('amount', {
                         is: Joi.exist(),
@@ -96,6 +124,18 @@ class LoanValidator {
                         'any.required': 'Amount in words is required',
                     }),
                 tenor: this.#tenorSchema,
+                recommendedTenor: Joi.number()
+                    .min(this.#minTenor)
+                    .max(this.#maxTenor)
+                    .when('status', {
+                        is: 'Approved',
+                        then: Joi.required(),
+                        otherwise: Joi.optional(),
+                    })
+                    .messages({
+                        'number.min': `"Recommended tenor" must be greater than or equal to ${this.#minTenor.toLocaleString()} months.`,
+                        'number.max': `"Recommended tenor" must be less than or equal to ${this.#maxTenor.toLocaleString()} months.`,
+                    }),
                 loanType: Joi.string().valid('New', 'Top Up').messages({
                     'any.only': 'Invalid loan type',
                 }),
@@ -143,67 +183,69 @@ class LoanValidator {
                     .messages({
                         'any.required': 'Remark is required',
                     }),
-                recommendedAmount: Joi.number()
-                    .min(this.#minLoanAmount)
-                    .max(this.#maxLoanAmount)
-                    .when('status', {
-                        is: ['Approved', 'Denied', 'On Hold'],
-                        then: Joi.optional(),
-                    })
-                    .messages({
-                        'number.min': `"Recommended amount" must be greater than or equal to ${this.#minLoanAmount.toLocaleString()}.`,
-                        'number.max': `"Recommended amount" must be less than or equal to ${this.#maxLoanAmount.toLocaleString()}.`,
-                    }),
-                recommendedTenor: Joi.number()
-                    .min(this.#minTenor)
-                    .max(this.#maxTenor)
-                    .when('status', {
-                        is: ['Approved', 'Denied', 'On Hold'],
-                        then: Joi.optional(),
-                    })
-                    .messages({
-                        'number.min': `"Recommended tenor" must be greater than or equal to ${this.#minTenor.toLocaleString()} months.`,
-                        'number.max': `"Recommended tenor" must be less than or equal to ${this.#maxTenor.toLocaleString()} months.`,
-                    }),
-                });
+            });
 
-                return schema.validate(loan);
-            
-        }
-        const schema = Joi.object({
-            amount: this.#amountSchema,
-            amountInWords: Joi.string()
-                .when('amount', {
-                    is: Joi.exist(),
-                    then: Joi.required(),
-                    otherwise: Joi.optional(),
-                })
-                .min(18)
-                .max(50)
-                .messages({
-                    'string.min': 'Loan amount in words is too short',
-                    'string.max': 'Loan amount in words is too long',
-                    'any.required': 'Amount in words is required',
+            return schema.validate(loan);
+        } else if (
+            [roles.admin, roles.master, roles.owner].includes(user.role)
+        ) {
+            const schema = Joi.object({
+                amount: this.#amountSchema,
+                amountInWords: Joi.string()
+                    .when('amount', {
+                        is: Joi.exist(),
+                        then: Joi.required(),
+                        otherwise: Joi.optional(),
+                    })
+                    .min(18)
+                    .max(50)
+                    .messages({
+                        'string.min': 'Loan amount in words is too short',
+                        'string.max': 'Loan amount in words is too long',
+                        'any.required': 'Amount in words is required',
+                    }),
+                tenor: this.#tenorSchema,
+                loanType: Joi.string().valid('New', 'Top Up').messages({
+                    'any.only': 'Invalid loan type',
                 }),
-            tenor: this.#tenorSchema,
-            loanType: Joi.string().valid('New', 'Top Up').messages({
-                'any.only': 'Invalid loan type',
-            }),
-            customer: Joi.objectId(),
-            agent: Joi.objectId(),
-            creditUser: Joi.objectId(),
-            params: {
-                // interestRate: Joi.number(),
-                // upfrontFeePercent: Joi.number(),
-                // transferFee: Joi.number(),
-                netPay: this.#netPaySchema,
-            }
-        }).min(1);
+                customer: Joi.objectId(),
+                creditUser: Joi.objectId(),
+                agent: Joi.objectId(),
+                params: {
+                    interestRate: Joi.number().min(0),
+                    upfrontFeePercent: Joi.number().min(0),
+                    transferFee: Joi.number().min(0),
+                    maxDti: Joi.number().min(0).messages({}),
+                    netPay: this.#netPaySchema,
+                },
+            }).min(1);
 
-        return schema.validate(loan);
+            return schema.validate(loan);
+        } else {
+            const schema = Joi.object({
+                amount: this.#amountSchema,
+                amountInWords: Joi.string()
+                    .when('amount', {
+                        is: Joi.exist(),
+                        then: Joi.required(),
+                        otherwise: Joi.optional(),
+                    })
+                    .min(18)
+                    .max(50)
+                    .messages({
+                        'string.min': 'Loan amount in words is too short',
+                        'string.max': 'Loan amount in words is too long',
+                        'any.required': 'Amount in words is required',
+                    }),
+                tenor: this.#tenorSchema,
+                loanType: Joi.string().valid('New', 'Top Up').messages({
+                    'any.only': 'Invalid loan type',
+                }),
+            }).min(1);
+
+            return schema.validate(loan);
+        }
     }
 }
 
-
 module.exports = LoanValidator;
-

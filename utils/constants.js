@@ -9,10 +9,9 @@ module.exports = {
     ],
     loanStatus: {
         approved: 'Approved',
-        deny: 'Denied',
-        disc: 'Discontinued',
+        denied: 'Denied',
+        discntd: 'Discontinued',
         hold: 'On Hold',
-        locked: 'Locked',
         liquidated: 'Liquidated',
         matured: 'Matured',
         pending: 'Pending',
