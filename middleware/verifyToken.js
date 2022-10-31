@@ -17,7 +17,7 @@ function verifyToken(req, res, next) {
         const decoded = jwt.verify(token, config.get('jwt.secret.access'));
         if (
             decoded.iss !== config.get('jwt.issuer') ||
-            decoded.aud !== config.get('jwt.audience.token')
+            decoded.aud !== config.get('jwt.audience')
         ) {
             return res.status(401).send('Invalid token provided.');
         }

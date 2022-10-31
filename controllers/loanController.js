@@ -525,7 +525,7 @@ module.exports = {
         }
     },
 
-    delete: async function (id) {
+    delete: async (id) => {
         try {
             const foundLoan = await Loan.findById(id);
             if (!foundLoan) return new ServerError(404, 'Loan not found');
@@ -546,7 +546,7 @@ module.exports = {
         }
     },
 
-    getDisbursement: async function (user, filters) {
+    getDisbursement: async (user, filters) => {
         try {
             // TODO: handle end date on the controller function
             const queryParams = {
@@ -649,7 +649,7 @@ module.exports = {
         }
     },
 
-    getLoanBooking: async function (request) {
+    getLoanBooking: async (request) => {
         try {
             request.body.active = true;
             request.body.booked = false;

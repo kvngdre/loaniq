@@ -224,12 +224,18 @@ module.exports = {
                 : { publicUrl: id };
             const foundLender = await Lender.findOne(queryParams)
                 .select(filters)
-                .select('-otp');
+                .select('-_id -otp');
             if (!foundLender) return new ServerError(404, 'Tenant not found.');
+
+            if(!mongoose.isValidObjectId(id)) 
+                var token = foundLender.generateToken();
+            
+            const payload = _.omit(foundLender._doc, ['_id']);
+            payload.token = token;
 
             return {
                 message: 'success',
-                data: foundLender,
+                data: payload,
             };
         } catch (exception) {
             logger.error({
@@ -291,7 +297,7 @@ module.exports = {
 
                 const index = foundLender.segments.findIndex(isMatch);
                 console.log(index);
-                
+
                 if (index > -1) {
                     // segment found, update parameters
                     Object.keys(payload.segment).forEach(
@@ -491,9 +497,12 @@ module.exports = {
 
     deactivate: async (id, user, password) => {
         try {
-            const lender = await Lender.findById(id);
+            const foundLender = await Lender.findById(id);
 
-            const isMatch = await bcrypt.compare(password, lender.password);
+            const isMatch = await bcrypt.compare(
+                password,
+                foundLender.password
+            );
             if (!isMatch) return new ServerError(401, 'Password is incorrect');
 
             if (user.role !== roles.master) {
@@ -501,7 +510,7 @@ module.exports = {
                 // TODO: Create template for deactivation.
                 const response = await mailer(
                     config.get('support.email'), // apexxia support
-                    lender.companyName,
+                    foundLender.companyName,
                     user.fullName
                 );
                 if (response instanceof Error) {
@@ -518,13 +527,13 @@ module.exports = {
                 };
             } else {
                 await User.updateMany(
-                    { lender: lender._id.toString() },
+                    { lender: foundLender._id.toString() },
                     { active: false }
                 );
 
-                lender.set({ active: false });
+                foundLender.set({ active: false });
 
-                await lender.save();
+                await foundLender.save();
                 // TODO: Send account deactivated to lender
 
                 return {
@@ -539,6 +548,41 @@ module.exports = {
             });
             debug(exception);
             return new ServerError(500, 'Something went wrong');
+        }
+    },
+
+    reactivate: async (id) => {
+        try {
+            const foundLender = await Lender.findOne({
+                _id: id,
+                active: false,
+            });
+            if (!foundLender) return new ServerError(404, 'Tenant not found');
+
+            const foundUser = await User.findOne({
+                lender: foundLender.id.toString(),
+                role: 'Owner',
+                active: false,
+            });
+            if (!foundUser) return new ServerError(404, 'Owner user not found');
+
+            foundLender.set({ active: true });
+            foundUser.set({ active: true });
+
+            await foundLender.save();
+            await foundUser.save();
+
+            return {
+                message: 'Tenant reactivated',
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'reactivate',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
 

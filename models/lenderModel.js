@@ -8,6 +8,7 @@ const lenderSchema = new mongoose.Schema(
     {
         logo: {
             type: String,
+            default: null,
         },
 
         companyName: {
@@ -303,12 +304,11 @@ const lenderSchema = new mongoose.Schema(
 lenderSchema.methods.generateToken = function () {
     return jwt.sign(
         {
-            id: this._id.toString(),
-            publicUrl: this.publicUrl,
+            lender: this._id.toString(),
         },
-        config.get('jwt.secret.form'),
+        config.get('jwt.secret.access'),
         {
-            audience: config.get('jwt.audience.form'),
+            audience: config.get('jwt.audience'),
             expiresIn: parseInt(config.get('jwt.expTime.form')),
             issuer: config.get('jwt.issuer'),
         }

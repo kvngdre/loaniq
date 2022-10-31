@@ -1,6 +1,5 @@
 const nodeCron = require('node-cron');
 const deleteApprovedPendingDocs = require('../controllers/pendingEditController');
-const { closeExpiringLoans } = require('../tools/loanManager');
 
 
 function print() {
@@ -15,7 +14,7 @@ function jobs_() {
     // nodeCron.schedule("* 0-20 23 * * 0", deleteApprovedPendingDocs);
 
     // Every day between 7:00 - 7:20am 24h
-    nodeCron.schedule("* 0-20 7 * * *", closeExpiringLoans);
+    // nodeCron.schedule("* 0-20 7 * * *", closeExpiringLoans);
 
     const job2 = nodeCron.schedule("10-50 * * * * *", print2);
 }

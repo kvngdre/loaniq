@@ -67,8 +67,15 @@ router.get(
 );
 
 router.get('/f/:shortUrl', async (req, res) => {
-    // TODO: loan req
-    const lenderData = await lenderController.getOne(req.params.shortUrl);
+    const fields = 'logo companyName website support social';
+    const lenderData = await lenderController.getOne(
+        req.params.shortUrl,
+        fields
+    );
+    if (lenderData instanceof ServerError)
+        return res.status(lenderData.errorCode).send(lenderData.message);
+
+    return res.status(200).send(lenderData);
 });
 
 router.get(
@@ -76,7 +83,7 @@ router.get(
     verifyToken,
     verifyRole([roles.master, roles.owner]),
     async (req, res) => {
-        console.log('here otp')
+        console.log('here otp');
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
 
@@ -101,6 +108,19 @@ router.get(
             return res.status(publicUrl.errorCode).send(publicUrl.message);
 
         return res.status(200).send(publicUrl);
+    }
+);
+
+router.get(
+    '/reactivate/:id?',
+    verifyToken,
+    verifyRole(roles.master),
+    async (req, res) => {
+        const response = await lenderController.reactivate(req.params.id);
+        if (response instanceof ServerError)
+            return res.status(response.errorCode).send(response.message);
+
+        return res.status(200).send(response);
     }
 );
 
@@ -198,13 +218,6 @@ router.post(
 
         return res.status(200).send(response);
     }
-);
-
-router.post(
-    '/reactivate/:id?',
-    verifyToken,
-    verifyRole(roles.master),
-    async (req, res) => {}
 );
 
 module.exports = router;
