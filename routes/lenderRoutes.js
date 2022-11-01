@@ -3,6 +3,7 @@ const lenderController = require('../controllers/lenderController');
 const lenderValidators = require('../validators/lenderValidator');
 const router = require('express').Router();
 const ServerError = require('../errors/serverError');
+const upload = require('../middleware/fileUpload');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
@@ -66,7 +67,7 @@ router.get(
     }
 );
 
-router.get('/f/:shortUrl', async (req, res) => {
+router.get('/forms/:shortUrl', async (req, res) => {
     const fields = 'logo companyName website support social';
     const lenderData = await lenderController.getOne(
         req.params.shortUrl,
@@ -219,5 +220,12 @@ router.post(
         return res.status(200).send(response);
     }
 );
+
+router.post('/upload/logo',upload.single('logo'), (req, res) => {
+    console.log(req.file)
+    return res.send({
+        message: 'file uploaded'
+    })
+})
 
 module.exports = router;

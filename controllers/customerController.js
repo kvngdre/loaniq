@@ -67,8 +67,9 @@ module.exports = {
 
             applyFilters(filters);
             function applyFilters(filters) {
-                if (filters?.name)
+                if (filters?.name) {
                     queryParams.fullName = new RegExp(filters.name, 'i');
+                }
 
                 // number filter - net pay
                 if (filters?.min) queryParams.netPay = { $gte: filters.min };
@@ -104,9 +105,51 @@ module.exports = {
                 }
             }
 
-            const foundCustomers = await Customer.find(queryParams, {
-                lenders: 0,
-            }).sort('name.first');
+            let foundCustomers = [];
+
+            if (user.role === roles.agent) {
+                foundCustomers = await Loan.aggregate([
+                    {
+                        $match: {
+                            agent: mongoose.Types.ObjectId(user.id),
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$customer',
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: 'customers',
+                            localField: '_id',
+                            foreignField: '_id',
+                            as: 'customer',
+                        },
+                    },
+                    {
+                        $unwind: '$customer',
+                    },
+                    {
+                        $replaceRoot: {
+                            newRoot: '$customer',
+                        },
+                    },
+                    {
+                        $unset: 'customer',
+                    },
+                    {
+                        $match: queryParams,
+                    },
+                    {
+                        $sort: { 'name.first': 1 },
+                    },
+                ]);
+            } else {
+                foundCustomers = await Customer.find(queryParams, {
+                    lenders: 0,
+                }).sort('name.first');
+            }
 
             if (foundCustomers.length == 0)
                 return new ServerError(404, 'No customers found');
@@ -126,7 +169,7 @@ module.exports = {
         }
     },
 
-    getOne: async function (id, user) {
+    getOne: async (id, user) => {
         try {
             const queryParams = mongoose.isValidObjectId(id)
                 ? { _id: id, lender: user.lender }
@@ -152,7 +195,7 @@ module.exports = {
         }
     },
 
-    update: async function (id, user, alteration) {
+    update: async (id, user, alteration) => {
         try {
             const foundLender = await Lender.findById(user.lender);
             if (!foundLender) return new ServerError(404, 'Tenant not found');
@@ -230,7 +273,7 @@ module.exports = {
         }
     },
 
-    fetchCustomerCreation: async function (user, fromDate) {
+    fetchCustomerCreation: async (user, fromDate) => {
         try {
             const customers = [];
 
@@ -291,7 +334,7 @@ module.exports = {
         }
     },
 
-    delete: async function (id, user) {
+    delete: async (id, user) => {
         try {
             const queryParams = mongoose.isValidObjectId(id)
                 ? { _id: id, lender: user.lender }

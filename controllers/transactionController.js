@@ -13,7 +13,7 @@ module.exports = {
             await newTransaction.save();
 
             return {
-                message: 'Transaction created.',
+                message: 'Transaction created',
                 data: newTransaction,
             };
         } catch (exception) {

@@ -5,6 +5,7 @@ const cors = require('cors');
 const corsOptions = require('../config/corsOptions');
 const credentials = require('../middleware/credentials');
 const customerRouter = require('../routes/customerRoutes');
+const dashboardRouter = require('../routes/dashboardRoutes');
 const errorHandler = require('../middleware/errorHandler');
 const express = require('express');
 const helmet = require('helmet');
@@ -31,6 +32,7 @@ module.exports = function (app) {
     app.use('/api/auth', authRouter);
     app.use('/api/banks', banksRouter);
     app.use('/api/customers', customerRouter);
+    app.use('/api/dashboard', dashboardRouter);
     app.use('/api/lenders', lenderRouter);
     app.use('/api/loans', loanRouter);
     app.use('/api/origin', originRouter);

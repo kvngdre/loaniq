@@ -194,7 +194,7 @@ userSchema.methods.generateAccessToken = function () {
         },
         config.get('jwt.secret.access'),
         {
-            audience: config.get('jwt.audience.token'),
+            audience: config.get('jwt.audience'),
             expiresIn: parseInt(config.get('jwt.expTime.access')),
             issuer: config.get('jwt.issuer'),
         }
@@ -209,7 +209,7 @@ userSchema.methods.generateRefreshToken = function () {
         },
         config.get('jwt.secret.refresh'),
         {
-            audience: config.get('jwt.audience.token'),
+            audience: config.get('jwt.audience'),
             expiresIn: refreshTokenTTL,
             issuer: config.get('jwt.issuer'),
         }

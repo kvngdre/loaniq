@@ -50,7 +50,7 @@ async function handleRefreshToken(cookies, res) {
         if (
             decoded.id != foundUser._id.toString() ||
             decoded.iss !== config.get('jwt.issuer') ||
-            decoded.aud !== config.get('jwt.audience.token')
+            decoded.aud !== config.get('jwt.audience')
         ) {
             // Not right token or token has been tampered with.
             return new ServerError(403, 'Invalid token');
