@@ -73,7 +73,7 @@ module.exports = {
                 subject: 'Almost there, just one more step',
                 name: newUser.name.first,
                 template: 'new-user',
-                payload: { otp: otp.OTP, password: randomPwd },
+                payload: { otp: newUser.otp.OTP, password: randomPwd },
             });
             if (response instanceof Error) {
                 // delete record if mail fails to send
