@@ -67,6 +67,7 @@ module.exports = {
 
             applyFilters(filters);
             function applyFilters(filters) {
+                // string filter - full name
                 if (filters?.name) {
                     queryParams.fullName = new RegExp(filters.name, 'i');
                 }
@@ -102,6 +103,16 @@ module.exports = {
                             .minus({ years: filters.maxAge })
                             .toFormat('yyyy-MM-dd'),
                     });
+                }
+
+                // number filter - net pay
+                if (filters?.minPay)
+                    queryParams.netPay = filters.minPay;
+                if (filters?.maxPay) {
+                    const target = queryParams.netPay
+                        ? queryParams.netPay
+                        : {};
+                    queryParams.netPay = Object.assign(target, filters.maxPay);
                 }
             }
 
