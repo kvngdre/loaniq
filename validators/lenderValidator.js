@@ -106,26 +106,8 @@ const validators = {
         const schema = Joi.object({
             lender: {
                 companyName: businessNameSchema.required(),
-                location: Joi.object({
-                    address: Joi.string().min(2).max(255).required().messages({
-                        'string.min': 'Business address is required',
-                        'string.max': 'Business address is too long',
-                        'any.required': 'Business address is required',
-                    }),
-                    lga: Joi.string().required().messages({
-                        'any.required': 'Select L.G.A of business operations',
-                    }),
-                    state: Joi.string().required().messages({
-                        'any.required': 'Select state of business operations',
-                    }),
-                }),
-                // cacNumber: cacNumberSchema,
                 category: categorySchema.required(),
-                phone: phoneSchema.required(),
-                email: emailSchema.required(),
-                website: Joi.string(),
-                // support: supportSchema,
-                // social: socialSchema,
+                
             },
             user: {
                 name: nameSchema.required(),

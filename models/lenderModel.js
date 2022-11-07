@@ -1,6 +1,7 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const ServerError = require('../errors/serverError');
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -21,21 +22,22 @@ const lenderSchema = new mongoose.Schema(
             address: {
                 type: String,
                 trim: true,
-                required: true,
+                default: null,
             },
             lga: {
                 type: String,
-                required: true,
+                default: null,
             },
             state: {
                 type: String,
-                required: true,
+                default: null,
             },
         },
 
         cacNumber: {
             type: String,
             unique: true,
+            sparse: true,
         },
 
         category: {
@@ -46,15 +48,15 @@ const lenderSchema = new mongoose.Schema(
         phone: {
             type: String,
             unique: true,
+            sparse: true,
             trim: true,
-            required: true,
         },
 
         email: {
             type: String,
             unique: true,
+            sparse: true,
             trim: true,
-            required: true,
         },
 
         emailVerified: {
@@ -86,16 +88,15 @@ const lenderSchema = new mongoose.Schema(
 
         website: {
             type: String,
+            default: null,
             trim: true,
             lowercase: true,
-            default: null,
         },
 
         // TODO: Should there be more than one admin?
         publicUrl: {
             // This should be the short url.
             type: String,
-            default: null,
             unique: true,
             sparse: true,
         },

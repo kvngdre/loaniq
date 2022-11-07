@@ -4,6 +4,7 @@ const { roles } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:lenderCtrl');
+const emailValidator = require('deep-email-validator');
 const flattenObject = require('../utils/flattenObj');
 const generateOTP = require('../utils/generateOTP');
 const generateShortUrl = require('../utils/generateShortUrl');
@@ -19,8 +20,10 @@ const User = require('../models/userModel');
 
 module.exports = {
     create: async (payload) => {
+        const session = await mongoose.startSession();
         try {
-            // TODO: generate public URL.
+            session.startTransaction();
+
             const newLender = new Lender(payload.lender);
             const randomPwd = Math.random().toString(36).substring(2, 8);
             const newUser = new User({
@@ -32,30 +35,24 @@ module.exports = {
                 role: roles.owner,
                 otp: generateOTP(),
             });
-
-            const settings = new Settings({
+            const newSettings = new Settings({
                 userId: newUser._id,
             });
 
-            // validating lender
-            const lenderError = newLender.validateSync();
-            if (lenderError) {
-                const msg =
-                    lenderError.errors[Object.keys(lenderError.errors)[0]]
-                        .message;
-                return new ServerError(400, msg);
-            }
+            // const { valid } = await emailValidator.validate(newUser.email);
+            // if(!valid) return new ServerError(400, 'Please provide a valid email');
+            
 
-            // validating user
-            const userError = newUser.validateSync();
-            if (userError) {
-                const msg =
-                    userError.errors[Object.keys(userError.errors)[0]].message;
-                return new ServerError(400, msg);
-            }
+            // validating  new user
+            // const userError = newUser.validateSync();
+            // if (userError) {
+            //     const msg =
+            //         userError.errors[Object.keys(userError.errors)[0]].message;
+            //     return new ServerError(400, msg);
+            // }
 
-            // validating user settings
-            const settingsError = settings.validateSync();
+            // validating new user settings
+            const settingsError = newSettings.validateSync();
             if (settingsError) {
                 const msg =
                     settingsError.errors[Object.keys(settingsError.errors)[0]]
@@ -63,11 +60,11 @@ module.exports = {
                 return new ServerError(400, msg);
             }
 
-            await newLender.save();
-            await newUser.save();
-            await settings.save();
+            await newLender.save({ session: session });
+            await newUser.save({ session: session });
+            await newSettings.save({ session: session });
 
-            // mailing one-time-token and one-time-password
+            // mailing one-time-pin and one-time-password
             const response = await mailer({
                 to: newUser.email,
                 subject: 'Almost there, just one more step',
@@ -76,10 +73,13 @@ module.exports = {
                 payload: { otp: newUser.otp.OTP, password: randomPwd },
             });
             if (response instanceof Error) {
-                // delete record if mail fails to send
-                await newLender.delete();
-                await newUser.delete();
-                await settings.delete();
+                // if error occurs sending email, abort the whole transaction and
+                // undo any changes that might have happened.
+                // await newLender.delete();
+                // await newUser.delete();
+                // await newSettings.delete();
+                await session.abortTransaction();
+                session.endSession();
 
                 logger.error({
                     method: 'create',
@@ -93,8 +93,11 @@ module.exports = {
                 );
             }
 
+            await session.commitTransaction();
+            session.endSession();
+
             return {
-                message: 'Tenant created. Password & OTP sent to user email.',
+                message: 'Tenant created. Password and OTP sent to email.',
                 data: {
                     lender: newLender,
                     user: _.omit(newUser._doc, [
@@ -106,6 +109,11 @@ module.exports = {
                 },
             };
         } catch (exception) {
+            // if an error occurred abort the whole transaction
+            // and undo any changes that might have happened.
+            await session.abortTransaction();
+            session.endSession();
+
             logger.error({
                 method: 'create',
                 message: exception.message,
@@ -114,12 +122,12 @@ module.exports = {
             debug(exception);
 
             // duplicate field error
-            if (exception.name === 'MongoServerError') {
+            if (exception.name === 'MongoServerError' && exception.code === 11000) {
                 let field = Object.keys(exception.keyPattern)[0];
                 field = field.charAt(0).toUpperCase() + field.slice(1);
                 if (field === 'Phone') field = 'Phone number';
 
-                return new ServerError(409, field + ' has already been taken');
+                return new ServerError(409, field + ' already in use.');
             }
 
             // validation error
@@ -130,13 +138,13 @@ module.exports = {
                     exception.errors[field].message.replace('Path', '')
                 );
             }
-
             return new ServerError(500, 'Something went wrong');
         }
     },
 
     activate: async (id, payload) => {
         try {
+            // TODO: work on this
             const { cacNumber, otp, support } = payload;
 
             const foundLender = await Lender.findById(id);
@@ -227,9 +235,9 @@ module.exports = {
                 .select('-_id -otp');
             if (!foundLender) return new ServerError(404, 'Tenant not found.');
 
-            if(!mongoose.isValidObjectId(id)) 
+            if (!mongoose.isValidObjectId(id))
                 var token = foundLender.generateToken();
-            
+
             const payload = _.omit(foundLender._doc, ['_id']);
             payload.token = token;
 

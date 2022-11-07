@@ -351,7 +351,7 @@ module.exports = {
                 active: false,
                 resetPwd: true,
                 otp: otp,
-                password: pwd,
+                password: randomPwd,
                 refreshTokens: [],
             });
             await foundUser.save();

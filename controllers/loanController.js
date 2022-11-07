@@ -27,7 +27,7 @@ async function getValidator(lender, segment) {
         if (!foundSegment)
             return new ServerError(404, 'Segment configuration not found');
 
-        const isNull = (key) => foundSegment[key] === null;
+        const isNull = (key) => foundSegment[key] === undefined;
         if (Object.keys(foundSegment).some(isNull))
             return new ServerError(424, 'Missing some segment parameters.');
 
@@ -57,6 +57,8 @@ async function getValidator(lender, segment) {
 
 module.exports = {
     create: async (user, customerPayload, loanPayload) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
         try {
             const foundLender = await Lender.findById(user.lender).populate({
                 path: 'segments.id',
@@ -107,11 +109,13 @@ module.exports = {
                 foundLender,
                 customer.employer.segment
             );
-            if (loanValidators instanceof Error)
+            if (loanValidators instanceof Error) {
+                debug(loanValidators);
                 return new ServerError(
                     500,
-                    'Error fetching segment parameters.'
+                    `Error fetching segment parameters: ${loanValidators.message}`
                 );
+            }
 
             // validating loan
             const { value, error } = loanValidators.create(loanPayload);
@@ -199,13 +203,19 @@ module.exports = {
                 paidAt: new Date(),
             });
 
-            await customer.save();
-            await newLoan.save();
-            await newTransaction.save();
-            await foundLender.updateOne({
-                $inc: { balance: -cost, requestCount: 1, totalCost: cost },
-                lastReqDate: new Date(),
-            });
+            await customer.save({ session: session });
+            await newLoan.save({ session: session });
+            await newTransaction.save({ session: session });
+            await foundLender.updateOne(
+                {
+                    $inc: { balance: -cost, requestCount: 1, totalCost: cost },
+                    lastReqDate: new Date(),
+                },
+                { session: session }
+            );
+
+            await session.commitTransaction();
+            session.endSession();
 
             return {
                 message: 'Loan created.',
@@ -215,6 +225,11 @@ module.exports = {
                 },
             };
         } catch (exception) {
+            // if an error occurred abort the whole transaction
+            // and undo any changes that might have happened
+            await session.abortTransaction();
+            session.endSession();
+
             logger.error({
                 method: 'create_loan',
                 message: exception.message,
@@ -559,7 +574,7 @@ module.exports = {
             applyFilters(filters);
             function applyFilters(filters) {
                 if (filters?.disbursed)
-                    queryParams.isDisbursed = (filters.disbursed === 'true');
+                    queryParams.isDisbursed = filters.disbursed === 'true';
 
                 // date filter - createdAt
                 if (filters?.start)
@@ -613,12 +628,9 @@ module.exports = {
                 {
                     $replaceRoot: {
                         newRoot: {
-                            $mergeObjects: [
-                                "$$ROOT",
-                                "$customer"
-                            ]
-                        }
-                    }
+                            $mergeObjects: ['$$ROOT', '$customer'],
+                        },
+                    },
                 },
                 {
                     $unset: 'customer',
@@ -664,5 +676,4 @@ module.exports = {
             return { errorCode: 500, message: 'Something went wrong.' };
         }
     },
-
 };
