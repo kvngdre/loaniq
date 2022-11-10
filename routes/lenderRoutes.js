@@ -54,7 +54,7 @@ router.get('/all', verifyToken, verifyRole(roles.master), async (req, res) => {
 router.get(
     '/balance/:id?',
     verifyToken,
-    verifyRole([roles.admin, roles.owner, roles.master]),
+    // verifyRole([roles.admin, roles.owner, roles.master]),
     async (req, res) => {
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
