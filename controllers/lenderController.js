@@ -488,9 +488,7 @@ module.exports = {
 
             return {
                 message: 'success',
-                data: {
-                    balance: lender.balance,
-                },
+                data: lender,
             };
         } catch (exception) {
             logger.error({
