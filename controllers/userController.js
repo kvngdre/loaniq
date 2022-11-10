@@ -270,6 +270,19 @@ module.exports = {
         }
     },
 
+    forgotPassword: async (email) => {
+        try {
+        } catch (exception) {
+            logger.error({
+                method: 'update',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return new ServerError(500, 'Something went wrong');
+        }
+    },
+
     changePassword: async (user, payload) => {
         try {
             const { currentPassword, newPassword } = payload;

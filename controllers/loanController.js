@@ -398,7 +398,7 @@ module.exports = {
             if (!foundLoan) return new ServerError(404, 'Document not found');
             if (foundLoan.isLocked)
                 return new ServerError(403, 'Loan document is locked');
-
+            
             const { liquidated, matured } = loanStatus;
             if (foundLoan.status === liquidated || foundLoan.status === matured)
                 return new ServerError(

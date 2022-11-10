@@ -482,7 +482,7 @@ module.exports = {
     getBalance: async (id) => {
         try {
             const lender = await Lender.findById(id).select(
-                'companyName balance'
+                'companyName active balance'
             );
             if (!lender) return new ServerError(404, 'Tenant not found');
 
