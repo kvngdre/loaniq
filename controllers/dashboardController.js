@@ -31,17 +31,18 @@ module.exports = {
             ]);
 
             if (approvedLoans.length == 0)
-                return new ServerError(404, 'No data');
+                return new ServerError(404, 'No data available');
 
             return {
                 message: 'success',
                 data: approvedLoans,
             };
         } catch (exception) {
-            // logger.error({
-            //     method:
-            // })
-            console.log(exception);
+            logger.error({
+                method: 'get_loan_data',
+                message: exception.message,
+                meta: exception.stack
+            })
             debug(exception);
             return new ServerError(500, 'Something went wrong');
         }

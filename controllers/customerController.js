@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const { DateTime } = require('luxon');
-const { roles, sort_fields } = require('../utils/constants');
+const { loanStatus, roles } = require('../utils/constants');
 const Customer = require('../models/customerModel');
 const debug = require('debug')('app:customerCtrl');
 const flattenObject = require('../utils/flattenObj');

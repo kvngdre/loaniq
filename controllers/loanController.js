@@ -271,51 +271,104 @@ module.exports = {
 
             applyFilters(filters);
             function applyFilters(filters) {
-                if (filters?.status) queryParams.status = filters.status;
+                if (filters?.status) {
+                    const validStatus = Object.values(loanStatus);
+
+                    // mutating array in place to change elements to lowercase
+                    validStatus.forEach((element, index, array) => {
+                        array.splice(index, 1, element.toLowerCase());
+                    });
+
+                    if (!validStatus.includes(filters.status.toLowerCase()))
+                        throw new ServerError(400, 'Invalid loan status');
+
+                    queryParams.status = new RegExp(filters.status, 'i');
+                }
 
                 // date filter - createdAt
-                if (filters?.start)
+                if (filters?.start) {
+                    const dateTime = DateTime.fromJSDate(
+                        new Date(filters.start)
+                    )
+                        .setZone(user.timeZone)
+                        .toUTC();
+                    if (!dateTime.isValid)
+                        throw new ServerError(400, 'Invalid start date');
+
                     queryParams.createdAt = {
-                        $gte: DateTime.fromJSDate(new Date(filters.start))
-                            .setZone(user.timeZone)
-                            .toUTC(),
+                        $gte: dateTime,
                     };
+                }
                 if (filters?.end) {
+                    const dateTime = DateTime.fromJSDate(new Date(filters.end))
+                        .setZone(user.timeZone)
+                        .toUTC();
+                    if (!dateTime.isValid)
+                        throw new ServerError(400, 'Invalid end date');
+
                     const target = queryParams.createdAt
                         ? queryParams.createdAt
                         : {};
                     queryParams.createdAt = Object.assign(target, {
-                        $lte: DateTime.fromJSDate(new Date(filters.end))
-                            .setZone(user.timeZone)
-                            .toUTC(),
+                        $lte: dateTime,
                     });
                 }
 
                 // number filter - recommended amount
-                if (filters?.minA)
+                if (filters?.minA) {
+                    const minAmount = parseInt(filters.minA);
+                    if (!Number.isFinite(minAmount))
+                        throw new ServerError(
+                            400,
+                            'Invalid minimum loan amount'
+                        );
+
                     queryParams.recommendedAmount = {
-                        $gte: parseInt(filters.minA),
+                        $gte: minAmount,
                     };
+                }
                 if (filters?.maxA) {
+                    const maxAmount = parseInt(filters.maxA);
+                    if (!Number.isFinite(maxAmount))
+                        throw new ServerError(
+                            400,
+                            'Invalid maximum loan amount'
+                        );
+
                     const target = queryParams.recommendedAmount
                         ? queryParams.recommendedAmount
                         : {};
                     queryParams.recommendedAmount = Object.assign(target, {
-                        $lte: parseInt(filters.maxA),
+                        $lte: maxAmount,
                     });
                 }
 
                 // number filter - recommended tenor
-                if (filters?.minT)
+                if (filters?.minT) {
+                    const minTenor = parseInt(filters.minT);
+                    if (!Number.isFinite(minTenor))
+                        throw new ServerError(
+                            400,
+                            'Invalid minimum loan tenor'
+                        );
+
                     queryParams.recommendedTenor = {
-                        $gte: parseInt(filters.minT),
+                        $gte: minTenor,
                     };
+                }
                 if (filters?.maxT) {
+                    const maxTenor = parseInt(filters.maxA);
+                    if (!Number.isFinite(maxTenor))
+                        throw new ServerError(
+                            400,
+                            'Invalid maximum loan tenor'
+                        );
+
                     const target = queryParams.recommendedTenor
                         ? queryParams.recommendedTenor
                         : {};
                     queryParams.recommendedTenor = Object.assign(target, {
-                        $lte: parseInt(filters.maxT),
+                        $lte: maxTenor,
                     });
                 }
             }
@@ -354,6 +407,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
+            if (exception?.errorCode === 400) return exception;
             return new ServerError(500, 'Something went wrong');
         }
     },
@@ -398,7 +452,7 @@ module.exports = {
             if (!foundLoan) return new ServerError(404, 'Document not found');
             if (foundLoan.isLocked)
                 return new ServerError(403, 'Loan document is locked');
-            
+
             const { liquidated, matured } = loanStatus;
             if (foundLoan.status === liquidated || foundLoan.status === matured)
                 return new ServerError(

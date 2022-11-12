@@ -7,7 +7,7 @@
         "secret_key": "SECURITY_KEY"
     },
     "db": {
-        "dev_database_uri": "DEV_DATABASE_URI_2",
+        "dev_database_uri": "DEV_DATABASE_URI",
         "test_database_uri": "TEST_DATABASE_URI",
         "prod_database_uri": "PROD_DATABASE_URI",
         "database_password": "DATABASE_PASSWORD"

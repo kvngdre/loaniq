@@ -40,6 +40,20 @@ const lenderSchema = new mongoose.Schema(
             sparse: true,
         },
 
+        // directors: [
+        //     {
+        //         name: {
+        //             type: String
+        //         },
+        //         email: {
+        //             type: String,
+        //         },
+        //         id: {
+        //             type: String
+        //         }
+        //     }
+        // ],
+
         category: {
             type: String,
             enum: ['MFB', 'Finance House', 'Money Lender'],
