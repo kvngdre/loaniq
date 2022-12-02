@@ -441,17 +441,19 @@ module.exports = {
             });
 
             // mailing OTPs
-            const response = await mailer({
-                to: foundLender.email,
-                subject: 'Your one-time-pin request',
-                name: foundLender.companyName,
-                template: 'otp-request',
-                payload: { otp: foundLender.otp.OTP },
-            });
-            if (response instanceof Error) {
-                debug(`Error sending OTP: ${response.message}`);
-                return new ServerError(424, 'Error sending OTP');
-            }
+            // const response = await mailer({
+            //     to: foundLender.email,
+            //     subject: 'Your one-time-pin request',
+            //     name: foundLender.companyName,
+            //     template: 'otp-request',
+            //     payload: { otp: foundLender.otp.OTP },
+            // });
+            // if (response instanceof Error) {
+            //     debug(`Error sending OTP: ${response.message}`);
+            //     return new ServerError(424, 'Error sending OTP');
+            // }
+
+            console.log(foundLender.otp.OTP);
 
             await foundLender.save();
 

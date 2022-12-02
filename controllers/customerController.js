@@ -43,7 +43,7 @@ module.exports = {
             });
             debug(exception);
             // duplicate field error
-            if (exception.name === 'MongoServerError') {
+            if (exception.code === 11000) {
                 let field = Object.keys(exception.keyPattern)[0].toUpperCase();
                 field = field.replace('ACCOUNTNO', 'Account Number');
                 return new ServerError(409, field + ' already in use');
@@ -72,15 +72,6 @@ module.exports = {
                     queryParams.fullName = new RegExp(filters.name, 'i');
                 }
 
-                // number filter - net pay
-                if (filters?.min) queryParams.netPay = { $gte: filters.min };
-                if (filters?.max) {
-                    const target = queryParams.netPay ? queryParams.netPay : {};
-                    queryParams.netPay = Object.assign(target, {
-                        $lte: filters.max,
-                    });
-                }
-
                 if (filters?.states)
                     queryParams['residentialAddress.state'] = filters.states;
 
@@ -88,31 +79,49 @@ module.exports = {
                     queryParams['employmentInfo.segment'] = filters.segments;
 
                 // date filter - dateOfBirth
-                if (filters?.minAge)
+                if (filters?.minAge) {
+                    const minAge = parseInt(filters.minAge);
+                    if (!Number.isFinite(minAge))
+                        throw new ServerError(400, 'Invalid minimum age');
+
                     queryParams.dateOfBirth = {
                         $gte: DateTime.now()
-                            .minus({ years: filters.minAge })
+                            .minus({ years: minAge })
                             .toFormat('yyyy-MM-dd'),
                     };
+                }
                 if (filters?.maxAge) {
+                    const maxAge = parseInt(filters.maxAge);
+                    if (!Number.isFinite(maxAge))
+                        throw new ServerError(400, 'Invalid maximum age');
+
                     const target = queryParams.dateOfBirth
                         ? queryParams.dateOfBirth
                         : {};
                     queryParams.dateOfBirth = Object.assign(target, {
                         $lte: DateTime.now()
-                            .minus({ years: filters.maxAge })
+                            .minus({ years: maxAge })
                             .toFormat('yyyy-MM-dd'),
                     });
                 }
 
                 // number filter - net pay
-                if (filters?.minPay)
-                    queryParams.netPay = filters.minPay;
+                if (filters?.minPay) {
+                    const minNetPay = parseInt(filters.minPay);
+                    if (!Number.isFinite(minNetPay))
+                        throw new ServerError(400, 'Invalid minimum net pay');
+
+                    queryParams.netPay = { $gte: minNetPay };
+                }
                 if (filters?.maxPay) {
-                    const target = queryParams.netPay
-                        ? queryParams.netPay
-                        : {};
-                    queryParams.netPay = Object.assign(target, filters.maxPay);
+                    const maxNetPay = parseInt(filters.maxPay);
+                    if (!Number.isFinite(maxNetPay))
+                        throw new ServerError(400, 'Invalid maximum net pay');
+
+                    const target = queryParams.netPay ? queryParams.netPay : {};
+                    queryParams.netPay = Object.assign(target, {
+                        $lte: filters.maxNetPay,
+                    });
                 }
             }
 
@@ -176,6 +185,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
+            if (exception?.errorCode) return exception;
             return new ServerError(500, 'Something went wrong');
         }
     },

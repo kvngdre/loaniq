@@ -83,7 +83,7 @@ const passwordSchema = joiPassword
         'password.minOfUppercase':
             'Password should contain at least {#min} uppercase character.',
         'password.minOfSpecialCharacters':
-            'Password should contain at least {#min} special characters.',
+            'Password should contain at least {#min} special character.',
         'password.minOfNumeric':
             'Password should contain at least {#min} numbers.',
         'password.noWhiteSpaces': 'Password should not contain white spaces.',
@@ -221,8 +221,8 @@ const validators = {
             currentPassword: Joi.string()
                 .max(1024)
                 .messages({
-                    'string.max': 'Invalid Password',
-                    'any.required': 'Current password is required',
+                    'string.max': 'Invalid Password.',
+                    'any.required': 'Current password is required.',
                 })
                 .required(),
             newPassword: passwordSchema.required(),

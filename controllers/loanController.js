@@ -407,7 +407,7 @@ module.exports = {
                 meta: exception.stack,
             });
             debug(exception);
-            if (exception?.errorCode === 400) return exception;
+            if (exception?.errorCode) return exception;
             return new ServerError(500, 'Something went wrong');
         }
     },

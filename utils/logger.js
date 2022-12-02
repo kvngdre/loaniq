@@ -1,4 +1,4 @@
-const { createLogger, format, transports, loggers } = require('winston');
+const { createLogger, format, transports } = require('winston');
 const { combine, align, timestamp, printf } = format;
 
 const Logger = createLogger({
