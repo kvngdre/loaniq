@@ -4,6 +4,7 @@ const lenderValidators = require('../validators/lenderValidator');
 const router = require('express').Router();
 const ServerError = require('../errors/serverError');
 const upload = require('../middleware/fileUpload');
+const validateObjectId = require('../middleware/validateObjectId');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
@@ -20,8 +21,7 @@ router.post('/', async (req, res) => {
 
 router.post(
     '/activate/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -43,18 +43,21 @@ router.post(
  * @queryParam max Filter by max balance.
  * @queryParam sort Field to sort by. Defaults to 'company name'.
  */
-router.get('/all', verifyToken, verifyRole(roles.master), async (req, res) => {
-    const lenders = await lenderController.getAll(req.query);
-    if (lenders instanceof ServerError)
-        return res.status(lenders.errorCode).send(lenders.message);
+router.get(
+    '/all',
+    [verifyToken, verifyRole(roles.master), validateObjectId],
+    async (req, res) => {
+        const lenders = await lenderController.getAll(req.query);
+        if (lenders instanceof ServerError)
+            return res.status(lenders.errorCode).send(lenders.message);
 
-    return res.status(200).send(lenders);
-});
+        return res.status(200).send(lenders);
+    }
+);
 
 router.get(
     '/balance/:id?',
-    verifyToken,
-    // verifyRole([roles.admin, roles.owner, roles.master]),
+    [verifyToken, validateObjectId],
     async (req, res) => {
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -81,8 +84,7 @@ router.get('/forms/:shortUrl', async (req, res) => {
 
 router.get(
     '/otp/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         console.log('here otp');
         const lender =
@@ -98,8 +100,7 @@ router.get(
 
 router.get(
     '/public-url/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -114,8 +115,7 @@ router.get(
 
 router.get(
     '/reactivate/:id?',
-    verifyToken,
-    verifyRole(roles.master),
+    [verifyToken, verifyRole(roles.master), validateObjectId],
     async (req, res) => {
         const response = await lenderController.reactivate(req.params.id);
         if (response instanceof ServerError)
@@ -127,8 +127,7 @@ router.get(
 
 router.get(
     '/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -143,8 +142,11 @@ router.get(
 
 router.patch(
     '/settings/:id?',
-    verifyToken,
-    verifyRole([roles.owner, roles.master, roles.admin]),
+    [
+        verifyToken,
+        verifyRole(roles.owner, roles.master, roles.admin),
+        validateObjectId,
+    ],
     async (req, res) => {
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -162,8 +164,7 @@ router.patch(
 
 router.patch(
     '/:id?',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         const id =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -181,8 +182,7 @@ router.patch(
 
 router.post(
     '/fund/:id?',
-    verifyToken,
-    verifyRole(roles.owner),
+    [verifyToken, verifyRole(roles.owner), validateObjectId],
     async (req, res) => {
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -203,8 +203,7 @@ router.post(
 
 router.post(
     'deactivate/:id?',
-    verifyToken,
-    verifyRole([roles.owner, roles.master]),
+    [verifyToken, verifyRole(roles.owner, roles.master), validateObjectId],
     async (req, res) => {
         const lender =
             req.params.id !== undefined ? req.params.id : req.user.lender;
@@ -221,11 +220,11 @@ router.post(
     }
 );
 
-router.post('/upload/logo',upload.single('logo'), (req, res) => {
-    console.log(req.file)
+router.post('/upload/logo', [upload.single('logo')], (req, res) => {
+    console.log(req.file);
     return res.send({
-        message: 'file uploaded'
-    })
-})
+        message: 'file uploaded',
+    });
+});
 
 module.exports = router;

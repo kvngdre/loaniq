@@ -400,22 +400,24 @@ module.exports = {
 
             //TODO: email template
             // mailing OTP
-            const response = await mailer({
-                to: foundUser.email,
-                subject: 'Your one-time-pin request',
-                name: foundUser.name.first,
-                template: 'otp-request',
-                payload: { otp: otp.OTP },
-            });
-            if (response instanceof Error) {
-                logger.error({
-                    method: 'request_otp',
-                    message: exception.message,
-                    meta: exception.stack,
-                });
-                debug(response);
-                return new ServerError(424, 'Error sending OTP to email');
-            }
+            // const response = await mailer({
+            //     to: foundUser.email,
+            //     subject: 'Your one-time-pin request',
+            //     name: foundUser.name.first,
+            //     template: 'otp-request',
+            //     payload: { otp: otp.OTP },
+            // });
+            // if (response instanceof Error) {
+            //     logger.error({
+            //         method: 'request_otp',
+            //         message: exception.message,
+            //         meta: exception.stack,
+            //     });
+            //     debug(response);
+            //     return new ServerError(424, 'Error sending OTP to email');
+            // }
+
+            console.log(otp);
 
             foundUser.set({ otp: otp });
             await foundUser.save();

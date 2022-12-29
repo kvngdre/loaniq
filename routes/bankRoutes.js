@@ -2,13 +2,13 @@ const { roles } = require('../utils/constants');
 const bankController = require('../controllers/bankController');
 const bankValidators = require('../validators/bankValidator');
 const router = require('express').Router();
+const validateObjectId = require('../middleware/validateObjectId');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
 
 router.post(
     '/',
-    verifyToken,
-    verifyRole([roles.admin, roles.lender, roles.master]),
+    [verifyToken, verifyRole(roles.admin, roles.lender, roles.master)],
     async (req, res) => {
         const { error } = bankValidators.create(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
     return res.status(200).send(banks);
 });
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', [verifyToken, validateObjectId], async (req, res) => {
     const bank = await bankController.getOne(req.params.id);
     if (bank.hasOwnProperty('errorCode'))
         return res.status(bank.errorCode).send(bank.message);
@@ -42,8 +42,11 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 router.patch(
     '/:id',
-    verifyToken,
-    verifyRole([roles.admin, roles.lender, roles.master]),
+    [
+        verifyToken,
+        verifyRole(roles.admin, roles.owner, roles.master),
+        validateObjectId,
+    ],
     async (req, res) => {
         const { error } = bankValidators.update(req.body);
         if (error) return res.status(400).send(error.details[0].message);
@@ -58,14 +61,13 @@ router.patch(
 
 router.delete(
     '/:id',
-    verifyToken,
-    verifyRole(roles.master),
+    [verifyToken, verifyRole(roles.master), validateObjectId],
     async (req, res) => {
-        const deletedBank = await bankController.delete(req.params.id);
-        if (deletedBank.hasOwnProperty('errorCode'))
-            return res.status(deletedBank.errorCode).send(deletedBank.message);
+        const response = await bankController.delete(req.params.id);
+        if (response.hasOwnProperty('errorCode'))
+            return res.status(response.errorCode).send(response.message);
 
-        return res.status(204).send(deletedBank);
+        return res.status(204).send(response);
     }
 );
 

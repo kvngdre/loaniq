@@ -7,11 +7,15 @@ const ServerError = require('../errors/serverError');
 const upload = require('../middleware/fileUpload');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const validateObjectId = require('../middleware/validateObjectId');
 
 router.post(
     '/',
-    verifyToken,
-    verifyRole([roles.agent, roles.owner, roles.operations, roles.master]),
+    [
+        verifyToken,
+        verifyRole(roles.agent, roles.owner, roles.operations, roles.master),
+        validateObjectId,
+    ],
     async (req, res) => {
         const { value, error } = customerValidators.create(req.user, req.body);
         if (error) {
@@ -31,7 +35,7 @@ router.post(
 
 router.post(
     '/upload-docs',
-    upload.fields([{ name: 'passport' }, { name: 'idCard' }]),
+    [upload.fields([{ name: 'passport' }, { name: 'idCard' }])],
     async (req, res) => {
         // FIXME: upload to s3
         console.log(req.files);
@@ -49,7 +53,7 @@ router.post(
  * @queryParam state Filter by customer state of residence.
  * @queryParam sort Sort order. Defaults to 'first name'. [asc, desc, first, last]
  */
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', [verifyToken], async (req, res) => {
     const customers = await customerController.getAll(req.user, req.query);
     if (customers instanceof ServerError)
         return res.status(customers.errorCode).send(customers.message);
@@ -57,7 +61,7 @@ router.get('/', verifyToken, async (req, res) => {
     return res.status(200).send(customers);
 });
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', [verifyToken, validateObjectId], async (req, res) => {
     const customer = await customerController.getOne(req.params.id, req.user);
     if (customer instanceof ServerError)
         return res.status(customer.errorCode).send(customer.message);
@@ -65,7 +69,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     return res.status(200).send(customer);
 });
 
-router.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', [verifyToken, validateObjectId], async (req, res) => {
     if (Object.entries(req.body).length == 0) return res.sendStatus(400);
 
     const { error } = customerValidators.update(req.body);
@@ -84,8 +88,11 @@ router.patch('/:id', verifyToken, async (req, res) => {
 
 router.delete(
     '/:id',
-    verifyToken,
-    verifyRole([roles.admin, roles.owner, roles.operations, roles.master]),
+    [
+        verifyToken,
+        verifyRole(roles.admin, roles.owner, roles.operations, roles.master),
+        validateObjectId,
+    ],
     async (req, res) => {
         const response = await customerController.delete(
             req.params.id,
@@ -100,17 +107,16 @@ router.delete(
 
 router.post(
     '/customer-booking',
-    verifyToken,
-    verifyRole(roles.operations),
+    [verifyToken, verifyRole(roles.operations), validateObjectId],
     async (req, res) => {
-        const result = await customerController.fetchCustomerCreation(
+        const response = await customerController.fetchCustomerCreation(
             req.user,
             req.body.fromDate
         );
-        if (result instanceof ServerError)
-            return res.status(result.errorCode).send(result.message);
+        if (response instanceof ServerError)
+            return res.status(response.errorCode).send(response.message);
 
-        return res.status(200).send(result);
+        return res.status(200).send(response);
     }
 );
 

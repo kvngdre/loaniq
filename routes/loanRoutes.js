@@ -7,8 +7,9 @@ const router = require('express').Router();
 const ServerError = require('../errors/serverError');
 const verifyRole = require('../middleware/verifyRole');
 const verifyToken = require('../middleware/verifyToken');
+const validateObjectId = require('../middleware/validateObjectId');
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', [verifyToken], async (req, res) => {
     const { value, error } = customerValidators.create(
         req.user,
         req.body.customer
@@ -35,7 +36,7 @@ router.post('/', verifyToken, async (req, res) => {
  * @queryParam end Filter by date the loan was created. end date.
  * @queryParam sort Sort order. Defaults to 'first name'. [asc, desc, first, last]
  */
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', [verifyToken], async (req, res) => {
     const loans = await loanController.getAll(req.user, req.query);
     if (loans instanceof ServerError)
         return res.status(loans.errorCode).send(loans.message);
@@ -45,8 +46,10 @@ router.get('/', verifyToken, async (req, res) => {
 
 router.get(
     '/disburse',
-    verifyToken,
-    verifyRole([roles.admin, roles.credit, roles.master, roles.owner]),
+    [
+        verifyToken,
+        verifyRole(roles.admin, roles.credit, roles.master, roles.owner),
+    ],
     async (req, res) => {
         const loans = await loanController.getDisbursement(req.user, req.query);
         if (loans instanceof ServerError)
@@ -56,7 +59,7 @@ router.get(
     }
 );
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', [verifyToken, validateObjectId], async (req, res) => {
     // TODO: add all
     const loan = await loanController.getOne(req.params.id);
     if (loan instanceof ServerError)
@@ -65,7 +68,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     return res.status(200).send(loan);
 });
 
-router.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', [verifyToken, validateObjectId], async (req, res) => {
     const loan = await loanController.update(req.params.id, req.user, req.body);
     if (loan instanceof ServerError)
         return res.status(loan.errorCode).send(loan.message);
@@ -75,8 +78,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
 
 router.delete(
     '/:id',
-    verifyToken,
-    verifyRole([roles.master, roles.owner]),
+    [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
     async (req, res) => {
         const deletedLoan = await loanController.delete(req.params.id);
         if (deletedLoan instanceof ServerError)

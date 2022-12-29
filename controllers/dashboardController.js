@@ -1,11 +1,11 @@
-const User = require('../models/userModel');
-const Lender = require('../models/lenderModel');
-const Customer = require('../models/customerModel');
-const Loan = require('../models/loanModel');
 const { loanStatus } = require('../utils/constants');
-const ServerError = require('../errors/serverError');
+const Customer = require('../models/customerModel');
 const debug = require('debug')('dashController');
+const Lender = require('../models/lenderModel');
+const Loan = require('../models/loanModel');
 const logger = require('../utils/logger')('dashboardCtrl.js');
+const ServerError = require('../errors/serverError');
+const User = require('../models/userModel');
 
 module.exports = {
     getLoanData: async (user, status) => {
