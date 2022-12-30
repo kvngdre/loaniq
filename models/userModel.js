@@ -183,6 +183,15 @@ userSchema.pre('save', function (next) {
     }
 });
 
+/**
+ * Compare user inputted password to password on database.
+ * @param {string} password 
+ * @returns {boolean}
+ */
+userSchema.methods.comparePasswords = async function(password) {
+    return await bcrypt.compare(password, this.password);
+}
+
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {

@@ -443,7 +443,7 @@ module.exports = {
 
     deactivate: async (id, user, password) => {
         try {
-            if (!password) return new ServerError(400, 'Password is required');
+            if (!password) return new ServerError(400, 'Password is required.');
 
             const foundUser = await User.findOne(
                 { _id: id, role: { $ne: roles.owner } },
@@ -514,8 +514,8 @@ module.exports = {
             await foundUser.delete();
 
             return {
-                message: 'User profile deleted',
-                data: _.omit(foundUser._doc, ['refreshTokens']),
+                message: 'User profile deleted.',
+                // data: _.omit(foundUser._doc, ['refreshTokens']),
             };
         } catch (exception) {
             logger.error({

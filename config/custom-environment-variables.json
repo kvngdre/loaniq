@@ -32,11 +32,15 @@
         "issuer": "JWT_ISSUER"
     },
     "mail": {
+        "sender_email": "SENDER_EMAIL_ADDRESS",
+        "client_secret": "CLIENT_SECRET",
+        "oauth_playground": "OAUTH_PLAYGROUND",
+        "client_id": "CLIENT_ID",
+        "refresh_token": "REFRESH_TOKEN",
         "password": "USER_EMAIL_PASSWORD"
     },
     "max_similarity": "MAX_SIMILARITY",
     "paystack": {
         "secret_key": "PAYSTACK_PRIVATE_KEY"
-    },
-    "salt_rounds": "SALT"
+    }
 }

@@ -3,17 +3,17 @@ const bcrypt = require('bcrypt');
 const config = require('config');
 const debug = require('debug')('app:authCtrl');
 const logger = require('../utils/logger')('authCtrl.js');
-const ServerError = require('../errors/serverError');
+const ServerResponse = require('../utils/ServerResponse');
 const similarity = require('../utils/similarity');
 const User = require('../models/userModel');
 
 async function login(email, password, cookies, res) {
     try {
         const foundUser = await User.findOne({ email }, { queryName: 0 });
-        if (!foundUser) return new ServerError(401, 'Invalid credentials');
+        if (!foundUser) return new ServerResponse(401, 'Invalid credentials');
 
-        const isMatch = await bcrypt.compare(password, foundUser.password);
-        if (!isMatch) return new ServerError(401, 'Invalid credentials');
+        const isMatch = await foundUser.comparePasswords(password);
+        if (!isMatch) return new ServerResponse(401, 'Invalid credentials');
 
         // trigger password reset
         if (
@@ -34,7 +34,7 @@ async function login(email, password, cookies, res) {
 
         // user is not active
         if (foundUser.emailVerified && !foundUser.active)
-            return new ServerError(
+            return new ServerResponse(
                 403,
                 'Account inactive. Contact your tech support'
             );
@@ -104,13 +104,13 @@ async function login(email, password, cookies, res) {
             meta: exception.stack,
         });
         debug(exception);
-        return new ServerError(500, 'Something went wrong');
+        return new ServerResponse(500, 'Something went wrong');
     }
 }
 
 async function logout(cookies, res) {
     try {
-        if (!cookies?.jwt) return new ServerError(204);
+        if (!cookies?.jwt) return new ServerResponse(204);
         const refreshToken = cookies.jwt;
 
         const foundUser = await User.findOne(
@@ -127,7 +127,7 @@ async function logout(cookies, res) {
             });
 
             debug('no user found to logout');
-            return new ServerError(204);
+            return new ServerResponse(204);
         }
 
         // deleting refresh token from user refresh tokens on db
@@ -154,7 +154,7 @@ async function logout(cookies, res) {
             meta: exception.stack,
         });
         debug(exception);
-        return new ServerError(500, 'Something went wrong');
+        return new ServerResponse(500, 'Something went wrong');
     }
 }
 
@@ -168,24 +168,24 @@ async function verifySignUp(
 ) {
     try {
         const foundUser = await User.findOne({ email });
-        if (!foundUser) return new ServerError(401, 'Invalid credentials');
-        if (!foundUser.resetPwd) return new ServerError(409, 'Account has been activated');
+        if (!foundUser) return new ServerResponse(401, 'Invalid credentials');
+        if (!foundUser.resetPwd) return new ServerResponse(409, 'Account has been activated');
 
         const isMatch = await bcrypt.compare(
             currentPassword,
             foundUser.password
         );
-        if (!isMatch) return new ServerError(401, 'Invalid credentials');
+        if (!isMatch) return new ServerResponse(401, 'Invalid credentials');
 
         // otp expired or incorrect
         if (Date.now() > foundUser.otp.exp || otp !== foundUser.otp.OTP)
-            return new ServerError(401, 'Invalid OTP');
+            return new ServerResponse(401, 'Invalid OTP');
 
         const percentageSimilarity =
             similarity(newPassword, currentPassword) * 100;
         const similarityThreshold = parseInt(config.get('max_similarity'));
         if (percentageSimilarity >= similarityThreshold)
-            return new ServerError(
+            return new ServerResponse(
                 400,
                 'Password is too similar to old password.'
             );
@@ -252,7 +252,7 @@ async function verifySignUp(
 
 async function signOutAllDevices(id, cookies, res) {
     try {
-        if (!cookies?.jwt) return new ServerError(204);
+        if (!cookies?.jwt) return new ServerResponse(204);
         const refreshToken = cookies.jwt;
 
         const foundUser = await User.findOne(
@@ -268,7 +268,7 @@ async function signOutAllDevices(id, cookies, res) {
             });
 
             debug('no user found to logout');
-            return new ServerError(204);
+            return new ServerResponse(204);
         }
 
         // deleting refresh token from user refresh tokens on db
@@ -295,7 +295,7 @@ async function signOutAllDevices(id, cookies, res) {
             meta: exception.stack,
         });
         debug(exception);
-        return new ServerError(500, 'Something went wrong');
+        return new ServerResponse(500, 'Something went wrong');
     }
 }
 

@@ -1,34 +1,19 @@
-const authRouter = require('../routes/authRoutes');
-const banksRouter = require('../routes/bankRoutes');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
-const corsOptions = require('../config/corsOptions');
-const credentials = require('../middleware/credentials');
-const customerRouter = require('../routes/customerRoutes');
-const dashboardRouter = require('../routes/dashboardRoutes');
+const authRouter = require('../routers/authRoutes');
+const banksRouter = require('../routers/bankRoutes');
+const customerRouter = require('../routers/customerRoutes');
+const dashboardRouter = require('../routers/dashboardRoutes');
 const errorHandler = require('../middleware/errorHandler');
-const express = require('express');
-const helmet = require('helmet');
-const lenderRouter = require('../routes/lenderRoutes');
-const loanRouter = require('../routes/loanRoutes');
-const originRouter = require('../routes/origin');
-const pendingEditRouter = require('../routes/pendingEditRoutes');
-const refreshTokenRouter = require('../routes/refreshTokenRoutes');
-const segmentRouter = require('../routes/segmentRoutes');
-const stateRouter = require('../routes/stateRoutes');
-const transactionRouter = require('../routes/transactionRoutes');
-const userRouter = require('../routes/userRoutes');
+const lenderRouter = require('../routers/lenderRoutes');
+const loanRouter = require('../routers/loanRoutes');
+const originRouter = require('../routers/origin');
+const pendingEditRouter = require('../routers/pendingEditRoutes');
+const refreshTokenRouter = require('../routers/refreshTokenRoutes');
+const segmentRouter = require('../routers/segmentRoutes');
+const stateRouter = require('../routers/stateRoutes');
+const transactionRouter = require('../routers/transactionRoutes');
+const userRouter = require('../routers/userRoutes');
 
 module.exports = function (app) {
-    // middleware
-    app.use(credentials);
-    app.use(cors(corsOptions));
-    app.use(helmet());
-    app.use(express.urlencoded({ extended: false }));
-    app.use(express.json());
-    app.use(cookieParser());
-
-    // Route handlers
     app.use('/api/auth', authRouter);
     app.use('/api/banks', banksRouter);
     app.use('/api/customers', customerRouter);

@@ -1,13 +1,12 @@
 const config = require('config');
 const debug = require('debug')('app:verifyToken');
 const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger')('verifyToken.js');
 
 function verifyToken(req, res, next) {
     try {
         const authHeader =
             req.header('authorization') || req.header('Authorization');
-        if (!authHeader) return res.sendStatus(401);
+        if (!authHeader) return res.status(401).send('No authorization header');
 
         const [scheme, token] = authHeader.split(' ');
         if (scheme !== 'Bearer') return res.sendStatus(401);
