@@ -25,7 +25,10 @@ function verifyToken(req, res, next) {
         next();
     } catch (exception) {
         debug(exception);
-        return res.status(403).send(exception.message);
+        if (exception.name === 'TokenExpiredError')
+            return res.status(403).send('Session expired.');
+
+        return res.sendStatus(403);
     }
 }
 

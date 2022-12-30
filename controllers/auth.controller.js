@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const authValidators = require('../validators/auth.validator');
 const config = require('config');
 const debug = require('debug')('app:authCtrl');
 const logger = require('../utils/logger')('authCtrl.js');
@@ -7,8 +8,15 @@ const ServerResponse = require('../utils/ServerResponse');
 const User = require('../models/userModel');
 
 class AuthController {
-    async login(email, password, cookies, res) {
+    async login({ email, password }, cookies, res) {
         try {
+            const { error } = authValidators.validateLogin({ email, password });
+            if (error)
+                return new ServerResponse(
+                    400,
+                    this.#formatMsg(error.details[0].message)
+                );
+
             const foundUser = await User.findOne({ email }, { queryName: 0 });
             if (!foundUser)
                 return new ServerResponse(401, 'Invalid credentials');
@@ -221,6 +229,13 @@ class AuthController {
             debug(exception);
             return new ServerResponse(500, 'Something went wrong');
         }
+    }
+
+    #formatMsg(errorMsg) {
+        const regex = /\B(?=(\d{3})+(?!\d))/g;
+        let msg = `${errorMsg.replaceAll('"', '')}.`; // remove quotation marks.
+        msg = msg.replace(regex, ','); // add comma to numbers if present in error msg.
+        return msg;
     }
 }
 

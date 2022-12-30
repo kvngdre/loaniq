@@ -61,7 +61,7 @@ const phoneSchema = Joi.string()
     .message({
         'string.pattern.base':
             'Invalid phone number, please include international dialling code.',
-            'any.required': 'Phone number is required',
+        'any.required': 'Phone number is required',
     });
 
 const emailSchema = Joi.string().email().min(10).max(50).messages({
@@ -73,26 +73,27 @@ const emailSchema = Joi.string().email().min(10).max(50).messages({
 
 const passwordSchema = joiPassword
     .string()
+    .label('Password')
     .minOfUppercase(1)
     .minOfSpecialCharacters(1)
-    .minOfNumeric(2)
+    .minOfNumeric(1)
     .noWhiteSpaces()
     .min(6)
     .max(1024)
     .messages({
         'password.minOfUppercase':
-            'Password should contain at least {#min} uppercase character.',
+            '{#label} should contain at least {#min} uppercase character',
         'password.minOfSpecialCharacters':
-            'Password should contain at least {#min} special character.',
+            '{#label} should contain at least {#min} special character',
         'password.minOfNumeric':
-            'Password should contain at least {#min} numbers.',
-        'password.noWhiteSpaces': 'Password should not contain white spaces.',
-        'any.required': 'Password is required',
+            '{#label} should contain at least {#min} number',
+        'password.noWhiteSpaces': '{#label} should not contain white spaces',
     });
 
 const otpSchema = Joi.string()
+    .label('OTP')
     .pattern(/^[0-9]{8}$/)
-    .messages({ 'string.pattern.base': 'Invalid OTP' });
+    .messages({ 'string.pattern.base': 'Invalid {#label}' });
 
 const segmentSchema = Joi.alternatives().try(
     Joi.array().items(Joi.objectId).min(1),
@@ -102,6 +103,7 @@ const segmentSchema = Joi.alternatives().try(
 );
 
 const roleSchema = Joi.string()
+    .label('Role')
     .valid(
         roles.admin,
         roles.agent,
@@ -110,44 +112,20 @@ const roleSchema = Joi.string()
         roles.operations
     )
     .messages({
-        'any.only': 'User role is not valid',
-        'any.required': 'User role is required',
+        'any.only': '{#label} is not valid',
+        'any.required': '{#label} is required',
     });
 
 const validators = {
-    create: function (user) {
-        if ([roles.agent, roles.credit].includes(user.role)) {
-            const schema = Joi.object({
-                name: Joi.object({
-                    first: Joi.string().min(2).max(255).required().messages({
-                        'string.min': 'Invalid first name',
-                        'string.max': 'First name is too long.',
-                        'any.required': 'First name is required',
-                    }),
-                    last: Joi.string().min(2).max(255).required().messages({
-                        'string.min': 'Invalid surname',
-                        'string.max': 'Surname is too long.',
-                        'any.required': 'Surname is required',
-                    }),
-                    middle: Joi.string().min(2).max(255).messages({
-                        'string.min': 'Invalid middle name',
-                        'string.max': 'Middle name is too long.',
-                        'any.required': 'Middle name is required',
-                    }),
-                }),
-                jobTitle: jobTitleSchema,
-                gender: genderSchema.required(),
-                dob: dobSchema,
-                displayName: Joi.string(),
-                phone: phoneSchema.required(),
-                email: emailSchema.required(),
-                role: roleSchema.required(),
-                segments: segmentSchema.required(),
-            });
+    validateLogin: (dto) => {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            password: Joi.string().max(40).required(),
+        });
+        return schema.validate(dto);
+    },
 
-            return schema.validate(user);
-        }
-        
+    create: (userDto) => {
         const schema = Joi.object({
             name: Joi.object({
                 first: Joi.string().min(2).max(255).required().messages({
@@ -174,7 +152,21 @@ const validators = {
             email: emailSchema.required(),
             role: roleSchema.required(),
         });
-        return schema.validate(user);
+
+        if ([roles.agent, roles.credit].includes(userDto.role))
+            schema.append({ segments: segmentSchema.required() });
+
+        return schema.validate(userDto);
+    },
+
+    verify: (userDto) => {
+        const schema = Joi.object({
+            email: emailSchema.required(),
+            otp: otpSchema.required(),
+            currentPassword: Joi.string().max(40).required(),
+            newPassword: passwordSchema.required(),
+        });
+        return schema.validate(userDto);
     },
 
     update: function (user) {
