@@ -8,7 +8,7 @@ class ServerResponse {
      *
      * @param {number} code - The HTTP status code
      * @param {string} message - The response message
-     * @param {Object|Array} data - The response data if any.
+     * @param {(Object|Array)} [data] - The response data if any.
      */
     constructor(code, message, data = undefined) {
         this.#code = code;
@@ -23,8 +23,7 @@ class ServerResponse {
 
     get payload() {
         return {
-            success: this.#code >= 400 ? true : false,
-            code: this.#code,
+            success: this.#code >= 400 ?  false : true,
             message: this.#message,
             data: this.#data,
         };

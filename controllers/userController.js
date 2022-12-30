@@ -137,6 +137,99 @@ module.exports = {
         }
     },
 
+    verifySignUp: async(
+        email,
+        currentPassword,
+        newPassword,
+        otp,
+        cookies,
+        res
+    ) => {
+        try {
+            const foundUser = await User.findOne({ email });
+            if (!foundUser) return new ServerResponse(401, 'Invalid credentials');
+            if (!foundUser.resetPwd)
+                return new ServerResponse(409, 'Account has been activated');
+    
+            const isMatch = await bcrypt.compare(
+                currentPassword,
+                foundUser.password
+            );
+            if (!isMatch) return new ServerResponse(401, 'Invalid credentials');
+    
+            // otp expired or incorrect
+            if (Date.now() > foundUser.otp.exp || otp !== foundUser.otp.OTP)
+                return new ServerResponse(401, 'Invalid OTP');
+    
+            const percentageSimilarity =
+                similarity(newPassword, currentPassword) * 100;
+            const similarityThreshold = parseInt(config.get('max_similarity'));
+            if (percentageSimilarity >= similarityThreshold)
+                return new ServerResponse(
+                    400,
+                    'Password is too similar to old password.'
+                );
+    
+            const accessToken = foundUser.generateAccessToken();
+            const newRefreshToken = foundUser.generateRefreshToken();
+    
+            if (cookies?.jwt) {
+                // If found jwt cookie, del from db to reissue a new refresh token
+                foundUser.refreshTokens = foundUser.refreshTokens.filter(
+                    (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
+                );
+                // TODO: uncomment secure
+                res.clearCookie('jwt', {
+                    httpOnly: true,
+                    sameSite: 'None',
+                    secure: config.get('secure_cookie'),
+                });
+            }
+    
+            foundUser.refreshTokens.push(newRefreshToken);
+            foundUser.set({
+                emailVerified: true,
+                password: newPassword,
+                'otp.OTP': null,
+                'otp.exp': null,
+                active: true,
+                resetPwd: false,
+                lastLoginTime: new Date(),
+            });
+            await foundUser.save();
+    
+            const expires = parseInt(config.get('jwt.expTime.refresh')) * 1_000; // convert to milliseconds
+            // TODO: uncomment secure in prod
+            res.cookie('jwt', newRefreshToken.token, {
+                httpOnly: true,
+                sameSite: 'None',
+                secure: config.get('secure_cookie'),
+                maxAge: expires,
+            });
+    
+            return {
+                message: 'Email verified and account activated',
+                new: false,
+                data: {
+                    user: _.omit(foundUser._doc, [
+                        'password',
+                        'otp',
+                        'refreshTokens',
+                    ]),
+                    accessToken,
+                },
+            };
+        } catch (exception) {
+            logger.error({
+                method: 'verify_sign_up',
+                message: exception.message,
+                meta: exception.stack,
+            });
+            debug(exception);
+            return { errorCode: 500, message: 'Something went wrong.' };
+        }
+    },  
+
     uploadImage: async () => {
         try {
         } catch (exception) {

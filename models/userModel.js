@@ -223,6 +223,7 @@ userSchema.methods.generateRefreshToken = function () {
             issuer: config.get('jwt.issuer'),
         }
     );
+    
     const expires = Date.now() + refreshTokenTTL * 1000;
 
     return {

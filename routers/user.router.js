@@ -23,6 +23,24 @@ router.post(
     }
 );
 
+router.post('/verify', async (req, res) => {
+    const { error } = authValidators.verify(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const isVerified = await authController.verifySignUp(
+        req.body.email,
+        req.body.currentPassword,
+        req.body.newPassword,
+        req.body.otp,
+        req.cookies,
+        res
+    );
+    if (isVerified instanceof ServerError)
+        return res.status(isVerified.errorCode).send(isVerified.message);
+
+    return res.status(200).send(isVerified);
+});
+
 router.post('/upload-photo', upload.single('photo'), async (req, res) => {
     console.log(req.file);
     return res.status(200).send('Image uploaded');

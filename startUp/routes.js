@@ -11,7 +11,7 @@ const refreshTokenRouter = require('../routers/refreshTokenRoutes');
 const segmentRouter = require('../routers/segmentRoutes');
 const stateRouter = require('../routers/stateRoutes');
 const transactionRouter = require('../routers/transactionRoutes');
-const userRouter = require('../routers/userRoutes');
+const userRouter = require('../routers/user.router');
 
 module.exports = function (app) {
     app.use('/api/auth', authRouter);
