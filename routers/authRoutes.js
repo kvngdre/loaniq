@@ -1,7 +1,6 @@
 const authController = require('../controllers/auth.controller');
 const authValidators = require('../validators/authValidator');
 const router = require('express').Router();
-const ServerError = require('../errors/serverError');
 
 
 router.post('/login', async (req, res) => {
