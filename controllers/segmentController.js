@@ -39,10 +39,10 @@ module.exports = {
 
     getAll: async (filters) => {
         try {
-            const queryParams = {};
-            if (filters?.name) queryParams.name = new RegExp(filters.name, 'i');
+            const queryFilter = {};
+            if (filters?.name) queryFilter.name = new RegExp(filters.name, 'i');
 
-            const foundSegments = await Segment.find(queryParams).sort('name');
+            const foundSegments = await Segment.find(queryFilter).sort('name');
             if (foundSegments.length === 0)
                 return new ServerError(404, 'No segments found');
 

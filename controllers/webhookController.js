@@ -36,12 +36,12 @@ const webhooks = {
                 meta: payload,
             });
 
-            const queryParams = {
+            const queryFilter = {
                 reference: payload.data.reference,
                 amount: payload.data.metadata.amount,
                 status: txnStatus.pending,
             };
-            const foundTxn = await Transaction.findOne(queryParams);
+            const foundTxn = await Transaction.findOne(queryFilter);
             // Transaction not found,
             if (!foundTxn) {
                 // return 200 to paystack and do not credit wallet
@@ -51,7 +51,7 @@ const webhooks = {
                     meta: {
                         queryObj: {
                             lender: payload.data.customer.email,
-                            ...queryParams,
+                            ...queryFilter,
                         },
                     },
                 });
@@ -158,12 +158,12 @@ const webhooks = {
             // log event
             logger.info({ message: 'flutterwave webhook', meta: payload });
 
-            const queryParams = {
+            const queryFilter = {
                 reference: payload.txRef || payload.tx_Ref,
                 amount: payload.amount,
                 status: txnStatus.pending,
             };
-            const foundTxn = await Transaction.findOne(queryParams);
+            const foundTxn = await Transaction.findOne(queryFilter);
             if (!foundTxn) {
                 logger.error({
                     method: 'flutterwave',
@@ -171,7 +171,7 @@ const webhooks = {
                     meta: {
                         queryObj: {
                             lender: payload.customer.email,
-                            ...queryParams,
+                            ...queryFilter,
                         },
                     },
                 });

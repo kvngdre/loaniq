@@ -53,9 +53,9 @@ const ctrlFuncs = {
 
     getOne: async function (id) {
         try {
-            const queryParams = { userId: id };
+            const queryFilter = { userId: id };
 
-            const settings = await Settings.findOne(queryParams);
+            const settings = await Settings.findOne(queryFilter);
             if (!settings)
                 return {
                     errorCode: 404,

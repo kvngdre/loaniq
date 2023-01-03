@@ -188,7 +188,7 @@ const customerSchema = new mongoose.Schema(
             },
 
             segment: {
-                type: String,
+                type: mongoose.Schema.Types.ObjectId,
                 required: true,
             },
 

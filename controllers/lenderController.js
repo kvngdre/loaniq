@@ -22,6 +22,7 @@ module.exports = {
     create: async (payload) => {
         const session = await mongoose.startSession();
         try {
+
             session.startTransaction();
 
             const newLender = new Lender(payload.lender);
@@ -187,26 +188,26 @@ module.exports = {
     getAll: async (filters) => {
         try {
             const sortBy = filters?.sort ? filters.sort : 'companyName';
-            const queryParams = {};
+            const queryFilter = {};
 
             applyFilters(filters);
             function applyFilters(filters) {
                 if (filters?.name)
-                    queryParams.companyName = new RegExp(filters.name, 'i');
+                    queryFilter.companyName = new RegExp(filters.name, 'i');
 
                 // number filter - wallet balance
-                if (filters?.min) queryParams.balance = { $gte: filters.min };
+                if (filters?.min) queryFilter.balance = { $gte: filters.min };
                 if (filters?.max) {
-                    const target = queryParams.balance
-                        ? queryParams.balance
+                    const target = queryFilter.balance
+                        ? queryFilter.balance
                         : {};
-                    queryParams.balance = Object.assign(target, {
+                    queryFilter.balance = Object.assign(target, {
                         $lte: filters.max,
                     });
                 }
             }
 
-            const lenders = await Lender.find(queryParams).sort(sortBy);
+            const lenders = await Lender.find(queryFilter).sort(sortBy);
             if (lenders.length === 0)
                 return { errorCode: 404, message: 'No Tenants found' };
 
@@ -227,10 +228,10 @@ module.exports = {
 
     getOne: async (id, filters) => {
         try {
-            const queryParams = mongoose.isValidObjectId(id)
+            const queryFilter = mongoose.isValidObjectId(id)
                 ? { _id: id }
                 : { publicUrl: id };
-            const foundLender = await Lender.findOne(queryParams)
+            const foundLender = await Lender.findOne(queryFilter)
                 .select(filters)
                 .select('-_id -otp');
             if (!foundLender) return new ServerError(404, 'Tenant not found.');
@@ -599,7 +600,7 @@ module.exports = {
             const lender = await Lender.findOne({ id });
 
             user = {
-                id: payload.customer.employmentInfo.ippis,
+                id: payload.customer.employer.ippis,
                 lender: lender._id.toString(),
                 role: 'guest',
                 email: payload.customer.contactInfo.email,

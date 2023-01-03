@@ -261,12 +261,12 @@ module.exports = {
     getAll: async (user, filters) => {
         try {
             // initializing query object
-            const queryParams = {};
+            const queryFilter = {};
             if (user.role === roles.master) {
-                if (filters?.lender) queryParams.lender = filters.lender;
+                if (filters?.lender) queryFilter.lender = filters.lender;
             } else {
-                if (user.role === roles.agent) queryParams.agent = user.id;
-                else queryParams['customer.lender'] = user.lender;
+                if (user.role === roles.agent) queryFilter.agent = user.id;
+                else queryFilter['customer.lender'] = user.lender;
             }
 
             applyFilters(filters);
@@ -282,7 +282,7 @@ module.exports = {
                     if (!validStatus.includes(filters.status.toLowerCase()))
                         throw new ServerError(400, 'Invalid loan status');
 
-                    queryParams.status = new RegExp(filters.status, 'i');
+                    queryFilter.status = new RegExp(filters.status, 'i');
                 }
 
                 // date filter - createdAt
@@ -295,7 +295,7 @@ module.exports = {
                     if (!dateTime.isValid)
                         throw new ServerError(400, 'Invalid start date');
 
-                    queryParams.createdAt = {
+                    queryFilter.createdAt = {
                         $gte: dateTime,
                     };
                 }
@@ -306,10 +306,10 @@ module.exports = {
                     if (!dateTime.isValid)
                         throw new ServerError(400, 'Invalid end date');
 
-                    const target = queryParams.createdAt
-                        ? queryParams.createdAt
+                    const target = queryFilter.createdAt
+                        ? queryFilter.createdAt
                         : {};
-                    queryParams.createdAt = Object.assign(target, {
+                    queryFilter.createdAt = Object.assign(target, {
                         $lte: dateTime,
                     });
                 }
@@ -323,7 +323,7 @@ module.exports = {
                             'Invalid minimum loan amount'
                         );
 
-                    queryParams.recommendedAmount = {
+                    queryFilter.recommendedAmount = {
                         $gte: minAmount,
                     };
                 }
@@ -335,10 +335,10 @@ module.exports = {
                             'Invalid maximum loan amount'
                         );
 
-                    const target = queryParams.recommendedAmount
-                        ? queryParams.recommendedAmount
+                    const target = queryFilter.recommendedAmount
+                        ? queryFilter.recommendedAmount
                         : {};
-                    queryParams.recommendedAmount = Object.assign(target, {
+                    queryFilter.recommendedAmount = Object.assign(target, {
                         $lte: maxAmount,
                     });
                 }
@@ -352,7 +352,7 @@ module.exports = {
                             'Invalid minimum loan tenor'
                         );
 
-                    queryParams.recommendedTenor = {
+                    queryFilter.recommendedTenor = {
                         $gte: minTenor,
                     };
                 }
@@ -364,10 +364,10 @@ module.exports = {
                             'Invalid maximum loan tenor'
                         );
 
-                    const target = queryParams.recommendedTenor
-                        ? queryParams.recommendedTenor
+                    const target = queryFilter.recommendedTenor
+                        ? queryFilter.recommendedTenor
                         : {};
-                    queryParams.recommendedTenor = Object.assign(target, {
+                    queryFilter.recommendedTenor = Object.assign(target, {
                         $lte: maxTenor,
                     });
                 }
@@ -383,7 +383,7 @@ module.exports = {
                     },
                 },
                 {
-                    $match: queryParams,
+                    $match: queryFilter,
                 },
                 {
                     $unwind: '$customer',
@@ -618,7 +618,7 @@ module.exports = {
     getDisbursement: async (user, filters) => {
         try {
             // TODO: handle end date on the controller function
-            const queryParams = {
+            const queryFilter = {
                 ['customer.lender']: user.lender,
                 active: true,
                 isDisbursed: false,
@@ -628,20 +628,20 @@ module.exports = {
             applyFilters(filters);
             function applyFilters(filters) {
                 if (filters?.disbursed)
-                    queryParams.isDisbursed = filters.disbursed === 'true';
+                    queryFilter.isDisbursed = filters.disbursed === 'true';
 
                 // date filter - createdAt
                 if (filters?.start)
-                    queryParams.createdAt = {
+                    queryFilter.createdAt = {
                         $gte: DateTime.fromJSDate(new Date(filters.start))
                             .setZone(user.timeZone)
                             .toUTC(),
                     };
                 if (filters?.end) {
-                    const target = queryParams.createdAt
-                        ? queryParams.createdAt
+                    const target = queryFilter.createdAt
+                        ? queryFilter.createdAt
                         : {};
-                    queryParams.createdAt = Object.assign(target, {
+                    queryFilter.createdAt = Object.assign(target, {
                         $lte: DateTime.fromJSDate(new Date(filters.end))
                             .setZone(user.timeZone)
                             .toUTC(),
@@ -659,7 +659,7 @@ module.exports = {
                     },
                 },
                 {
-                    $match: queryParams,
+                    $match: queryFilter,
                 },
                 {
                     $unwind: '$customer',

@@ -39,11 +39,11 @@ module.exports = {
 
     getAll: async (filters) => {
         try {
-            const queryParams = {};
-            if (filters?.name) queryParams.name = new RegExp(filters.name, 'i');
-            if (filters?.lga) queryParams.lgas = new RegExp(filters.lga, 'i');
+            const queryFilter = {};
+            if (filters?.name) queryFilter.name = new RegExp(filters.name, 'i');
+            if (filters?.lga) queryFilter.lgas = new RegExp(filters.lga, 'i');
 
-            const foundStates = await State.find(queryParams).sort('name');
+            const foundStates = await State.find(queryFilter).sort('name');
             if (foundStates.length === 0)
                 return new ServerError(404, 'No states found');
 

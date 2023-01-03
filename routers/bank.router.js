@@ -21,17 +21,17 @@ router.get('/', async (req, res) => {
     return res.status(response.code).send(response.payload);
 });
 
-router.get('/:id', [verifyToken, validateObjectId], async (req, res) => {
-    const response = await bankController.getBank(req.params.id);
+router.get('/:bankId', [verifyToken, validateObjectId], async (req, res) => {
+    const response = await bankController.getBank(req.params.bankId);
     return res.status(response.code).send(response.payload);
 });
 
 router.patch(
-    '/:id',
+    '/:bankId',
     [verifyToken, verifyRole(admin, master, owner), validateObjectId],
     async (req, res) => {
         const response = await bankController.updateBank(
-            req.params.id,
+            req.params.bankId,
             req.body
         );
         return res.status(response.code).send(response.payload);
@@ -39,10 +39,10 @@ router.patch(
 );
 
 router.delete(
-    '/:id',
+    '/:bankId',
     [verifyToken, verifyRole(roles.master), validateObjectId],
     async (req, res) => {
-        const response = await bankController.deleteBank(req.params.id);
+        const response = await bankController.deleteBank(req.params.bankId);
         return res.status(response.code).send(response.payload);
     }
 );

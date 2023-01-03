@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const { roles } = require('../utils/constants');
 const concatErrorMsg = require('../utils/concatMsg');
-const customerValidators = require('../validators/customerValidator');
+const customerValidators = require('../validators/customer.validator');
 const loanController = require('../controllers/loanController');
 const router = require('express').Router();
 const ServerError = require('../errors/serverError');

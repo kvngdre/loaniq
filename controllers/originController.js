@@ -44,11 +44,11 @@ const origin = {
 
     update: async function (id, alteration) {
         try {
-            const queryParams = mongoose.isValidObjectId(id)
+            const queryFilter = mongoose.isValidObjectId(id)
                 ? { _id: id }
                 : { ippis: id };
 
-            const staff = await Origin.findOne(queryParams);
+            const staff = await Origin.findOne(queryFilter);
             if (!staff) return { errorCode: 404, message: 'Staff not found.' };
 
             staff.set(alteration);
@@ -87,11 +87,11 @@ const origin = {
 
     getOne: async function (id) {
         try {
-            const queryParams = mongoose.isValidObjectId(id)
+            const queryFilter = mongoose.isValidObjectId(id)
                 ? { _id: id }
                 : { ippis: id };
 
-            const staff = await Origin.findOne(queryParams);
+            const staff = await Origin.findOne(queryFilter);
             if (!staff) return { errorCode: 404, message: 'Staff not found.' };
 
             return {
@@ -107,43 +107,43 @@ const origin = {
 
     getAll: async function (filters) {
         try {
-            const queryParams = Object.assign(
+            const queryFilter = Object.assign(
                 {},
                 _.omit(filters, ['age', 'yearsServed', 'netPay', 'name'])
             );
 
             // Name filter
-            if (filters.name) queryParams.name = new RegExp(filters.name, 'gi');
+            if (filters.name) queryFilter.name = new RegExp(filters.name, 'gi');
 
             // Amount Filter - Net Pay
             if (filters.netPay?.min)
-                queryParams['netPays.0'] = {
+                queryFilter['netPays.0'] = {
                     $gte: filters.netPay.min,
                 };
             if (filters.netPay?.max) {
-                const target = queryParams['netPays.0']
-                    ? queryParams['netPays.0']
+                const target = queryFilter['netPays.0']
+                    ? queryFilter['netPays.0']
                     : {};
 
-                queryParams['netPays.0'] = Object.assign(target, {
+                queryFilter['netPays.0'] = Object.assign(target, {
                     $lte: filters.netPay.max,
                 });
             }
 
             // Date Filter - Date of Birth
             if (filters.age?.min)
-                queryParams['dateOfBirth'] = {
+                queryFilter['dateOfBirth'] = {
                     $lte: DateTime.now()
                         .minus({ years: filters.age.min })
                         .toFormat('yyyy'),
                 };
-            console.log(queryParams);
+            console.log(queryFilter);
             if (filters.age?.max) {
-                const target = queryParams['dateOfBirth']
-                    ? queryParams['dateOfBirth']
+                const target = queryFilter['dateOfBirth']
+                    ? queryFilter['dateOfBirth']
                     : {};
                 console.log(target);
-                queryParams['dateOfBirth'] = Object.assign(target, {
+                queryFilter['dateOfBirth'] = Object.assign(target, {
                     $gte: DateTime.now()
                         .minus({ years: filters.age.max })
                         .toFormat('yyyy'),
@@ -152,23 +152,23 @@ const origin = {
 
             // Date Filter - Date of Enlistment
             if (filters.yearsServed?.min)
-                queryParams['dateOfEnlistment'] = {
+                queryFilter['dateOfEnlistment'] = {
                     $lte: DateTime.now()
                         .minus({ years: filters.yearsServed.min })
                         .toFormat('yyyy'),
                 };
             if (filters.yearsServed?.max) {
-                const target = queryParams['dateOfEnlistment']
-                    ? queryParams['dateOfEnlistment']
+                const target = queryFilter['dateOfEnlistment']
+                    ? queryFilter['dateOfEnlistment']
                     : {};
-                queryParams['dateOfEnlistment'] = Object.assign(target, {
+                queryFilter['dateOfEnlistment'] = Object.assign(target, {
                     $gte: DateTime.now()
                         .minus({ years: filters.yearsServed.max })
                         .toFormat('yyyy'),
                 });
             }
 
-            const staff = await Origin.find(queryParams);
+            const staff = await Origin.find(queryFilter);
             if (staff.length === 0)
                 return {
                     errorCode: 404,
@@ -188,11 +188,11 @@ const origin = {
 
     delete: async function (id) {
         try {
-            const queryParams = mongoose.isValidObjectId(id)
+            const queryFilter = mongoose.isValidObjectId(id)
                 ? { _id: id }
                 : { ippis: id };
 
-            const staff = await Origin.findOne(queryParams);
+            const staff = await Origin.findOne(queryFilter);
             if (!staff)
                 return {
                     errorCode: 404,

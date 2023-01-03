@@ -1,6 +1,6 @@
 const authRouter = require('../routers/auth.router');
 const banksRouter = require('../routers/bank.router');
-const customerRouter = require('../routers/customerRoutes');
+const customerRouter = require('../routers/customer.router');
 const dashboardRouter = require('../routers/dashboardRoutes');
 const errorHandler = require('../middleware/errorHandler');
 const lenderRouter = require('../routers/lenderRoutes');

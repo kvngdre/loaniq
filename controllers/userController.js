@@ -239,17 +239,17 @@ module.exports = {
 
     getAll: async (user, filters) => {
         try {
-            const queryParams =
+            const queryFilter =
                 user.role === roles.master ? {} : { lender: user.lender };
             applyFilters(filters);
             function applyFilters(filters) {
                 if (filters?.name)
-                    queryParams.queryName = new RegExp(filters.name, 'i');
-                if (filters?.lender) queryParams.lender = filters.lender;
-                if (filters?.role) queryParams.role = filters.role;
+                    queryFilter.queryName = new RegExp(filters.name, 'i');
+                if (filters?.lender) queryFilter.lender = filters.lender;
+                if (filters?.role) queryFilter.role = filters.role;
             }
 
-            const foundUsers = await User.find(queryParams, {
+            const foundUsers = await User.find(queryFilter, {
                 password: 0,
                 queryName: 0,
                 refreshTokens: 0,

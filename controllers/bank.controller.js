@@ -37,6 +37,7 @@ class BankController {
                 meta: exception.stack,
             });
             debug(exception);
+            // Duplicate field error handling
             if (exception.code === MONGO_DUPLICATE_ERROR_CODE) {
                 let field = Object.keys(exception.keyPattern)[0];
                 return new ServerResponse(409, `Bank ${field} already in use.`);

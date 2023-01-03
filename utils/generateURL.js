@@ -7,7 +7,7 @@ const secret = config.get('crypto.secret_key');
 const key = crypto.createHash('sha256').update(String(secret)).digest('base64').substring(0, 16);
 console.log('key', key)
 
-function encryptQueryParams(lenderId) {
+function encryptqueryFilter(lenderId) {
     // Cipher func
 
     const cipher = crypto.createCipheriv(algorithm, key, initVector);
@@ -22,7 +22,7 @@ function encryptQueryParams(lenderId) {
     return encryptedData;
 }
 
-function decryptQueryParams(encryptedData) {
+function decryptqueryFilter(encryptedData) {
     // Decipher Func
     const decipher = crypto.createDecipheriv(algorithm, key, initVector);
 
@@ -34,6 +34,6 @@ function decryptQueryParams(encryptedData) {
 }
 
 module.exports = {
-    encryptQueryParams,
-    decryptQueryParams,
+    encryptqueryFilter,
+    decryptqueryFilter,
 };

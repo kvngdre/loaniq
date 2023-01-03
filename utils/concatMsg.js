@@ -1,6 +1,5 @@
-const unwantedTexts = ['"value" does not match any of the allowed types. '];
-
 function concatErrorMsg(errorMessage) {
+    const unwantedTexts = ['"value" does not match any of the allowed types. '];
     let newErrorMsg = '';
 
     if (Array.isArray(errorMessage)) {
@@ -12,6 +11,7 @@ function concatErrorMsg(errorMessage) {
         unwantedTexts.forEach(
             (text) => (errorMessage = errorMessage.replace(text, ''))
         );
+
         // Separate error messages.
         errorMessage = errorMessage.split('. ');
 

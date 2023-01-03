@@ -29,21 +29,21 @@ module.exports = {
 
     getAll: async (user, filters) => {
         try {
-            const queryParams =
+            const queryFilter =
                 user.role === roles.master ? {} : { lender: user.lender };
 
-            if (filters?.type) queryParams.type = filters.type;
-            if (filters?.status) queryParams.status = filters.status;
+            if (filters?.type) queryFilter.type = filters.type;
+            if (filters?.status) queryFilter.status = filters.status;
 
-            // Number Filter - amount   `k            if (filters?.min) queryParams.amount = { $gte: filters.min };
+            // Number Filter - amount   `k            if (filters?.min) queryFilter.amount = { $gte: filters.min };
             if (filters?.max) {
-                const target = queryParams.amount ? queryParams.amount : {};
-                queryParams.amount = Object.assign(target, {
+                const target = queryFilter.amount ? queryFilter.amount : {};
+                queryFilter.amount = Object.assign(target, {
                     $lte: filters.max,
                 });
             }
 
-            const foundTransactions = await Transaction.find(queryParams, {
+            const foundTransactions = await Transaction.find(queryFilter, {
                 lender: 0,
             }).sort('-createdAt');
             if (foundTransactions.length == 0)

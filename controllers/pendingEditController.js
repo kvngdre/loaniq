@@ -445,9 +445,9 @@ module.exports = {
 
     update: async (id, user, payload) => {
         try {
-            const queryParams = { _id: id, createdBy: user.id };
+            const queryFilter = { _id: id, createdBy: user.id };
 
-            const foundEditRequest = await PendingEdit.findOne(queryParams);
+            const foundEditRequest = await PendingEdit.findOne(queryFilter);
             if (!foundEditRequest)
                 return new ServerError(404, 'Edit request document not found');
             if (foundEditRequest.status !== 'Pending')
@@ -538,7 +538,7 @@ module.exports = {
     delete: async (id, user) => {
         try {
             //
-            const queryParams = ![
+            const queryFilter = ![
                 roles.admin,
                 roles.master,
                 roles.owner,
@@ -546,7 +546,7 @@ module.exports = {
                 ? { _id: id, createdBy: user.id }
                 : { _id: id };
 
-            const foundPendingEdit = await PendingEdit.findOne(queryParams);
+            const foundPendingEdit = await PendingEdit.findOne(queryFilter);
             if (!foundPendingEdit)
                 return new ServerError(404, 'Edit request not found');
             if (foundPendingEdit.status !== 'Pending')
