@@ -1,6 +1,0 @@
-{
-    "name": "Apexxia App - Development",
-    "db": {
-        "uri": "mongodb://127.0.0.1/apex_"
-    }
-}

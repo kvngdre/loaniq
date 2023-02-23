@@ -1,0 +1,34 @@
+import authRoutes from './auth.routes'
+import bankRoutes from './bank.routes'
+import customerRoutes from './customer.routes'
+import dashboardRoutes from './dashboard.routes'
+import loanRoutes from './loan.routes'
+import pendingEditRoutes from './pendingEdit.routes'
+import segmentRoutes from './segment.routes'
+import stateRoutes from './state.routes'
+import tenantRoutes from './tenant.routes'
+import testRoutes from './test.routes'
+import transactionRoutes from './transaction.routes'
+import userRoutes from './user.routes'
+import webhookRoutes from './webhook.routes'
+import Router from 'express'
+
+const router = Router()
+
+export default () => {
+  router.use('/auth', authRoutes)
+  router.use('/bank', bankRoutes)
+  router.use('/customer', customerRoutes)
+  router.use('/dashboard', dashboardRoutes)
+  router.use('/loan', loanRoutes)
+  router.use('/pending-edit', pendingEditRoutes)
+  router.use('/segment', segmentRoutes)
+  router.use('/state', stateRoutes)
+  router.use('/tenant', tenantRoutes)
+  router.use('/test', testRoutes)
+  router.use('/transaction', transactionRoutes)
+  router.use('/user', userRoutes)
+  router.use('/webhook', webhookRoutes)
+
+  return router
+}
