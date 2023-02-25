@@ -51,7 +51,7 @@ class TenantValidator extends BaseValidator {
   #cacNumberSchema
   #categorySchema
   #supportSchema
-  #socialsSchema
+  #urlSchema
 
   constructor () {
     super()
@@ -75,7 +75,9 @@ class TenantValidator extends BaseValidator {
       state: Joi.string().invalid('').label('State').messages({
         'any.invalid': '{#label} is required'
       })
-    }).min(1).label('Location')
+    })
+      .min(1)
+      .label('Location')
 
     this.#cacNumberSchema = Joi.string()
       .label('CAC number')
@@ -83,7 +85,7 @@ class TenantValidator extends BaseValidator {
       .invalid('RC0000', 'RC000')
       .messages({
         'any.invalid': '{#label} is not valid',
-        'string.pattern.base': '{#label} must begin with "RC"',
+        'string.pattern.base': '{#label} must begin with "RC"'
       })
 
     this.#categorySchema = Joi.string()
@@ -96,30 +98,43 @@ class TenantValidator extends BaseValidator {
       phone_number: this._phoneNumberSchema.label('Support phone number')
     }).min(1)
 
-    this.#socialsSchema = Joi.object({
-      name: Joi.string().label('Social media name').valid(...socials),
-      url: Joi.string().label('Social media url'),
+    this.socialsSchema = Joi.object({
+      platform: Joi.string()
+        .label('Social platform')
+        .valid(...socials),
+      url: Joi.string().label('Social url'),
       active: Joi.boolean().label('Active').default(false)
     }).min(1)
+
+    this.#urlSchema = Joi.string()
+      .label('URL')
+      .custom((value, helpers) => {
+        try {
+          URL(value)
+
+          return value
+        } catch (err) {
+          helpers.error('any.invalid')
+        }
+      })
+      .messages({ 'any.invalid': '{#label} not valid' })
   }
 
   validateSignUp = (dto) => {
     const schema = Joi.object({
-      tenant: {
+      tenant: Joi.object({
         company_name: this.#companyNameSchema.required(),
         category: this.#categorySchema.required()
-      },
-      user: {
-        name: this._nameSchema.required(),
+      }).required(),
+      user: Joi.object({
+        name: this._nameSchema.and('first', 'last').required(),
         email: this._emailSchema.required(),
-        phone_number: this._phoneNumberSchema
-          .label('User phone number')
-          .required()
-      }
+        phone_number: this._phoneNumberSchema.required()
+      }).required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }
@@ -133,10 +148,9 @@ class TenantValidator extends BaseValidator {
       category: this.#categorySchema,
       email: this._emailSchema,
       phone_number: this._phoneNumberSchema,
-      website: Joi.string(),
-      support: this.#supportSchema,
-      social: this.#socialsSchema
-    })
+      website: this.#urlSchema.label('Website').required(),
+      support: this.#supportSchema
+    }).min(1)
 
     let { value, error } = schema.validate(dto)
     error = this._refineError(error)
@@ -162,8 +176,8 @@ class TenantValidator extends BaseValidator {
       password: Joi.string().label('Password').max(256).required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }

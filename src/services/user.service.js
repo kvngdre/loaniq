@@ -11,26 +11,26 @@ class UserService {
     return newUser
   }
 
-  static async getUsers(query = {}, projection = {}) {
+  static async getUsers (query = {}, projection = {}) {
     const foundUsers = await UserDAO.findAll(query, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, foundUsers }
   }
 
-  static async getUser(userId, projection = {}) {
+  static async getUser (userId, projection = {}) {
     const foundUser = await UserDAO.findById(userId, projection)
 
     return foundUser
   }
 
-  static async updateUser(userId, updateUserDto, projection = {}) {
+  static async updateUser (userId, updateUserDto, projection = {}) {
     const updatedUser = await UserDAO.update(userId, updateUserDto, projection)
 
     return updatedUser
   }
 
-  static async deleteUser(userId, projection = {}) {
+  static async deleteUser (userId, projection = {}) {
     const deletedUser = await UserDAO.remove(userId, projection)
 
     return deletedUser

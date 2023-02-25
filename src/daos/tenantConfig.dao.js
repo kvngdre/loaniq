@@ -30,6 +30,29 @@ class TenantConfigDAO extends BaseDAO {
 
     return foundRecords
   }
+
+  static async update (id, updateRecordDto) {
+    try {
+      const foundRecord = await TenantConfig.findById(id)
+
+      foundRecord.set(updateRecordDto)
+      await foundRecord.save()
+
+      return foundRecord
+    } catch (exception) {
+      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+        const field = this.getDuplicateField(exception)
+        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+      }
+
+      if (exception.name === 'ValidationError') {
+        const errMsg = this.getValidationErrorMsg(exception)
+        throw new ValidationError(errMsg)
+      }
+
+      throw exception
+    }
+  }
 }
 
 export default TenantConfigDAO

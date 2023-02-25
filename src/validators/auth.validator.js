@@ -8,12 +8,14 @@ class AuthValidator extends BaseValidator {
       current_password: Joi.string().label('Current password').required(),
       new_password: this._passwordSchema.required(),
       confirm_password: Joi.string()
+        .label('Confirm password')
         .equal(Joi.ref('new_password'))
-        .messages({ 'any.only': 'Passwords do not match' }).required()
+        .messages({ 'any.only': 'Passwords do not match' })
+        .required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }
@@ -24,8 +26,8 @@ class AuthValidator extends BaseValidator {
       password: Joi.string().max(256).label('Password').required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }
@@ -35,8 +37,8 @@ class AuthValidator extends BaseValidator {
       email: this._emailSchema.required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }

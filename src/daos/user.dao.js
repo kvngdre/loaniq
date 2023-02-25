@@ -13,7 +13,7 @@ class UserDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
+        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
       }
 
       if (exception.name === 'ValidationError') {
@@ -46,12 +46,26 @@ class UserDAO extends BaseDAO {
   }
 
   static async update (id, updateDto, projection = {}) {
-    const foundRecord = await User.findById(id, projection)
+    try {
+      const foundRecord = await User.findById(id, projection)
 
-    foundRecord.set(updateDto)
-    await foundRecord.save()
+      foundRecord.set(updateDto)
+      await foundRecord.save()
 
-    return foundRecord
+      return foundRecord
+    } catch (exception) {
+      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+        const field = this.getDuplicateField(exception)
+        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+      }
+
+      if (exception.name === 'ValidationError') {
+        const errMsg = this.getValidationErrorMsg(exception)
+        throw new ValidationError(errMsg)
+      }
+
+      throw exception
+    }
   }
 
   static async updateMany (matchObj, updateDto) {

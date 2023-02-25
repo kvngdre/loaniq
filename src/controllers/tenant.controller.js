@@ -43,7 +43,7 @@ class TenantController extends BaseController {
 
   static updateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
     const tenant = await TenantService.updateTenant(req.params.tenantId, value)
     const response = this.apiResponse('Tenant updated.', tenant)
@@ -73,7 +73,7 @@ class TenantController extends BaseController {
 
   static deactivateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateDeactivate(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
     await TenantService.activateTenant(
       req.params.tenantId,

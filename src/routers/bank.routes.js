@@ -1,7 +1,7 @@
 import { userRoles } from '../utils/constants'
 import bankController from '../controllers/bank.controller'
 import Router from 'express'
-import validateObjectId from '../middleware/validateObjectId'
+import validateObjectId from '../middleware/validateId'
 import verifyRole from '../middleware/verifyRole'
 import auth from '../middleware/verifyToken'
 

@@ -2,11 +2,11 @@ import { httpCodes } from '../utils/constants'
 import BaseError from './BaseError'
 
 class ConflictError extends BaseError {
-  constructor (description) {
+  constructor (description, name = 'Conflict Error') {
     const httpCode = httpCodes.CONFLICT
     const isOperational = true
 
-    super(httpCode, isOperational, description)
+    super(name, httpCode, isOperational, description)
   }
 }
 

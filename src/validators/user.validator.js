@@ -39,3 +39,5 @@ class UserValidator extends BaseValidator {
     })
   }
 }
+
+export default UserValidator

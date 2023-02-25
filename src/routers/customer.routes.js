@@ -4,7 +4,7 @@ import customerController from '../controllers/customer.controller'
 import Router from 'express'
 import ServerError from '../errors/serverError'
 import upload from '../middleware/fileUpload'
-import validateObjectId from '../middleware/validateObjectId'
+import validateObjectId from '../middleware/validateId'
 import verifyRole from '../middleware/verifyRole'
 
 const router = Router()

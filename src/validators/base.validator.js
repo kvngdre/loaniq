@@ -40,7 +40,7 @@ class BaseValidator {
       'string.min': '{#label} is not valid',
       'string.max': '{#label} is too long'
     })
-  })
+  }).min(1)
 
   _genderSchema = Joi.string().valid('Male', 'Female').messages({
     'any.only': 'Invalid gender',
@@ -66,7 +66,7 @@ class BaseValidator {
     })
 
   _emailSchema = Joi.string().email().label('Email').messages({
-    'string.email': '{#label} is invalid',
+    'string.email': '{#label} is  not valid',
     'any.required': '{#label} is required'
   })
 

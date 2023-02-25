@@ -6,7 +6,7 @@ import Router from 'express'
 import ServerError from '../errors/serverError'
 import verifyRole from '../middleware/verifyRole'
 import verifyToken from '../middleware/verifyToken'
-import validateObjectId from '../middleware/validateObjectId'
+import validateObjectId from '../middleware/validateId'
 
 const router = Router()
 

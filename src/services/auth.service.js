@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
 import BadRequestError from '../errors/BadRequestError'
-import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
 import generateOTP from '../utils/generateOTP'
@@ -15,12 +14,12 @@ import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
 
 class AuthService {
-  static async verifyRegistration (verifyRegDto, token) {
+  static async verifySignUp (verifyRegDto, token) {
     const { email, otp, current_password, new_password } = verifyRegDto
 
     const foundUser = await UserDAO.findByField({ email })
     if (foundUser.active) {
-      throw new ConflictError('User has been verified, please sign in.')
+      throw new BadRequestError('User has been verified, please sign in.')
     }
 
     const isMatch = foundUser.comparePasswords(current_password)
@@ -83,12 +82,15 @@ class AuthService {
 
     if (!foundUser.isEmailVerified && !foundUser.active) {
       return [
-        'New User, verify email.',
+        'Your account has not been confirmed.',
         {
-          name: foundUser.name,
-          active: foundUser.active,
-          isEmailVerified: foundUser.isEmailVerified,
-          tenantId: foundUser.tenantId
+          email,
+          role: foundUser.role,
+          accessToken: null,
+          redirect: {
+            verify_registration: true,
+            reset_password: false
+          }
         },
         null
       ]
@@ -96,20 +98,23 @@ class AuthService {
 
     if (foundUser.resetPwd && foundUser.active) {
       return [
-        'Password reset triggered',
+        'Your password reset has been triggered.',
         {
-          name: foundUser.name,
-          active: foundUser.active,
-          isEmailVerified: foundUser.isEmailVerified,
-          tenantId: foundUser.tenantId
+          email,
+          role: foundUser.role,
+          accessToken: null,
+          redirect: {
+            verify_registration: false,
+            reset_password: true
+          }
         },
         null
       ]
     }
 
     if (!foundUser.active) {
-      throw new UnauthorizedError(
-        'Account deactivated. Contact your administrator. '
+      throw new ForbiddenError(
+        'Account deactivated. Contact your administrator.'
       )
     }
 
@@ -121,13 +126,20 @@ class AuthService {
         (rt) => rt.token !== token && Date.now() < rt.expires
       )
 
-      // Refresh token reuse detected. Delete all refresh tokens.
+      /**
+       * * Scenario simulated here:
+       * * 1) User logs in, never uses the refresh token and does not logout.
+       * * 2) The refresh token gets stolen
+       * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
+       */
       await UserDAO.findByField({
-        refreshTokens: {
-          $elemMatch: { token }
-        }
+        refreshTokens: { $elemMatch: { token } }
       }).catch(() => {
-        foundUser.updateOne({ refreshTokens: [] })
+        /**
+         * ! Refresh token reuse detected.
+         * * Purge user refresh token array.
+         */
+        foundUser.set({ refreshTokens: [] })
       })
     }
 
@@ -137,7 +149,11 @@ class AuthService {
     // Emitting event
     pubsub.publish(events.user.login, { userId: foundUser._doc._id })
 
-    return ['Login successful', { email, accessToken }, refreshToken]
+    return [
+      'Login successful.',
+      { email, role: foundUser.role, accessToken, redirect: null },
+      refreshToken
+    ]
   }
 
   static async getNewTokenSet (token) {
@@ -187,6 +203,7 @@ class AuthService {
     foundUser.set({ otp: generatedOTP })
     await foundUser.save()
 
+    logger.info('Sending otp mail...')
     await mailer({
       to: email,
       subject: 'Your one-time-pin request',

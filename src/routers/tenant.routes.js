@@ -2,7 +2,7 @@ import { userRoles } from '../utils/constants'
 import auth from '../middleware/verifyToken'
 import Router from 'express'
 import upload from '../middleware/fileUpload'
-import validateObjectId from '../middleware/validateObjectId'
+import validateId from '../middleware/validateId'
 import verifyRole from '../middleware/verifyRole'
 import TenantController from '../controllers/tenant.controller'
 import tenantConfigRoutes from './tenantConfig.routes'
@@ -16,21 +16,21 @@ router.use('/wallets', walletRoutes)
 
 router.post('/sign_up', TenantController.signUp)
 
-router.post('/activate/:tenantId', TenantController.activateTenant)
+router.post('/activate/:tenantId', [validateId], TenantController.activateTenant)
 
 router.get('/', TenantController.getTenants)
 
 router.get('/mine', TenantController.getCurrentTenant)
 
-router.get('/reactivate/:tenantId', TenantController.reactivateTenant)
+router.get('/reactivate/:tenantId', [validateId], TenantController.reactivateTenant)
 
 router.get('/:tenantId', TenantController.getTenants)
 
-router.patch('/:tenantId', TenantController.updateTenant)
+router.patch('/:tenantId', [validateId], TenantController.updateTenant)
 
-router.post('activate/:tenantId', TenantController.activateTenant)
+router.post('activate/:tenantId', [validateId], TenantController.activateTenant)
 
-router.post('deactivate/:tenantId', TenantController.deactivateTenant)
+router.post('deactivate/:tenantId', [validateId], TenantController.deactivateTenant)
 
 // router.post('/upload/logo', [upload.single('logo')], (req, res) => {
 //   console.log(req.file)

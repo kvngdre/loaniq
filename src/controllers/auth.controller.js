@@ -2,25 +2,26 @@ import { constants } from '../config'
 import { httpCodes } from '../utils/constants'
 import AuthService from '../services/auth.service'
 import authValidator from '../validators/auth.validator'
-import BadRequestError from '../errors/BadRequestError'
 import BaseController from './base.controller'
 import ValidationError from '../errors/ValidationError'
+import UnauthorizedError from '../errors/UnauthorizedError'
 
 class AuthController extends BaseController {
   static verifyRegistration = async (req, res) => {
-    if (res.cookies?.jwt) {
-      res.clearCookie('jwt', {
-        httpOnly: true,
-        sameSite: 'None',
-        secure: constants.secure_cookie
-      })
-    }
+    const token = res.cookies?.jwt
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie
+    })
 
     const { value, error } = authValidator.validateVerifyReg(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
-    const { accessToken, refreshToken, user } =
-      await AuthService.verifyRegistration(value, res.cookies?.jwt)
+    const { accessToken, refreshToken, user } = await AuthService.verifySignUp(
+      value,
+      token
+    )
 
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
@@ -29,30 +30,27 @@ class AuthController extends BaseController {
       maxAge: constants.jwt.exp_time.refresh * 1000
     })
 
-    const payload = { user, accessToken }
-    const response = this.apiResponse('User verified.', payload)
+    const response = this.apiResponse('User verified.', { user, accessToken })
 
     return res.status(httpCodes.OK).json(response)
   }
 
   static login = async (req, res) => {
-    if (res.cookies?.jwt) {
-      res.clearCookie('jwt', {
-        httpOnly: true,
-        sameSite: 'None',
-        secure: constants.secure_cookie
-      })
-    }
+    const token = req.cookies?.jwt
+    console.log(token)
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie
+    })
 
     const { value, error } = authValidator.validateLogin(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
-    const [message, payload, refreshToken] = await AuthService.login(
-      value,
-      res.cookies?.jwt
-    )
+    const [message, data, refreshToken] = await AuthService.login(value, token)
 
     if (refreshToken) {
+      // Create secure cookie with refresh token.
       res.cookie('jwt', refreshToken.token, {
         httpOnly: true,
         sameSite: 'None',
@@ -60,14 +58,14 @@ class AuthController extends BaseController {
         maxAge: constants.jwt.exp_time.refresh * 1000
       })
     }
-    const response = this.apiResponse(message, payload)
+    const response = this.apiResponse(message, data)
 
-    res.status(httpCodes.OK).json(response)
+    res.status(httpCodes.FORBIDDEN).json(response)
   }
 
   static getNewTokenSet = async (req, res) => {
-    if (!req.cookies?.jwt) throw new BadRequestError('No refresh token found.')
     const token = req.cookies?.jwt
+    if (!token) throw new UnauthorizedError('No refresh token found.')
 
     // Clear jwt cookie
     res.clearCookie('jwt', {
@@ -80,7 +78,7 @@ class AuthController extends BaseController {
       token
     )
 
-    // Setting new refresh token cookie
+    // Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
       sameSite: 'None',

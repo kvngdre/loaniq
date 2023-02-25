@@ -10,6 +10,7 @@ export const geoZones = [
 export const httpCodes = {
   OK: 200,
   CREATED: 201,
+  FOUND_REDIRECT: 307,
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
   PAYMENT_REQUIRED: 402,

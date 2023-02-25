@@ -20,7 +20,7 @@ class AuthController {
     if (error) throw new ValidationError(error.details[0].message)
 
     const { accessToken, refreshToken, user } =
-      await AuthService.verifyRegistration(value, res.cookies?.jwt)
+      await AuthService.verifySignUp(value, res.cookies?.jwt)
 
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
