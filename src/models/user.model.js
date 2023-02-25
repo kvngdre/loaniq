@@ -45,7 +45,7 @@ const userSchema = new Schema(
       }
     },
 
-    displayName: {
+    display_name: {
       type: String,
       trim: true,
       maxLength: 50,
@@ -54,7 +54,7 @@ const userSchema = new Schema(
       }
     },
 
-    jobTitle: {
+    job_title: {
       type: String,
       minLength: 2,
       maxLength: 50,
@@ -104,6 +104,18 @@ const userSchema = new Schema(
       required: true
     },
 
+    role: {
+      type: String,
+      enum: Object.values(userRoles),
+      default: userRoles.OWNER,
+      required: true
+    },
+
+    assignedSegments: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Segment'
+    },
+
     resetPwd: {
       type: Boolean,
       default: true
@@ -124,18 +136,6 @@ const userSchema = new Schema(
         type: Number,
         default: null
       }
-    },
-
-    role: {
-      type: String,
-      enum: Object.values(userRoles),
-      default: userRoles.OWNER,
-      required: true
-    },
-
-    segments: {
-      type: [Schema.Types.ObjectId],
-      ref: 'Segment'
     },
 
     refreshTokens: {

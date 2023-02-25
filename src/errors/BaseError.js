@@ -1,8 +1,9 @@
 class BaseError extends Error {
-  constructor (httpCode, isOperational, description) {
+  constructor (name, httpCode, isOperational, description) {
     super(description)
     Object.setPrototypeOf(this, new.target.prototype)
 
+    this.name = name
     this.code = httpCode
     this.isOperational = isOperational
 

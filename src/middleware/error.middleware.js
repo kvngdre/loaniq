@@ -2,11 +2,12 @@ import { httpCodes } from '../utils/constants'
 import ErrorHandler from '../errors/ErrorHandler'
 
 class ErrorResponse {
-  constructor (description) {
+  constructor (err) {
     this.success = false
-    this.error = {
-      message: description
-    }
+    this.name = err.name
+    this.errors = err.path
+      ? { [err.path]: err.message }
+      : { message: err.message }
   }
 }
 
@@ -22,10 +23,15 @@ export default (err, req, res, next) => {
   ErrorHandler.handleError(err)
 
   if (ErrorHandler.isTrustedError(err)) {
-    return res.status(err.code).json(new ErrorResponse(err.message))
+    return res.status(err.code).json(new ErrorResponse(err))
   }
 
   return res
     .status(httpCodes.INTERNAL_SERVER)
-    .json(new ErrorResponse('Something went wrong.'))
+    .json(
+      new ErrorResponse({
+        name: 'Server Error',
+        message: 'Something went wrong.'
+      })
+    )
 }

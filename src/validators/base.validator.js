@@ -1,8 +1,9 @@
 import { joiPassword } from 'joi-password'
+import { userRoles } from '../utils/constants'
 import Joi from 'joi'
 
 class BaseValidator {
-  formatErrorMessage = (error) => {
+  formatErrorMessage (error) {
     const regex = /\B(?=(\d{3})+(?!\d))/g
     const errorMsg = error.details[0].message
 
@@ -12,35 +13,41 @@ class BaseValidator {
     // Insert comma to number if a number is present in the error message.
     formattedMsg = formattedMsg.replace(regex, ',')
 
-    error.details[0].message = formattedMsg
     return formattedMsg
   }
 
+  _refineError = (error) => {
+    if (error) {
+      error = {
+        message: this.formatErrorMessage(error),
+        path: error.details[0].path.reduce((acc, value) => acc + '.' + value)
+      }
+    }
+
+    return error
+  }
+
   _nameSchema = Joi.object({
-    first: Joi.string()
-      .min(2)
-      .max(255)
-      .messages({
-        'string.min': 'Invalid first name.',
-        'string.max': 'First name is too long',
-        'any.required': 'First name is required'
-      })
-      .required(),
-    last: Joi.string()
-      .min(2)
-      .max(255)
-      .messages({
-        'string.min': 'Invalid surname',
-        'string.max': 'Surname is too long',
-        'any.required': 'Surname is required'
-      })
-      .required(),
-    middle: Joi.string().min(2).max(255).messages({
-      'string.min': 'Invalid middle name',
-      'string.max': 'Middle name is too long',
-      'any.required': 'Middle name is required'
+    first: Joi.string().label('First name').min(2).max(255).trim().messages({
+      'string.min': '{#label} is not valid',
+      'string.max': '{#label} is too long'
+    }),
+    last: Joi.string().label('Last name').min(2).max(255).trim().messages({
+      'string.min': '{#label} is not valid',
+      'string.max': '{#label} is too long'
+    }),
+    middle: Joi.string().label('Middle name').min(2).max(255).trim().messages({
+      'string.min': '{#label} is not valid',
+      'string.max': '{#label} is too long'
     })
   })
+
+  _genderSchema = Joi.string().valid('Male', 'Female').messages({
+    'any.only': 'Invalid gender',
+    'any.required': 'Gender is required'
+  })
+
+  _dobSchema = Joi.date().label('Date of birth').less('now')
 
   _phoneNumberSchema = Joi.string()
     .label('Phone number')
@@ -58,7 +65,7 @@ class BaseValidator {
       'any.required': 'OTP is required'
     })
 
-  _emailSchema = Joi.string().label('Email').email().messages({
+  _emailSchema = Joi.string().email().label('Email').messages({
     'string.email': '{#label} is invalid',
     'any.required': '{#label} is required'
   })
@@ -80,6 +87,12 @@ class BaseValidator {
       'password.minOfNumeric': '{#label} should contain at least {#min} number',
       'password.noWhiteSpaces': '{#label} should not contain white spaces'
     })
+
+  _displayNameSchema = Joi.string().label('Display name').max(255)
+
+  _roleSchema = Joi.string()
+    .label('Role')
+    .valid(...Object.values(userRoles))
 }
 
 export default BaseValidator

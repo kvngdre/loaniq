@@ -47,7 +47,7 @@ import Joi from 'joi'
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema
-  #addressSchema
+  #locationSchema
   #cacNumberSchema
   #categorySchema
   #supportSchema
@@ -58,46 +58,49 @@ class TenantValidator extends BaseValidator {
 
     this.#companyNameSchema = Joi.string()
       .label('Company name')
+      .min(2)
       .max(255)
       .messages({
-        'string.max': '{#label} is too long',
-        'any.required': '{#label} is required'
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long'
       })
 
-    this.#addressSchema = Joi.object({
-      address: Joi.string(),
-      lga: Joi.string(),
-      state: Joi.string()
-    })
+    this.#locationSchema = Joi.object({
+      address: Joi.string().invalid('').label('Address').messages({
+        'any.invalid': '{#label} is required'
+      }),
+      lga: Joi.string().invalid('').label('LGA').messages({
+        'any.invalid': '{#label} is required'
+      }),
+      state: Joi.string().invalid('').label('State').messages({
+        'any.invalid': '{#label} is required'
+      })
+    }).min(1).label('Location')
 
     this.#cacNumberSchema = Joi.string()
+      .label('CAC number')
       .pattern(/^RC[\d]{3,8}$/)
       .invalid('RC0000', 'RC000')
       .messages({
-        'any.invalid': 'Invalid CAC number',
-        'string.pattern.base': 'CAC number must begin with "RC".',
-        'any.required': 'CAC number is required'
+        'any.invalid': '{#label} is not valid',
+        'string.pattern.base': '{#label} must begin with "RC"',
       })
 
     this.#categorySchema = Joi.string()
+      .label('Category')
       .valid(...companyCategory)
-      .messages({
-        'any.only': 'Not a valid category',
-        'any.required': 'Company category is required'
-      })
+      .messages({ 'any.only': 'Not a valid category' })
 
     this.#supportSchema = Joi.object({
-      email: this._emailSchema.label('Support email address'),
+      email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
-    })
+    }).min(1)
 
     this.#socialsSchema = Joi.object({
-      name: Joi.string()
-        .valid(...socials)
-        .required(),
-      url: Joi.string().required(),
-      active: Joi.boolean().default(false)
-    })
+      name: Joi.string().label('Social media name').valid(...socials),
+      url: Joi.string().label('Social media url'),
+      active: Joi.boolean().label('Active').default(false)
+    }).min(1)
   }
 
   validateSignUp = (dto) => {
@@ -108,7 +111,7 @@ class TenantValidator extends BaseValidator {
       },
       user: {
         name: this._nameSchema.required(),
-        email: this._emailSchema.label('User email address').required(),
+        email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema
           .label('User phone number')
           .required()
@@ -125,35 +128,31 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       logo: Joi.string(),
       company_name: this.#companyNameSchema,
-      location: this.#addressSchema.min(1),
+      location: this.#locationSchema,
       cac_number: this.#cacNumberSchema,
       category: this.#categorySchema,
       email: this._emailSchema,
       phone_number: this._phoneNumberSchema,
       website: Joi.string(),
-      support: this.#supportSchema.min(1),
-      social: this.#socialsSchema.min(1)
+      support: this.#supportSchema,
+      social: this.#socialsSchema
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }
 
   validateActivate = (dto) => {
     const schema = Joi.object({
-      location: Joi.object({
-        address: Joi.string().required(),
-        lga: Joi.string().required(),
-        state: Joi.string().required()
-      }),
+      location: this.#locationSchema.and('address', 'lga', 'state').required(),
       cac_number: this.#cacNumberSchema.required(),
-      support: this.#supportSchema.required()
+      support: this.#supportSchema.and('email', 'phone_number').required()
     })
 
-    const { value, error } = schema.validate(dto)
-    if (error) this.formatErrorMessage(error)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
     return { value, error }
   }

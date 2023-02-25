@@ -7,7 +7,7 @@ import ValidationError from '../errors/ValidationError'
 class TenantController extends BaseController {
   static signUp = async (req, res) => {
     const { value, error } = tenantValidator.validateSignUp(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
     const newTenant = await TenantService.createTenant(value)
     const response = this.apiResponse(
@@ -60,7 +60,7 @@ class TenantController extends BaseController {
 
   static activateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateActivate(req.body)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
     await TenantService.activateTenant(
       req.params.tenantId,

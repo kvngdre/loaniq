@@ -7,6 +7,7 @@ import pubsub from '../pubsub/PubSub'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
+import BadRequestError from '../errors/BadRequestError'
 
 class TenantService {
   static async createTenant (dto) {
@@ -94,6 +95,8 @@ class TenantService {
   static async activateTenant (tenantId, activateDto) {
     const { cac_number, support } = activateDto
     const foundTenant = await TenantDAO.findById(tenantId)
+
+    if (foundTenant.activated) throw new BadRequestError('Tenant already activated.')
 
     foundTenant.set({
       emailVerified: true,
