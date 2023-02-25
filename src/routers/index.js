@@ -3,7 +3,7 @@ import bankRoutes from './bank.routes'
 import customerRoutes from './customer.routes'
 import dashboardRoutes from './dashboard.routes'
 import loanRoutes from './loan.routes'
-import pendingEditRoutes from './pendingEdit.routes'
+import reviewRoutes from './review.routes.js'
 import segmentRoutes from './segment.routes'
 import stateRoutes from './state.routes'
 import tenantRoutes from './tenant.routes'
@@ -17,18 +17,18 @@ const router = Router()
 
 export default () => {
   router.use('/auth', authRoutes)
-  router.use('/bank', bankRoutes)
-  router.use('/customer', customerRoutes)
+  router.use('/banks', bankRoutes)
+  router.use('/customers', customerRoutes)
   router.use('/dashboard', dashboardRoutes)
-  router.use('/loan', loanRoutes)
-  router.use('/pending-edit', pendingEditRoutes)
-  router.use('/segment', segmentRoutes)
-  router.use('/state', stateRoutes)
-  router.use('/tenant', tenantRoutes)
+  router.use('/loans', loanRoutes)
+  router.use('/reviews', reviewRoutes)
+  router.use('/segments', segmentRoutes)
+  router.use('/states', stateRoutes)
+  router.use('/tenants', tenantRoutes)
   router.use('/test', testRoutes)
-  router.use('/transaction', transactionRoutes)
-  router.use('/user', userRoutes)
-  router.use('/webhook', webhookRoutes)
+  router.use('/transactions', transactionRoutes)
+  router.use('/users', userRoutes)
+  router.use('/webhooks', webhookRoutes)
 
   return router
 }

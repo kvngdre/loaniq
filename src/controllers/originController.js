@@ -3,8 +3,7 @@ import { isValidObjectId } from 'mongoose'
 import { DateTime } from 'luxon'
 import Origin, { findOne, find } from '../models/origin'
 const debug = require('debug')('app:OriginCtrl')
-const logger = require('../utils/logger')('originCtrl.js')
-
+const logger = require('../utils/logger')
 const origin = {
   create: async function (payload) {
     try {

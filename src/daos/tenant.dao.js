@@ -1,13 +1,9 @@
-import Tenant from '../models/tenant.model'
-import BaseDAO from './BaseDAO'
+import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
+import Tenant from '../models/tenant.model'
 import ValidationError from '../errors/ValidationError'
 
 class TenantDAO extends BaseDAO {
-  constructor () {
-    super()
-  }
-
   static async insert (newRecordDto, trx) {
     try {
       const newRecord = new Tenant(newRecordDto)
@@ -27,6 +23,33 @@ class TenantDAO extends BaseDAO {
 
       throw exception
     }
+  }
+
+  static async findById (id, projection = {}) {
+    const foundRecord = await Tenant.findById(id, projection)
+
+    return foundRecord
+  }
+
+  static async findAll (query = {}, projection = {}) {
+    const foundRecords = await Tenant.find(query, projection)
+
+    return foundRecords
+  }
+
+  static async update (id, updateDto, projection = {}) {
+    const foundRecord = await Tenant.findById(id, projection)
+
+    foundRecord.set(updateDto)
+    await foundRecord.save()
+
+    return foundRecord
+  }
+
+  static async remove (id) {
+    const foundRecord = await Tenant.findByIdAndDelete(id)
+
+    return foundRecord
   }
 }
 

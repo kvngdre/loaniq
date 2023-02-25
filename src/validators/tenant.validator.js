@@ -1,214 +1,173 @@
+import { companyCategory, socials } from '../utils/constants'
+import BaseValidator from './base.validator'
 import Joi from 'joi'
-import objectId from 'joi-objectid'
-Joi.objectId = objectId(Joi)
 
-const CompanyNameSchema = Joi.string().max(255).messages({
-  'string.min': 'Company name is required',
-  'string.max': 'Company name is too long',
-  'any.required': 'Company name is required'
-})
+// const validators = {
+//   validateUpdateTenantSettings: function (settings) {
+//     const schema = Joi.object({
+//       segment: Joi.object({
+//         id: Joi.objectId().required(),
+//         interestRate: Joi.number(),
+//         minNetPay: Joi.number(),
+//         minLoanAmount: Joi.number(),
+//         maxLoanAmount: Joi.number(),
+//         minTenor: Joi.number(),
+//         maxTenor: Joi.number(),
+//         maxDti: Joi.number(),
+//         transferFee: Joi.number(),
+//         upfrontFeePercent: Joi.number()
+//       }),
 
-const addressSchema = Joi.object({
-  address: Joi.string().min(2).max(255).messages({
-    'string.min': 'Company address is required',
-    'string.max': 'Company address is too long',
-    'any.required': 'Company address is required'
-  }),
-  lga: Joi.string().messages({
-    'any.required': 'Select L.G.A of company operations'
-  }),
-  state: Joi.string().messages({
-    'any.required': 'Select state of company operations'
-  })
-})
+//       defaultParams: Joi.object({
+//         minLoanAmount: Joi.number(),
+//         maxLoanAmount: Joi.number(),
+//         minTenor: Joi.number(),
+//         maxTenor: Joi.number(),
+//         interestRate: Joi.number(),
+//         upfrontFeePercent: Joi.number(),
+//         transferFee: Joi.number(),
+//         minNetPay: Joi.number(),
+//         maxDti: Joi.number()
+//       })
+//     })
 
-const emailSchema = Joi.string().email().max(50).messages({
-  'string.min': 'Invalid company email address',
-  'string.max': 'Invalid company email address',
-  'string.email': 'Please enter a valid company email address',
-  'any.required': 'Company email address is required'
-})
+//     return schema.validate(settings)
+//   },
 
-const cacNumberSchema = Joi.string()
-  .pattern(/^RC[0-9]{3,8}/)
-  .invalid('RC0000', 'RC000')
-  .messages({
-    'any.invalid': 'Invalid CAC number',
-    'string.pattern.base': 'CAC number must begin with "RC".',
-    'any.required': 'CAC number is required'
-  })
+//   fundAccount: function (payload) {
+//     const schema = Joi.object({
+//       amount: Joi.number().precision(2).min(500).required().messages({
+//         'number.min': 'Minimum amount is 500.00.'
+//       })
+//     })
 
-const phoneSchema = Joi.string()
-  .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-  .messages({
-    'string.min': 'Invalid company phone number',
-    'string.max': 'Invalid company phone number',
-    'string.pattern.base':
-            'Invalid company phone number, please include international dialling code.'
-  })
+//     return schema.validate(payload)
+//   }
+// }
 
-const categorySchema = Joi.string()
-  .valid('MFB', 'Finance House', 'Money Lender')
-  .messages({
-    'any.only': 'Not a valid category',
-    'any.required': 'Please pick a company category'
-  })
+class TenantValidator extends BaseValidator {
+  #companyNameSchema
+  #addressSchema
+  #cacNumberSchema
+  #categorySchema
+  #supportSchema
+  #socialsSchema
 
-const supportSchema = Joi.object({
-  email: Joi.string().email().max(50).messages({
-    'string.min': 'Invalid support email address',
-    'string.max': 'Invalid support email address',
-    'string.email': 'Please enter a valid support email address',
-    'any.required': 'Support email address is required'
-  }),
-  phone: Joi.string()
-    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-    .messages({
-      'string.pattern.base':
-                'Invalid support phone number, please include international dialling code.',
-      'any.required': 'Support phone number is required'
+  constructor () {
+    super()
+
+    this.#companyNameSchema = Joi.string()
+      .label('Company name')
+      .max(255)
+      .messages({
+        'string.max': '{#label} is too long',
+        'any.required': '{#label} is required'
+      })
+
+    this.#addressSchema = Joi.object({
+      address: Joi.string(),
+      lga: Joi.string(),
+      state: Joi.string()
     })
-})
 
-const socialSchema = Joi.object({
-  twitter: Joi.string(),
-  instagram: Joi.string(),
-  facebook: Joi.string(),
-  whatsapp: Joi.string(),
-  youTube: Joi.string(),
-  tiktok: Joi.string()
-})
+    this.#cacNumberSchema = Joi.string()
+      .pattern(/^RC[\d]{3,8}$/)
+      .invalid('RC0000', 'RC000')
+      .messages({
+        'any.invalid': 'Invalid CAC number',
+        'string.pattern.base': 'CAC number must begin with "RC".',
+        'any.required': 'CAC number is required'
+      })
 
-const nameSchema = Joi.object({
-  first: Joi.string().min(2).max(255).messages({
-    'string.min': 'Invalid first name.',
-    'string.max': 'First name is too long',
-    'any.required': 'First name is required'
-  }),
-  last: Joi.string().min(2).max(255).messages({
-    'string.min': 'Invalid surname',
-    'string.max': 'Surname is too long',
-    'any.required': 'Surname is required'
-  }),
-  middle: Joi.string().min(2).max(255).messages({
-    'string.min': 'Invalid middle name',
-    'string.max': 'Middle name is too long',
-    'any.required': 'Middle name is required'
-  })
-})
+    this.#categorySchema = Joi.string()
+      .valid(...companyCategory)
+      .messages({
+        'any.only': 'Not a valid category',
+        'any.required': 'Company category is required'
+      })
 
-const otpSchema = Joi.string()
-  .pattern(/^[0-9]{8}$/)
-  .messages({
-    'string.pattern.base': 'Invalid OTP',
-    'any.required': 'OTP is required'
-  })
+    this.#supportSchema = Joi.object({
+      email: this._emailSchema.label('Support email address'),
+      phone_number: this._phoneNumberSchema.label('Support phone number')
+    })
 
-const validators = {
-  validateCreateTenant: function (payload) {
+    this.#socialsSchema = Joi.object({
+      name: Joi.string()
+        .valid(...socials)
+        .required(),
+      url: Joi.string().required(),
+      active: Joi.boolean().default(false)
+    })
+  }
+
+  validateSignUp = (dto) => {
     const schema = Joi.object({
       tenant: {
-        company_name: CompanyNameSchema.required(),
-        category: categorySchema.required()
-
+        company_name: this.#companyNameSchema.required(),
+        category: this.#categorySchema.required()
       },
       user: {
-        name: nameSchema.required(),
-        email: Joi.string()
-          .email()
-          .min(10)
-          .max(50)
-          .messages({
-            'string.min': 'Invalid user email address',
-            'string.max': 'Invalid user email address',
-            'string.email': 'Please enter a valid user email address',
-            'any.required': 'User email address is required'
-          })
-          .required(),
-        phone: Joi.string()
-          .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-          .messages({
-            'string.min': 'Invalid user phone number.',
-            'string.max': 'Invalid user phone number.',
-            'string.pattern.base':
-                            'Invalid user phone number, please include international dialling code.'
-          })
+        name: this._nameSchema.required(),
+        email: this._emailSchema.label('User email address').required(),
+        phone_number: this._phoneNumberSchema
+          .label('User phone number')
           .required()
       }
     })
 
-    return schema.validate(payload, { abortEarly: false })
-  },
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
 
-  validateActivateTenant: function (lender) {
-    const schema = Joi.object({
-      otp: otpSchema.required(),
-      cacNumber: cacNumberSchema.required(),
-      support: supportSchema.required()
-      // website: Joi.string().required().messages({
-      //     'any.required': 'Company website is required',
-      // }),
-    })
+    return { value, error }
+  }
 
-    return schema.validate(lender)
-  },
-
-  validateUpdateTenant: function (lender) {
+  validateUpdate = (dto) => {
     const schema = Joi.object({
       logo: Joi.string(),
-      CompanyName: CompanyNameSchema,
-      location: addressSchema,
-      cacNumber: cacNumberSchema,
-      category: categorySchema,
-      phone: phoneSchema,
+      company_name: this.#companyNameSchema,
+      location: this.#addressSchema.min(1),
+      cac_number: this.#cacNumberSchema,
+      category: this.#categorySchema,
+      email: this._emailSchema,
+      phone_number: this._phoneNumberSchema,
       website: Joi.string(),
-      support: supportSchema,
-      social: socialSchema
+      support: this.#supportSchema.min(1),
+      social: this.#socialsSchema.min(1)
     })
 
-    return schema.validate(lender)
-  },
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
 
-  validateUpdateTenantSettings: function (settings) {
+    return { value, error }
+  }
+
+  validateActivate = (dto) => {
     const schema = Joi.object({
-      segment: Joi.object({
-        id: Joi.objectId().required(),
-        interestRate: Joi.number(),
-        minNetPay: Joi.number(),
-        minLoanAmount: Joi.number(),
-        maxLoanAmount: Joi.number(),
-        minTenor: Joi.number(),
-        maxTenor: Joi.number(),
-        maxDti: Joi.number(),
-        transferFee: Joi.number(),
-        upfrontFeePercent: Joi.number()
+      location: Joi.object({
+        address: Joi.string().required(),
+        lga: Joi.string().required(),
+        state: Joi.string().required()
       }),
-
-      defaultParams: Joi.object({
-        minLoanAmount: Joi.number(),
-        maxLoanAmount: Joi.number(),
-        minTenor: Joi.number(),
-        maxTenor: Joi.number(),
-        interestRate: Joi.number(),
-        upfrontFeePercent: Joi.number(),
-        transferFee: Joi.number(),
-        minNetPay: Joi.number(),
-        maxDti: Joi.number()
-      })
+      cac_number: this.#cacNumberSchema.required(),
+      support: this.#supportSchema.required()
     })
 
-    return schema.validate(settings)
-  },
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
 
-  fundAccount: function (payload) {
+    return { value, error }
+  }
+
+  validateDeactivate = (dto) => {
     const schema = Joi.object({
-      amount: Joi.number().precision(2).min(500).required().messages({
-        'number.min': 'Minimum amount is 500.00.'
-      })
+      password: Joi.string().label('Password').max(256).required()
     })
 
-    return schema.validate(payload)
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
+
+    return { value, error }
   }
 }
 
-export default validators
+export default new TenantValidator()

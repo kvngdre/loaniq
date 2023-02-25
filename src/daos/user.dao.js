@@ -1,13 +1,9 @@
-import BaseDAO from './BaseDAO'
+import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import ValidationError from '../errors/ValidationError'
 import User from '../models/user.model'
+import ValidationError from '../errors/ValidationError'
 
 class UserDAO extends BaseDAO {
-  constructor () {
-    super()
-  }
-
   static async insert (newRecordDto, trx) {
     try {
       const newRecord = new User(newRecordDto)
@@ -27,6 +23,47 @@ class UserDAO extends BaseDAO {
 
       throw exception
     }
+  }
+
+  static async findById (id, projection = {}) {
+    const foundRecord = await User.findById(id, projection)
+
+    return foundRecord
+  }
+
+  static async findByField (query = null, projection = {}) {
+    if (!query) throw new Error('Query object is required')
+
+    const foundRecord = await User.findOne(query, projection)
+
+    return foundRecord
+  }
+
+  static async findAll (query = {}, projection = {}) {
+    const foundRecords = await User.find(query, projection)
+
+    return foundRecords
+  }
+
+  static async update (id, updateDto, projection = {}) {
+    const foundRecord = await User.findById(id, projection)
+
+    foundRecord.set(updateDto)
+    await foundRecord.save()
+
+    return foundRecord
+  }
+
+  static async updateMany (matchObj, updateDto) {
+    const result = await User.updateMany(matchObj, updateDto)
+
+    return result
+  }
+
+  static async remove (id) {
+    const foundRecord = await User.findByIdAndDelete(id)
+
+    return foundRecord
   }
 }
 

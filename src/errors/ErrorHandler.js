@@ -1,16 +1,19 @@
 import BaseError from './BaseError'
-// const logger = require('../utils/logger')('errorHandler');
+import logger from '../utils/logger'
 
 class ErrorHandler {
-  static isTrustedError (err) {
-    if (err instanceof BaseError) return true
+  static isTrustedError (error) {
+    if (error instanceof BaseError) return true
 
     return false
   }
 
-  static handleError (err) {
-    // logger.error({message: err.message, meta: err.stack});
-
+  static handleError (error) {
+    if (this.isTrustedError(error)) {
+      logger.error(error.message, error.stack)
+    } else {
+      logger.fatal(error.message, error.stack)
+    }
   }
 }
 

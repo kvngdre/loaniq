@@ -1,5 +1,5 @@
 import { httpCodes } from '../utils/constants'
-import { handleError, isTrustedError } from '../errors/ErrorHandler'
+import ErrorHandler from '../errors/ErrorHandler'
 
 class ErrorResponse {
   constructor (description) {
@@ -11,11 +11,21 @@ class ErrorResponse {
 }
 
 export default (err, req, res, next) => {
-  handleError(err)
+  // Catch errors for bad req json.
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(httpCodes.BAD_REQUEST).json({
+      success: false,
+      error: { message: 'Error in request JSON.' }
+    })
+  }
 
-  if (isTrustedError(err)) { return res.status(err.code).json(new ErrorResponse(err.message)) }
+  ErrorHandler.handleError(err)
+
+  if (ErrorHandler.isTrustedError(err)) {
+    return res.status(err.code).json(new ErrorResponse(err.message))
+  }
 
   return res
     .status(httpCodes.INTERNAL_SERVER)
-    .json(new ErrorResponse('Internal Server Error'))
+    .json(new ErrorResponse('Something went wrong.'))
 }

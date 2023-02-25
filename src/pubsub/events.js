@@ -9,6 +9,7 @@ export default {
   },
 
   user: {
-    new: 'onCreateUser'
+    new: 'onCreateUser',
+    login: 'onUserLogin'
   }
 }

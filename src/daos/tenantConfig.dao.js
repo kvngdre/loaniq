@@ -1,16 +1,12 @@
-import Config from '../models/config.model'
-import BaseDAO from './BaseDAO'
+import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
+import TenantConfig from '../models/tenantConfig.model'
 import ValidationError from '../errors/ValidationError'
 
-class ConfigDAO extends BaseDAO {
-  constructor () {
-    super()
-  }
-
+class TenantConfigDAO extends BaseDAO {
   static async insert (newRecordDto, trx) {
     try {
-      const newRecord = new Config(newRecordDto)
+      const newRecord = new TenantConfig(newRecordDto)
       await newRecord.save({ session: trx })
 
       return newRecord
@@ -28,6 +24,12 @@ class ConfigDAO extends BaseDAO {
       throw exception
     }
   }
+
+  static async findAll () {
+    const foundRecords = await TenantConfig.find({})
+
+    return foundRecords
+  }
 }
 
-export default ConfigDAO
+export default TenantConfigDAO

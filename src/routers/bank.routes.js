@@ -1,4 +1,4 @@
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import bankController from '../controllers/bank.controller'
 import Router from 'express'
 import validateObjectId from '../middleware/validateObjectId'
@@ -7,9 +7,9 @@ import auth from '../middleware/verifyToken'
 
 const router = Router()
 
-const { admin, master, owner } = roles
+const { ADMIN, MASTER, OWNER } = userRoles
 
-router.post('/', [auth, verifyRole(admin, owner, master)], async (req, res) => {
+router.post('/', [auth, verifyRole(ADMIN, OWNER, MASTER)], async (req, res) => {
   const response = await bankController.create(req.body)
   return res.status(response.code).json(response.payload)
 })
@@ -26,7 +26,7 @@ router.get('/:bankId', [auth, validateObjectId], async (req, res) => {
 
 router.patch(
   '/:bankId',
-  [auth, verifyRole(admin, master, owner), validateObjectId],
+  [auth, verifyRole(ADMIN, MASTER, OWNER), validateObjectId],
   async (req, res) => {
     const response = await bankController.updateBank(
       req.params.bankId,
@@ -38,7 +38,7 @@ router.patch(
 
 router.delete(
   '/:bankId',
-  [auth, verifyRole(roles.master), validateObjectId],
+  [auth, validateObjectId],
   async (req, res) => {
     const response = await bankController.deleteBank(req.params.bankId)
     return res.status(response.code).json(response.payload)

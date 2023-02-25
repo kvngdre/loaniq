@@ -6,7 +6,7 @@ import { create as _create, getAll, getOne, update as _update, delete_ } from '.
 
 const router = Router()
 
-router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const { error } = create(req.body)
   if (error) {
     const errorResponse = error.details
@@ -20,7 +20,7 @@ router.post('/', verifyToken, verifyRole('Master'), async (req, res) => {
 })
 
 // Get all staff
-router.post('/all', verifyToken, verifyRole('Master'), async (req, res) => {
+router.post('/all', verifyToken, async (req, res) => {
   const staff = await getAll(req.body)
   if (staff.hasOwnProperty('errorCode')) { return res.status(staff.errorCode).json(staff.message) }
 
@@ -34,7 +34,7 @@ router.get('/:id', verifyToken, async (req, res) => {
   return res.status(200).json(staff)
 })
 
-router.patch('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
   const { error } = update(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -44,7 +44,7 @@ router.patch('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
   return res.status(200).json(staff)
 })
 
-router.delete('/:id', verifyToken, verifyRole('Master'), async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   const staff = await delete (req.params.id)
   if (staff.hasOwnProperty('errorCode')) { return res.status(404).json(staff.message) }
 

@@ -2,10 +2,10 @@ import { calcAge, calcServiceLength } from '../utils/loanParamFuncs'
 import { loanStatus, maritalStatus, relationships, validIds } from '../utils/constants'
 import { updateMany } from './loanModel'
 import { Schema, model } from 'mongoose'
-import { findOne } from './segmentModel'
+import { findOne } from './segment.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:customerModel')
-const logger = require('../utils/logger').default('customerModel.js')
+const logger = require('../utils/Logger')
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

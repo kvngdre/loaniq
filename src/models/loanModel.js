@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose'
 import { calcDti, calcNetValue, calcRepayment, calcTotalRepayment, calcUpfrontFee } from '../utils/loanParamFuncs'
 import { loanStatus, loanRemarks } from '../utils/constants'
 import ServerError from '../errors/serverError'
-const logger = require('../utils/logger').default('loanModel.js')
+const logger = require('../utils/Logger')
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

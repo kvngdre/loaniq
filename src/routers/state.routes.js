@@ -1,4 +1,4 @@
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import Router from 'express'
 import ServerError from '../errors/serverError'
 import { create, getAll, getOne, update, delete_ } from '../controllers/stateController'
@@ -8,7 +8,7 @@ import verifyToken from '../middleware/verifyToken'
 
 const router = Router()
 
-router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const { error } = _create(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -37,7 +37,6 @@ router.get('/:id', verifyToken, async (req, res) => {
 router.patch(
   '/:id',
   verifyToken,
-  verifyRole(roles.master),
   async (req, res) => {
     const { error } = _update(req.body)
     if (error) return res.status(400).json(error.details[0].message)
@@ -52,7 +51,6 @@ router.patch(
 router.delete(
   '/:id',
   verifyToken,
-  verifyRole(roles.master),
   async (req, res) => {
     const state = await delete (req.params.id)
     if (state instanceof ServerError) { return res.status(state.errorCode).json(state.message) }

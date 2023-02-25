@@ -1,12 +1,12 @@
+// import credentials from '../middleware/credentials'
 import { constants } from '../config'
+import { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import corsOptions from '../config/corsOptions'
-// import credentials from '../middleware/credentials'
 import errorMiddleware from '../middleware/error.middleware'
-import morgan from 'morgan'
-import { json, urlencoded } from 'express'
 import helmet from 'helmet'
+import morgan from 'morgan'
 import NotFoundError from '../errors/NotFoundError'
 
 const { api } = constants
@@ -29,8 +29,8 @@ export default async function expressLoader (app, routes) {
   app.use(api.prefix + api.version, routes())
 
   // Catch and handle 404
-  app.use((req, res, next) => {
-    const err = new NotFoundError('Resource not found')
+  app.use((_req, _res, next) => {
+    const err = new NotFoundError('Page not found.')
     next(err)
   })
 

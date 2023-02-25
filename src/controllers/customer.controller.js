@@ -8,11 +8,11 @@ import flattenObject from '../utils/flattenObj'
 import { findById as _findById } from '../models/tenant.model'
 import { aggregate } from '../models/loanModel'
 import { startSession, Types } from 'mongoose'
-import Origin from '../models/origin.model'
-import PendingEdit from '../models/pendingEditModel'
+// import Origin from '../models/origin.model'
+import PendingEdit from '../models/review.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:customerCtrl')
-const logger = require('../utils/logger').default('customerCtrl.js')
+const logger = require('../utils/Logger')
 
 const MONGO_DUPLICATE_ERROR_CODE = 11000
 
@@ -186,7 +186,7 @@ class CustomerController {
           .sort('name.first')
       }
 
-      if (foundCustomers.length == 0) { return new ServerResponse(404, 'No customers found') }
+      if (foundCustomers.length === 0) { return new ServerResponse(404, 'No customers found') }
 
       return new ServerResponse(200, 'Success', foundCustomers)
     } catch (exception) {

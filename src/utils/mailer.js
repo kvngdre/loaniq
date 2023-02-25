@@ -1,31 +1,27 @@
 import { google } from 'googleapis'
 import { constants } from '../config'
-import hbs from 'nodemailer-express-handlebars'
 import { createTransport } from 'nodemailer'
 import { resolve } from 'path'
-const debug = require('debug')('app:mailer')
-const logger = require('../utils/logger').default('mailer.js')
+import DependencyError from '../errors/DependencyError'
+import hbs from 'nodemailer-express-handlebars'
+import logger from './Logger'
+
 const partialsPath = resolve(__dirname, '../assets/templates/partials/')
 const viewsPath = resolve(__dirname, '../assets/templates/views/')
 
 // TODO: clean up sendMail with domain name for sending mails
-const {
-  client_id,
-  client_secret,
-  refresh_token,
-  sender_email,
-  oauth_playground
-} = constants.mailer
+const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =
+  constants.mailer
 
 // Setting up oauth2Client
 const oauth2Client = new google.auth.OAuth2(
-  client_id,
-  client_secret,
-  refresh_token,
-  oauth_playground
+  clientId,
+  clientSecret,
+  refreshToken,
+  oauthPlayground
 )
 
-oauth2Client.setCredentials({ refresh_token })
+oauth2Client.setCredentials({ refresh_token: refreshToken })
 
 // Creating reusable transport object
 async function getTransporter () {
@@ -35,23 +31,18 @@ async function getTransporter () {
       service: 'gmail',
       auth: {
         type: 'OAuth2',
-        user: sender_email,
-        clientId: client_id,
-        clientSecret: client_secret,
-        refreshToken: refresh_token,
+        user: senderEmail,
+        clientId,
+        clientSecret,
+        refreshToken,
         accessToken
       }
     })
 
     return transporter
   } catch (exception) {
-    logger.error({
-      method: 'get_mail_transport',
-      message: exception.message,
-      meta: exception.stack
-    })
-    debug(exception)
-    return exception
+    logger.error(exception.message, exception.stack)
+    throw new DependencyError('Error sending OTP, try again later.')
   }
 }
 
@@ -91,7 +82,7 @@ const sendMail = async function ({
 
   // Defining the mailing options
   const mailOptions = {
-    from: `"Apexxia" <${sender_email}>`,
+    from: `"Apex" <${senderEmail}>`,
     to,
     subject,
     template,
@@ -117,15 +108,10 @@ const sendMail = async function ({
   }
 
   try {
-    return await transporter.jsonMail(mailOptions)
+    return await transporter.sendMail(mailOptions)
   } catch (exception) {
-    logger.error({
-      method: 'sendMail',
-      message: exception.message,
-      meta: exception.stack
-    })
-    debug(exception)
-    return exception
+    logger.error(exception.message, exception.stack)
+    throw new DependencyError('Error sending OTP, try again later.')
   }
 }
 

@@ -1,8 +1,8 @@
+import { joiPassword } from 'joi-password'
+import { userRoles } from '../utils/constants'
 import Joi from 'joi'
 import objectId from 'joi-objectid'
-const { roles } = require('../utils/constants')
 Joi.objectId = objectId(Joi)
-const { joiPassword } = require('joi-password')
 
 const nameSchema = Joi.object({
   first: Joi.string().min(2).max(255).messages({
@@ -24,13 +24,13 @@ const nameSchema = Joi.object({
 
 const genderSchema = Joi.string().valid('Male', 'Female').messages({
   'any.only': 'Invalid gender',
-  'any.required': 'gender is required'
+  'any.required': 'Gender is required'
 })
 
-const jobTitleSchema = Joi.string().min(2).max(50).messages({
-  'string.min': 'Job title is too short',
-  'string.max': 'Job title is too long',
-  'any.required': 'Job title is required'
+const jobTitleSchema = Joi.string().label('Job title').min(2).max(50).messages({
+  'string.min': '{#label} is too short',
+  'string.max': '{#label} is too long',
+  'any.required': '{#label} is required'
 })
 
 // TODO: ask if front end would do the validation logic
@@ -61,19 +61,16 @@ const phoneSchema = Joi.string()
   .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
   .message({
     'string.pattern.base':
-            'Invalid phone number, please include international dialling code.',
+      'Invalid phone number, please include international dialling code.',
     'any.required': 'Phone number is required'
   })
 
-const emailSchema = Joi.string().email().min(10).max(50).messages({
-  'string.min': 'Invalid email',
-  'string.max': 'Invalid email',
+const emailSchema = Joi.string().email().messages({
   'string.email': 'Please enter a valid email',
   'any.required': 'Email is required'
 })
 
-const passwordSchema = joiPassword
-  .string()
+const passwordSchema = joiPassword.string()
   .label('Password')
   .minOfUppercase(1)
   .minOfSpecialCharacters(1)
@@ -83,11 +80,10 @@ const passwordSchema = joiPassword
   .max(1024)
   .messages({
     'password.minOfUppercase':
-            '{#label} should contain at least {#min} uppercase character',
+      '{#label} should contain at least {#min} uppercase character',
     'password.minOfSpecialCharacters':
-            '{#label} should contain at least {#min} special character',
-    'password.minOfNumeric':
-            '{#label} should contain at least {#min} number',
+      '{#label} should contain at least {#min} special character',
+    'password.minOfNumeric': '{#label} should contain at least {#min} number',
     'password.noWhiteSpaces': '{#label} should not contain white spaces'
   })
 
@@ -105,13 +101,7 @@ const segmentSchema = Joi.alternatives().try(
 
 const roleSchema = Joi.string()
   .label('Role')
-  .valid(
-    roles.admin,
-    roles.agent,
-    roles.credit,
-    roles.master,
-    roles.operations
-  )
+  .valid(...Object.values(userRoles))
   .messages({
     'any.only': '{#label} is not valid',
     'any.required': '{#label} is required'
@@ -149,12 +139,14 @@ const validators = {
       gender: genderSchema.required(),
       dob: dobSchema,
       displayName: Joi.string(),
-      phone: phoneSchema.required(),
+      phone_number: phoneSchema.required(),
       email: emailSchema.required(),
       role: roleSchema.required()
     })
 
-    if ([roles.agent, roles.credit].includes(userDto.role)) { schema.append({ segments: segmentSchema.required() }) }
+    if ([userRoles.AGENT, userRoles.CREDIT].includes(userDto.role)) {
+      schema.append({ segments: segmentSchema.required() })
+    }
 
     return schema.validate(userDto)
   },
@@ -176,7 +168,7 @@ const validators = {
       gender: genderSchema,
       dob: dobSchema,
       displayName: displayNameSchema,
-      phone: phoneSchema,
+      phone_number: phoneSchema,
       role: roleSchema,
       segments: segmentSchema
     })

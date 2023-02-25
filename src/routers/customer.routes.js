@@ -1,4 +1,4 @@
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import auth from '../middleware/verifyToken'
 import customerController from '../controllers/customer.controller'
 import Router from 'express'
@@ -9,11 +9,9 @@ import verifyRole from '../middleware/verifyRole'
 
 const router = Router()
 
-const { admin, agent, master, operations, owner } = roles
-
 router.post(
   '/new',
-  [auth, verifyRole(agent, owner, operations, master), validateObjectId],
+  [auth, validateObjectId],
   async (req, res) => {
     const response = await customerController.create(req.user, req.body)
     return res.status(response.code).json(response.payload)
@@ -64,9 +62,9 @@ router.patch('/:customerId', [auth, validateObjectId], async (req, res) => {
 
 router.delete(
   '/:customerId',
-  [auth, verifyRole(admin, owner, operations, master), validateObjectId],
+  [auth, validateObjectId],
   async (req, res) => {
-    const response = await customerController.delete(req.params.customerId)
+    const _ = await customerController.delete(req.params.customerId)
   }
 )
 

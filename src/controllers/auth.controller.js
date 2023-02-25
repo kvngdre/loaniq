@@ -1,243 +1,122 @@
-import _ from 'lodash'
-import { validateLogin } from '../validators/auth.validator'
-import { get } from '../config'
-import ServerResponse from '../utils/ServerResponse'
+import { constants } from '../config'
+import { httpCodes } from '../utils/constants'
+import AuthService from '../services/auth.service'
+import authValidator from '../validators/auth.validator'
+import BadRequestError from '../errors/BadRequestError'
+import BaseController from './base.controller'
+import ValidationError from '../errors/ValidationError'
 
-import { findOne } from '../models/user.model'
-const debug = require('debug')('app:authCtrl')
-const logger = require('../utils/logger').default('authCtrl.js')
-
-class AuthController {
-  async login ({ email, password }, cookies, res) {
-    try {
-      const { error } = validateLogin({ email, password })
-      if (error) {
-        return new ServerResponse(
-          400,
-          this.#formatMsg(error.details[0].message)
-        )
-      }
-
-      const foundUser = await findOne({ email }, { queryName: 0 })
-      if (!foundUser) { return new ServerResponse(401, 'Invalid credentials') }
-
-      const isMatch = await foundUser.comparePasswords(password)
-      if (!isMatch) return new ServerResponse(401, 'Invalid credentials')
-
-      // New user or password reset trigger.
-      /*
-               Condition is satisfied if:
-               1. user is inactive AND
-               2. reset password field is true OR
-               3. last login time field is null OR
-               4. email verified field is false
-            */
-      const passwordResetTrigged = ((user) => {
-        const { active, emailVerified, lastLoginTime, resetPwd } = user
-        return (
-          !active && (resetPwd || !lastLoginTime || !emailVerified)
-        )
-      })(foundUser)
-      if (passwordResetTrigged) {
-        const {
-          active,
-          email,
-          emailVerified,
-          lastLoginTime,
-          lender,
-          name,
-          role
-        } = foundUser
-        return new ServerResponse(200, 'Password reset triggered.', {
-          name,
-          active,
-          email,
-          emailVerified,
-          role,
-          lender,
-          lastLoginTime
-        })
-      }
-
-      // user is not active
-      const inactiveUser = foundUser.emailVerified && !foundUser.active
-      if (inactiveUser) {
-        return new ServerResponse(
-          401,
-          'Account inactive. Contact your tech support.'
-        )
-      }
-
-      const accessToken = foundUser.generateAccessToken()
-      const newRefreshToken = foundUser.generateRefreshToken()
-
-      await handleCookies(cookies)
-      async function handleCookies (cookies) {
-        if (cookies?.jwt) {
-          // Delete expired tokens or existing refresh token from user.
-          foundUser.refreshTokens = foundUser.refreshTokens.filter(
-            (rt) => rt.token !== cookies.jwt && Date.now() < rt.exp
-          )
-
-          // Check if the refresh token is being reused.
-          const foundToken = await findOne(
-            {
-              refreshTokens: {
-                $elemMatch: { token: cookies.jwt }
-              }
-            },
-            { password: 0 }
-          )
-          /*
-                       No user found with that refresh token. Token reuse has been detected.
-                       Delete all refresh tokens from user.
-                    */
-          if (!foundToken) {
-            console.log('clearing tokens')
-            foundUser.refreshTokens = []
-            await foundUser.save()
-          }
-
-          // Clear all jwt cookies.
-          res.clearCookie('jwt', {
-            httpOnly: true,
-            sameSite: 'None',
-            secure: get('secure_cookie')
-          })
-        }
-
-        res.cookie('jwt', newRefreshToken.token, {
-          httpOnly: true,
-          sameSite: 'None',
-          secure: get('secure_cookie'),
-          maxAge: newRefreshToken.exp
-        })
-      }
-
-      foundUser.refreshTokens.push(newRefreshToken)
-      foundUser.set({
-        lastLoginTime: new Date()
-      })
-      await foundUser.save()
-
-      const payload = {
-        active: foundUser.active,
-        email: foundUser.email,
-        role: foundUser.role,
-        lastLoginTime: foundUser.lastLoginTime,
-        lender: foundUser.lender,
-        accessToken
-      }
-      return new ServerResponse(200, 'Login success.', payload)
-    } catch (exception) {
-      logger.error({
-        method: 'login',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return new ServerResponse(500, 'Something went wrong')
-    }
-  }
-
-  async logout (cookies, res) {
-    try {
-      if (!cookies?.jwt) return new ServerResponse(204)
-      const refreshToken = cookies.jwt
-
-      const foundUser = await findOne(
-        { refreshTokens: { $elemMatch: { token: refreshToken } } },
-        { password: 0, otp: 0 }
-      )
-      if (!foundUser) {
-        // cookie found but does not match any user
-        res.clearCookie('jwt', {
-          httpOnly: true,
-          sameSite: 'None',
-          secure: get('secure_cookie')
-        })
-
-        debug('no user found to logout')
-        return new ServerResponse(204)
-      }
-
+class AuthController extends BaseController {
+  static verifyRegistration = async (req, res) => {
+    if (res.cookies?.jwt) {
       res.clearCookie('jwt', {
         httpOnly: true,
         sameSite: 'None',
-        secure: get('secure_cookie')
+        secure: constants.secure_cookie
       })
-
-      // Delete expired tokens or existing refresh token from user.
-      foundUser.refreshTokens = foundUser.refreshTokens.filter(
-        (rt) => rt.token !== refreshToken && Date.now() < rt.exp
-      )
-      await foundUser.save()
-
-      debug('logged out')
-      return new ServerResponse(200, 'Logged out')
-    } catch (exception) {
-      logger.error({
-        method: 'logout',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return new ServerResponse(500, 'Something went wrong')
     }
+
+    const { value, error } = authValidator.validateVerifyReg(req.body)
+    if (error) throw new ValidationError(error.details[0].message)
+
+    const { accessToken, refreshToken, user } =
+      await AuthService.verifyRegistration(value, res.cookies?.jwt)
+
+    res.cookie('jwt', refreshToken.token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie,
+      maxAge: constants.jwt.exp_time.refresh * 1000
+    })
+
+    const payload = { user, accessToken }
+    const response = this.apiResponse('User verified.', payload)
+
+    return res.status(httpCodes.OK).json(response)
   }
 
-  async signOutAllDevices (id, cookies, res) {
-    try {
-      if (!cookies?.jwt) return new ServerResponse(204)
-      const refreshToken = cookies.jwt
-
-      const foundUser = await findOne(
-        { refreshTokens: { $elemMatch: { token: refreshToken } } },
-        { password: 0, otp: 0 }
-      )
-      if (!foundUser) {
-        // TODO: uncomment secure
-        res.clearCookie('jwt', {
-          httpOnly: true,
-          sameSite: 'None',
-          secure: get('secure_cookie')
-        })
-
-        debug('no user found to logout')
-        return new ServerResponse(204)
-      }
-
+  static login = async (req, res) => {
+    if (res.cookies?.jwt) {
       res.clearCookie('jwt', {
         httpOnly: true,
         sameSite: 'None',
-        secure: get('secure_cookie')
+        secure: constants.secure_cookie
       })
-
-      // deleting refresh token from user refresh tokens on db
-      foundUser.refreshTokens = foundUser.refreshTokens.filter(
-        (rt) => rt.token !== refreshToken && Date.now() < rt.exp
-      )
-      await foundUser.save()
-
-      debug('logged out')
-      return new ServerResponse(200, 'Logged out')
-    } catch (exception) {
-      logger.error({
-        method: 'sign_out_all_devices',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return new ServerResponse(500, 'Something went wrong')
     }
+
+    const { value, error } = authValidator.validateLogin(req.body)
+    if (error) throw new ValidationError(error.details[0].message)
+
+    const [message, payload, refreshToken] = await AuthService.login(
+      value,
+      res.cookies?.jwt
+    )
+
+    if (refreshToken) {
+      res.cookie('jwt', refreshToken.token, {
+        httpOnly: true,
+        sameSite: 'None',
+        secure: constants.secure_cookie,
+        maxAge: constants.jwt.exp_time.refresh * 1000
+      })
+    }
+    const response = this.apiResponse(message, payload)
+
+    res.status(httpCodes.OK).json(response)
   }
 
-  #formatMsg (errorMsg) {
-    const regex = /\B(?=(\d{3})+(?!\d))/g
-    let msg = `${errorMsg.replaceAll('"', '')}.` // remove quotation marks.
-    msg = msg.replace(regex, ',') // add comma to numbers if present in error msg.
-    return msg
+  static getNewTokenSet = async (req, res) => {
+    if (!req.cookies?.jwt) throw new BadRequestError('No refresh token found.')
+    const token = req.cookies?.jwt
+
+    // Clear jwt cookie
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie
+    })
+
+    const { accessToken, refreshToken } = await AuthService.getNewTokenSet(
+      token
+    )
+
+    // Setting new refresh token cookie
+    res.cookie('jwt', refreshToken.token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie,
+      maxAge: constants.jwt.exp_time.refresh * 1000
+    })
+
+    const response = this.apiResponse('New token set generated.', {
+      accessToken
+    })
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static sendOTP = async (req, res) => {
+    const { value, error } = authValidator.validateSendOTP(req.query)
+    if (error) throw new ValidationError(error.details[0].message)
+
+    await AuthService.sendOTP(value)
+    const response = this.apiResponse('OTP sent to email.')
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static logout = async (req, res) => {
+    const [httpCode, message] = await AuthService.logout(req.cookies?.jwt)
+
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie
+    })
+
+    const response = this.apiResponse(message)
+    res.status(httpCode).json(response)
   }
 }
 
-export default new AuthController()
+export default AuthController

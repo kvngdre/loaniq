@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import Segment from '../models/segmentModel'
+import Segment from '../models/segment.model'
 import State from '../models/stateModel'
 
 async function getSegments () {

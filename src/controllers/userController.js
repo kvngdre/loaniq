@@ -1,18 +1,18 @@
 import { omit } from 'lodash'
 import { roles } from '../utils/constants'
-import { compare } from 'bcrypt'
+import { compare } from 'bcryptjs'
 import { get } from '../config'
 import generateOTP from '../utils/generateOTP'
 import { findById } from '../models/tenant.model'
 import mailer from '../utils/mailer'
-import { find } from '../models/segmentModel'
+import { find } from '../models/segment.model'
 import ServerError from '../errors/serverError'
 import Settings, { deleteOne } from '../models/settings.model'
 import similarity from '../utils/similarity'
 import User, { findOne, find as _find, findById as _findById } from '../models/user.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:userCtrl')
-const logger = require('../utils/logger').default('userCtrl.js')
+const logger = require('../utils/Logger')
 
 export async function create (user, payload) {
   try {

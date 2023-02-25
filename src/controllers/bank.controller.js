@@ -2,7 +2,7 @@ import Bank, { find, findById } from '../models/bank.model'
 import { validateCreation, validateUpdate } from '../validators/bank.validator'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:bankModel')
-const logger = require('../utils/logger').default('bankCtrl.js')
+const logger = require('../utils/Logger')
 
 const MONGO_DUPLICATE_ERROR_CODE = 11000
 

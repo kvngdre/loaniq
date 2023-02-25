@@ -3,7 +3,7 @@ import { verify } from 'jsonwebtoken'
 import ServerResponse from '../utils/ServerResponse'
 import { findOne } from '../models/user.model'
 const debug = require('debug')('app:refreshTokenCtrl')
-const logger = require('../utils/logger').default('refreshTokenCtrl.js')
+const logger = require('../utils/Logger')
 
 class RefreshTokenController {
   async handleRefreshToken (cookies, res) {
@@ -50,7 +50,7 @@ class RefreshTokenController {
         get('jwt.secret.refresh')
       )
       if (
-        decoded.id != foundUser._id.toString() ||
+        decoded.id !== foundUser._id.toString() ||
                 decoded.iss !== get('jwt.issuer') ||
                 decoded.aud !== get('jwt.audience')
       ) {

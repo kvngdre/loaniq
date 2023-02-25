@@ -1,4 +1,3 @@
-import debug from 'debug'
 import flwService from '../utils/Flutterwave'
 // import logger from '../utils/logger'('paymentCtrl.js')
 import ServerError from '../errors/serverError'

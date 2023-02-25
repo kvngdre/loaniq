@@ -5,7 +5,7 @@ import { aggregate } from '../models/loanModel'
 import ServerError from '../errors/serverError'
 import User from '../models/user.model'
 const debug = require('debug')('dashController')
-const logger = require('../utils/logger').default('dashboardCtrl.js')
+const logger = require('../utils/Logger')
 
 export default {
   getLoanData: async (user, status) => {

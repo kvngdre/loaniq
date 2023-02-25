@@ -1,19 +1,45 @@
 import Joi from 'joi'
-
-const emailSchema = Joi.string().email().min(10).max(50).messages({
-  'string.min': 'Invalid email address',
-  'string.max': 'Invalid email address',
-  'string.email': 'Please enter a valid email address'
-})
-
-const validators = {
-  validateLogin: function (lender) {
+import BaseValidator from './base.validator'
+class AuthValidator extends BaseValidator {
+  validateVerifyReg = (dto) => {
     const schema = Joi.object({
-      email: emailSchema.required(),
-      password: Joi.string().max(40).required()
+      email: this._emailSchema.required(),
+      otp: this._otpSchema.required(),
+      current_password: Joi.string().label('Current password').required(),
+      new_password: this._passwordSchema.required(),
+      confirm_password: Joi.string()
+        .equal(Joi.ref('new_password'))
+        .messages({ 'any.only': 'Passwords do not match' }).required()
     })
-    return schema.validate(lender)
+
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
+
+    return { value, error }
+  }
+
+  validateLogin = (dto) => {
+    const schema = Joi.object({
+      email: this._emailSchema.required(),
+      password: Joi.string().max(256).label('Password').required()
+    })
+
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
+
+    return { value, error }
+  }
+
+  validateSendOTP = (dto) => {
+    const schema = Joi.object({
+      email: this._emailSchema.required()
+    })
+
+    const { value, error } = schema.validate(dto)
+    if (error) this.formatErrorMessage(error)
+
+    return { value, error }
   }
 }
 
-export default validators
+export default new AuthValidator()

@@ -1,4 +1,4 @@
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import Router from 'express'
 import ServerError from '../errors/serverError'
 import upload from '../middleware/fileUpload'
@@ -6,13 +6,15 @@ import { create, verifySignUp, getAll, requestOtp, getOne, update, changePasswor
 import { create as _create, verify, update as _update, password } from '../validators/userValidator'
 import verifyRole from '../middleware/verifyRole'
 import verifyToken from '../middleware/verifyToken'
+import settingsRoutes from './settings.routes'
 
 const router = Router()
+
+router.use('/settings', settingsRoutes)
 
 router.post(
   '/',
   verifyToken,
-  verifyRole([roles.admin, roles.owner, roles.master]),
   async (req, res) => {
     const { error } = _create(req.body)
     if (error) return res.status(400).json(error.details[0].message)
@@ -75,7 +77,6 @@ router.get('/otp', async (req, res) => {
 router.get(
   '/:id',
   verifyToken,
-  verifyRole(roles.admin, roles.owner, roles.master),
   async (req, res) => {
     const id = req.params.id !== undefined ? req.params.id : req.user.id
 
@@ -117,7 +118,6 @@ router.post('/change-password', verifyToken, async (req, res) => {
 router.get(
   '/reset-password/:id',
   verifyToken,
-  verifyRole([roles.admin, roles.owner, roles.master]),
   async (req, res) => {
     const user = await resetPassword(req.params.id)
     if (user instanceof ServerError) { return res.status(user.errorCode).json(user.message) }
@@ -132,7 +132,6 @@ router.get(
 router.post(
   '/deactivate/:id',
   verifyToken,
-  verifyRole([roles.admin, roles.owner, roles.master]),
   async (req, res) => {
     const user = await deactivate(
       req.params.id,
@@ -151,7 +150,6 @@ router.post(
 router.delete(
   '/:id',
   verifyToken,
-  verifyRole([roles.owner, roles.master]),
   async (req, res) => {
     const deletedUser = await delete (
       req.params.id,

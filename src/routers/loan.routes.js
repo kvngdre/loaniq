@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import { create } from '../validators/customer.validator'
 import { create as _create, getAll, getDisbursement, getOne, update, delete_ } from '../controllers/loanController'
 import Router from 'express'
@@ -46,8 +46,7 @@ router.get('/', [verifyToken], async (req, res) => {
 router.get(
   '/disburse',
   [
-    verifyToken,
-    verifyRole(roles.admin, roles.credit, roles.master, roles.owner)
+    verifyToken
   ],
   async (req, res) => {
     const loans = await getDisbursement(req.user, req.query)
@@ -73,8 +72,7 @@ router.patch('/:id', [verifyToken, validateObjectId], async (req, res) => {
 })
 
 router.delete(
-  '/:id',
-  [verifyToken, verifyRole(roles.master, roles.owner), validateObjectId],
+  '/:id', [validateObjectId],
   async (req, res) => {
     const deletedLoan = await delete (req.params.id)
     if (deletedLoan instanceof ServerError) { return res.status(deletedLoan.errorCode).json(deletedLoan.message) }

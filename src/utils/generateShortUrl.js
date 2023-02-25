@@ -1,7 +1,7 @@
 import { generate } from 'shortid'
 import Lender from '../models/tenant.model'
 const debug = require('debug')('app:generateShortId')
-const logger = require('../utils/logger').default('generateShortUrl.js')
+const logger = require('./Logger')
 
 async function generateShortUrl () {
   try {

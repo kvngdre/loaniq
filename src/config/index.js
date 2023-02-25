@@ -1,5 +1,7 @@
-import constantConfig from './constants.config'
+import constantConfig from './constant.config'
+import databaseConnectionSetup from './db.config'
 
 export {
-  constantConfig as constants
+  constantConfig as constants,
+  databaseConnectionSetup as dbSetup
 }

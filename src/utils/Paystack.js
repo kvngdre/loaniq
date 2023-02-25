@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { constants } from '../config'
 const debug = require('debug')('app:paystack')
-const logger = require('./logger').default('paystack.js')
+const logger = require('./Logger')
 
 class PaystackService {
   #headers

@@ -1,29 +1,16 @@
-import authController from '../controllers/auth.controller'
+import AuthController from '../controllers/auth.controller'
 import Router from 'express'
-import refreshTokenController from '../controllers/refreshToken.controller'
 
 const router = Router()
 
-router.post('/login', async (req, res) => {
-  const response = await authController.login(
-    req.body,
-    req.cookies,
-    res
-  )
-  return res.status(response.code).json(response.payload)
-})
+router.post('/verify_registration', AuthController.verifyRegistration)
 
-router.get('/logout', async (req, res) => {
-  const response = await authController.logout(req.cookies, res)
-  return res.status(response.code).json(response.payload)
-})
+router.post('/login', AuthController.login)
 
-router.get('/refresh-token', async (req, res) => {
-  const response = await refreshTokenController.handleRefreshToken(
-    req.cookies,
-    res
-  )
-  return res.status(response.code).json(response.payload)
-})
+router.get('/logout', AuthController.logout)
+
+router.get('/request_otp', AuthController.sendOTP)
+
+router.get('/token_set', AuthController.getNewTokenSet)
 
 export default router

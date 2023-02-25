@@ -7,11 +7,15 @@ app.set('pkg', pkg)
 
 const router = express.Router()
 
-router.get('/status', (req, res) => {
-  res.status(httpCodes.OK).send('OK ✔')
+router.get('/status', (_req, res) => {
+  try {
+    res.status(httpCodes.OK).json({ message: 'OK ✔' })
+  } catch (exception) {
+    res.status(httpCodes.BAD_REQUEST).json({ error: exception.message })
+  }
 })
 
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   const info = {
     appName: app.get('pkg').name,
     appDescription: app.get('pkg').description,

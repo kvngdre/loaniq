@@ -12,7 +12,7 @@ class BaseDAO {
 
   static getValidationErrorMsg (err) {
     const field = Object.keys(err.errors)[0]
-    return exception.errors[field].message.replace('Path', '')
+    return err.errors[field].message.replace('Path', '')
   }
 }
 

@@ -13,13 +13,13 @@ import Loan, {
 } from '../models/loanModel'
 import LoanValidator from '../validators/loanValidator'
 import { startSession, isValidObjectId } from 'mongoose'
-import PendingEdit from '../models/pendingEditModel'
+import PendingEdit from '../models/review.model'
 import pickRandomUser from '../utils/pickRandomUser'
-import Segment from '../models/segmentModel'
+import Segment from '../models/segment.model'
 import ServerError from '../errors/serverError'
 import Transaction from '../models/transactionModel'
 const debug = require('debug')('app:loanCtrl')
-const logger = require('../utils/logger').default('loanCtrl.js')
+const logger = require('../utils/Logger')
 
 // get loan validator
 async function getValidator (lender, segment) {

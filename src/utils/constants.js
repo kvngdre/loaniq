@@ -16,17 +16,18 @@ export const httpCodes = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  DEPENDENCY: 424,
   INTERNAL_SERVER: 500
 }
 
 export const loanStatus = {
-  approved: 'Approved',
-  denied: 'Denied',
-  discntd: 'Discontinued',
-  hold: 'On Hold',
-  liquidated: 'Liquidated',
-  matured: 'Matured',
-  pending: 'Pending'
+  APPROVED: 'approved',
+  DENIED: 'denied',
+  DISCONTINUED: 'discontinued',
+  LIQUIDATED: 'liquidated',
+  MATURED: 'matured',
+  NEW: 'new',
+  PENDING: 'pending'
 }
 
 export const loanRemarks = [
@@ -62,13 +63,14 @@ export const maritalStatus = [
   'Widower'
 ]
 
-export const roles = {
-  admin: 'Admin',
-  agent: 'Agent',
-  credit: 'Credit',
-  master: 'Master',
-  operations: 'Operations',
-  owner: 'Owner'
+export const userRoles = {
+  ADMIN: 'Q2',
+  AGENT: 'Y6',
+  CREDIT: 'R4',
+  MASTER: 'Z0',
+  MANAGER: 'E3',
+  OPERATIONS: 'T5',
+  OWNER: 'W1'
   // support: 'Support',
 }
 
@@ -86,10 +88,10 @@ export const relationships = [
 ]
 
 export const txnStatus = {
-  abandoned: 'Abandoned',
-  failed: 'Failed',
-  pending: 'Pending',
-  success: 'Successful'
+  ABANDONED: 'abandoned',
+  FAILED: 'failed',
+  PENDING: 'pending',
+  SUCCESS: 'successful'
 }
 
 export const validIds = [
@@ -98,4 +100,15 @@ export const validIds = [
   'Staff ID card',
   'National ID card',
   "Driver's license"
+]
+
+export const companyCategory = ['MFB', 'Finance House', 'Money Lender']
+
+export const socials = [
+  'facebook',
+  'twitter',
+  'instagram',
+  'youtube',
+  'linkedin',
+  'tictok'
 ]

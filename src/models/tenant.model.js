@@ -1,6 +1,8 @@
-import { get } from '../config'
-import { sign } from 'jsonwebtoken'
+import { constants } from '../config'
+import { companyCategory } from '../utils/constants'
 import { Schema, model } from 'mongoose'
+import jwt from 'jsonwebtoken'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
@@ -40,23 +42,26 @@ const tenantSchema = new Schema(
       sparse: true
     },
 
-    // directors: [
-    //     {
-    //         name: {
-    //             type: String
-    //         },
-    //         email: {
-    //             type: String,
-    //         },
-    //         id: {
-    //             type: String
-    //         }
-    //     }
-    // ],
+    directors: [
+      {
+        name: {
+          type: String,
+          trim: true
+        },
+        email: {
+          type: String,
+          trim: true
+        },
+        id: {
+          type: String,
+          trim: true
+        }
+      }
+    ],
 
     category: {
       type: String,
-      enum: ['MFB', 'Finance House', 'Money Lender']
+      enum: companyCategory
     },
 
     phone_number: {
@@ -88,18 +93,6 @@ const tenantSchema = new Schema(
       default: false
     },
 
-    otp: {
-      pin: {
-        type: String,
-        default: null
-      },
-
-      exp: {
-        type: Number,
-        default: null
-      }
-    },
-
     website: {
       type: String,
       default: null,
@@ -114,72 +107,9 @@ const tenantSchema = new Schema(
         default: null
       },
 
-      phone: {
+      phone_number: {
         type: String,
         default: null
-      }
-    },
-
-    socials: {
-      twitter: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
-      },
-      instagram: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
-      },
-      facebook: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
-      },
-      whatsapp: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
-      },
-      youtube: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
-      },
-      tiktok: {
-        url: {
-          type: String,
-          default: null
-        },
-        active: {
-          type: Boolean,
-          default: false
-        }
       }
     }
   },
@@ -187,18 +117,26 @@ const tenantSchema = new Schema(
 )
 
 tenantSchema.methods.generateToken = function () {
-  return sign(
+  return jwt.sign(
     {
       tenantId: this._id.toString()
     },
-    get('jwt.secret.access'),
+    constants.jwt.secret.access,
     {
-      audience: get('jwt.audience'),
-      expiresIn: parseInt(get('jwt.expTime.form')),
-      issuer: get('jwt.issuer')
+      audience: constants.jwt.audience,
+      expiresIn: parseInt(constants.jwt.exp_time.form),
+      issuer: constants.jwt.issuer
     }
   )
 }
+
+tenantSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Tenants not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Tenant not found.')
+})
 
 const Tenant = model('Tenant', tenantSchema)
 

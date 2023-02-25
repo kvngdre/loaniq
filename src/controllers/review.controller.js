@@ -3,14 +3,14 @@ import { findById } from '../models/customer.model'
 import flattenObject from '../utils/flattenObj'
 import { findById as _findById } from '../models/loanModel'
 import { Types } from 'mongoose'
-import PendingEdit, { aggregate, findOne } from '../models/pendingEditModel'
+import Review, { aggregate, findOne } from '../models/review.model'
 import ServerError from '../errors/serverError'
 const debug = require('debug')('app:pendingEditCtrl')
-const logger = require('../utils/logger').default('pendingEditCtrl.js')
+const logger = require('../utils/Logger')
 
 export async function create (user, payload) {
   try {
-    const newPendingEdit = new PendingEdit({
+    const newPendingEdit = new Review({
       lender: user.lender,
       docId: payload.docId,
       type: payload.type,

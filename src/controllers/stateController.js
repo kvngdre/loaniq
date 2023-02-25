@@ -1,7 +1,7 @@
 import ServerError from '../errors/serverError'
 import State, { find, findById } from '../models/stateModel'
 const debug = require('debug')('app:stateCtrl')
-const logger = require('../utils/logger').default('stateCtrl')
+const logger = require('../utils/Logger')
 
 export async function create (payload) {
   try {

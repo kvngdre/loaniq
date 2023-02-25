@@ -1,8 +1,9 @@
-import { roles } from '../utils/constants'
-import { hashSync, compare } from 'bcrypt'
-import { get } from '../config'
-import { sign } from 'jsonwebtoken'
+import { constants } from '../config'
+import { hashSync, compare } from 'bcryptjs'
+import { userRoles } from '../utils/constants'
 import { Schema, model } from 'mongoose'
+import jwt from 'jsonwebtoken'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = {
   timestamps: true,
@@ -14,7 +15,10 @@ const schemaOptions = {
 const userSchema = new Schema(
   {
     tenantId: {
-      type: String
+      type: Schema.Types.ObjectId,
+      ref: 'Tenant',
+      unique: true,
+      required: true
     },
 
     name: {
@@ -62,8 +66,8 @@ const userSchema = new Schema(
       default: function () {
         return this.name.first.concat(
           this.name.middle ? ` ${this.name.middle}` : '',
-                    ` ${this.name.last}`,
-                    ` ${this.displayName}`
+          ` ${this.name.last}`,
+          ` ${this.displayName}`
         )
       }
     },
@@ -73,7 +77,7 @@ const userSchema = new Schema(
       default: null
     },
 
-    phone: {
+    phone_number: {
       type: String,
       unique: true,
       trim: true,
@@ -116,7 +120,7 @@ const userSchema = new Schema(
         default: null
       },
 
-      exp: {
+      expires: {
         type: Number,
         default: null
       }
@@ -124,23 +128,14 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      enum: Object.values(roles),
+      enum: Object.values(userRoles),
+      default: userRoles.OWNER,
       required: true
     },
 
     segments: {
       type: [Schema.Types.ObjectId],
-      default: null
-    },
-
-    lastLoginTime: {
-      type: Date,
-      default: null
-    },
-
-    timeZone: {
-      type: String,
-      default: 'Africa/Lagos'
+      ref: 'Segment'
     },
 
     refreshTokens: {
@@ -149,7 +144,7 @@ const userSchema = new Schema(
           token: {
             type: String
           },
-          exp: {
+          expires: {
             type: Number
           }
         }
@@ -163,69 +158,65 @@ const userSchema = new Schema(
 userSchema.virtual('fullName').get(function () {
   return this.name.first.concat(
     this.name.middle ? ` ${this.name.middle}` : '',
-        ` ${this.name.last}`
+    ` ${this.name.last}`
   )
 })
 
-userSchema.pre('save', function (next) {
-  try {
-    // Hashing password
-    if (this.modifiedPaths().includes('password')) { this.password = hashSync(this.password, 10) }
-
-    next()
-  } catch (exception) {
-    next(exception)
-  }
-})
-
-/**
- * Compare user inputted password to password on database.
- * @param {string} password
- * @returns {boolean}
- */
 userSchema.methods.comparePasswords = async function (password) {
   return await compare(password, this.password)
 }
 
 userSchema.methods.generateAccessToken = function () {
-  return sign(
+  return jwt.sign(
     {
       id: this._id.toString(),
       tenantId: this.tenantId,
-      role: this.role,
-      active: this.active,
-      timeZone: this.timeZone
+      role: this.role
     },
-    get('jwt.secret.access'),
+    constants.jwt.secret.access,
     {
-      audience: get('jwt.audience'),
-      expiresIn: parseInt(get('jwt.expTime.access')),
-      issuer: get('jwt.issuer')
+      audience: constants.jwt.audience,
+      expiresIn: constants.jwt.exp_time.access,
+      issuer: constants.jwt.issuer
     }
   )
 }
 
 userSchema.methods.generateRefreshToken = function () {
-  const refreshTokenTTL = parseInt(get('jwt.expTime.refresh'))
-  const refreshToken = sign(
+  const refreshToken = jwt.sign(
     {
       id: this._id.toString()
     },
-    get('jwt.secret.refresh'),
+    constants.jwt.secret.refresh,
     {
-      audience: get('jwt.audience'),
-      expiresIn: refreshTokenTTL,
-      issuer: get('jwt.issuer')
+      audience: constants.jwt.audience,
+      expiresIn: constants.jwt.exp_time.refresh,
+      issuer: constants.jwt.issuer
     }
   )
 
-  const expires = Date.now() + refreshTokenTTL * 1000
-
   return {
     token: refreshToken,
-    exp: expires
+    expires: Date.now() + constants.jwt.exp_time.refresh * 1000
   }
 }
+
+// Hashing password before insert
+userSchema.pre('save', function (next) {
+  if (this.modifiedPaths()?.includes('password')) {
+    this.password = hashSync(this.password, 10)
+  }
+
+  next()
+})
+
+userSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('User accounts not found.')
+  }
+
+  if (!doc) throw new NotFoundError('User account not found.')
+})
 
 const User = model('User', userSchema)
 

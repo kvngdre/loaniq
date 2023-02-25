@@ -1,4 +1,4 @@
-import { roles } from '../utils/constants'
+import { userRoles } from '../utils/constants'
 import Router from 'express'
 import ServerError from '../errors/serverError'
 import { create, getAll, getOne, update } from '../controllers/transactionController'
@@ -8,7 +8,7 @@ import verifyToken from '../middleware/verifyToken'
 
 const router = Router()
 
-router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const { error } = _create(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -32,7 +32,6 @@ router.post('/', verifyToken, verifyRole(roles.master), async (req, res) => {
 router.get(
   '/',
   verifyToken,
-  verifyRole([roles.admin, roles.master, roles.operations, roles.owner]),
   async (req, res) => {
     const transactions = await getAll(req.user, req.query)
     if (transactions instanceof ServerError) {
@@ -48,7 +47,6 @@ router.get(
 router.get(
   '/:id',
   verifyToken,
-  verifyRole([roles.admin, roles.master, roles.operations, roles.owner]),
   async (req, res) => {
     const transaction = await getOne(req.params.id, req.user)
     if (transaction instanceof ServerError) { return res.status(transaction.errorCode).json(transaction.message) }
@@ -60,7 +58,6 @@ router.get(
 router.patch(
   '/:id',
   verifyToken,
-  verifyRole(roles.master),
   async (req, res) => {
     const { error } = _update(req.body)
     if (error) return res.status(400).json(error.details[0].message)

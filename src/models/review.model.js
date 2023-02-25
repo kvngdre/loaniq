@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose'
 
 const schemaOptions = { strict: false, timestamps: true, versionKey: false }
 
-const pendingSchema = new Schema(
+const reviewSchema = new Schema(
   {
     lender: {
       type: String,
@@ -45,6 +45,6 @@ const pendingSchema = new Schema(
   schemaOptions
 )
 
-const Pending = model('PendingEdit', pendingSchema)
+const Review = model('Review', reviewSchema)
 
-export default Pending
+export default Review
