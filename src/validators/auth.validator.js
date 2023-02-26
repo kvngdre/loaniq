@@ -1,5 +1,5 @@
-import Joi from 'joi'
 import BaseValidator from './base.validator'
+import Joi from 'joi'
 class AuthValidator extends BaseValidator {
   validateVerifyReg = (dto) => {
     const schema = Joi.object({
@@ -7,11 +7,7 @@ class AuthValidator extends BaseValidator {
       otp: this._otpSchema.required(),
       current_password: Joi.string().label('Current password').required(),
       new_password: this._passwordSchema.required(),
-      confirm_password: Joi.string()
-        .label('Confirm password')
-        .equal(Joi.ref('new_password'))
-        .messages({ 'any.only': 'Passwords do not match' })
-        .required()
+      confirm_password: this._confirmPasswordSchema.required()
     })
 
     let { value, error } = schema.validate(dto)

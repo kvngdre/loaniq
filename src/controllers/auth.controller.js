@@ -48,8 +48,10 @@ class AuthController extends BaseController {
     if (error) throw new ValidationError(error.message, error.path)
 
     const [message, data, refreshToken] = await AuthService.login(value, token)
+    let code = httpCodes.FORBIDDEN
 
     if (refreshToken) {
+      code = httpCodes.OK
       // Create secure cookie with refresh token.
       res.cookie('jwt', refreshToken.token, {
         httpOnly: true,
@@ -60,7 +62,7 @@ class AuthController extends BaseController {
     }
     const response = this.apiResponse(message, data)
 
-    res.status(httpCodes.FORBIDDEN).json(response)
+    res.status(code).json(response)
   }
 
   static getNewTokenSet = async (req, res) => {

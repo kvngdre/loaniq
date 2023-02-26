@@ -6,7 +6,7 @@ import { Types } from 'mongoose'
 import Review, { aggregate, findOne } from '../models/review.model'
 import ServerError from '../errors/serverError'
 const debug = require('debug')('app:pendingEditCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 export async function create (user, payload) {
   try {

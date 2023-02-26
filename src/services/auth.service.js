@@ -5,7 +5,7 @@ import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
 import generateOTP from '../utils/generateOTP'
 import jwt from 'jsonwebtoken'
-import logger from '../utils/Logger'
+import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import pubsub from '../pubsub/PubSub'
 import similarity from '../utils/similarity'
@@ -31,10 +31,10 @@ class AuthService {
 
     if (otp !== foundUser.otp.pin) throw new BadRequestError('Invalid OTP.')
 
-    // Measuring similarity of new password to the current password.
-    const similarityPercent = similarity(new_password, current_password) * 100
+    // * Measuring similarity of new password to the current password.
+    const percentageSimilarity = similarity(new_password, current_password) * 100
     const similarityThreshold = constants.max_similarity
-    if (similarityPercent >= similarityThreshold) {
+    if (percentageSimilarity >= similarityThreshold) {
       throw new ValidationError('Password is too similar to old password.')
     }
 

@@ -4,11 +4,11 @@ import ServerError from '../errors/serverError'
 import { create, getAll, getOne, update } from '../controllers/transactionController'
 import { create as _create, update as _update } from '../validators/transactionValidator'
 import verifyRole from '../middleware/verifyRole'
-import verifyToken from '../middleware/verifyToken'
+import auth from '../middleware/auth'
 
 const router = Router()
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { error } = _create(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -31,7 +31,7 @@ router.post('/', verifyToken, async (req, res) => {
  */
 router.get(
   '/',
-  verifyToken,
+  auth,
   async (req, res) => {
     const transactions = await getAll(req.user, req.query)
     if (transactions instanceof ServerError) {
@@ -46,7 +46,7 @@ router.get(
 
 router.get(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const transaction = await getOne(req.params.id, req.user)
     if (transaction instanceof ServerError) { return res.status(transaction.errorCode).json(transaction.message) }
@@ -57,7 +57,7 @@ router.get(
 
 router.patch(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const { error } = _update(req.body)
     if (error) return res.status(400).json(error.details[0].message)

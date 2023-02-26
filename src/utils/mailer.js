@@ -4,12 +4,12 @@ import { createTransport } from 'nodemailer'
 import { resolve } from 'path'
 import DependencyError from '../errors/DependencyError'
 import hbs from 'nodemailer-express-handlebars'
-import logger from './Logger'
+import logger from './logger'
 
 const partialsPath = resolve(__dirname, '../assets/templates/partials/')
 const viewsPath = resolve(__dirname, '../assets/templates/views/')
 
-// TODO: clean up sendMail with domain name for sending mails
+// todo Clean up sendMail with domain name for sending mails
 const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =
   constants.mailer
 

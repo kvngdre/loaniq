@@ -65,14 +65,14 @@ export const maritalStatus = [
 ]
 
 export const userRoles = {
-  ADMIN: 'Q2',
-  AGENT: 'Y6',
-  CREDIT: 'R4',
+  ADMIN: 'E4',
+  AGENT: 'Y5',
+  ANALYST: 'R3',
   MASTER: 'Z0',
-  MANAGER: 'E3',
-  OPERATIONS: 'T5',
-  OWNER: 'W1'
-  // support: 'Support',
+  OPERATIONS: 'T6',
+  OWNER: 'W1',
+  S_ADMIN: 'Q2',
+  SUPPORT: 'U8'
 }
 
 export const relationships = [

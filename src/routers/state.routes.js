@@ -4,11 +4,11 @@ import ServerError from '../errors/serverError'
 import { create, getAll, getOne, update, delete_ } from '../controllers/stateController'
 import { create as _create, update as _update } from '../validators/stateValidator'
 import verifyRole from '../middleware/verifyRole'
-import verifyToken from '../middleware/verifyToken'
+import auth from '../middleware/auth'
 
 const router = Router()
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { error } = _create(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
   return res.status(200).json(states)
 })
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   const state = await getOne(req.params.id)
   if (state instanceof ServerError) { return res.status(state.errorCode).json(state.message) }
 
@@ -36,7 +36,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 router.patch(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const { error } = _update(req.body)
     if (error) return res.status(400).json(error.details[0].message)
@@ -50,7 +50,7 @@ router.patch(
 
 router.delete(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const state = await delete (req.params.id)
     if (state instanceof ServerError) { return res.status(state.errorCode).json(state.message) }

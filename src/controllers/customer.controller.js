@@ -12,7 +12,7 @@ import { startSession, Types } from 'mongoose'
 import PendingEdit from '../models/review.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:customerCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 const MONGO_DUPLICATE_ERROR_CODE = 11000
 

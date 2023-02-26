@@ -62,8 +62,9 @@ class SettingsDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
-    const deletedRecord = await Setting.findByIdAndDelete(id)
+  static async remove (query) {
+    query = !Types.ObjectId.isValid(query) ? query : { _id: query }
+    const deletedRecord = await Setting.findOneAndDelete(query)
 
     return deletedRecord
   }

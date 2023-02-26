@@ -1,5 +1,5 @@
 import { userRoles } from '../utils/constants'
-import auth from '../middleware/verifyToken'
+import auth from '../middleware/auth'
 import customerController from '../controllers/customer.controller'
 import Router from 'express'
 import ServerError from '../errors/serverError'

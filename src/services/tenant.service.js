@@ -8,24 +8,25 @@ import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ConflictError from '../errors/ConflictError'
+import generateRandomPwd from '../utils/generateRandomPwd'
 
 class TenantService {
   static async createTenant (dto) {
     const trx = await startSession()
     try {
       const { tenant, user } = dto
-      // Start transaction
+
+      // ! Start transaction
       trx.startTransaction()
 
-      const generatedOTP = generateOTP(10)
-      user.otp = generatedOTP
-      user.password = Math.random().toString(36).substring(2, 8)
+      user.otp = generateOTP(10)
+      user.password = generateRandomPwd()
 
       const newTenant = await TenantDAO.insert(tenant, trx)
       user.tenantId = newTenant._id
       const newUser = await UserDAO.insert(user, trx)
 
-      // Emitting events
+      // * Emitting new tenant and user sign up event.
       await pubsub.publish(
         events.tenant.signUp,
         { tenantId: newTenant._id, ...newTenant._doc },
@@ -43,9 +44,12 @@ class TenantService {
         subject: 'Almost there, just one more step',
         name: user.name.first,
         template: 'new-tenant',
-        payload: { otp: generatedOTP.pin, password: user.password }
+        payload: { otp: user.otp.pin, password: user.password }
       })
 
+      /**
+       * * Email sent successful, commit changes.
+       */
       await trx.commitTransaction()
       trx.endSession()
 

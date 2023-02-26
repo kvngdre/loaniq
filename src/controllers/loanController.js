@@ -19,7 +19,7 @@ import Segment from '../models/segment.model'
 import ServerError from '../errors/serverError'
 import Transaction from '../models/transactionModel'
 const debug = require('debug')('app:loanCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 // get loan validator
 async function getValidator (lender, segment) {

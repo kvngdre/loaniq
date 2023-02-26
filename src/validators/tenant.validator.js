@@ -47,7 +47,6 @@ import Joi from 'joi'
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema
-  #locationSchema
   #cacNumberSchema
   #categorySchema
   #supportSchema
@@ -64,20 +63,6 @@ class TenantValidator extends BaseValidator {
         'string.min': '{#label} is not valid',
         'string.max': '{#label} is too long'
       })
-
-    this.#locationSchema = Joi.object({
-      address: Joi.string().invalid('').label('Address').messages({
-        'any.invalid': '{#label} is required'
-      }),
-      lga: Joi.string().invalid('').label('LGA').messages({
-        'any.invalid': '{#label} is required'
-      }),
-      state: Joi.string().invalid('').label('State').messages({
-        'any.invalid': '{#label} is required'
-      })
-    })
-      .min(1)
-      .label('Location')
 
     this.#cacNumberSchema = Joi.string()
       .label('CAC number')
@@ -143,7 +128,7 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       logo: Joi.string(),
       company_name: this.#companyNameSchema,
-      location: this.#locationSchema,
+      location: this._locationSchema,
       cac_number: this.#cacNumberSchema,
       category: this.#categorySchema,
       email: this._emailSchema,
@@ -160,7 +145,11 @@ class TenantValidator extends BaseValidator {
 
   validateActivate = (dto) => {
     const schema = Joi.object({
-      location: this.#locationSchema.and('address', 'lga', 'state').required(),
+      location: Joi.object().keys({
+        address: this._locationSchema.extract('address').required(),
+        lga: this._locationSchema.extract('lga').required(),
+        state: this._locationSchema.extract('state').required()
+      }).required(),
       cac_number: this.#cacNumberSchema.required(),
       support: this.#supportSchema.and('email', 'phone_number').required()
     })

@@ -3,7 +3,7 @@ import { verify } from 'jsonwebtoken'
 import ServerResponse from '../utils/ServerResponse'
 import { findOne } from '../models/user.model'
 const debug = require('debug')('app:refreshTokenCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 class RefreshTokenController {
   async handleRefreshToken (cookies, res) {

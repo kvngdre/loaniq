@@ -10,6 +10,7 @@ export default {
 
   user: {
     new: 'onCreateUser',
-    login: 'onUserLogin'
+    login: 'onUserLogin',
+    delete: 'onUserDelete'
   }
 }

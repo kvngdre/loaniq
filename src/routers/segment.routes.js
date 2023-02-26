@@ -1,14 +1,14 @@
 import { userRoles } from '../utils/constants'
 import Router from 'express'
 import verifyRole from '../middleware/verifyRole'
-import verifyToken from '../middleware/verifyToken'
+import auth from '../middleware/auth'
 import { create, update } from '../validators/segmentValidator'
 import { create as _create, getAll, get, update as _update, delete_ } from '../controllers/segmentController'
 import ServerError from '../errors/serverError'
 
 const router = Router()
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { error } = create(req.body)
   if (error) return res.status(400).json(error.details[0].message)
 
@@ -18,14 +18,14 @@ router.post('/', verifyToken, async (req, res) => {
   return res.status(201).json(newSegment)
 })
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', auth, async (req, res) => {
   const segments = await getAll(req.query)
   if (segments instanceof ServerError) { return res.status(segments.errorCode).json(segments.message) }
 
   return res.status(200).json(segments)
 })
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   const segment = await get(req.params.id)
   if (segment instanceof ServerError) { return res.status(segment.errorCode).json(segment.message) }
 
@@ -34,7 +34,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 router.patch(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const { error } = update(req.body)
     if (error) return res.status(400).json(error.details[0].message)
@@ -48,7 +48,7 @@ router.patch(
 
 router.delete(
   '/:id',
-  verifyToken,
+  auth,
   async (req, res) => {
     const segment = await delete (req.params.id)
     if (segment instanceof ServerError) { return res.status(segment.errorCode).json(segment.message) }

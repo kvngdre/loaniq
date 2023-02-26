@@ -5,7 +5,7 @@ import { Schema, model } from 'mongoose'
 import { findOne } from './segment.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:customerModel')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

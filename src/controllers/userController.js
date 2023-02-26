@@ -12,7 +12,7 @@ import similarity from '../utils/similarity'
 import User, { findOne, find as _find, findById as _findById } from '../models/user.model'
 import ServerResponse from '../utils/ServerResponse'
 const debug = require('debug')('app:userCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 export async function create (user, payload) {
   try {

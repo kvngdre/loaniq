@@ -6,6 +6,7 @@ class SettingsService {
   constructor () {
     pubsub.subscribe(events.user.new, this.createSettings)
     pubsub.subscribe(events.user.login, this.updateUserSignIn)
+    pubsub.subscribe(events.user.delete, this.deleteSettings)
   }
 
   async createSettings (newSettingsDto, trx) {
@@ -41,8 +42,8 @@ class SettingsService {
     return updatedSettings
   }
 
-  async deleteSettings (settingsId) {
-    const deletedSettings = await SettingsDAO.update(settingsId)
+  async deleteSettings (query) {
+    const deletedSettings = await SettingsDAO.remove(query)
 
     return deletedSettings
   }

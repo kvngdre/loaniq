@@ -2,7 +2,7 @@ import { roles } from '../utils/constants'
 import ServerError from '../errors/serverError'
 import Transaction, { find, findById } from '../models/transactionModel'
 const debug = require('debug')('app:txnCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 export async function create (user, payload) {
   try {

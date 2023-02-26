@@ -6,7 +6,7 @@ import { findOneAndUpdate } from '../models/tenant.model'
 import { verifyTxn as _verifyTxn } from '../utils/Paystack'
 import { findOne } from '../models/transactionModel'
 const debug = require('debug')('app:webhookCtrl')
-const logger = require('../utils/Logger')
+const logger = require('../utils/logger')
 
 const webhooks = {
   paystack: async function (signature, payload) {

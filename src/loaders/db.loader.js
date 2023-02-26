@@ -1,5 +1,5 @@
 import { dbSetup } from '../config'
-import logger from '../utils/Logger'
+import logger from '../utils/logger'
 import mongoose from 'mongoose'
 
 export default async () => {
