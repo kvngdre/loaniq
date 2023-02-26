@@ -130,6 +130,16 @@ class BaseValidator {
   })
     .min(1)
     .label('Location')
+
+  _activeSchema = Joi.boolean().label('Active').messages({
+    'any.invalid': 'Must be a boolean value'
+  })
+
+  _amountSchema = Joi.number().label('Loan amount').min(0).max(9999999.99).precision(2)
+
+  _tenorSchema = Joi.number().label('Loan tenor').min(1).max(120)
+
+  _percentageSchema = Joi.number().label('Interest rate').min(0).max(100.00).precision(2)
 }
 
 export default BaseValidator

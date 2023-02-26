@@ -1,6 +1,7 @@
 import auth from '../middleware/auth'
 import Router from 'express'
 import SegmentController from '../controllers/segmentController'
+import validateId from '../middleware/validateId'
 
 const router = Router()
 
@@ -8,10 +9,10 @@ router.post('/', [auth], SegmentController.createSegment)
 
 router.get('/', [auth], SegmentController.getSegments)
 
-router.get('/:segmentId', [auth], SegmentController.getSegment)
+router.get('/:segmentId', [auth, validateId], SegmentController.getSegment)
 
-router.patch('/:segmentId', [auth], SegmentController.updateSegment)
+router.patch('/:segmentId', [auth, validateId], SegmentController.updateSegment)
 
-router.delete('/:id', [auth], SegmentController.deleteSegment)
+router.delete('/:segmentId', [auth, validateId], SegmentController.deleteSegment)
 
 export default router

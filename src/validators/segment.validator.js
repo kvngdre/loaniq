@@ -5,7 +5,6 @@ class SegmentValidator extends BaseValidator {
   #nameSchema
   #codeSchema
   #prefixSchema
-  #activeSchema
 
   constructor () {
     super()
@@ -27,10 +26,6 @@ class SegmentValidator extends BaseValidator {
       .messages({
         'string.pattern.base': '{#label} is not valid'
       })
-
-    this.#activeSchema = Joi.boolean().messages({
-      'any.invalid': 'Must be a boolean value'
-    })
   }
 
   validateCreate = (dto) => {
@@ -38,7 +33,7 @@ class SegmentValidator extends BaseValidator {
       code: this.#codeSchema.required(),
       name: this.#nameSchema.required(),
       id_prefix: this.#prefixSchema.required(),
-      active: this.#activeSchema
+      active: this._activeSchema
     })
 
     let { value, error } = schema.validate(dto)
@@ -52,7 +47,7 @@ class SegmentValidator extends BaseValidator {
       code: this.#codeSchema,
       name: this.#nameSchema,
       id_prefix: this.#prefixSchema,
-      active: this.#activeSchema
+      active: this._activeSchema
     })
 
     let { value, error } = schema.validate(dto)

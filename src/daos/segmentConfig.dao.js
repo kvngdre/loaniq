@@ -32,6 +32,15 @@ class SegmentConfigDAO extends BaseDAO {
     return foundRecord
   }
 
+  static async findDocsByField (query = null, projection = {}, orderBy = {}) {
+    if (!query) throw new Error('Query object is required')
+
+    const foundRecord = await SegmentConfig.find(query, projection).sort(orderBy)
+
+    return foundRecord
+  }
+
+
   static async findAll (query = {}, projection = {}) {
     const foundRecords = await SegmentConfig.find(query, projection)
 

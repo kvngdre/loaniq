@@ -18,6 +18,10 @@ const tenantConfigSchema = new Schema(
       sparse: true
     },
 
+    form_data: {
+      back_color: {type: String}
+    },
+
     default_params: {
       min_loan_amount: {
         type: Number,
