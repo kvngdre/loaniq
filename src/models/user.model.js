@@ -111,7 +111,7 @@ const userSchema = new Schema(
       required: true
     },
 
-    assignedSegments: {
+    segments: {
       type: [Schema.Types.ObjectId],
       ref: 'Segment'
     },

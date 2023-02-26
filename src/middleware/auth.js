@@ -37,9 +37,9 @@ export default function auth (req, res, next) {
 
     next()
   } catch (exception) {
-    if (exception.name === 'TokenExpiredError') {
-      throw new ForbiddenError('Session expired.')
-    }
+    // if (exception.name === 'TokenExpiredError') {
+    //   throw new ForbiddenError('Session expired.')
+    // }
 
     if (exception instanceof BaseError) {
       throw exception

@@ -25,6 +25,11 @@ class UserService {
       newUserDto.otp = generateOTP(10)
       newUserDto.password = generateRandomPwd()
 
+      /**
+       *
+       */
+      // if(newUserDto.segments) {}
+
       const newUser = await UserDAO.insert(newUserDto, trx)
 
       // * Emitting  new user sign up event.

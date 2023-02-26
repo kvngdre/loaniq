@@ -5,7 +5,7 @@ import { Types } from 'mongoose'
 
 class BaseValidator {
   formatErrorMessage = (error) => {
-    const regex = /\B(?=(\d{3})+(?!\d))/g
+    const regex = /(?<!.*ISO \d)\B(?=(\d{3})+(?!\d))/g
     const errorMsg = error.details[0].message
 
     // Remove quotation marks.
@@ -18,6 +18,7 @@ class BaseValidator {
   }
 
   _refineError = (error) => {
+    console.log(error.details)
     if (error) {
       error = {
         message: this.formatErrorMessage(error),
@@ -28,13 +29,13 @@ class BaseValidator {
     return error
   }
 
-  _objectIdSchema = Joi.string()
-    .custom((value, helpers) => {
-      if (Types.ObjectId.isValid(value)) helpers.error('any.invalid')
-
-      return value
+  _objectIdSchema = Joi.alternatives(
+    Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    Joi.object().keys({
+      id: Joi.any(),
+      _bsontype: Joi.allow('ObjectId')
     })
-    .messages({ 'any.invalid': '{#label} is not a valid object id.' })
+  )
 
   _nameSchema = Joi.object({
     first: Joi.string().label('First name').min(2).max(255).trim().messages({
@@ -113,7 +114,7 @@ class BaseValidator {
     })
     .messages({
       'any.only': '{#label} is not valid',
-      'any.invalid': '{#label} \'{#value}\', cannot be assigned to this user'
+      'any.invalid': "{#label} '{#value}', cannot be assigned to this user"
     })
 
   _locationSchema = Joi.object({

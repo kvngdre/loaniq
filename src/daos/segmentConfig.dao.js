@@ -1,19 +1,20 @@
+import { Types } from 'mongoose'
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import TenantConfig from '../models/tenantConfig.model'
+import SegmentConfig from '../models/segmentConfig.model'
 import ValidationError from '../errors/ValidationError'
 
-class TenantConfigDAO extends BaseDAO {
+class SegmentConfigDAO extends BaseDAO {
   static async insert (newRecordDto, trx) {
     try {
-      const newRecord = new TenantConfig(newRecordDto)
+      const newRecord = new SegmentConfig(newRecordDto)
       await newRecord.save({ session: trx })
 
       return newRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
+        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
       }
 
       if (exception.name === 'ValidationError') {
@@ -25,17 +26,24 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async findAll () {
-    const foundRecords = await TenantConfig.find({})
+  static async findById (id, projection = {}) {
+    const foundRecord = await SegmentConfig.findById(id, projection)
+
+    return foundRecord
+  }
+
+  static async findAll (query = {}, projection = {}) {
+    const foundRecords = await SegmentConfig.find(query, projection)
 
     return foundRecords
   }
 
-  static async update (id, updateRecordDto) {
+  static async update (query, updateDto, projection = {}) {
     try {
-      const foundRecord = await TenantConfig.findById(id)
+      query = !Types.ObjectId.isValid(query) ? query : { _id: query }
+      const foundRecord = await SegmentConfig.findOne(query, projection)
 
-      foundRecord.set(updateRecordDto)
+      foundRecord.set(updateDto)
       await foundRecord.save()
 
       return foundRecord
@@ -54,11 +62,12 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
-    const deletedRecord = await TenantConfig.findByIdAndDelete(id)
+  static async remove (query) {
+    query = !Types.ObjectId.isValid(query) ? query : { _id: query }
+    const deletedRecord = await SegmentConfig.findOneAndDelete(query)
 
     return deletedRecord
   }
 }
 
-export default TenantConfigDAO
+export default SegmentConfigDAO

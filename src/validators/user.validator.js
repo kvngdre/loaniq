@@ -6,9 +6,9 @@ class UserValidator extends BaseValidator {
   #jobTitle
   #dobSchema
   #displayNameSchema
-  #assignedSegmentsSchema
+  #segmentsSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#jobTitle = Joi.string().label('Job title').min(2).max(50).messages({
@@ -18,21 +18,21 @@ class UserValidator extends BaseValidator {
 
     this.#displayNameSchema = Joi.string().label('Display name').max(255)
 
-    this.#dobSchema = Joi.date().label('Date of birth').less('now').message({
-      'any.invalid': ''
-    })
+    this.#dobSchema = Joi.date().iso().label('Date of birth').less('now')
 
-    this.#assignedSegmentsSchema = Joi.alternatives().try(
-      Joi.array().label('Assigned segments').items(Joi.objectId).min(1),
-      Joi.string().label('Assigned segments').valid('all')
-    )
-
-    this.#assignedSegmentsSchema = Joi.alternatives().try(
-      Joi.array().items(Joi.objectId).min(1),
-      Joi.string().valid('all').messages({
-        'any.required': 'Segments is required'
+    this.#segmentsSchema = Joi.alternatives()
+      .try(
+        Joi.array()
+          .items(this._objectIdSchema)
+          .min(1)
+          .messages({ 'array.min': '{#label} array cannot be empty' }),
+        Joi.string().valid('ALL')
+      )
+      .label('Segments')
+      .messages({
+        'alternatives.types':
+          "{#label} must be an array of object ids or string 'ALL'"
       })
-    )
   }
 
   validateCreate = (dto, tenantId) => {
@@ -55,7 +55,8 @@ class UserValidator extends BaseValidator {
       }),
       phone_number: this._phoneNumberSchema.required(),
       email: this._emailSchema.required(),
-      role: this._roleSchema.invalid(...invalidRoles).required()
+      role: this._roleSchema.invalid(...invalidRoles).required(),
+      segments: this.#segmentsSchema.required()
     })
 
     let { value, error } = schema.validate(dto)
@@ -68,13 +69,17 @@ class UserValidator extends BaseValidator {
     const invalidRoles = getUserRoleKeys(userRoles.OWNER)
 
     const schema = Joi.object({
-      name: this._nameSchema,
+      name: Joi.object().keys({
+        first: this._nameSchema.extract('first'),
+        last: this._nameSchema.extract('last'),
+        middle: this._nameSchema.extract('middle')
+      }),
       job_title: this.#jobTitle,
       gender: this._genderSchema,
       dob: this.#dobSchema,
       display_name: this.#displayNameSchema,
       role: this._roleSchema.invalid(...invalidRoles),
-      assignedSegments: this.#assignedSegmentsSchema
+      segments: this.#segmentsSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto)

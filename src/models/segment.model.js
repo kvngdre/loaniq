@@ -11,7 +11,7 @@ const segmentSchema = new Schema({
     required: true
   },
 
-  prefix: {
+  id_prefix: {
     type: String,
     trim: true,
     default: null
