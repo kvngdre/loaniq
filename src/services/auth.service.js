@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
 import BadRequestError from '../errors/BadRequestError'
+import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
 import generateOTP from '../utils/generateOTP'
@@ -11,9 +12,8 @@ import pubsub from '../pubsub/PubSub'
 import similarity from '../utils/similarity'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
-import ValidationError from '../errors/ValidationError'
 import UserService from './user.service'
-import ConflictError from '../errors/ConflictError'
+import ValidationError from '../errors/ValidationError'
 
 class AuthService {
   static async verifySignUp (verifyRegDto, token) {
@@ -90,12 +90,13 @@ class AuthService {
         accessToken: null,
         redirect: {}
       }
+
       if (!user.isEmailVerified && !user.active) {
         data.redirect.verify_registration = true
         throw new ForbiddenError('Your account has not been confirmed.', data)
       }
 
-      if (!user.isEmailVerified && !user.active) {
+      if (user.resetPwd) {
         data.redirect.reset_password = true
         throw new ForbiddenError(
           'Your password reset has been triggered.',

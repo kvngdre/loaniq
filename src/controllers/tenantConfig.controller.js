@@ -1,17 +1,66 @@
+import { httpCodes } from '../utils/constants'
+import BaseController from './base.controller'
 import tenantConfigService from '../services/tenantConfig.service'
+import tenantConfigValidator from '../validators/tenantConfig.validator'
+import ValidationError from '../errors/ValidationError'
 
-class TenantConfigController {
-  static async createConfigurations (newConfigDto) {
-    const newTenantConfigurations = await tenantConfigService.createConfig(
-      newConfigDto
+class TenantConfigController extends BaseController {
+  static createConfig = async (req, res) => {
+    const { value, error } = tenantConfigValidator.validateCreate(req.body)
+    if (error) throw new ValidationError(error.message, error.path)
+
+    const newConfiguration = await tenantConfigService.createConfig(value)
+    const response = this.apiResponse(
+      'Tenant configuration created.',
+      newConfiguration
     )
-    return newTenantConfigurations
+
+    res.status(httpCodes.CREATED).json(response)
   }
 
-  static async getConfigurations () {
-    const foundTenantConfigurations = await tenantConfigService.getConfigs()
+  static getConfigs = async (req, res) => {
+    const [count, tenantConfigs] = await tenantConfigService.getConfigs()
 
-    return foundTenantConfigurations
+    const message = this.getMsgFromCount(count)
+    const response = this.apiResponse(message, tenantConfigs)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static getConfig = async (req, res) => {
+    const tenantConfig = await tenantConfigService.getConfig(
+      req.params.tenantId
+    )
+
+    const response = this.apiResponse(
+      'Fetched tenant configuration.',
+      tenantConfig
+    )
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static updateConfig = async (req, res) => {
+    const { value, error } = tenantConfigValidator.validateUpdate(req.body)
+    if (error) throw new ValidationError(error.message, error.path)
+
+    const tenantConfig = await tenantConfigService.updateConfig(
+      req.params.tenatId,
+      value
+    )
+    const response = this.apiResponse(
+      'Tenant configuration updated.',
+      tenantConfig
+    )
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static deleteConfig = async (req, res) => {
+    await tenantConfigService.deleteConfig(req.params.tenantId)
+    const response = this.apiResponse('Tenant configuration deleted.')
+
+    res.status(httpCodes.OK).json(response)
   }
 }
 

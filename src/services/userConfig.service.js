@@ -16,22 +16,22 @@ class UserConfigService {
   }
 
   async getAllConfigs () {
-    const foundSettings = await UserConfigDAO.findAll()
-    const count = Intl.NumberFormat('en-US').format(foundSettings.length)
+    const foundUserConfigs = await UserConfigDAO.findAll()
+    const count = Intl.NumberFormat('en-US').format(foundUserConfigs.length)
 
-    return { count, foundSettings }
+    return [count, foundUserConfigs]
   }
 
   async getConfig ({ userId }) {
-    const foundSettings = await UserConfigDAO.findByField({ userId })
+    const foundUserConfig = await UserConfigDAO.findByField({ userId })
 
-    return foundSettings
+    return foundUserConfig
   }
 
   async updateConfig ({ userId }, updateDto) {
-    const updatedSettings = await UserConfigDAO.update({ userId }, updateDto)
+    const updatedUserConfig = await UserConfigDAO.update({ userId }, updateDto)
 
-    return updatedSettings
+    return updatedUserConfig
   }
 
   async updateUserSignIn ({ userId }) {
@@ -46,9 +46,9 @@ class UserConfigService {
   }
 
   async deleteConfig ({ userId }) {
-    const deletedSettings = await UserConfigDAO.remove({ userId })
+    const deletedUserConfig = await UserConfigDAO.remove({ userId })
 
-    return deletedSettings
+    return deletedUserConfig
   }
 }
 

@@ -1,16 +1,16 @@
 /* eslint-disable camelcase */
+import { constants } from '../config'
+import { startSession } from 'mongoose'
 import events from '../pubsub/events'
 import generateOTP from '../utils/generateOTP'
+import generateRandomPwd from '../utils/generateRandomPwd'
+import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import pubsub from '../pubsub/PubSub'
-import UserDAO from '../daos/user.dao'
-import UnauthorizedError from '../errors/UnauthorizedError'
-import { constants } from '../config'
 import similarity from '../utils/similarity'
+import UnauthorizedError from '../errors/UnauthorizedError'
+import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
-import { startSession } from 'mongoose'
-import logger from '../utils/logger'
-import generateRandomPwd from '../utils/generateRandomPwd'
 
 class UserService {
   static async createUser (newUserDto, trx = null) {

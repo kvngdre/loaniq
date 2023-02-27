@@ -15,8 +15,27 @@ class TenantConfigService {
 
   async getConfigs () {
     const foundConfigs = await TenantConfigDAO.findAll()
+    const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
-    return foundConfigs
+    return [count, foundConfigs]
+  }
+
+  async getConfig (tenantId) {
+    const foundConfig = await TenantConfigDAO.findById(tenantId)
+
+    return foundConfig
+  }
+
+  async updateConfig (tenantId, updateDto) {
+    const updateConfig = await TenantConfigDAO.update(tenantId, updateDto)
+
+    return updateConfig
+  }
+
+  async deleteConfig (tenantId) {
+    const deletedTenantConfig = await TenantConfigDAO.remove({ tenantId })
+
+    return deletedTenantConfig
   }
 }
 

@@ -36,7 +36,6 @@ class SegmentConfigValidator extends BaseValidator {
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
-      // tenantId: this._objectIdSchema.label('Tenant Id').default(tenantId),
       segment: this._objectIdSchema.required(),
       active: this._activeSchema,
       min_loan_amount: this._amountSchema.label('Minimum loan amount'),

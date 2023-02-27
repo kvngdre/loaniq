@@ -25,15 +25,21 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async findAll () {
-    const foundRecords = await TenantConfig.find({})
+  static async findAll (query = {}, projection = {}) {
+    const foundRecords = await TenantConfig.find(query, projection)
 
     return foundRecords
   }
 
-  static async update (id, updateRecordDto) {
+  static async findById (tenantId, projection) {
+    const foundRecords = await TenantConfig.findOne({ tenantId }, projection)
+
+    return foundRecords
+  }
+
+  static async update (tenantId, updateRecordDto, projection = {}) {
     try {
-      const foundRecord = await TenantConfig.findById(id)
+      const foundRecord = await TenantConfig.findOne({ tenantId }, projection)
 
       foundRecord.set(updateRecordDto)
       await foundRecord.save()
@@ -54,8 +60,8 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
-    const deletedRecord = await TenantConfig.findByIdAndDelete(id)
+  static async remove (tenantId) {
+    const deletedRecord = await TenantConfig.findByIdAndDelete({ tenantId })
 
     return deletedRecord
   }
