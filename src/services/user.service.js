@@ -25,11 +25,6 @@ class UserService {
       newUserDto.otp = generateOTP(10)
       newUserDto.password = generateRandomPwd()
 
-      /**
-       *
-       */
-      // if(newUserDto.segments) {}
-
       const newUser = await UserDAO.insert(newUserDto, trx)
 
       // * Emitting  new user sign up event.
@@ -67,26 +62,64 @@ class UserService {
     }
   }
 
-  static async getUsers (query = {}, projection = {}) {
+  static async getUsers (query = {}, projection = null) {
+    projection = projection || {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    }
     const foundUsers = await UserDAO.findAll(query, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, users: foundUsers }
   }
 
-  static async getUser (userId, projection = {}) {
+  static async getUserById (userId, projection = null) {
+    projection = projection || {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    }
     const foundUser = await UserDAO.findById(userId, projection)
 
     return foundUser
   }
 
-  static async updateUser (userId, updateUserDto, projection = {}) {
+  static async getUserByField (query, projection = null) {
+    projection = projection || {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    }
+    if (!query) throw new Error('Query object is required.')
+
+    const foundUser = await UserDAO.findByField(query, projection)
+
+    return foundUser
+  }
+
+  static async updateUser (userId, updateUserDto, projection = null) {
+    projection = projection || {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    }
     const updatedUser = await UserDAO.update(userId, updateUserDto, projection)
 
     return updatedUser
   }
 
-  static async deleteUser (userId, projection = {}) {
+  static async deleteUser (userId, projection = null) {
+    projection = projection || {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    }
     const deletedUser = await UserDAO.remove(userId, projection)
 
     await pubsub.publish(events.user.delete, { userId: deletedUser._doc._id })
@@ -168,7 +201,7 @@ class UserService {
         active: false,
         refreshTokens: []
       },
-      { password: 0, refreshTokens: 0, otp: 0 }
+      { password: 0, refreshTokens: 0, otp: 0, resetPwd: 0 }
     )
 
     return deactivatedUser

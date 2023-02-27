@@ -28,6 +28,11 @@ const segmentSchema = new Schema({
     default: true
   }
 
+  /**
+   * todo have recommended values for this segments last 6 bvn and income data
+   * todo authorize account number to be billed to send to customer account
+   */
+
 }, schemaOptions)
 
 const Segment = model('Segment', segmentSchema)

@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError'
-import SegmentService from '../services/segment.service'
 import { httpCodes } from '../utils/constants'
-import segmentValidator from '../validators/segment.validator'
 import BaseController from './base.controller'
+import SegmentService from '../services/segment.service'
+import segmentValidator from '../validators/segment.validator'
+import ValidationError from '../errors/ValidationError'
 
 class SegmentController extends BaseController {
   static createSegment = async (req, res) => {

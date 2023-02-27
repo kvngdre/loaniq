@@ -12,44 +12,51 @@ import similarity from '../utils/similarity'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
+import UserService from './user.service'
+import ConflictError from '../errors/ConflictError'
 
 class AuthService {
   static async verifySignUp (verifyRegDto, token) {
     const { email, otp, current_password, new_password } = verifyRegDto
 
-    const foundUser = await UserDAO.findByField({ email })
+    const foundUser = await UserService.findByField({ email })
     if (foundUser.active) {
-      throw new BadRequestError('User has been verified, please sign in.')
+      throw new ConflictError('User has been verified, please sign in.')
     }
 
     const isMatch = foundUser.comparePasswords(current_password)
-    if (!isMatch) throw new BadRequestError('Password is incorrect.')
+    if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
 
-    if (Date.now() > foundUser.otp.expires) {
-      throw new BadRequestError('OTP expired.')
+    validateOTP(foundUser, otp)
+    function validateOTP (user, otp) {
+      if (Date.now() > user.otp.expires) {
+        throw new BadRequestError('OTP expired.')
+      }
+
+      if (otp !== user.otp.pin) {
+        throw new UnauthorizedError('Invalid OTP.')
+      }
     }
 
-    if (otp !== foundUser.otp.pin) throw new BadRequestError('Invalid OTP.')
-
     // * Measuring similarity of new password to the current password.
-    const percentageSimilarity = similarity(new_password, current_password) * 100
+    const percentageSimilarity =
+      similarity(new_password, current_password) * 100
     const similarityThreshold = constants.max_similarity
     if (percentageSimilarity >= similarityThreshold) {
       throw new ValidationError('Password is too similar to old password.')
     }
 
-    // Generating new token set
-    const accessToken = foundUser.generateAccessToken()
-    const newRefreshToken = foundUser.generateRefreshToken()
-
     if (token) {
-      // Prune user refresh tokens array for expired tokens.
+      // ! Prune user refresh tokens array for expired tokens.
       foundUser.refreshTokens = foundUser.refreshTokens.filter(
         (rt) => rt.token !== token && Date.now() < rt.expires
       )
     }
+    // * Generating new token set.
+    const accessToken = foundUser.generateAccessToken()
+    const refreshToken = foundUser.generateRefreshToken()
 
-    foundUser.refreshTokens.push(newRefreshToken)
+    foundUser.refreshTokens.push(refreshToken)
     foundUser.set({
       isEmailVerified: true,
       password: new_password,
@@ -60,18 +67,14 @@ class AuthService {
     })
     await foundUser.save()
 
-    // Emitting event
+    // ! Emitting user login event.
     pubsub.publish(events.user.login, { userId: foundUser._doc._id })
 
     delete foundUser._doc.password
     delete foundUser._doc.otp
     delete foundUser._doc.refreshTokens
 
-    return {
-      accessToken,
-      refreshToken: newRefreshToken,
-      user: foundUser
-    }
+    return [accessToken, refreshToken, foundUser]
   }
 
   static async login ({ email, password }, token) {
@@ -80,48 +83,37 @@ class AuthService {
     const isMatch = await foundUser.comparePasswords(password)
     if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
 
-    if (!foundUser.isEmailVerified && !foundUser.active) {
-      return [
-        'Your account has not been confirmed.',
-        {
-          email,
-          role: foundUser.role,
-          accessToken: null,
-          redirect: {
-            verify_registration: true,
-            reset_password: false
-          }
-        },
-        null
-      ]
-    }
+    permitLogin(foundUser)
+    function permitLogin (user) {
+      const data = {
+        email: user.email,
+        accessToken: null,
+        redirect: {}
+      }
+      if (!user.isEmailVerified && !user.active) {
+        data.redirect.verify_registration = true
+        throw new ForbiddenError('Your account has not been confirmed.', data)
+      }
 
-    if (foundUser.resetPwd && foundUser.active) {
-      return [
-        'Your password reset has been triggered.',
-        {
-          email,
-          role: foundUser.role,
-          accessToken: null,
-          redirect: {
-            verify_registration: false,
-            reset_password: true
-          }
-        },
-        null
-      ]
-    }
+      if (!user.isEmailVerified && !user.active) {
+        data.redirect.reset_password = true
+        throw new ForbiddenError(
+          'Your password reset has been triggered.',
+          data
+        )
+      }
 
-    if (!foundUser.active) {
-      throw new ForbiddenError(
-        'Account deactivated. Contact your administrator.'
-      )
+      if (!user.active) {
+        data.redirect = null
+        throw new ForbiddenError(
+          'Account deactivated. Contact your administrator.',
+          data
+        )
+      }
     }
-
-    const accessToken = foundUser.generateAccessToken()
-    const refreshToken = foundUser.generateRefreshToken()
 
     if (token) {
+      // ! Prune user refresh tokens array for expired tokens.
       foundUser.refreshTokens = foundUser.refreshTokens.filter(
         (rt) => rt.token !== token && Date.now() < rt.expires
       )
@@ -143,17 +135,26 @@ class AuthService {
       })
     }
 
+    // * Generating new token set.
+    const accessToken = foundUser.generateAccessToken()
+    const refreshToken = foundUser.generateRefreshToken()
+
     foundUser.refreshTokens.push(refreshToken)
     await foundUser.save()
 
-    // Emitting event
+    // * Emitting user login event.
     pubsub.publish(events.user.login, { userId: foundUser._doc._id })
 
     return [
-      'Login successful.',
       { email, role: foundUser.role, accessToken, redirect: null },
       refreshToken
     ]
+  }
+
+  static async getCurrentUser (userId) {
+    const foundUser = await UserService.getUserById(userId)
+
+    return foundUser
   }
 
   static async getNewTokenSet (token) {
@@ -176,7 +177,7 @@ class AuthService {
       const accessToken = foundUser.generateAccessToken()
       const refreshToken = foundUser.generateRefreshToken()
 
-      // Prune refresh token array for expired refresh tokens.
+      // ! Prune refresh token array for expired refresh tokens.
       foundUser.refreshTokens = foundUser.refreshTokens.filter(
         (rt) => rt.token !== token && Date.now() < rt.expires
       )
@@ -203,7 +204,7 @@ class AuthService {
     foundUser.set({ otp: generatedOTP })
     await foundUser.save()
 
-    logger.info('Sending otp mail...')
+    logger.info('Sending OTP mail...')
     await mailer({
       to: email,
       subject: 'Your one-time-pin request',
@@ -230,7 +231,17 @@ class AuthService {
     }
   }
 
-  static async logoutAll () {}
+  static async logoutAllSessions (userId, token) {
+    const foundUser = await UserService.getUserById(userId)
+
+    // ! Prune refresh token array for expired refresh tokens.
+    foundUser.refreshTokens = foundUser.refreshTokens.filter(
+      (rt) => rt.token !== token
+    )
+    await foundUser.save()
+
+    return foundUser
+  }
 }
 
 export default AuthService

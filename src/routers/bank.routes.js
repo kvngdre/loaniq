@@ -1,4 +1,4 @@
-import { userRoles } from '../utils/constants'
+import { userRoles } from '../utils/userRoles'
 import bankController from '../controllers/bank.controller'
 import Router from 'express'
 import validateObjectId from '../middleware/validateId'

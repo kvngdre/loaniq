@@ -1,9 +1,12 @@
 import auth from '../middleware/auth'
 import Router from 'express'
-import SegmentController from '../controllers/segmentController'
+import SegmentController from '../controllers/segment.controller'
+import segConfigRoutes from './segConfig.routes'
 import validateId from '../middleware/validateId'
 
 const router = Router()
+
+router.use('/configurations', segConfigRoutes)
 
 router.post('/', [auth], SegmentController.createSegment)
 

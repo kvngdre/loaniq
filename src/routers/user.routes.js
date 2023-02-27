@@ -1,14 +1,14 @@
 import Router from 'express'
 import upload from '../middleware/fileUpload'
-import verifyRole from '../middleware/verifyRole'
+// import verifyRole from '../middleware/verifyRole'
 import auth from '../middleware/auth'
-import settingsRoutes from './settings.routes'
+import userConfigRoutes from './userConfig.routes'
 import UserController from '../controllers/user.controller'
 import validateId from '../middleware/validateId'
 
 const router = Router()
 
-router.use('/settings', settingsRoutes)
+router.use('/configurations', [auth], userConfigRoutes)
 
 router.post('/', [auth], UserController.createUser)
 
@@ -16,9 +16,9 @@ router.post('/:userId/change_password', [auth, validateId], UserController.chang
 
 router.post('/:userId/reset_password', [auth, validateId], UserController.resetPassword)
 
-router.get('/', UserController.getUsers)
+router.get('/', [auth], UserController.getUsers)
 
-router.get('/:userId', [validateId], UserController.getUsers)
+router.get('/:userId', [auth, validateId], UserController.getUser)
 
 router.get('/:userId/deactivate', [auth, validateId], UserController.deactivateUser)
 

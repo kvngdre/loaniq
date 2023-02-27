@@ -33,7 +33,7 @@ class UserController extends BaseController {
   }
 
   static getUser = async (req, res) => {
-    const user = await UserService.getUser(req.params.userId)
+    const user = await UserService.getUserById(req.params.userId)
     const response = this.apiResponse('Fetched user.', user)
 
     res.status(httpCodes.OK).json(response)
@@ -67,6 +67,14 @@ class UserController extends BaseController {
   }
 
   static resetPassword = async (req, res) => {
+    await UserService.resetPassword(req.params.userId)
+    const response = this.apiResponse('User password has been reset.')
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  // todo Discuss with Vic your ideas on forgot password flow.
+  static forgotPassword = async (req, res) => {
     await UserService.resetPassword(req.params.userId)
     const response = this.apiResponse('User password has been reset.')
 

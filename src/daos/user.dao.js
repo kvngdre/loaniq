@@ -32,8 +32,6 @@ class UserDAO extends BaseDAO {
   }
 
   static async findByField (query = null, projection = {}) {
-    if (!query) throw new Error('Query object is required')
-
     const foundRecord = await User.findOne(query, projection)
 
     return foundRecord

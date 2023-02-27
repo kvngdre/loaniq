@@ -1,6 +1,6 @@
 import { constants } from '../config'
 import { hashSync, compare } from 'bcryptjs'
-import { userRoles } from '../utils/constants'
+import { getUserRoleKeys, userRoles } from '../utils/userRoles'
 import { Schema, model } from 'mongoose'
 import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
@@ -17,7 +17,7 @@ const userSchema = new Schema(
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      unique: true,
+      // unique: true,
       required: true
     },
 
@@ -61,17 +61,6 @@ const userSchema = new Schema(
       default: null
     },
 
-    queryName: {
-      type: String,
-      default: function () {
-        return this.name.first.concat(
-          this.name.middle ? ` ${this.name.middle}` : '',
-          ` ${this.name.last}`,
-          ` ${this.displayName}`
-        )
-      }
-    },
-
     dob: {
       type: String,
       default: null
@@ -88,7 +77,7 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       trim: true,
-      unique: true,
+      // unique: true,
       required: true
     },
 
@@ -106,8 +95,8 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      enum: Object.values(userRoles),
-      default: userRoles.OWNER,
+      enum: Object.keys(userRoles),
+      default: getUserRoleKeys(userRoles.OWNER)[0],
       required: true
     },
 
@@ -155,7 +144,7 @@ const userSchema = new Schema(
   schemaOptions
 )
 
-userSchema.virtual('fullName').get(function () {
+userSchema.virtual('full_Name').get(function () {
   return this.name.first.concat(
     this.name.middle ? ` ${this.name.middle}` : '',
     ` ${this.name.last}`
@@ -171,7 +160,7 @@ userSchema.methods.generateAccessToken = function () {
     {
       id: this._id.toString(),
       tenantId: this.tenantId,
-      role: this.role
+      role: userRoles[this.role]
     },
     constants.jwt.secret.access,
     {

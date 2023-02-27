@@ -55,8 +55,8 @@ class UserValidator extends BaseValidator {
       }),
       phone_number: this._phoneNumberSchema.required(),
       email: this._emailSchema.required(),
-      role: this._roleSchema.invalid(...invalidRoles).required(),
-      segments: this.#segmentsSchema.required()
+      role: this._roleSchema.invalid(...invalidRoles).required()
+      // segments: this.#segmentsSchema.required()
     })
 
     let { value, error } = schema.validate(dto)
@@ -78,8 +78,8 @@ class UserValidator extends BaseValidator {
       gender: this._genderSchema,
       dob: this.#dobSchema,
       display_name: this.#displayNameSchema,
-      role: this._roleSchema.invalid(...invalidRoles),
-      segments: this.#segmentsSchema
+      role: this._roleSchema.invalid(...invalidRoles)
+      // segments: this.#segmentsSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto)

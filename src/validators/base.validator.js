@@ -1,7 +1,6 @@
 import { joiPassword } from 'joi-password'
-import Joi from 'joi'
 import { userRoles } from '../utils/userRoles'
-import { Types } from 'mongoose'
+import Joi from 'joi'
 
 class BaseValidator {
   formatErrorMessage = (error) => {
@@ -18,7 +17,6 @@ class BaseValidator {
   }
 
   _refineError = (error) => {
-    console.log(error.details)
     if (error) {
       error = {
         message: this.formatErrorMessage(error),
@@ -104,14 +102,7 @@ class BaseValidator {
   _roleSchema = Joi.string()
     .label('Role')
     .uppercase()
-    .custom((value, helpers) => {
-      if (!Object.keys(userRoles).includes(value)) {
-        return helpers.error('any.only')
-      }
-
-      console.log('-->', value)
-      return userRoles[value]
-    })
+    .valid(...Object.keys(userRoles))
     .messages({
       'any.only': '{#label} is not valid',
       'any.invalid': "{#label} '{#value}', cannot be assigned to this user"

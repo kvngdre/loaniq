@@ -1,13 +1,13 @@
-import { Types } from 'mongoose'
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import SegmentConfig from '../models/segmentConfig.model'
+import UserConfig from '../models/userConfig.model'
 import ValidationError from '../errors/ValidationError'
+import { Types } from 'mongoose'
 
-class SegmentConfigDAO extends BaseDAO {
+class UserConfigDAO extends BaseDAO {
   static async insert (newRecordDto, trx) {
     try {
-      const newRecord = new SegmentConfig(newRecordDto)
+      const newRecord = new UserConfig(newRecordDto)
       await newRecord.save({ session: trx })
 
       return newRecord
@@ -27,22 +27,19 @@ class SegmentConfigDAO extends BaseDAO {
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await SegmentConfig.findById(id, projection)
+    const foundRecord = await UserConfig.findById(id, projection)
 
     return foundRecord
   }
 
-  static async findDocsByField (query = null, projection = {}, orderBy = {}) {
-    if (!query) throw new Error('Query object is required')
-
-    const foundRecord = await SegmentConfig.find(query, projection).sort(orderBy)
+  static async findByField (query, projection = {}) {
+    const foundRecord = await UserConfig.findOne(query, projection)
 
     return foundRecord
   }
-
 
   static async findAll (query = {}, projection = {}) {
-    const foundRecords = await SegmentConfig.find(query, projection)
+    const foundRecords = await UserConfig.find(query, projection)
 
     return foundRecords
   }
@@ -50,7 +47,7 @@ class SegmentConfigDAO extends BaseDAO {
   static async update (query, updateDto, projection = {}) {
     try {
       query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-      const foundRecord = await SegmentConfig.findOne(query, projection)
+      const foundRecord = await UserConfig.findOne(query, projection)
 
       foundRecord.set(updateDto)
       await foundRecord.save()
@@ -73,10 +70,10 @@ class SegmentConfigDAO extends BaseDAO {
 
   static async remove (query) {
     query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-    const deletedRecord = await SegmentConfig.findOneAndDelete(query)
+    const deletedRecord = await UserConfig.findOneAndDelete(query)
 
     return deletedRecord
   }
 }
 
-export default SegmentConfigDAO
+export default UserConfigDAO

@@ -20,6 +20,7 @@ const customerSchema = new Schema(
       type: String,
       default: null
     },
+
     idCard: {
       type: String,
       default: null
@@ -294,7 +295,7 @@ const customerSchema = new Schema(
   schemaOptions
 )
 
-// creating compound indexes
+// ! Creating compound indexes
 customerSchema.index({ ippis: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ accountNo: 1, tenantId: 1 }, { unique: true })

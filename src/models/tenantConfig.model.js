@@ -19,7 +19,7 @@ const tenantConfigSchema = new Schema(
     },
 
     form_data: {
-      back_color: {type: String}
+      background_color: { type: String }
     },
 
     default_params: {

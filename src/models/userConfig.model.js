@@ -1,13 +1,13 @@
 import { Schema, model } from 'mongoose'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
-const settingsSchema = new Schema(
+const userConfigSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      unique: true,
       required: [true, 'Tenant Id is required.']
     },
 
@@ -31,6 +31,14 @@ const settingsSchema = new Schema(
   schemaOptions
 )
 
-const Setting = model('Setting', settingsSchema)
+userConfigSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('User configurations not found.')
+  }
 
-export default Setting
+  if (!doc) throw new NotFoundError('User configuration not found.')
+})
+
+const UserConfig = model('UserConfig', userConfigSchema)
+
+export default UserConfig

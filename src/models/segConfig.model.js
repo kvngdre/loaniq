@@ -3,12 +3,12 @@ import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
-const segmentConfigSchema = new Schema(
+const segConfigSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      unique: true,
+      // unique: true,
       required: [true, 'Tenant Id is required.']
     },
 
@@ -84,7 +84,13 @@ const segmentConfigSchema = new Schema(
   schemaOptions
 )
 
-segmentConfigSchema.post(/^find/, function (doc) {
+segConfigSchema.index(
+  { tenantId: 1, segment: 1, min_net_pay: 1 },
+  { unique: true }
+)
+// segConfigSchema.index({ min_net_pay: 1, tenantId: 1 }, { unique: true })
+
+segConfigSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Segment configurations not found.')
   }
@@ -92,6 +98,6 @@ segmentConfigSchema.post(/^find/, function (doc) {
   if (!doc) throw new NotFoundError('Segment configuration not found.')
 })
 
-const SegmentConfig = model('SegmentConfig', segmentConfigSchema)
+const SegmentConfig = model('SegmentConfig', segConfigSchema)
 
 export default SegmentConfig

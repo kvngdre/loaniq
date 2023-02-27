@@ -1,13 +1,13 @@
+import { Types } from 'mongoose'
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import Setting from '../models/settings.model'
+import SegConfig from '../models/segConfig.model'
 import ValidationError from '../errors/ValidationError'
-import { Types } from 'mongoose'
 
-class SettingsDAO extends BaseDAO {
+class SegConfigDAO extends BaseDAO {
   static async insert (newRecordDto, trx) {
     try {
-      const newRecord = new Setting(newRecordDto)
+      const newRecord = new SegConfig(newRecordDto)
       await newRecord.save({ session: trx })
 
       return newRecord
@@ -27,13 +27,21 @@ class SettingsDAO extends BaseDAO {
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await Setting.findById(id, projection)
+    const foundRecord = await SegConfig.findById(id, projection)
+
+    return foundRecord
+  }
+
+  static async findDocsByField (query = null, projection = {}, orderBy = {}) {
+    if (!query) throw new Error('Query object is required')
+
+    const foundRecord = await SegConfig.find(query, projection).sort(orderBy)
 
     return foundRecord
   }
 
   static async findAll (query = {}, projection = {}) {
-    const foundRecords = await Setting.find(query, projection)
+    const foundRecords = await SegConfig.find(query, projection)
 
     return foundRecords
   }
@@ -41,7 +49,7 @@ class SettingsDAO extends BaseDAO {
   static async update (query, updateDto, projection = {}) {
     try {
       query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-      const foundRecord = await Setting.findOne(query, projection)
+      const foundRecord = await SegConfig.findOne(query, projection)
 
       foundRecord.set(updateDto)
       await foundRecord.save()
@@ -64,10 +72,10 @@ class SettingsDAO extends BaseDAO {
 
   static async remove (query) {
     query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-    const deletedRecord = await Setting.findOneAndDelete(query)
+    const deletedRecord = await SegConfig.findOneAndDelete(query)
 
     return deletedRecord
   }
 }
 
-export default SettingsDAO
+export default SegConfigDAO

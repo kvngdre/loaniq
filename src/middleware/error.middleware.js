@@ -8,6 +8,7 @@ class ErrorResponse {
     this.errors = err.path
       ? { [err.path]: err.message }
       : { message: err.message }
+    this.data = err?.data
   }
 }
 
@@ -26,12 +27,10 @@ export default (err, req, res, next) => {
     return res.status(err.code).json(new ErrorResponse(err))
   }
 
-  return res
-    .status(httpCodes.INTERNAL_SERVER)
-    .json(
-      new ErrorResponse({
-        name: 'Server Error',
-        message: 'Something went wrong.'
-      })
-    )
+  return res.status(httpCodes.INTERNAL_SERVER).json(
+    new ErrorResponse({
+      name: 'Server Error',
+      message: 'Something went wrong.'
+    })
+  )
 }

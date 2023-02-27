@@ -10,7 +10,7 @@ import walletRoutes from './wallet.routes'
 
 const router = Router()
 
-router.use('/configurations', tenantConfigRoutes)
+router.use('/configurations', [auth], tenantConfigRoutes)
 
 router.use('/wallets', walletRoutes)
 
