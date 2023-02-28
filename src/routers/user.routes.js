@@ -14,8 +14,6 @@ router.post('/', [auth], UserController.createUser)
 
 router.post('/:userId/change_password', [auth, validateId], UserController.changePassword)
 
-router.post('/:userId/reset_password', [auth, validateId], UserController.resetPassword)
-
 router.get('/', [auth], UserController.getUsers)
 
 router.get('/:userId', [auth, validateId], UserController.getUser)
@@ -23,6 +21,8 @@ router.get('/:userId', [auth, validateId], UserController.getUser)
 router.get('/:userId/deactivate', [auth, validateId], UserController.deactivateUser)
 
 router.get('/:userId/reactivate', [auth, validateId], UserController.reactivateUser)
+
+router.get('/:userId/reset_password', [auth, validateId], UserController.resetPassword)
 
 router.patch('/:userId', [validateId], UserController.updateUser)
 

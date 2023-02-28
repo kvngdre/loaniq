@@ -26,6 +26,12 @@ class TenantConfigService {
     return foundConfig
   }
 
+  async getConfigByField (filter) {
+    const foundConfig = await TenantConfigDAO.findByField(filter)
+
+    return foundConfig
+  }
+
   async updateConfig (tenantId, updateDto) {
     const updateConfig = await TenantConfigDAO.update(tenantId, updateDto)
 
@@ -33,7 +39,7 @@ class TenantConfigService {
   }
 
   async deleteConfig (tenantId) {
-    const deletedTenantConfig = await TenantConfigDAO.remove({ tenantId })
+    const deletedTenantConfig = await TenantConfigDAO.remove(tenantId)
 
     return deletedTenantConfig
   }

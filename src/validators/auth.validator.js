@@ -4,8 +4,8 @@ class AuthValidator extends BaseValidator {
   validateVerifyReg = (dto) => {
     const schema = Joi.object({
       email: this._emailSchema.required(),
-      otp: this._otpSchema.required(),
-      current_password: Joi.string().label('Current password').required(),
+      otp: this._otpSchema(6).required(),
+      current_password: Joi.string().trim().label('Current password').required(),
       new_password: this._passwordSchema.required(),
       confirm_password: this._confirmPasswordSchema.required()
     })
@@ -30,7 +30,8 @@ class AuthValidator extends BaseValidator {
 
   validateSendOTP = (dto) => {
     const schema = Joi.object({
-      email: this._emailSchema.required()
+      email: this._emailSchema.required(),
+      len: Joi.number().valid(6, 8).required()
     })
 
     let { value, error } = schema.validate(dto)

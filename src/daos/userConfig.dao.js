@@ -26,12 +26,7 @@ class UserConfigDAO extends BaseDAO {
     }
   }
 
-  static async findById (id, projection = {}) {
-    const foundRecord = await UserConfig.findById(id, projection)
-
-    return foundRecord
-  }
-
+  // todo see if RBAC can narrow down so that we can do an upsert if not found
   static async findByField (query, projection = {}) {
     const foundRecord = await UserConfig.findOne(query, projection)
 
@@ -44,13 +39,12 @@ class UserConfigDAO extends BaseDAO {
     return foundRecords
   }
 
-  static async update (query, updateDto, projection = {}) {
+  static async update (query, updateDto) {
     try {
-      query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-      const foundRecord = await UserConfig.findOne(query, projection)
-
-      foundRecord.set(updateDto)
-      await foundRecord.save()
+      const foundRecord = await UserConfig.findOneAndUpdate(query, updateDto, {
+        upsert: true,
+        new: true
+      })
 
       return foundRecord
     } catch (exception) {

@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
-import BadRequestError from '../errors/BadRequestError'
 import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
@@ -19,22 +18,22 @@ class AuthService {
   static async verifySignUp (verifyRegDto, token) {
     const { email, otp, current_password, new_password } = verifyRegDto
 
-    const foundUser = await UserService.findByField({ email })
+    const foundUser = await UserService.getUserByField({ email }, {})
     if (foundUser.active) {
       throw new ConflictError('User has been verified, please sign in.')
     }
 
-    const isMatch = foundUser.comparePasswords(current_password)
+    const isMatch = await foundUser.comparePasswords(current_password)
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
 
     validateOTP(foundUser, otp)
     function validateOTP (user, otp) {
-      if (Date.now() > user.otp.expires) {
-        throw new BadRequestError('OTP expired.')
-      }
-
       if (otp !== user.otp.pin) {
         throw new UnauthorizedError('Invalid OTP.')
+      }
+
+      if (Date.now() > user.otp.expires) {
+        throw new UnauthorizedError('OTP has expired.')
       }
     }
 
@@ -144,7 +143,7 @@ class AuthService {
     await foundUser.save()
 
     // * Emitting user login event.
-    pubsub.publish(events.user.login, { userId: foundUser._doc._id })
+    pubsub.publish(events.user.login, { userId: foundUser._id, ...foundUser._doc })
 
     return [
       { email, role: foundUser.role, accessToken, redirect: null },
@@ -198,17 +197,17 @@ class AuthService {
     }
   }
 
-  static async sendOTP ({ email }) {
+  static async sendOTP ({ email, len }) {
     const foundUser = await UserDAO.findByField({ email })
 
-    const generatedOTP = generateOTP()
+    const generatedOTP = generateOTP(10, len)
     foundUser.set({ otp: generatedOTP })
     await foundUser.save()
 
     logger.info('Sending OTP mail...')
     await mailer({
       to: email,
-      subject: 'Your one-time-pin request',
+      subject: `Account verification code: ${generatedOTP.pin}`,
       name: foundUser.name.first,
       template: 'otp-request',
       payload: { otp: generatedOTP.pin }

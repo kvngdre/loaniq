@@ -3,7 +3,7 @@ import { userRoles } from '../utils/userRoles'
 import Joi from 'joi'
 
 class BaseValidator {
-  formatErrorMessage = (error) => {
+  #formatErrorMessage = (error) => {
     const regex = /(?<!.*ISO \d)\B(?=(\d{3})+(?!\d))/g
     const errorMsg = error.details[0].message
 
@@ -17,10 +17,16 @@ class BaseValidator {
   }
 
   _refineError = (error) => {
+    // console.log(error.details[0])
+    const reducer = (acc, value) => {
+      if (acc === '') return acc + value
+      return acc + '.' + value
+    }
+
     if (error) {
       error = {
-        message: this.formatErrorMessage(error),
-        path: error.details[0].path.reduce((acc, value) => acc + '.' + value)
+        message: this.#formatErrorMessage(error),
+        path: error.details[0].path.reduce(reducer, '')
       }
     }
 
@@ -36,18 +42,36 @@ class BaseValidator {
   )
 
   _nameSchema = Joi.object({
-    first: Joi.string().label('First name').min(2).max(255).trim().messages({
-      'string.min': '{#label} is not valid',
-      'string.max': '{#label} is too long'
-    }),
-    last: Joi.string().label('Last name').min(2).max(255).trim().messages({
-      'string.min': '{#label} is not valid',
-      'string.max': '{#label} is too long'
-    }),
-    middle: Joi.string().label('Middle name').min(2).max(255).trim().messages({
-      'string.min': '{#label} is not valid',
-      'string.max': '{#label} is too long'
-    })
+    first: Joi.string()
+      .label('First name')
+      .trim()
+      .min(2)
+      .max(255)
+      .trim()
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long'
+      }),
+    last: Joi.string()
+      .label('Last name')
+      .trim()
+      .min(2)
+      .max(255)
+      .trim()
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long'
+      }),
+    middle: Joi.string()
+      .label('Middle name')
+      .trim()
+      .min(2)
+      .max(255)
+      .trim()
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long'
+      })
   }).min(1)
 
   _genderSchema = Joi.string()
@@ -59,22 +83,31 @@ class BaseValidator {
 
   _phoneNumberSchema = Joi.string()
     .label('Phone number')
+    .trim()
     .pattern(/^\+?[\d]{10,14}$/)
     .messages({
       'string.pattern.base':
         '{#label} is invalid, please include international dialling code.'
     })
 
-  _otpSchema = Joi.string()
-    .label('OTP')
-    .pattern(/^[0-9]{6}$/)
-    .messages({
-      'string.pattern.base': 'Invalid OTP'
-    })
+  _otpSchema = (len) => {
+    return Joi.string()
+      .label('OTP')
+      .trim()
+      .pattern(new RegExp(`^[0-9]{${len}}$`))
+      .messages({
+        'string.pattern.base': 'Invalid OTP'
+      })
+  }
 
-  _emailSchema = Joi.string().email().label('Email').messages({
-    'string.email': '{#label} is  not valid'
-  })
+  _emailSchema = Joi.string()
+    .email()
+    .trim()
+    .lowercase()
+    .label('Email')
+    .messages({
+      'string.email': '{#label} is  not valid'
+    })
 
   _passwordSchema = joiPassword
     .string()
@@ -96,6 +129,7 @@ class BaseValidator {
 
   _confirmPasswordSchema = Joi.string()
     .label('Confirm password')
+    .trim()
     .equal(Joi.ref('new_password'))
     .messages({ 'any.only': 'Passwords do not match' })
 
@@ -109,13 +143,13 @@ class BaseValidator {
     })
 
   _locationSchema = Joi.object({
-    address: Joi.string().invalid('').label('Address').messages({
+    address: Joi.string().trim().label('Address').invalid('').messages({
       'any.invalid': '{#label} is required'
     }),
-    lga: Joi.string().invalid('').label('LGA').messages({
+    lga: Joi.string().trim().label('LGA').invalid('').messages({
       'any.invalid': '{#label} is required'
     }),
-    state: Joi.string().invalid('').label('State').messages({
+    state: Joi.string().trim().label('State').invalid('').messages({
       'any.invalid': '{#label} is required'
     })
   })
@@ -126,11 +160,19 @@ class BaseValidator {
     'any.invalid': 'Must be a boolean value'
   })
 
-  _amountSchema = Joi.number().label('Loan amount').min(0).max(9999999.99).precision(2)
+  _amountSchema = Joi.number()
+    .label('Loan amount')
+    .min(0)
+    .max(9999999.99)
+    .precision(2)
 
   _tenorSchema = Joi.number().label('Loan tenor').min(1).max(120)
 
-  _percentageSchema = Joi.number().label('Interest rate').min(0).max(100.00).precision(2)
+  _percentageSchema = Joi.number()
+    .label('Interest rate')
+    .min(0)
+    .max(100.0)
+    .precision(2)
 }
 
 export default BaseValidator

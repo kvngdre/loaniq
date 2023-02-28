@@ -9,10 +9,10 @@ class UserConfigService {
     pubsub.subscribe(events.user.delete, this.deleteConfig)
   }
 
-  async createConfig (newSettingsDto, trx) {
-    const newSettings = await UserConfigDAO.insert(newSettingsDto, trx)
+  async createConfig (newConfigDto, trx) {
+    const newConfig = await UserConfigDAO.insert(newConfigDto, trx)
 
-    return newSettings
+    return newConfig
   }
 
   async getAllConfigs () {
@@ -34,10 +34,12 @@ class UserConfigService {
     return updatedUserConfig
   }
 
-  async updateUserSignIn ({ userId }) {
+  async updateUserSignIn ({ userId, tenantId }) {
     const updatedSettings = await UserConfigDAO.update(
       { userId },
       {
+        tenantId,
+        userId,
         last_login_time: new Date()
       }
     )

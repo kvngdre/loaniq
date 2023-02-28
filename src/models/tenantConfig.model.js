@@ -12,16 +12,6 @@ const tenantConfigSchema = new Schema(
       required: [true, 'Tenant Id is required.']
     },
 
-    formId: {
-      type: String,
-      unique: true,
-      sparse: true
-    },
-
-    form_data: {
-      background_color: { type: String }
-    },
-
     default_params: {
       min_loan_amount: {
         type: Number,
@@ -63,6 +53,11 @@ const tenantConfigSchema = new Schema(
         default: null
       },
 
+      max_net_pay: {
+        type: Number,
+        default: null
+      },
+
       max_dti: {
         type: Number,
         default: null
@@ -71,11 +66,33 @@ const tenantConfigSchema = new Schema(
 
     socials: [
       {
-        name: { type: String },
-        url: { type: String },
-        active: { type: Boolean, default: false }
+        platform: { type: String, trim: true },
+        url: { type: String, trim: true }
       }
-    ]
+    ],
+
+    formId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+
+    form_data: {
+      background_color: { type: String }
+    },
+
+    support: {
+      email: {
+        type: String,
+        trim: true,
+        default: null
+      },
+
+      phone_number: {
+        type: String,
+        default: null
+      }
+    }
   },
   schemaOptions
 )

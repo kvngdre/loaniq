@@ -32,16 +32,16 @@ class SegmentDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async findAll (query = {}, projection = {}) {
-    const foundRecords = await Segment.find(query, projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await Segment.find(filter, projection)
 
     return foundRecords
   }
 
-  static async update (query, updateDto, projection = {}) {
+  static async update (filter, updateDto, projection = {}) {
     try {
-      query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-      const foundRecord = await Segment.findOne(query, projection)
+      filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
+      const foundRecord = await Segment.findOne(filter, projection)
 
       foundRecord.set(updateDto)
       await foundRecord.save()
@@ -62,9 +62,9 @@ class SegmentDAO extends BaseDAO {
     }
   }
 
-  static async remove (query) {
-    query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-    const deletedRecord = await Segment.findOneAndDelete(query)
+  static async remove (filter) {
+    filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
+    const deletedRecord = await Segment.findOneAndDelete(filter)
 
     return deletedRecord
   }

@@ -24,6 +24,7 @@ const devFormatter = combine(
   colorize(),
   timestamp({ format: 'HH:mm:ss' }),
   printf(({ level, timestamp, message, meta }) => {
+    message = message.replace('undefined', '')
     return `[${level}] ${timestamp} ${message}  ${
       meta ? JSON.stringify(meta, null, 2) : ''
     }`

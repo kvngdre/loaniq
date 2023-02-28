@@ -95,6 +95,7 @@ export const validIds = [
 export const companyCategory = ['MFB', 'Finance House', 'Money Lender']
 
 export const socials = [
+  'website',
   'facebook',
   'twitter',
   'instagram',

@@ -9,12 +9,17 @@ class SegmentValidator extends BaseValidator {
   constructor () {
     super()
 
-    this.#nameSchema = Joi.string().label('Segment name').max(255).messages({
-      'string.max': 'Segment name is too long'
-    })
+    this.#nameSchema = Joi.string()
+      .trim()
+      .label('Segment name')
+      .max(255)
+      .messages({
+        'string.max': 'Segment name is too long'
+      })
 
     this.#codeSchema = Joi.string()
       .label('Segment code')
+      .trim()
       .pattern(/^[a-zA-Z]{2,5}$/)
       .messages({
         'string.pattern.base': '{#label} is not valid'
@@ -22,6 +27,7 @@ class SegmentValidator extends BaseValidator {
 
     this.#prefixSchema = Joi.string()
       .label('ID prefix')
+      .trim()
       .pattern(/[a-zA-Z]{2,8}/)
       .messages({
         'string.pattern.base': '{#label} is not valid'

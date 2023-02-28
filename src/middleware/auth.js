@@ -33,14 +33,12 @@ export default function auth (req, res, next) {
       throw new UnauthorizedError('Invalid token provided.')
     }
 
+    if (!decoded.active) throw new ForbiddenError('Account deactivated. Contact administrator.')
+
     req.currentUser = decoded
 
     next()
   } catch (exception) {
-    // if (exception.name === 'TokenExpiredError') {
-    //   throw new ForbiddenError('Session expired.')
-    // }
-
     if (exception instanceof BaseError) {
       throw exception
     }

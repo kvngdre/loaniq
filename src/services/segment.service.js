@@ -7,8 +7,8 @@ class SegmentService {
     return newSegment
   }
 
-  static async getSegments (query, projection) {
-    const foundSegments = await SegmentDAO.findAll(query, projection)
+  static async getSegments (filter, projection) {
+    const foundSegments = await SegmentDAO.findAll(filter, projection)
     const count = Intl.NumberFormat('en-US').format(foundSegments.length)
 
     return { count, segments: foundSegments }

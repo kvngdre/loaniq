@@ -13,36 +13,32 @@ import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
 
 class UserService {
-  static async createUser (newUserDto, trx = null) {
-    if (!trx) {
-      trx = await startSession()
-
-      // ! Start transaction.
-      trx.startTransaction()
-    }
-
+  static async createUser (insertDto, trx) {
+    // * Initializing transaction session.
+    const txn = !trx ? await startSession() : null
     try {
-      newUserDto.otp = generateOTP(10)
-      newUserDto.password = generateRandomPwd()
+      insertDto.otp = generateOTP(10)
+      insertDto.password = generateRandomPwd()
 
-      const newUser = await UserDAO.insert(newUserDto, trx)
+      // ! Starting transaction.
+      txn?.startTransaction()
+
+      const newUser = await UserDAO.insert(insertDto, trx || txn)
 
       // * Emitting  new user sign up event.
-      pubsub.publish(events.user.new, { ...newUser._doc })
+      pubsub.publish(events.user.new, { userId: newUser._id, ...newUser._doc }, trx || txn)
 
       await mailer({
         to: newUser.email,
         subject: 'One more step',
         name: newUser.name.first,
         template: 'new-user',
-        payload: { otp: newUserDto.otp.pin, password: newUserDto.password }
+        payload: { otp: insertDto.otp.pin, password: insertDto.password }
       })
 
-      /**
-       * * Email sent successful, commit changes.
-       */
-      await trx.commitTransaction()
-      trx.endSession()
+      // * Email sent successfully, committing changes.
+      await txn?.commitTransaction()
+      txn?.endSession()
 
       delete newUser._doc.password
       delete newUser._doc.otp
@@ -52,11 +48,9 @@ class UserService {
 
       return newUser
     } catch (exception) {
-      /**
-       * ! Exception thrown, roll back changes
-       */
-      await trx.abortTransaction()
-      trx.endSession()
+      // ! Exception thrown, roll back changes
+      await txn?.abortTransaction()
+      txn?.endSession()
 
       throw exception
     }
@@ -101,16 +95,20 @@ class UserService {
     return foundUser
   }
 
-  static async updateUser (userId, updateUserDto, projection = null) {
+  static async updateUser (userId, updateDto, projection = null) {
     projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
-    const updatedUser = await UserDAO.update(userId, updateUserDto, projection)
+    const updatedUser = await UserDAO.update(userId, updateDto, projection)
 
     return updatedUser
+  }
+
+  static async updateUsers (filter, updateDto) {
+    await UserDAO.updateMany(filter, updateDto)
   }
 
   static async deleteUser (userId, projection = null) {
@@ -145,11 +143,11 @@ class UserService {
      * ! Notify user of password change
      */
     logger.info('Sending password change email...')
-    await mailer({
+    mailer({
       to: foundUser.email,
       subject: 'Password changed',
       name: foundUser.name.first,
-      template: 'password-changed'
+      template: 'password-change'
     })
 
     foundUser.set({ password: new_password })

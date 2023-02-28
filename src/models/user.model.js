@@ -17,7 +17,6 @@ const userSchema = new Schema(
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      // unique: true,
       required: true
     },
 
@@ -62,7 +61,7 @@ const userSchema = new Schema(
     },
 
     dob: {
-      type: String,
+      type: Date,
       default: null
     },
 
@@ -77,7 +76,7 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       trim: true,
-      // unique: true,
+      unique: true,
       required: true
     },
 
@@ -100,10 +99,10 @@ const userSchema = new Schema(
       required: true
     },
 
-    segments: {
-      type: [Schema.Types.ObjectId],
-      ref: 'Segment'
-    },
+    // segments: {
+    //   type: [Schema.Types.ObjectId],
+    //   ref: 'Segment'
+    // },
 
     resetPwd: {
       type: Boolean,
@@ -152,6 +151,7 @@ userSchema.virtual('full_Name').get(function () {
 })
 
 userSchema.methods.comparePasswords = async function (password) {
+  console.log(this)
   return await compare(password, this.password)
 }
 
@@ -160,7 +160,8 @@ userSchema.methods.generateAccessToken = function () {
     {
       id: this._id.toString(),
       tenantId: this.tenantId,
-      role: userRoles[this.role]
+      role: userRoles[this.role],
+      active: true
     },
     constants.jwt.secret.access,
     {

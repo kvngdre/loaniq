@@ -41,13 +41,15 @@ class TenantConfigController extends BaseController {
   }
 
   static updateConfig = async (req, res) => {
-    const { value, error } = tenantConfigValidator.validateUpdate(req.body)
+    const { tenantId } = req.params
+
+    const { value, error } = tenantConfigValidator.validateUpdate(
+      req.body,
+      tenantId
+    )
     if (error) throw new ValidationError(error.message, error.path)
 
-    const tenantConfig = await tenantConfigService.updateConfig(
-      req.params.tenatId,
-      value
-    )
+    const tenantConfig = await tenantConfigService.updateConfig(tenantId, value)
     const response = this.apiResponse(
       'Tenant configuration updated.',
       tenantConfig

@@ -32,24 +32,24 @@ class SegConfigDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async findDocsByField (query = null, projection = {}, orderBy = {}) {
-    if (!query) throw new Error('Query object is required')
+  static async findDocsByField (filter = null, projection = {}, orderBy = {}) {
+    if (!filter) throw new Error('Filter is required.')
 
-    const foundRecord = await SegConfig.find(query, projection).sort(orderBy)
+    const foundRecord = await SegConfig.find(filter, projection).sort(orderBy)
 
     return foundRecord
   }
 
-  static async findAll (query = {}, projection = {}) {
-    const foundRecords = await SegConfig.find(query, projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await SegConfig.find(filter, projection)
 
     return foundRecords
   }
 
-  static async update (query, updateDto, projection = {}) {
+  static async update (filter, updateDto, projection = {}) {
     try {
-      query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-      const foundRecord = await SegConfig.findOne(query, projection)
+      filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
+      const foundRecord = await SegConfig.findOne(filter, projection)
 
       foundRecord.set(updateDto)
       await foundRecord.save()
@@ -70,9 +70,9 @@ class SegConfigDAO extends BaseDAO {
     }
   }
 
-  static async remove (query) {
-    query = !Types.ObjectId.isValid(query) ? query : { _id: query }
-    const deletedRecord = await SegConfig.findOneAndDelete(query)
+  static async remove (filter) {
+    filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
+    const deletedRecord = await SegConfig.findOneAndDelete(filter)
 
     return deletedRecord
   }

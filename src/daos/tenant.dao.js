@@ -31,8 +31,8 @@ class TenantDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async findAll (query = {}, projection = {}) {
-    const foundRecords = await Tenant.find(query, projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await Tenant.find(filter, projection)
 
     return foundRecords
   }

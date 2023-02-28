@@ -62,24 +62,18 @@ class TenantController extends BaseController {
     const { value, error } = tenantValidator.validateActivate(req.body)
     if (error) throw new ValidationError(error.message, error.path)
 
-    await TenantService.activateTenant(
-      req.params.tenantId,
-      value
-    )
+    await TenantService.activateTenant(req.params.tenantId, value)
     const response = this.apiResponse('Tenant activated')
 
     res.status(httpCodes.OK).json(response)
   }
 
   static deactivateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateDeactivate(req.body)
+    const { value, error } = tenantValidator.validateDeactivate(req.query)
     if (error) throw new ValidationError(error.message, error.path)
 
-    await TenantService.activateTenant(
-      req.params.tenantId,
-      value
-    )
-    const response = this.apiResponse('Tenant activated')
+    await TenantService.deactivateTenant(req.currentUser, value)
+    const response = this.apiResponse('Tenant deactivated')
 
     res.status(httpCodes.OK).json(response)
   }
@@ -87,6 +81,20 @@ class TenantController extends BaseController {
   static reactivateTenant = async (req, res) => {
     const tenant = await TenantService.reactivateTenant(req.params.tenantId)
     const response = this.apiResponse('Tenant reactivated.', tenant)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static generatePublicUrl = async (req, res) => {
+    const publicUrl = await TenantService.generateFormId(req.params.tenantId)
+    const response = this.apiResponse('Link generated.', publicUrl)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static getPublicFormData = async (req, res) => {
+    const formData = await TenantService.getPublicFormData(req.params.formId)
+    const response = this.apiResponse('Fetched tenant public form data.', formData)
 
     res.status(httpCodes.OK).json(response)
   }

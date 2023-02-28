@@ -1,69 +1,54 @@
 /* eslint-disable camelcase */
 import { startSession } from 'mongoose'
+import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
-import generateOTP from '../utils/generateOTP'
+import genFormId from '../utils/genFormId'
 import mailer from '../utils/mailer'
 import pubsub from '../pubsub/PubSub'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import UserDAO from '../daos/user.dao'
-import ConflictError from '../errors/ConflictError'
-import generateRandomPwd from '../utils/generateRandomPwd'
+import UserService from './user.service'
+import tenantConfigService from './tenantConfig.service'
 
 class TenantService {
   static async createTenant (dto) {
+    // * Initializing transaction session.
     const trx = await startSession()
     try {
       const { tenant, user } = dto
 
-      // ! Start transaction
+      // ! Starting transaction.
       trx.startTransaction()
-
-      user.otp = generateOTP(10)
-      user.password = generateRandomPwd()
 
       const newTenant = await TenantDAO.insert(tenant, trx)
       user.tenantId = newTenant._id
-      const newUser = await UserDAO.insert(user, trx)
+      const newUser = await UserService.createUser(user, trx)
 
       // * Emitting new tenant and user sign up event.
-      await pubsub.publish(
+      pubsub.publish(
         events.tenant.signUp,
         { tenantId: newTenant._id, ...newTenant._doc },
         trx
       )
-      await pubsub.publish(
-        events.user.new,
-        { userId: newUser._id, ...newUser._doc },
-        trx
-      )
 
-      // Sending OTP to user email.
-      await mailer({
-        to: user.email,
-        subject: 'Almost there, just one more step',
-        name: user.name.first,
-        template: 'new-tenant',
-        payload: { otp: user.otp.pin, password: user.password }
+      // * Send welcome mail...
+      mailer({
+        to: newTenant.email,
+        subject: 'Great to have you onboard',
+        name: newTenant.company_name,
+        template: 'new-tenant'
       })
 
-      /**
-       * * Email sent successful, commit changes.
-       */
+      // * Email sent successfully, committing changes.
       await trx.commitTransaction()
       trx.endSession()
-
-      // Delete fields from the new user object
-      delete newUser._doc.otp
-      delete newUser._doc.password
-      delete newUser._doc.queryName
-      delete newUser._doc.refreshTokens
 
       return {
         tenant: newTenant,
         user: newUser
       }
     } catch (exception) {
+      // ! Exception thrown, roll back changes.
       await trx.abortTransaction()
       trx.endSession()
 
@@ -100,7 +85,9 @@ class TenantService {
     const { cac_number, support } = activateDto
     const foundTenant = await TenantDAO.findById(tenantId)
 
-    if (foundTenant.activated) throw new ConflictError('Tenant has already been activated.')
+    if (foundTenant.activated) {
+      throw new ConflictError('Tenant has already been activated.')
+    }
 
     foundTenant.set({
       emailVerified: true,
@@ -113,21 +100,33 @@ class TenantService {
     return foundTenant
   }
 
-  static async deactivateTenant (currentUser, deactivateDto) {
-    const foundTenant = await TenantDAO.findById(currentUser.tenantId)
-    const foundOwner = await UserDAO.findById(currentUser.id)
+  static async deactivateTenant ({ id, tenantId }, { otp }) {
+    const foundTenant = await TenantDAO.findById(tenantId)
+    const foundOwner = await UserService.getUserById(id, {})
 
-    const isMatch = await foundOwner.comparePasswords(deactivateDto.password)
-    if (!isMatch) throw new UnauthorizedError('Invalid password.')
+    validateOTP(foundOwner, otp)
+    function validateOTP (owner, otp) {
+      if (otp !== owner.otp.pin) {
+        throw new UnauthorizedError('Invalid OTP.')
+      }
+
+      if (Date.now() > owner.otp.expires) {
+        throw new UnauthorizedError('OTP has expired.')
+      }
+    }
+
+    await mailer({
+      to: foundOwner.email,
+      subject: 'Tenant Deactivated',
+      template: 'deactivate-tenant',
+      name: foundOwner.name.first
+    })
 
     /**
-     * todo send a deactivate email to Apex!
+     * ? send a deactivate email to Apex!
      */
     foundTenant.set({ active: false })
-    await UserDAO.updateMany(
-      { tenantId: currentUser.tenantId },
-      { active: false }
-    )
+    UserService.updateUsers({ tenantId }, { active: false })
     await foundTenant.save()
 
     return foundTenant
@@ -136,78 +135,46 @@ class TenantService {
   static async reactivateTenant (tenantId) {
     const foundTenant = await TenantDAO.findById(tenantId)
 
+    /**
+     * todo should only the owner user be reactivated,
+     * todo and they activate every other user?
+     */
     foundTenant.set({ active: true })
-    await UserDAO.updateMany({ tenantId }, { active: true })
+    UserService.updateUsers({ tenantId }, { active: true })
     await foundTenant.save()
 
     return foundTenant
   }
 
-  static async getPublicFormData () {}
+  static async generateFormId (tenantId) {
+    const baseurl = 'http://localhost:8480/api/v1/loans/form/'
+    const formId = genFormId()
+    try {
+      const updatedTenantConfig = await tenantConfigService.updateConfig(
+        tenantId,
+        { formId }
+      )
 
-  static async generatePublicURL () {}
+      updatedTenantConfig._doc.formId = baseurl + formId
 
-  static async handleGuestLoan () {}
+      return updatedTenantConfig
+    } catch (error) {
+      await this.generateFormId(tenantId)
+    }
+  }
+
+  static async getPublicFormData (formId) {
+    const { _id, form_data, socials, support } =
+      await tenantConfigService.getConfigByField({ formId })
+    const { logo, company_name } = await TenantDAO.findById(_id)
+
+    return { ...form_data, logo, company_name, socials, support }
+  }
+
+  static async uploadDocs (tenantId, uploadDto) {
+    
+  }
 }
-
-// async getPublicFormData (
-//   shortURL,
-//   selectedFields = ['logo', 'companyName', 'website', 'support', 'social']
-// ) {
-//   try {
-//     const foundTenant = await findOne({ public_url: shortURL })
-//       .select(selectedFields)
-//       .select('-_id -otp')
-//     if (!foundTenant) { return new ServerResponse(404, 'Tenant not found.') }
-
-//     const token = foundTenant.generateToken()
-
-//     const payload = delete foundTenant._id
-//     payload.token = token
-
-//     return new ServerResponse(200, 'Success', payload)
-//   } catch (exception) {
-// logger.error({
-//       method: 'get_public_form_data',
-//       message: exception.message,
-//       meta: exception.stack
-//     })
-//     debug(exception)
-//     return new ServerResponse(500, 'Something went wrong')
-//   }
-// }
-
-// async generatePublicURL (tenantId) {
-//   try {
-//     const foundLender = await _findById(tenantId)
-//     if (!foundLender) { return new ServerResponse(404, 'Tenant not found.') }
-//     if (!foundLender.active) {
-//       return new ServerResponse(
-//         403,
-//         'Tenant is yet to be activated.'
-//       )
-//     }
-
-//     const shortUrl = await generateShortUrl()
-//     foundLender.set({
-//       publicUrl: shortUrl
-//     })
-//     await foundLender.save()
-
-//     return {
-//       message: 'success',
-//       data: `http://apexxia.co/f/${shortUrl}`
-//     }
-//   } catch (exception) {
-//     logger.error({
-//       method: 'gen_public_url',
-//       message: exception.message,
-//       meta: exception.stack
-//     })
-//     debug(exception)
-//     return new ServerResponse(500, 'Something went wrong')
-//   }
-// }
 
 // async handleGuestLoan (payload) {
 //   try {

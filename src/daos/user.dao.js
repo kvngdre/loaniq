@@ -31,14 +31,14 @@ class UserDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async findByField (query = null, projection = {}) {
-    const foundRecord = await User.findOne(query, projection)
+  static async findByField (filter = null, projection = {}) {
+    const foundRecord = await User.findOne(filter, projection)
 
     return foundRecord
   }
 
-  static async findAll (query = {}, projection = {}) {
-    const foundRecords = await User.find(query, projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await User.find(filter, projection)
 
     return foundRecords
   }

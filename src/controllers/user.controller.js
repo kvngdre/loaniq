@@ -8,11 +8,10 @@ class UserController extends BaseController {
   static createUser = async (req, res) => {
     const { value, error } = userValidator.validateCreate(
       req.body,
-      req.currentUser
+      req.currentUser.tenantId
     )
     console.log(value)
     if (error) throw new ValidationError(error.message, error.path)
-    return res.send('OK').end()
 
     const newUser = await UserService.createUser(value)
     const response = this.apiResponse(

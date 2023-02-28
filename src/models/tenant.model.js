@@ -1,7 +1,5 @@
-import { constants } from '../config'
 import { companyCategory } from '../utils/constants'
 import { Schema, model } from 'mongoose'
-import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
@@ -91,44 +89,10 @@ const tenantSchema = new Schema(
     activated: {
       type: Boolean,
       default: false
-    },
-
-    website: {
-      type: String,
-      default: null,
-      trim: true,
-      lowercase: true
-    },
-
-    support: {
-      email: {
-        type: String,
-        trim: true,
-        default: null
-      },
-
-      phone_number: {
-        type: String,
-        default: null
-      }
     }
   },
   schemaOptions
 )
-
-tenantSchema.methods.generateToken = function () {
-  return jwt.sign(
-    {
-      tenantId: this._id.toString()
-    },
-    constants.jwt.secret.access,
-    {
-      audience: constants.jwt.audience,
-      expiresIn: parseInt(constants.jwt.exp_time.form),
-      issuer: constants.jwt.issuer
-    }
-  )
-}
 
 tenantSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {

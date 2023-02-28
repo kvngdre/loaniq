@@ -99,7 +99,7 @@ class AuthController extends BaseController {
 
   static sendOTP = async (req, res) => {
     const { value, error } = authValidator.validateSendOTP(req.query)
-    if (error) throw new ValidationError(error.details[0].message)
+    if (error) throw new ValidationError(error.message, error.path)
 
     await AuthService.sendOTP(value)
     const response = this.apiResponse('OTP sent to email.')
