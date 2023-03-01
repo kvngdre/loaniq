@@ -1,5 +1,5 @@
 import Router from 'express'
-import upload from '../middleware/fileUpload'
+import upload from '../middleware/fileUploader'
 // import verifyRole from '../middleware/verifyRole'
 import auth from '../middleware/auth'
 import userConfigRoutes from './userConfig.routes'
@@ -28,9 +28,6 @@ router.patch('/:userId', [validateId], UserController.updateUser)
 
 router.delete('/:userId', [validateId], UserController.deleteUser)
 
-router.post('/upload-photo', [upload.single('photo')], async (req, res) => {
-  console.log(req.file)
-  return res.status(200).json('Image uploaded')
-})
+router.post('/uploads', [auth, upload.single('avatar')], UserController.uploadFiles)
 
 export default router

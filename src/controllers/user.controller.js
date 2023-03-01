@@ -93,6 +93,12 @@ class UserController extends BaseController {
 
     res.status(httpCodes.OK).json(response)
   }
+
+  static uploadFiles = async (req, res) => {
+    console.log(req.files)
+
+    res.status(httpCodes.OK).json({ files: req.files })
+  }
 }
 
 export default UserController

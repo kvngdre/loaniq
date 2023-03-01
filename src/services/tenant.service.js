@@ -9,6 +9,10 @@ import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
 import tenantConfigService from './tenantConfig.service'
+import driverUploader from '../utils/driveUploader'
+import path from 'path'
+import logger from '../utils/logger'
+import fs from 'fs'
 
 class TenantService {
   static async createTenant (dto) {
@@ -171,8 +175,46 @@ class TenantService {
     return { ...form_data, logo, company_name, socials, support }
   }
 
-  static async uploadDocs (tenantId, uploadDto) {
-    
+  static async uploadDocs (tenantId, uploadFiles) {
+    const foundTenant = await TenantDAO.findById(tenantId)
+    const folderName = `t-${tenantId.toString()}`
+
+    const [foundFolder] = await driverUploader.findFolder(folderName)
+
+    // Selecting folder
+    const folderId = foundFolder?.id
+      ? foundFolder.id
+      : await driverUploader.createFolder(folderName)
+
+    logger.debug(folderId)
+
+    for (const key of Object.keys(uploadFiles)) {
+      const file = uploadFiles[key][0]
+
+      const name = file.originalname
+      const filePath = path.resolve(__dirname, `../../${file.path}`)
+      const mimeType = file.mimetype
+
+      const response = await driverUploader.createFile(
+        name,
+        filePath,
+        folderId,
+        mimeType
+      )
+      logger.debug(response.data.id)
+
+      if (key === 'logo') {
+        foundTenant.set({
+          logo: response.data.id
+        })
+      }
+
+      // Delete uploaded file from file system
+      fs.unlinkSync(filePath)
+    }
+
+    await foundTenant.save({})
+    return foundTenant
   }
 }
 

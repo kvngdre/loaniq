@@ -1,9 +1,9 @@
 import auth from '../middleware/auth'
 import Router from 'express'
-import upload from '../middleware/fileUpload'
-import validateId from '../middleware/validateId'
-import TenantController from '../controllers/tenant.controller'
 import tenantConfigRoutes from './tenantConfig.routes'
+import TenantController from '../controllers/tenant.controller'
+import upload from '../middleware/fileUploader'
+import validateId from '../middleware/validateId'
 import walletRoutes from './wallet.routes'
 
 const router = Router()
@@ -34,11 +34,6 @@ router.patch('/:tenantId', [validateId], TenantController.updateTenant)
 
 router.delete('/:tenantId', [validateId], TenantController.deleteTenant)
 
-// router.post('/upload/logo', [upload.single('logo')], (req, res) => {
-//   console.log(req.file)
-//   return res.json({
-//     message: 'file uploaded'
-//   })
-// })
+router.post('/uploads', [auth, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'avatar', maxCount: 1 }])], TenantController.uploadFiles)
 
 export default router

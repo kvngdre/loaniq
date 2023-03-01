@@ -98,6 +98,13 @@ class TenantController extends BaseController {
 
     res.status(httpCodes.OK).json(response)
   }
+
+  static uploadFiles = async (req, res) => {
+    const tenant = await TenantService.uploadDocs(req.currentUser.tenantId, req.files)
+    const response = this.apiResponse('Files uploaded.', tenant)
+
+    res.status(httpCodes.OK).json(response)
+  }
 }
 
 export default TenantController

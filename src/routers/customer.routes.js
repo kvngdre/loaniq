@@ -3,7 +3,7 @@ import auth from '../middleware/auth'
 import customerController from '../controllers/customer.controller'
 import Router from 'express'
 import ServerError from '../errors/serverError'
-import upload from '../middleware/fileUpload'
+import upload from '../middleware/fileUploader'
 import validateObjectId from '../middleware/validateId'
 import verifyRole from '../middleware/verifyRole'
 
@@ -18,15 +18,15 @@ router.post(
   }
 )
 
-router.post(
-  '/upload-docs',
-  [upload.fields([{ name: 'passport' }, { name: 'idCard' }])],
-  async (req, res) => {
-    // FIXME: upload to s3
-    console.log(req.files)
-    return res.status(200).json('Docs uploaded')
-  }
-)
+// router.post(
+//   '/upload-docs',
+//   [upload.fields([{ name: 'passport' }, { name: 'idCard' }])],
+//   async (req, res) => {
+//     // FIXME: upload to s3
+//     console.log(req.files)
+//     return res.status(200).json('Docs uploaded')
+//   }
+// )
 
 /**
  * @queryParam name Filter by name.
