@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError'
-import userConfigService from '../services/userConfig.service'
 import { httpCodes } from '../utils/constants'
-import userConfigValidator from '../validators/userConfig.validator'
 import BaseController from './base.controller'
+import userConfigService from '../services/userConfig.service'
+import userConfigValidator from '../validators/userConfig.validator'
+import ValidationError from '../errors/ValidationError'
 
 class UserConfigController extends BaseController {
   static createSettings = async (req, res) => {

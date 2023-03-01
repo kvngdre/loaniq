@@ -4,7 +4,7 @@ import { roles } from '../utils/constants'
 import Customer, { find, findById } from '../models/customer.model'
 import { validateCreateCustomer, validateUpdateCustomer } from '../validators/customer.validator'
 import filterValidator from '../validators/filter.validator'
-import flattenObject from '../utils/flattenObj'
+import { flatten } from '../helpers'
 import { findById as _findById } from '../models/tenant.model'
 import { aggregate } from '../models/loanModel'
 import { startSession, Types } from 'mongoose'
@@ -233,7 +233,7 @@ class CustomerController {
       if (!foundLender.active) { return new ServerResponse(403, 'Tenant is yet to be activated') }
 
       // Flatten request body
-      alteration = flattenObject(alteration)
+      alteration = flatten(alteration)
 
       const foundCustomer = await findById(customerId)
       if (!foundCustomer) { return new ServerResponse(404, 'Customer not found') }

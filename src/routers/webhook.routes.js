@@ -1,5 +1,5 @@
 import Router from 'express'
-import { getBanks } from '../utils/Flutterwave'
+import { getBanks } from '../services/flutterwave.service'
 import webhooks from '../controllers/webhook.controller'
 
 const router = Router()

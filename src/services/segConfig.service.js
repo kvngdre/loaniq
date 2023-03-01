@@ -3,7 +3,7 @@ import SegConfigDAO from '../daos/segConfig.dao'
 import ValidationError from '../errors/ValidationError'
 
 class SegConfigService {
-  static createSegConfig = async (newSegConfigDto) => {
+  static createConfig = async (newSegConfigDto) => {
     const { tenantId, segmentId, min_net_pay, max_net_pay } = newSegConfigDto
 
     // ! Validating net pay range
@@ -22,20 +22,20 @@ class SegConfigService {
     return newSegConfig
   }
 
-  static async getSegConfigs () {
+  static async getConfigs () {
     const foundSegConfigs = await SegConfigDAO.findAll()
     const count = Intl.NumberFormat('en-US').format(foundSegConfigs.length)
 
     return { count, segConfigs: foundSegConfigs }
   }
 
-  static async getSegConfig (segConfigId) {
+  static async getConfig (segConfigId) {
     const foundSegConfig = await SegConfigDAO.findById(segConfigId)
 
     return foundSegConfig
   }
 
-  static async updateSegConfig (segConfigId, updateSegConfigDto) {
+  static async updateConfig (segConfigId, updateSegConfigDto) {
     const foundSegConfig = await SegConfigDAO.findById(segConfigId)
     foundSegConfig.set(updateSegConfigDto)
 
@@ -65,7 +65,7 @@ class SegConfigService {
     return foundSegConfig
   }
 
-  static async deleteSegConfig (segmentConfigId) {
+  static async deleteConfig (segmentConfigId) {
     const deletedSegConfig = await SegConfigDAO.remove(segmentConfigId)
 
     return deletedSegConfig

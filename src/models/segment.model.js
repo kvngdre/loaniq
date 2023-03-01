@@ -2,38 +2,58 @@ import { Schema, model } from 'mongoose'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
-const segmentSchema = new Schema({
-  code: {
-    type: String,
-    uppercase: true,
-    trim: true,
-    unique: true,
-    required: true
+const segmentSchema = new Schema(
+  {
+    code: {
+      type: String,
+      uppercase: true,
+      trim: true,
+      unique: true,
+      required: true
+    },
+
+    id_prefix: {
+      type: String,
+      trim: true,
+      default: null
+    },
+
+    name: {
+      type: String,
+      trim: true,
+      required: true
+    },
+
+    active: {
+      type: Boolean,
+      default: true
+    },
+
+    recommendation: {
+      max_age: {
+        type: Number,
+        default: 58
+      },
+
+      max_tenure: {
+        type: Number,
+        default: 33
+      },
+
+      min_income: {
+        type: Number,
+        set: (v) => Math.floor(v * 100) / 100,
+        default: 30_000
+      }
+    }
+
+    /**
+     * todo have recommended values for this segments last 6 bvn and income data
+     * todo authorize account number to be billed to send to customer account
+     */
   },
-
-  id_prefix: {
-    type: String,
-    trim: true,
-    default: null
-  },
-
-  name: {
-    type: String,
-    trim: true,
-    required: true
-  },
-
-  active: {
-    type: Boolean,
-    default: true
-  }
-
-  /**
-   * todo have recommended values for this segments last 6 bvn and income data
-   * todo authorize account number to be billed to send to customer account
-   */
-
-}, schemaOptions)
+  schemaOptions
+)
 
 const Segment = model('Segment', segmentSchema)
 

@@ -1,18 +1,18 @@
 /* eslint-disable camelcase */
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError'
+import driverUploader from '../utils/driveUploader'
 import events from '../pubsub/events'
-import genFormId from '../utils/genFormId'
+import fs from 'fs'
+import { genRandomStr } from '../helpers'
+import logger from '../utils/logger'
 import mailer from '../utils/mailer'
+import path from 'path'
 import pubsub from '../pubsub/PubSub'
+import tenantConfigService from './tenantConfig.service'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
-import tenantConfigService from './tenantConfig.service'
-import driverUploader from '../utils/driveUploader'
-import path from 'path'
-import logger from '../utils/logger'
-import fs from 'fs'
 
 class TenantService {
   static async createTenant (dto) {
@@ -152,7 +152,7 @@ class TenantService {
 
   static async generateFormId (tenantId) {
     const baseurl = 'http://localhost:8480/api/v1/loans/form/'
-    const formId = genFormId()
+    const formId = genRandomStr(5)
     try {
       const updatedTenantConfig = await tenantConfigService.updateConfig(
         tenantId,
@@ -209,7 +209,7 @@ class TenantService {
         })
       }
 
-      // Delete uploaded file from file system
+      // ! Delete uploaded file from file system
       fs.unlinkSync(filePath)
     }
 

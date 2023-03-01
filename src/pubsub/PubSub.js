@@ -4,7 +4,7 @@ class PubSub {
   #events = {}
 
   subscribe = (eventName, fn) => {
-    logger.silly(`Subscribed to know about ${eventName}`)
+    // logger.silly(`Subscribed to know about ${eventName}`)
 
     // Add an event to an existing list or as new
     this.#events[eventName] = this.#events[eventName] || []

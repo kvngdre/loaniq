@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import { calcDti, calcNetValue, calcRepayment, calcTotalRepayment, calcUpfrontFee } from '../utils/loanParamFuncs'
+import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
 import { loanStatus, loanRemarks } from '../utils/constants'
 import ServerError from '../errors/serverError'
 const logger = require('../utils/logger')
@@ -182,29 +182,29 @@ loanSchema.pre('save', function (next) {
     if (this.modifiedPaths().some(hasTrigger)) {
       console.log('yes')
 
-      this.upfrontFee = calcUpfrontFee(
-        this.recommendedAmount,
-        this.params.upfrontFeePercent
-      )
+      // this.upfrontFee = calcUpfrontFee(
+      //   this.recommendedAmount,
+      //   this.params.upfrontFeePercent
+      // )
 
-      this.netValue = calcNetValue(
-        this.recommendedAmount,
-        this.upfrontFee,
-        this.params.transferFee
-      )
+      // this.netValue = applyFees(
+      //   this.recommendedAmount,
+      //   this.upfrontFee,
+      //   this.params.transferFee
+      // )
 
-      this.repayment = calcRepayment(
-        this.recommendedAmount,
-        this.params.interestRate,
-        this.recommendedTenor
-      )
+      // this.repayment = calcRepayment(
+      //   this.recommendedAmount,
+      //   this.params.interestRate,
+      //   this.recommendedTenor
+      // )
 
-      this.totalRepayment = calcTotalRepayment(
-        this.repayment,
-        this.recommendedTenor
-      )
+      // this.totalRepayment = calcTotalRepayment(
+      //   this.repayment,
+      //   this.recommendedTenor
+      // )
 
-      this.dti = calcDti(this.repayment, this.params.netPay)
+      // this.dti = calcDti(this.repayment, this.params.netPay)
     }
 
     next()

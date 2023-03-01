@@ -1,13 +1,11 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
+import { genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
 import events from '../pubsub/events'
-import generateOTP from '../utils/generateOTP'
-import generateRandomPwd from '../utils/generateRandomPwd'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import pubsub from '../pubsub/PubSub'
-import similarity from '../utils/similarity'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
@@ -18,7 +16,7 @@ class UserService {
     const txn = !trx ? await startSession() : null
     try {
       insertDto.otp = generateOTP(10)
-      insertDto.password = generateRandomPwd()
+      insertDto.password = genRandomStr(6)
 
       // ! Starting transaction.
       txn?.startTransaction()
@@ -42,7 +40,6 @@ class UserService {
 
       delete newUser._doc.password
       delete newUser._doc.otp
-      delete newUser._doc.queryName
       delete newUser._doc.refreshTokens
       delete newUser._doc.resetPwd
 
@@ -56,14 +53,14 @@ class UserService {
     }
   }
 
-  static async getUsers (query = {}, projection = null) {
+  static async getUsers (filter = {}, projection = null) {
     projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
-    const foundUsers = await UserDAO.findAll(query, projection)
+    const foundUsers = await UserDAO.findAll(filter, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, users: foundUsers }
@@ -81,16 +78,16 @@ class UserService {
     return foundUser
   }
 
-  static async getUserByField (query, projection = null) {
+  static async getUserByField (filter, projection = null) {
     projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
-    if (!query) throw new Error('Query object is required.')
+    if (!filter) throw new Error('Query object is required.')
 
-    const foundUser = await UserDAO.findByField(query, projection)
+    const foundUser = await UserDAO.findByField(filter, projection)
 
     return foundUser
   }
@@ -165,7 +162,7 @@ class UserService {
     const foundUser = await UserDAO.findById(userId)
 
     const generatedOTP = generateOTP(10)
-    const randomPwd = generateRandomPwd()
+    const randomPwd = genRandomStr(6)
 
     logger.info('Sending password reset mail...')
     await mailer({
@@ -209,7 +206,7 @@ class UserService {
     const foundUser = await UserDAO.findById(userId)
 
     const generatedOTP = generateOTP(10)
-    const randomPwd = generateRandomPwd()
+    const randomPwd = genRandomStr(6)
 
     logger.info('Sending password reset mail...')
     await mailer({

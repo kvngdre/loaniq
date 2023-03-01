@@ -31,15 +31,21 @@ class WalletDAO extends BaseDAO {
     return foundRecord
   }
 
+  static async findByField (filter) {
+    const foundRecord = await Wallet.findOne(filter)
+
+    return foundRecord
+  }
+
   static async findAll () {
     const foundRecords = await Wallet.find({})
 
     return foundRecords
   }
 
-  static async update (id, updateDto) {
+  static async update (query, updateDto) {
     try {
-      const foundRecord = await Wallet.findById(id)
+      const foundRecord = await Wallet.findOne(query)
 
       foundRecord.set(updateDto)
       await foundRecord.save()
@@ -60,8 +66,8 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
-    const foundRecord = await Wallet.findByIdAndDelete(id)
+  static async remove (query) {
+    const foundRecord = await Wallet.findOneAndDelete(query)
 
     return foundRecord
   }

@@ -9,7 +9,7 @@ class SegConfigController extends BaseController {
     const { value, error } = segConfigValidator.validateCreate(req.currentUser.tenantId, req.body)
     if (error) throw new ValidationError(error.message, error.path)
 
-    const newSegConfig = await SegConfigService.createSegConfig(value)
+    const newSegConfig = await SegConfigService.createConfig(value)
     const response = this.apiResponse(
       'Segment configurations created.',
       newSegConfig
@@ -19,7 +19,7 @@ class SegConfigController extends BaseController {
   }
 
   static getSegConfigs = async (req, res) => {
-    const { count, segConfigs } = await SegConfigService.getSegConfigs()
+    const { count, segConfigs } = await SegConfigService.getConfigs()
     const message = this.getMsgFromCount(count)
 
     const response = this.apiResponse(message, segConfigs)
@@ -28,7 +28,7 @@ class SegConfigController extends BaseController {
   }
 
   static getSegConfig = async (req, res) => {
-    const segConfig = await SegConfigService.getSegConfig(
+    const segConfig = await SegConfigService.getConfig(
       req.params.segConfigId
     )
     const response = this.apiResponse(
@@ -43,7 +43,7 @@ class SegConfigController extends BaseController {
     const { value, error } = segConfigValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(error.message, error.path)
 
-    const segConfig = await SegConfigService.updateSegConfig(
+    const segConfig = await SegConfigService.updateConfig(
       req.params.segConfigId,
       value
     )
@@ -56,7 +56,7 @@ class SegConfigController extends BaseController {
   }
 
   static deleteSegConfig = async (req, res) => {
-    await SegConfigService.deleteSegConfig(req.params.segConfigId)
+    await SegConfigService.deleteConfig(req.params.segConfigId)
     const response = this.apiResponse('Segment configurations deleted.')
 
     res.status(httpCodes.OK).json(response)

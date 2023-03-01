@@ -36,9 +36,10 @@ export const loanRemarks = [
   'Ok for disbursement',
   'Net pay below threshold',
   'Inconsistent net pay',
-  'Incorrect IPPIS number',
-  'Confirm recommended loan amount',
-  'Confirm recommended tenor',
+  'Incorrect staff id',
+  'Confirm loan amount',
+  'Confirm tenor',
+  'Confirm loan amount and tenor',
   'Confirm account number',
   'Confirm BVN',
   'Confirm BVN and account number',
@@ -52,7 +53,7 @@ export const loanRemarks = [
   'Name mismatch',
   'Net pay not available',
   'Client discontinued',
-  'Failed to provide valid documentation'
+  'Failed to provide valid documentations'
 ]
 
 export const maritalStatus = [
@@ -92,7 +93,11 @@ export const validIds = [
   "Driver's license"
 ]
 
-export const companyCategory = ['MFB', 'Finance House', 'Money Lender']
+export const companyCategory = [
+  'MFB',
+  'Finance House',
+  'Money Lender'
+]
 
 export const socials = [
   'website',
@@ -103,3 +108,16 @@ export const socials = [
   'linkedin',
   'tictok'
 ]
+
+export const userRoles = {
+  ADMIN: 'E4',
+  AGENT: 'Y5',
+  ANALYST: 'R3',
+  MASTER: 'Z0',
+  OPERATIONS: 'T6',
+  OWNER: 'W1',
+  S_ADMIN: 'Q2',
+  SUPPORT: 'U8'
+}
+
+export const feeTypes = { percent: 'percent', decimal: 'decimal' }

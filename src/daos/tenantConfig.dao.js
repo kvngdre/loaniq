@@ -43,10 +43,10 @@ class TenantConfigDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async update (tenantId, updateRecordDto) {
+  static async update (filter, updateRecordDto) {
     try {
       const foundRecord = await TenantConfig.findOneAndUpdate(
-        { tenantId },
+        filter,
         updateRecordDto,
         { upsert: true, new: true }
       )

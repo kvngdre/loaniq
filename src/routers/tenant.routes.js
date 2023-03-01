@@ -10,7 +10,7 @@ const router = Router()
 
 router.use('/configurations', [auth], tenantConfigRoutes)
 
-router.use('/wallets', walletRoutes)
+router.use('/wallets', [auth], walletRoutes)
 
 router.post('/sign_up', TenantController.signUp)
 
@@ -22,7 +22,7 @@ router.get('/deactivate', [auth, validateId], TenantController.deactivateTenant)
 
 router.get('/forms/:formId', TenantController.getPublicFormData)
 
-router.get('/mine', TenantController.getCurrentTenant)
+router.get('/self', TenantController.getCurrentTenant)
 
 router.get('/:tenantId/public_url', [validateId], TenantController.generatePublicUrl)
 

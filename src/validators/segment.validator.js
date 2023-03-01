@@ -39,7 +39,12 @@ class SegmentValidator extends BaseValidator {
       code: this.#codeSchema.required(),
       name: this.#nameSchema.required(),
       id_prefix: this.#prefixSchema.required(),
-      active: this._activeSchema
+      active: this._activeSchema,
+      recommendation: Joi.object({
+        max_age: this._ageSchema.label('Max age').max(60),
+        max_tenure: this._tenorSchema.label('Max tenure'),
+        min_income: this._amountSchema.label('Min income')
+      })
     })
 
     let { value, error } = schema.validate(dto)
@@ -53,7 +58,12 @@ class SegmentValidator extends BaseValidator {
       code: this.#codeSchema,
       name: this.#nameSchema,
       id_prefix: this.#prefixSchema,
-      active: this._activeSchema
+      active: this._activeSchema,
+      recommendation: Joi.object({
+        max_age: this._ageSchema.label('Max age').max(60),
+        max_tenure: this._tenorSchema.label('Max tenure'),
+        min_income: this._amountSchema.label('Min income')
+      })
     })
 
     let { value, error } = schema.validate(dto)

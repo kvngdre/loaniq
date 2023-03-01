@@ -1,3 +1,4 @@
+import { feeTypes } from '../utils/constants'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
@@ -8,7 +9,6 @@ const segConfigSchema = new Schema(
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      // unique: true,
       required: [true, 'Tenant Id is required.']
     },
 
@@ -21,6 +21,16 @@ const segConfigSchema = new Schema(
     active: {
       type: Boolean,
       default: false
+    },
+
+    max_age: {
+      type: Number,
+      required: true
+    },
+
+    max_tenure: {
+      type: Number,
+      required: true
     },
 
     min_loan_amount: {
@@ -51,28 +61,37 @@ const segConfigSchema = new Schema(
       required: [true, 'Interest rate is required.']
     },
 
-    mgt_fee_percent: {
+    fees: [
+      {
+        name: {
+          type: String,
+          required: true
+        },
+
+        type: {
+          type: String,
+          enum: Object.values(feeTypes),
+          required: true
+        },
+
+        value: {
+          type: Number,
+          set: (v) => Math.floor(v * 100) / 100,
+          required: true
+        }
+      }
+    ],
+
+    min_income: {
       type: Number,
       set: (v) => Math.floor(v * 100) / 100,
-      required: [true, 'Management fee is required.']
+      required: [true, 'Minimum income is required.']
     },
 
-    transfer_fee: {
+    max_income: {
       type: Number,
       set: (v) => Math.floor(v * 100) / 100,
-      required: [true, 'Transfer fee is required.']
-    },
-
-    min_net_pay: {
-      type: Number,
-      set: (v) => Math.floor(v * 100) / 100,
-      required: [true, 'Minimum net pay is required.']
-    },
-
-    max_net_pay: {
-      type: Number,
-      set: (v) => Math.floor(v * 100) / 100,
-      default: null
+      required: [true, 'Maximum income is required.']
     },
 
     max_dti: {

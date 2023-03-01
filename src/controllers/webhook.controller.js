@@ -1,9 +1,9 @@
 import { txnStatus } from '../utils/constants'
 import { get } from '../config'
 import { createHmac } from 'crypto'
-import { verifyTxn } from '../utils/Flutterwave'
+import { verifyTxn } from '../services/flutterwave.service'
 import { findOneAndUpdate } from '../models/tenant.model'
-import { verifyTxn as _verifyTxn } from '../utils/Paystack'
+import { verifyTxn as _verifyTxn } from '../services/paystack.service'
 import { findOne } from '../models/transactionModel'
 const debug = require('debug')('app:webhookCtrl')
 const logger = require('../utils/logger')

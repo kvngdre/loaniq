@@ -1,5 +1,6 @@
 import { joiPassword } from 'joi-password'
 import { userRoles } from '../utils/userRoles'
+import { feeTypes } from '../utils/constants'
 import Joi from 'joi'
 
 class BaseValidator {
@@ -40,6 +41,12 @@ class BaseValidator {
       _bsontype: Joi.allow('ObjectId')
     })
   )
+
+  _dateSchema = Joi.date().iso()
+
+  _ageSchema = Joi.number().min(18)
+
+  _tenureSchema = Joi.number().positive().max(35)
 
   _nameSchema = Joi.object({
     first: Joi.string()
@@ -173,6 +180,16 @@ class BaseValidator {
     .min(0)
     .max(100.0)
     .precision(2)
+
+  _feesSchema = Joi.array().label('Fees').items(Joi.object({
+    name: Joi.string().label('Fee name').trim().required(),
+    type: Joi.number().label('Fee type').valid(...Object.values(feeTypes)).required(),
+    value: Joi.when('type', {
+      is: feeTypes.percent,
+      then: this._percentageSchema.label('Fee value'),
+      otherwise: this._amountSchema.label('Fee value')
+    }).required()
+  }))
 }
 
 export default BaseValidator

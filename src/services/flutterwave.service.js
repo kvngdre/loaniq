@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import axios from 'axios'
 import Flutterwave from 'flutterwave-node-v3'
 const debug = require('debug')('app:FLW')
-const logger = require('./logger')
+const logger = require('../utils/logger')
 
 const flutterwave = new Flutterwave(constants.flw.public_key, constants.flw.secret)
 

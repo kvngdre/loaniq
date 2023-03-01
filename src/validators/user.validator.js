@@ -4,7 +4,6 @@ import Joi from 'joi'
 
 class UserValidator extends BaseValidator {
   #jobTitle
-  #dobSchema
   #displayNameSchema
   #segmentsSchema
 
@@ -17,8 +16,6 @@ class UserValidator extends BaseValidator {
     })
 
     this.#displayNameSchema = Joi.string().label('Display name').max(255)
-
-    this.#dobSchema = Joi.date().iso().label('Date of birth').less('now')
 
     this.#segmentsSchema = Joi.alternatives()
       .try(
@@ -49,7 +46,7 @@ class UserValidator extends BaseValidator {
         .required(),
       job_title: this.#jobTitle,
       gender: this._genderSchema.required(),
-      dob: this.#dobSchema,
+      dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema.default((parent) => {
         return `${parent.name.first} ${parent.name.last}`
       }),
@@ -76,7 +73,7 @@ class UserValidator extends BaseValidator {
       }),
       job_title: this.#jobTitle,
       gender: this._genderSchema,
-      dob: this.#dobSchema,
+      dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema,
       role: this._roleSchema.invalid(...invalidRoles)
       // segments: this.#segmentsSchema

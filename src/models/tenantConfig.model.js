@@ -1,3 +1,4 @@
+import { feeTypes } from '../utils/constants'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
@@ -38,31 +39,32 @@ const tenantConfigSchema = new Schema(
         default: null
       },
 
-      mgt_fee_percent: {
-        type: Number,
-        default: null
-      },
-
-      transfer_fee: {
-        type: Number,
-        default: null
-      },
-
-      min_net_pay: {
-        type: Number,
-        default: null
-      },
-
-      max_net_pay: {
-        type: Number,
-        default: null
-      },
-
       max_dti: {
         type: Number,
         default: null
       }
     },
+
+    fees: [
+      {
+        name: {
+          type: String,
+          required: true
+        },
+
+        type: {
+          type: String,
+          enum: Object.values(feeTypes),
+          required: true
+        },
+
+        value: {
+          type: Number,
+          set: (v) => Math.floor(v * 100) / 100,
+          required: true
+        }
+      }
+    ],
 
     socials: [
       {

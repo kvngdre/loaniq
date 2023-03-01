@@ -1,4 +1,4 @@
-import { calcAge, calcServiceLength } from '../utils/loanParamFuncs'
+import { computeAge, computeTenure } from '../helpers'
 import { loanStatus, maritalStatus, relationships, validIds } from '../utils/constants'
 import { updateMany } from './loanModel'
 import { Schema, model } from 'mongoose'
@@ -306,8 +306,8 @@ customerSchema.pre('save', async function (next) {
       ['birthDate', 'employer.hireDate'].includes(path)
     if (this.modifiedPaths().some(isPresent)) {
       console.log('triggered')
-      const age = calcAge(this.birthDate)
-      const serviceLen = calcServiceLength(this.employer.hireDate)
+      const age = computeAge(this.birthDate)
+      const serviceLen = computeTenure(this.employer.hireDate)
       await updateMany(
         {
           customer: this._id,

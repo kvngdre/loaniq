@@ -1,6 +1,6 @@
 import { roles } from '../utils/constants'
 import { findById } from '../models/customer.model'
-import flattenObject from '../utils/flattenObj'
+import { flatten } from '../helpers'
 import { findById as _findById } from '../models/loanModel'
 import { Types } from 'mongoose'
 import Review, { aggregate, findOne } from '../models/review.model'
@@ -442,7 +442,7 @@ export async function update (id, user, payload) {
     if (!foundEditRequest) { return new ServerError(404, 'Edit request document not found') }
     if (foundEditRequest.status !== 'Pending') { return new ServerError(403, 'Cannot perform update operation') }
 
-    payload = flattenObject(payload)
+    payload = flatten(payload)
 
     if (![roles.credit, roles.operations].includes(user.role)) {
       // user role is neither credit nor operations, update alteration only

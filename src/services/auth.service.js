@@ -3,14 +3,12 @@ import { constants } from '../config'
 import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
-import generateOTP from '../utils/generateOTP'
+import { generateOTP, similarity } from '../helpers'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import pubsub from '../pubsub/PubSub'
-import similarity from '../utils/similarity'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import UserDAO from '../daos/user.dao'
 import UserService from './user.service'
 import ValidationError from '../errors/ValidationError'
 
@@ -20,7 +18,7 @@ class AuthService {
 
     const foundUser = await UserService.getUserByField({ email }, {})
     if (foundUser.active) {
-      throw new ConflictError('User has been verified, please sign in.')
+      throw new ConflictError('User already verified, please sign in.')
     }
 
     const isMatch = await foundUser.comparePasswords(current_password)
@@ -77,7 +75,7 @@ class AuthService {
   }
 
   static async login ({ email, password }, token) {
-    const foundUser = await UserDAO.findByField({ email })
+    const foundUser = await UserService.getUserByField({ email }, {})
 
     const isMatch = await foundUser.comparePasswords(password)
     if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
@@ -124,9 +122,9 @@ class AuthService {
        * * 2) The refresh token gets stolen
        * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
        */
-      await UserDAO.findByField({
+      await UserService.getUserByField({
         refreshTokens: { $elemMatch: { token } }
-      }).catch(() => {
+      }, {}).catch(() => {
         /**
          * ! Refresh token reuse detected.
          * * Purge user refresh token array.
@@ -159,7 +157,7 @@ class AuthService {
 
   static async getNewTokenSet (token) {
     try {
-      const foundUser = await UserDAO.findByField({
+      const foundUser = await UserService.getUserByField({
         refreshTokens: { $elemMatch: { token } }
       })
       const { id, iss, aud } = jwt.verify(token, constants.jwt.secret.refresh)
@@ -189,7 +187,7 @@ class AuthService {
       return { accessToken, refreshToken }
     } catch (exception) {
       const decoded = jwt.verify(token, constants.jwt.secret.refresh)
-      UserDAO.findById(decoded.id)
+      UserService.getUserById(decoded.id)
         .then(async (foundUser) => {
           await foundUser.updateOne({ refreshTokens: [] })
         })
@@ -198,7 +196,7 @@ class AuthService {
   }
 
   static async sendOTP ({ email, len }) {
-    const foundUser = await UserDAO.findByField({ email })
+    const foundUser = await UserService.getUserByField({ email })
 
     const generatedOTP = generateOTP(10, len)
     foundUser.set({ otp: generatedOTP })
@@ -216,7 +214,7 @@ class AuthService {
 
   static async logout (token) {
     try {
-      const foundUser = await UserDAO.findByField({
+      const foundUser = await UserService.getUserByField({
         refreshTokens: { $elemMatch: { token } }
       })
 

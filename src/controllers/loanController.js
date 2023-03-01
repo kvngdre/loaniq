@@ -1,10 +1,8 @@
 import _ from 'lodash'
-import { calcAge, calcServiceLength } from '../utils/loanParamFuncs'
 import { DateTime } from 'luxon'
 import { roles, txnStatus, loanStatus } from '../utils/constants'
 import { get } from '../config'
 import Customer, { findById, findOne } from '../models/customer.model'
-import flattenObj from '../utils/flattenObj'
 import { findById as _findById } from '../models/tenant.model'
 import Loan, {
   findOne as _findOne,
@@ -14,7 +12,7 @@ import Loan, {
 import LoanValidator from '../validators/loanValidator'
 import { startSession, isValidObjectId } from 'mongoose'
 import PendingEdit from '../models/review.model'
-import pickRandomUser from '../utils/pickRandomUser'
+import { computeAge, computeTenure, flatten, pickRandomUser } from '../helpers'
 import Segment from '../models/segment.model'
 import ServerError from '../errors/serverError'
 import Transaction from '../models/transactionModel'
@@ -170,8 +168,8 @@ export async function create (user, customerPayload, loanPayload) {
     // setting customer parameters on loan document
     value.customer = customer._id
     value.params.netPay = customer.netPay
-    value.params.age = calcAge(customer.birthDate)
-    value.params.serviceLen = calcServiceLength(customer.employer.hireDate)
+    // value.params.age = calcAge(customer.birthDate)
+    // value.params.serviceLen = calcServiceLength(customer.employer.hireDate)
 
     const newLoan = new Loan(value)
 
@@ -441,7 +439,7 @@ export async function update (id, user, payload) {
     const { error } = loanValidators.update(payload)
     if (error) return new ServerError(400, error.details[0].message)
 
-    payload = flattenObj(payload)
+    payload = flatten(payload)
     const response = await loanManager.update(user, foundLoan, payload)
 
     // alter loan parameters
