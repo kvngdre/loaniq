@@ -20,28 +20,26 @@ const userSchema = new Schema(
       required: true
     },
 
-    name: {
-      first: {
-        type: String,
-        trim: true,
-        maxLength: 50,
-        required: true
-      },
+    first_name: {
+      type: String,
+      trim: true,
+      maxLength: 50,
+      required: true
+    },
 
-      last: {
-        type: String,
-        trim: true,
-        maxLength: 50,
-        required: true
-      },
+    last_name: {
+      type: String,
+      trim: true,
+      maxLength: 50,
+      required: true
+    },
 
-      middle: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        trim: true,
-        default: null
-      }
+    middle_name: {
+      type: String,
+      minLength: 3,
+      maxLength: 50,
+      trim: true,
+      default: null
     },
 
     display_name: {
@@ -49,7 +47,7 @@ const userSchema = new Schema(
       trim: true,
       maxLength: 50,
       default: function () {
-        return this.name.first.concat(` ${this.name.last}`)
+        return this.first_name.concat(` ${this.last_name}`)
       }
     },
 
@@ -143,15 +141,14 @@ const userSchema = new Schema(
   schemaOptions
 )
 
-userSchema.virtual('full_Name').get(function () {
-  return this.name.first.concat(
-    this.name.middle ? ` ${this.name.middle}` : '',
-    ` ${this.name.last}`
+userSchema.virtual('full_name').get(function () {
+  return this.first_name.concat(
+    this.middle_name ? ` ${this.middle_name}` : '',
+    ` ${this.last_name}`
   )
 })
 
 userSchema.methods.comparePasswords = async function (password) {
-  console.log(this)
   return await compare(password, this.password)
 }
 

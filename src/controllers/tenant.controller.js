@@ -19,7 +19,7 @@ class TenantController extends BaseController {
   }
 
   static getTenants = async (req, res) => {
-    const { count, tenants } = await TenantService.getTenants()
+    const [count, tenants] = await TenantService.getTenants()
 
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, tenants)

@@ -4,16 +4,16 @@ import Tenant from '../models/tenant.model'
 import ValidationError from '../errors/ValidationError'
 
 class TenantDAO extends BaseDAO {
-  static async insert (newRecordDto, trx) {
+  static async insert (dto, trx) {
     try {
-      const newRecord = new Tenant(newRecordDto)
+      const newRecord = new Tenant(dto)
       await newRecord.save({ session: trx })
 
       return newRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -25,30 +25,30 @@ class TenantDAO extends BaseDAO {
     }
   }
 
-  static async findById (id, projection = {}) {
-    const foundRecord = await Tenant.findById(id, projection)
-
-    return foundRecord
-  }
-
   static async findAll (filter = {}, projection = {}) {
-    const foundRecords = await Tenant.find(filter, projection)
+    const foundRecords = await Tenant.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async update (id, updateDto, projection = {}) {
-    try {
-      const foundRecord = await Tenant.findById(id, projection)
+  static async findById (id, projection = {}) {
+    const foundRecord = await Tenant.findById(id).select(projection)
 
-      foundRecord.set(updateDto)
+    return foundRecord
+  }
+
+  static async update (id, dto, projection = {}) {
+    try {
+      const foundRecord = await Tenant.findById(id).select(projection)
+
+      foundRecord.set(dto)
       await foundRecord.save()
 
       return foundRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {

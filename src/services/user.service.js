@@ -11,17 +11,17 @@ import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
 
 class UserService {
-  static async createUser (insertDto, trx) {
+  static async createUser (dto, trx) {
     // * Initializing transaction session.
     const txn = !trx ? await startSession() : null
     try {
-      insertDto.otp = generateOTP(10)
-      insertDto.password = genRandomStr(6)
+      dto.otp = generateOTP(10)
+      dto.password = genRandomStr(6)
 
       // ! Starting transaction.
       txn?.startTransaction()
 
-      const newUser = await UserDAO.insert(insertDto, trx || txn)
+      const newUser = await UserDAO.insert(dto, trx || txn)
 
       // * Emitting  new user sign up event.
       pubsub.publish(events.user.new, { userId: newUser._id, ...newUser._doc }, trx || txn)
@@ -29,9 +29,9 @@ class UserService {
       await mailer({
         to: newUser.email,
         subject: 'One more step',
-        name: newUser.name.first,
+        name: newUser.first_name,
         template: 'new-user',
-        payload: { otp: insertDto.otp.pin, password: insertDto.password }
+        payload: { otp: dto.otp.pin, password: dto.password }
       })
 
       // * Email sent successfully, committing changes.
@@ -53,8 +53,8 @@ class UserService {
     }
   }
 
-  static async getUsers (filter = {}, projection = null) {
-    projection = projection || {
+  static async getUsers (filter) {
+    const projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -66,8 +66,8 @@ class UserService {
     return { count, users: foundUsers }
   }
 
-  static async getUserById (userId, projection = null) {
-    projection = projection || {
+  static async getUserById (userId) {
+    const projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -78,38 +78,38 @@ class UserService {
     return foundUser
   }
 
-  static async getUserByField (filter, projection = null) {
-    projection = projection || {
+  static async getUserByField (filter) {
+    if (!filter) throw new Error('Filter is required.')
+    const projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
-    if (!filter) throw new Error('Query object is required.')
 
     const foundUser = await UserDAO.findByField(filter, projection)
 
     return foundUser
   }
 
-  static async updateUser (userId, updateDto, projection = null) {
-    projection = projection || {
+  static async updateUser (userId, dto) {
+    const projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
-    const updatedUser = await UserDAO.update(userId, updateDto, projection)
+    const updatedUser = await UserDAO.update(userId, dto, projection)
 
     return updatedUser
   }
 
-  static async updateUsers (filter, updateDto) {
-    await UserDAO.updateMany(filter, updateDto)
+  static async updateUsers (filter, dto) {
+    await UserDAO.updateMany(filter, dto)
   }
 
-  static async deleteUser (userId, projection = null) {
-    projection = projection || {
+  static async deleteUser (userId) {
+    const projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -122,8 +122,8 @@ class UserService {
     return deletedUser
   }
 
-  static async changePassword (userId, updatePasswordDto) {
-    const { current_password, new_password } = updatePasswordDto
+  static async changePassword (userId, dto) {
+    const { current_password, new_password } = dto
     const foundUser = await UserDAO.findById(userId)
 
     const isMatch = foundUser.comparePasswords(current_password)
@@ -143,7 +143,7 @@ class UserService {
     mailer({
       to: foundUser.email,
       subject: 'Password changed',
-      name: foundUser.name.first,
+      name: foundUser.first_name,
       template: 'password-change'
     })
 
@@ -168,7 +168,7 @@ class UserService {
     await mailer({
       to: foundUser.email,
       subject: 'Password reset triggered',
-      name: foundUser.name.first,
+      name: foundUser.first_name,
       template: 'password-reset',
       payload: { otp: generatedOTP.pin, password: randomPwd }
     })
@@ -212,7 +212,7 @@ class UserService {
     await mailer({
       to: foundUser.email,
       subject: 'Account reactivation',
-      name: foundUser.name.first,
+      name: foundUser.first_name,
       template: 'password-reset',
       payload: { otp: generatedOTP.pin, password: randomPwd }
     })

@@ -3,7 +3,7 @@ import BaseError from './BaseError'
 
 class UnauthorizedError extends BaseError {
   constructor (description) {
-    const name = 'Unauthorized Error'
+    const name = 'Auth Error'
     const httpCode = httpCodes.UNAUTHORIZED
     const isOperational = true
 

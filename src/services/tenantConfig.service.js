@@ -7,14 +7,14 @@ class TenantConfigService {
     pubsub.subscribe(events.tenant.signUp, this.createConfig)
   }
 
-  async createConfig (newConfigDto, trx) {
-    const newConfig = await TenantConfigDAO.insert(newConfigDto, trx)
+  async createConfig (dto, trx) {
+    const newConfig = await TenantConfigDAO.insert(dto, trx)
 
     return newConfig
   }
 
-  async getConfigs () {
-    const foundConfigs = await TenantConfigDAO.findAll()
+  async getConfigs (filters) {
+    const foundConfigs = await TenantConfigDAO.findAll(filters)
     const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
     return [count, foundConfigs]
@@ -26,8 +26,8 @@ class TenantConfigService {
     return foundConfig
   }
 
-  async updateConfig (tenantId, updateDto) {
-    const updateConfig = await TenantConfigDAO.update({ tenantId }, updateDto)
+  async updateConfig (tenantId, dto) {
+    const updateConfig = await TenantConfigDAO.update({ tenantId }, dto)
 
     return updateConfig
   }

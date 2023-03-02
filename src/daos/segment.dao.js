@@ -1,20 +1,19 @@
-import { Types } from 'mongoose'
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
 import Segment from '../models/segment.model'
 import ValidationError from '../errors/ValidationError'
 
 class SegmentDAO extends BaseDAO {
-  static async insert (newRecordDto, trx) {
+  static async insert (dto, trx) {
     try {
-      const newRecord = new Segment(newRecordDto)
+      const newRecord = new Segment(dto)
       await newRecord.save({ session: trx })
 
       return newRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -26,31 +25,30 @@ class SegmentDAO extends BaseDAO {
     }
   }
 
-  static async findById (id, projection = {}) {
-    const foundRecord = await Segment.findById(id, projection)
-
-    return foundRecord
-  }
-
-  static async findAll (filter = {}, projection = {}) {
-    const foundRecords = await Segment.find(filter, projection)
+  static async findAll (filter, projection = {}) {
+    const foundRecords = await Segment.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async update (filter, updateDto, projection = {}) {
-    try {
-      filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
-      const foundRecord = await Segment.findOne(filter, projection)
+  static async findById (id, projection = {}) {
+    const foundRecord = await Segment.findById(id).select(projection)
 
-      foundRecord.set(updateDto)
+    return foundRecord
+  }
+
+  static async update (id, dto, projection = {}) {
+    try {
+      const foundRecord = await Segment.findById(id).select(projection)
+
+      foundRecord.set(dto)
       await foundRecord.save()
 
       return foundRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -62,9 +60,8 @@ class SegmentDAO extends BaseDAO {
     }
   }
 
-  static async remove (filter) {
-    filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
-    const deletedRecord = await Segment.findOneAndDelete(filter)
+  static async remove (id) {
+    const deletedRecord = await Segment.findByIdAndDelete(id)
 
     return deletedRecord
   }

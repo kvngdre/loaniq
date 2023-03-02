@@ -3,8 +3,8 @@ import SegConfigDAO from '../daos/segConfig.dao'
 import ValidationError from '../errors/ValidationError'
 
 class SegConfigService {
-  static createConfig = async (newSegConfigDto) => {
-    const { tenantId, segmentId, min_net_pay, max_net_pay } = newSegConfigDto
+  static createConfig = async (dto) => {
+    const { tenantId, segmentId, min_net_pay, max_net_pay } = dto
 
     // ! Validating net pay range
     const isValid = await this.#validatePayRange(
@@ -17,13 +17,13 @@ class SegConfigService {
       throw new ValidationError('Overlap or gap found in net pay range.')
     }
 
-    const newSegConfig = await SegConfigDAO.insert(newSegConfigDto)
+    const newSegConfig = await SegConfigDAO.insert(dto)
 
     return newSegConfig
   }
 
-  static async getConfigs () {
-    const foundSegConfigs = await SegConfigDAO.findAll()
+  static async getConfigs (tenantId) {
+    const foundSegConfigs = await SegConfigDAO.findAll({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundSegConfigs.length)
 
     return { count, segConfigs: foundSegConfigs }
@@ -35,19 +35,21 @@ class SegConfigService {
     return foundSegConfig
   }
 
-  static async updateConfig (segConfigId, updateSegConfigDto) {
-    const foundSegConfig = await SegConfigDAO.findById(segConfigId)
-    foundSegConfig.set(updateSegConfigDto)
+  static async updateConfig (segConfigId, dto) {
+    const foundSegConfig = await SegConfigDAO.update(
+      segConfigId,
+      dto
+    )
+    foundSegConfig.set(dto)
 
     const triggers = ['min_net_pay', 'max_net_pay']
 
     const containsTrigger = triggers.some((trigger) =>
-      Object.keys(updateSegConfigDto).includes(trigger)
+      Object.keys(dto).includes(trigger)
     )
 
     if (containsTrigger) {
-      const { tenantId, segmentId, min_net_pay, max_net_pay } =
-        foundSegConfig
+      const { tenantId, segmentId, min_net_pay, max_net_pay } = foundSegConfig
 
       const isValid = this.#validatePayRange(
         tenantId,

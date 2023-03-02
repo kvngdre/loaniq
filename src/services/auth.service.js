@@ -13,8 +13,8 @@ import UserService from './user.service'
 import ValidationError from '../errors/ValidationError'
 
 class AuthService {
-  static async verifySignUp (verifyRegDto, token) {
-    const { email, otp, current_password, new_password } = verifyRegDto
+  static async verifySignUp (dto, token) {
+    const { email, otp, current_password, new_password } = dto
 
     const foundUser = await UserService.getUserByField({ email }, {})
     if (foundUser.active) {
@@ -122,9 +122,12 @@ class AuthService {
        * * 2) The refresh token gets stolen
        * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
        */
-      await UserService.getUserByField({
-        refreshTokens: { $elemMatch: { token } }
-      }, {}).catch(() => {
+      await UserService.getUserByField(
+        {
+          refreshTokens: { $elemMatch: { token } }
+        },
+        {}
+      ).catch(() => {
         /**
          * ! Refresh token reuse detected.
          * * Purge user refresh token array.
@@ -141,7 +144,10 @@ class AuthService {
     await foundUser.save()
 
     // * Emitting user login event.
-    pubsub.publish(events.user.login, { userId: foundUser._id, ...foundUser._doc })
+    pubsub.publish(events.user.login, {
+      userId: foundUser._id,
+      ...foundUser._doc
+    })
 
     return [
       { email, role: foundUser.role, accessToken, redirect: null },
@@ -157,9 +163,12 @@ class AuthService {
 
   static async getNewTokenSet (token) {
     try {
-      const foundUser = await UserService.getUserByField({
-        refreshTokens: { $elemMatch: { token } }
-      })
+      const foundUser = await UserService.getUserByField(
+        {
+          refreshTokens: { $elemMatch: { token } }
+        },
+        {}
+      )
       const { id, iss, aud } = jwt.verify(token, constants.jwt.secret.refresh)
       const { issuer, audience } = constants.jwt
       if (
@@ -186,6 +195,11 @@ class AuthService {
 
       return { accessToken, refreshToken }
     } catch (exception) {
+      logger.fatal(
+        'Refresh token reuse detected ' + exception.message,
+        exception.stack
+      )
+
       const decoded = jwt.verify(token, constants.jwt.secret.refresh)
       UserService.getUserById(decoded.id)
         .then(async (foundUser) => {
@@ -196,7 +210,7 @@ class AuthService {
   }
 
   static async sendOTP ({ email, len }) {
-    const foundUser = await UserService.getUserByField({ email })
+    const foundUser = await UserService.getUserByField({ email }, {})
 
     const generatedOTP = generateOTP(10, len)
     foundUser.set({ otp: generatedOTP })
@@ -206,7 +220,7 @@ class AuthService {
     await mailer({
       to: email,
       subject: `Account verification code: ${generatedOTP.pin}`,
-      name: foundUser.name.first,
+      name: foundUser.first_name,
       template: 'otp-request',
       payload: { otp: generatedOTP.pin }
     })
@@ -214,9 +228,12 @@ class AuthService {
 
   static async logout (token) {
     try {
-      const foundUser = await UserService.getUserByField({
-        refreshTokens: { $elemMatch: { token } }
-      })
+      const foundUser = await UserService.getUserByField(
+        {
+          refreshTokens: { $elemMatch: { token } }
+        },
+        {}
+      )
 
       foundUser.refreshTokens = foundUser.refreshTokens.filter(
         (rt) => rt.token !== token && Date.now() < rt.expires
@@ -230,7 +247,7 @@ class AuthService {
   }
 
   static async logoutAllSessions (userId, token) {
-    const foundUser = await UserService.getUserById(userId)
+    const foundUser = await UserService.getUserById(userId, {})
 
     // ! Prune refresh token array for expired refresh tokens.
     foundUser.refreshTokens = foundUser.refreshTokens.filter(

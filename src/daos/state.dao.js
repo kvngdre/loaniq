@@ -1,13 +1,13 @@
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import SegConfig from '../models/segConfig.model'
+import State from '../models/stateModel'
 import ValidationError from '../errors/ValidationError'
 
-class SegConfigDAO extends BaseDAO {
-  static async insert (dto, trx) {
+class StateDAO extends BaseDAO {
+  static async insert (dto) {
     try {
-      const newRecord = new SegConfig(dto)
-      await newRecord.save({ session: trx })
+      const newRecord = new State(dto)
+      await newRecord.save()
 
       return newRecord
     } catch (exception) {
@@ -25,21 +25,21 @@ class SegConfigDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter, projection = {}) {
-    const foundRecords = await SegConfig.find(filter).select(projection)
-
-    return foundRecords
-  }
-
   static async findById (id, projection = {}) {
-    const foundRecord = await SegConfig.findById(id).select(projection)
+    const foundRecord = await State.findById(id).select(projection)
 
     return foundRecord
   }
 
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await State.find(filter).select(projection)
+
+    return foundRecords
+  }
+
   static async update (id, dto, projection = {}) {
     try {
-      const foundRecord = await SegConfig.findById(id).select(projection)
+      const foundRecord = await State.findById(id).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -61,10 +61,10 @@ class SegConfigDAO extends BaseDAO {
   }
 
   static async remove (id) {
-    const deletedRecord = await SegConfig.findOneAndDelete(id)
+    const foundRecord = await State.findByIdAndDelete(id)
 
-    return deletedRecord
+    return foundRecord
   }
 }
 
-export default SegConfigDAO
+export default StateDAO

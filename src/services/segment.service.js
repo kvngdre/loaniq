@@ -1,14 +1,14 @@
 import SegmentDAO from '../daos/segment.dao'
 
 class SegmentService {
-  static async createSegment (newSegmentDto) {
-    const newSegment = await SegmentDAO.insert(newSegmentDto)
+  static async createSegment (dto) {
+    const newSegment = await SegmentDAO.insert(dto)
 
     return newSegment
   }
 
-  static async getSegments (filter, projection) {
-    const foundSegments = await SegmentDAO.findAll(filter, projection)
+  static async getSegments (filter) {
+    const foundSegments = await SegmentDAO.findAll(filter)
     const count = Intl.NumberFormat('en-US').format(foundSegments.length)
 
     return { count, segments: foundSegments }
@@ -20,8 +20,8 @@ class SegmentService {
     return foundSegment
   }
 
-  static async updateSegment (segmentId, updateSegmentDto) {
-    const updateSegment = await SegmentDAO.update(segmentId, updateSegmentDto)
+  static async updateSegment (segmentId, dto) {
+    const updateSegment = await SegmentDAO.update(segmentId, dto)
 
     return updateSegment
   }

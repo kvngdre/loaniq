@@ -19,7 +19,7 @@ class SegConfigController extends BaseController {
   }
 
   static getSegConfigs = async (req, res) => {
-    const { count, segConfigs } = await SegConfigService.getConfigs()
+    const { count, segConfigs } = await SegConfigService.getConfigs(req.currentUser.tenantId)
     const message = this.getMsgFromCount(count)
 
     const response = this.apiResponse(message, segConfigs)

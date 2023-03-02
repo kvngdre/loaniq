@@ -9,14 +9,14 @@ class UserConfigService {
     pubsub.subscribe(events.user.delete, this.deleteConfig)
   }
 
-  async createConfig (newConfigDto, trx) {
-    const newConfig = await UserConfigDAO.insert(newConfigDto, trx)
+  async createConfig (dto, trx) {
+    const newConfig = await UserConfigDAO.insert(dto, trx)
 
     return newConfig
   }
 
-  async getAllConfigs () {
-    const foundUserConfigs = await UserConfigDAO.findAll()
+  async getAllConfigs (filter) {
+    const foundUserConfigs = await UserConfigDAO.findAll(filter)
     const count = Intl.NumberFormat('en-US').format(foundUserConfigs.length)
 
     return [count, foundUserConfigs]
@@ -28,8 +28,8 @@ class UserConfigService {
     return foundUserConfig
   }
 
-  async updateConfig ({ userId }, updateDto) {
-    const updatedUserConfig = await UserConfigDAO.update({ userId }, updateDto)
+  async updateConfig ({ userId }, dto) {
+    const updatedUserConfig = await UserConfigDAO.update({ userId }, dto)
 
     return updatedUserConfig
   }

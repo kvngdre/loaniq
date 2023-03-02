@@ -1,53 +1,60 @@
+import { geoZones } from '../utils/constants'
 import Joi from 'joi'
+import BaseValidator from './base.validator'
 
-const codeSchema = Joi.string()
-  .pattern(/^[a-zA-z]{2}$/)
-  .messages({
-    'string.pattern.base': 'Invalid state code',
-    'any.required': 'State code is required'
-  })
+class StateValidator extends BaseValidator {
+  #codeSchema
+  #nameSchema
+  #lgaSchema
+  #regionSchema
 
-const nameSchema = Joi.string().max(255).messages({
-  'string.max': 'State name is too long',
-  'any.required': 'State name is required'
-})
+  constructor () {
+    super()
 
-const lgasSchema = Joi.array().items(Joi.string()).messages({
-  'array.min': 'LGAs cannot be empty',
-  'any.required': 'LGA is required'
-})
+    this.#codeSchema = Joi.string()
+      .trim()
+      .label('Code')
+      .pattern(/^[a-zA-Z]{2}$/)
+      .messages({
+        'string.pattern.base': '{#label} is not valid'
+      })
 
-const geoSchema = Joi.string().valid(
-  'North Central',
-  'North East',
-  'North West',
-  'South East',
-  'South South',
-  'South West'
-).messages({
-  'any.only': 'Invalid geo political zone',
-  'any.required': 'Geo political zone is required'
-})
-const validators = {
-  create: function (state) {
+    this.#nameSchema = Joi.string().trim().label('Name')
+
+    this.#lgaSchema = Joi.array().items(Joi.string().trim()).label('LGAs')
+
+    this.#regionSchema = Joi.string()
+      .valid(...geoZones)
+      .label('Geo')
+  }
+
+  validateCreate = (dto) => {
     const schema = Joi.object({
-      code: codeSchema.required(),
-      name: nameSchema.required(),
-      lgas: lgasSchema.required(),
-      geo: geoSchema.required()
+      code: this.#codeSchema.required(),
+      name: this.#nameSchema.required(),
+      lgas: this.#lgaSchema.required(),
+      geo: this.#regionSchema.required()
     })
-    return schema.validate(state)
-  },
 
-  update (state) {
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateUpdate = (dto) => {
     const schema = Joi.object({
-      code: codeSchema,
-      name: nameSchema,
-      lgas: lgasSchema,
-      geo: geoSchema
+      code: this.#codeSchema,
+      name: this.#nameSchema,
+      lgas: this.#lgaSchema,
+      geo: this.#regionSchema
     })
-    return schema.validate(state)
+
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
+
+    return { value, error }
   }
 }
 
-export default validators
+export default new StateValidator()

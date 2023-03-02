@@ -7,14 +7,14 @@ class WalletService {
     pubsub.subscribe(events.tenant.signUp, this.createWallet)
   }
 
-  async createWallet (newWalletDto, trx) {
-    const newWallet = await WalletDAO.insert(newWalletDto, trx)
+  async createWallet (dto, trx) {
+    const newWallet = await WalletDAO.insert(dto, trx)
 
     return newWallet
   }
 
-  async getWallets () {
-    const foundWallets = await WalletDAO.findAll()
+  async getWallets (filter) {
+    const foundWallets = await WalletDAO.findAll(filter)
     const count = Intl.NumberFormat('en-US').format(foundWallets.length)
 
     return [count, foundWallets]
@@ -26,8 +26,8 @@ class WalletService {
     return foundWallet
   }
 
-  async updateWallet (tenantId, updateDto) {
-    const updatedWallet = await WalletDAO.update({ tenantId }, updateDto)
+  async updateWallet (tenantId, dto) {
+    const updatedWallet = await WalletDAO.update({ tenantId }, dto)
 
     return updatedWallet
   }

@@ -1,38 +1,48 @@
 import Joi from 'joi'
+import BaseValidator from './base.validator'
 
-const bankNameSchema = Joi.string().label('Name').min(8).max(20).messages({
-  'string.min': '{#label} too short.',
-  'string.max': '{#label} too long.'
-})
+class BankValidator extends BaseValidator {
+  #nameSchema
+  #codeSchema
 
-const bankCodeSchema = Joi.string()
-  .min(3)
-  .max(6)
-  .pattern(/^[0-9]{3,6}$/)
-  .messages({
-    'string.min': 'Invalid {#label}',
-    'string.max': 'Invalid {#label}',
-    'string.pattern.base': 'Invalid {#label}'
-  })
+  constructor () {
+    super()
 
-const validators = {
-  validateCreation: function (bank) {
+    this.#nameSchema = Joi.string().label('Name').trim().min(8).max(20)
+    this.#codeSchema = Joi.string()
+      .min(3)
+      .max(6)
+      .pattern(/^[0-9]{3,6}$/)
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is not valid',
+        'string.pattern.base': '{#label} is not valid'
+      })
+  }
+
+  validateCreate = (dto) => {
     const schema = Joi.object({
-      name: bankNameSchema.required(),
-      code: bankCodeSchema.required()
+      name: this.#nameSchema.required(),
+      code: this.#codeSchema.required()
     })
 
-    return schema.validate(bank)
-  },
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
-  validateUpdate: function (bank) {
+    return { value, error }
+  }
+
+  validateUpdate = (dto) => {
     const schema = Joi.object({
-      name: bankNameSchema,
-      code: bankCodeSchema
+      name: this.#nameSchema,
+      code: this.#codeSchema
     }).min(1)
 
-    return schema.validate(bank)
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
+
+    return { value, error }
   }
 }
 
-export default validators
+export default new BankValidator()

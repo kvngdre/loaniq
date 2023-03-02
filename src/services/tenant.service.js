@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
+import { genRandomStr } from '../helpers'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError'
 import driverUploader from '../utils/driveUploader'
 import events from '../pubsub/events'
 import fs from 'fs'
-import { genRandomStr } from '../helpers'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import path from 'path'
@@ -60,11 +60,11 @@ class TenantService {
     }
   }
 
-  static async getTenants () {
-    const foundTenants = await TenantDAO.findAll()
+  static async getTenants (filters) {
+    const foundTenants = await TenantDAO.findAll(filters)
     const count = Intl.NumberFormat('en-US').format(foundTenants.length)
 
-    return { count, tenants: foundTenants }
+    return [count, foundTenants]
   }
 
   static async getTenant (tenantId) {
@@ -73,8 +73,8 @@ class TenantService {
     return foundTenant
   }
 
-  static async updateTenant (tenantId, updateDto) {
-    const updateTenant = await TenantDAO.update(tenantId, updateDto)
+  static async updateTenant (tenantId, dto) {
+    const updateTenant = await TenantDAO.update(tenantId, dto)
 
     return updateTenant
   }
@@ -85,8 +85,8 @@ class TenantService {
     return deletedTenant
   }
 
-  static async activateTenant (tenantId, activateDto) {
-    const { cac_number, support } = activateDto
+  static async activateTenant (tenantId, dto) {
+    const { cac_number, support } = dto
     const foundTenant = await TenantDAO.findById(tenantId)
 
     if (foundTenant.activated) {
@@ -123,7 +123,7 @@ class TenantService {
       to: foundOwner.email,
       subject: 'Tenant Deactivated',
       template: 'deactivate-tenant',
-      name: foundOwner.name.first
+      name: foundOwner.first_name
     })
 
     /**

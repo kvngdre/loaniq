@@ -1,10 +1,8 @@
 import { computeAge, computeTenure } from '../helpers'
 import { loanStatus, maritalStatus, relationships, validIds } from '../utils/constants'
-import { updateMany } from './loanModel'
+import Loan from './loanModel'
 import { Schema, model } from 'mongoose'
-import { findOne } from './segment.model'
-import ServerResponse from '../utils/ServerResponse'
-const debug = require('debug')('app:customerModel')
+import Segment from './segment.model'
 const logger = require('../utils/logger')
 
 const schemaOptions = { timestamps: true, versionKey: false }
@@ -21,7 +19,7 @@ const customerSchema = new Schema(
       default: null
     },
 
-    idCard: {
+    id_card: {
       type: String,
       default: null
     },
@@ -48,16 +46,6 @@ const customerSchema = new Schema(
         minLength: 3,
         maxLength: 50,
         trim: true
-      }
-    },
-
-    fullName: {
-      type: String,
-      default: function () {
-        return this.name.first.concat(
-          this.name.middle ? ` ${this.name.middle}` : '',
-                    ` ${this.name.last}`
-        )
       }
     },
 
@@ -299,6 +287,15 @@ const customerSchema = new Schema(
 customerSchema.index({ ippis: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ accountNo: 1, tenantId: 1 }, { unique: true })
+
+customerSchema.virtual('full_name').get(function () {
+  return this.first_name.concat(
+    this.middle_name ? ` ${this.middle_name}` : '',
+    ` ${this.last_name}`
+  )
+})
+
+// customerSchema.methods = function runCalulations () {}
 
 customerSchema.pre('save', async function (next) {
   try {

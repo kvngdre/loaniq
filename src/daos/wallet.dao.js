@@ -4,16 +4,16 @@ import ValidationError from '../errors/ValidationError'
 import Wallet from '../models/wallet.model'
 
 class WalletDAO extends BaseDAO {
-  static async insert (newRecordDto, trx) {
+  static async insert (dto, trx) {
     try {
-      const newRecord = new Wallet(newRecordDto)
+      const newRecord = new Wallet(dto)
       await newRecord.save({ session: trx })
 
       return newRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -25,36 +25,36 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async findById (id) {
-    const foundRecord = await Wallet.findById(id)
-
-    return foundRecord
-  }
-
-  static async findByField (filter) {
-    const foundRecord = await Wallet.findOne(filter)
-
-    return foundRecord
-  }
-
-  static async findAll () {
-    const foundRecords = await Wallet.find({})
+  static async findAll (filter = {}) {
+    const foundRecords = await Wallet.find(filter)
 
     return foundRecords
   }
 
-  static async update (query, updateDto) {
-    try {
-      const foundRecord = await Wallet.findOne(query)
+  static async findById (id, projection = {}) {
+    const foundRecord = await Wallet.findById(id).select(projection)
 
-      foundRecord.set(updateDto)
+    return foundRecord
+  }
+
+  static async findByField (filter, projection = {}) {
+    const foundRecord = await Wallet.findOne(filter).select(projection)
+
+    return foundRecord
+  }
+
+  static async update (filter, dto, projection = {}) {
+    try {
+      const foundRecord = await Wallet.findOne(filter).select(projection)
+
+      foundRecord.set(dto)
       await foundRecord.save()
 
       return foundRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`, 'Duplicate Error')
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -66,8 +66,8 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async remove (query) {
-    const foundRecord = await Wallet.findOneAndDelete(query)
+  static async remove (filter) {
+    const foundRecord = await Wallet.findOneAndDelete(filter)
 
     return foundRecord
   }

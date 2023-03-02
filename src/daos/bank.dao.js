@@ -1,22 +1,22 @@
-import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import SegConfig from '../models/segConfig.model'
 import ValidationError from '../errors/ValidationError'
+import Bank from '../models/bank.model'
+import BaseDAO from './base.dao'
 
-class SegConfigDAO extends BaseDAO {
-  static async insert (dto, trx) {
+class BankDAO extends BaseDAO {
+  static async insert (dto) {
     try {
-      const newRecord = new SegConfig(dto)
-      await newRecord.save({ session: trx })
+      const newBank = new Bank(dto)
+      await newBank.save()
 
-      return newRecord
+      return newBank
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
+        throw new ConflictError(`${field} already un use.`)
       }
 
-      if (exception.name === 'ValidationError') {
+      if (exception.name === 'Validation Error') {
         const errMsg = this.getValidationErrorMsg(exception)
         throw new ValidationError(errMsg)
       }
@@ -25,21 +25,21 @@ class SegConfigDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter, projection = {}) {
-    const foundRecords = await SegConfig.find(filter).select(projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await Bank.find(filter).select(projection)
 
     return foundRecords
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await SegConfig.findById(id).select(projection)
+    const foundRecord = await Bank.findById(id).select(projection)
 
     return foundRecord
   }
 
   static async update (id, dto, projection = {}) {
     try {
-      const foundRecord = await SegConfig.findById(id).select(projection)
+      const foundRecord = await Bank.findById(id).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -61,10 +61,10 @@ class SegConfigDAO extends BaseDAO {
   }
 
   static async remove (id) {
-    const deletedRecord = await SegConfig.findOneAndDelete(id)
+    const deletedRecord = await Bank.findByIdAndDelete(id)
 
     return deletedRecord
   }
 }
 
-export default SegConfigDAO
+export default BankDAO

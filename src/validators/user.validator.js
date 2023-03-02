@@ -37,18 +37,14 @@ class UserValidator extends BaseValidator {
 
     const schema = Joi.object({
       tenantId: this._objectIdSchema.label('Tenant id').default(tenantId),
-      name: Joi.object()
-        .keys({
-          first: this._nameSchema.extract('first').required(),
-          last: this._nameSchema.extract('last').required(),
-          middle: this._nameSchema.extract('middle')
-        })
-        .required(),
+      first_name: this._nameSchema.extract('first').required(),
+      last_name: this._nameSchema.extract('last').required(),
+      middle_name: this._nameSchema.extract('middle'),
       job_title: this.#jobTitle,
       gender: this._genderSchema.required(),
       dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema.default((parent) => {
-        return `${parent.name.first} ${parent.name.last}`
+        return `${parent.first_name} ${parent.last_name}`
       }),
       phone_number: this._phoneNumberSchema.required(),
       email: this._emailSchema.required(),
@@ -66,11 +62,9 @@ class UserValidator extends BaseValidator {
     const invalidRoles = getUserRoleKeys(userRoles.OWNER)
 
     const schema = Joi.object({
-      name: Joi.object().keys({
-        first: this._nameSchema.extract('first'),
-        last: this._nameSchema.extract('last'),
-        middle: this._nameSchema.extract('middle')
-      }),
+      first_name: this._nameSchema.extract('first'),
+      last_name: this._nameSchema.extract('last'),
+      middle_name: this._nameSchema.extract('middle'),
       job_title: this.#jobTitle,
       gender: this._genderSchema,
       dob: this._dateSchema.label('Date of birth').less('now'),

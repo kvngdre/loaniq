@@ -1,48 +1,18 @@
-import { userRoles } from '../utils/userRoles'
-import bankController from '../controllers/bank.controller'
+import auth from '../middleware/auth'
+import BankController from '../controllers/bank.controller'
 import Router from 'express'
 import validateObjectId from '../middleware/validateId'
-import verifyRole from '../middleware/verifyRole'
-import auth from '../middleware/auth'
 
 const router = Router()
 
-const { ADMIN, MASTER, OWNER } = userRoles
+router.post('/', [auth], BankController.createBank)
 
-router.post('/', [auth, verifyRole(ADMIN, OWNER, MASTER)], async (req, res) => {
-  const response = await bankController.create(req.body)
-  return res.status(response.code).json(response.payload)
-})
+router.get('/', BankController.getBanks)
 
-router.get('/', async (req, res) => {
-  const response = await bankController.getBanks()
-  return res.status(response.code).json(response.payload)
-})
+router.get('/:bankId', [auth, validateObjectId], BankController.getBank)
 
-router.get('/:bankId', [auth, validateObjectId], async (req, res) => {
-  const response = await bankController.getBank(req.params.bankId)
-  return res.status(response.code).json(response.payload)
-})
+router.patch('/:bankId', [auth, validateObjectId], BankController.updateBank)
 
-router.patch(
-  '/:bankId',
-  [auth, verifyRole(ADMIN, MASTER, OWNER), validateObjectId],
-  async (req, res) => {
-    const response = await bankController.updateBank(
-      req.params.bankId,
-      req.body
-    )
-    return res.status(response.code).json(response.payload)
-  }
-)
-
-router.delete(
-  '/:bankId',
-  [auth, validateObjectId],
-  async (req, res) => {
-    const response = await bankController.deleteBank(req.params.bankId)
-    return res.status(response.code).json(response.payload)
-  }
-)
+router.delete('/:bankId', [auth, validateObjectId], BankController.deleteBank)
 
 export default router

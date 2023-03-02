@@ -23,7 +23,7 @@ class CustomerController {
       // Start transaction
       session.startTransaction()
 
-      const { value: customerDto, error } =
+      const { value: dto, error } =
                 validateCreateCustomer(user, payload)
       if (error) {
         console.log(error.details[0].context)
@@ -42,7 +42,7 @@ class CustomerController {
       if (!foundLender.active) { return new ServerResponse(403, 'Tenant is yet to be activated') }
 
       // Create new customer
-      const newCustomer = new Customer(customerDto)
+      const newCustomer = new Customer(dto)
       await newCustomer.save()
 
       // Commit changes and end transaction.

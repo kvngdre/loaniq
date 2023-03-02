@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
@@ -23,6 +24,14 @@ const bankSchema = new Schema(
   },
   schemaOptions
 )
+
+bankSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Banks not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Bank not found.')
+})
 
 const Bank = model('Bank', bankSchema)
 
