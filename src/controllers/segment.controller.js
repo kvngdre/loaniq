@@ -7,7 +7,7 @@ import ValidationError from '../errors/ValidationError'
 class SegmentController extends BaseController {
   static createSegment = async (req, res) => {
     const { value, error } = segmentValidator.validateCreate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const newSegment = await SegmentService.createSegment(value)
     const response = this.apiResponse('Segment created.', newSegment)
@@ -33,7 +33,7 @@ class SegmentController extends BaseController {
 
   static updateSegment = async (req, res) => {
     const { value, error } = segmentValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const updatedSegment = await SegmentService.updateSegment(
       req.params.segmentId,

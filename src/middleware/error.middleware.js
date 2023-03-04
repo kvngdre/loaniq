@@ -5,9 +5,7 @@ class ErrorResponse {
   constructor (err) {
     this.success = false
     this.name = err.name
-    this.errors = err.path
-      ? { [err.path]: err.message }
-      : { message: err.message }
+    this.errors = err?.errors ? { ...err.errors } : { message: err.message }
     this.data = err?.data
   }
 }

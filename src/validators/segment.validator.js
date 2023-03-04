@@ -47,7 +47,7 @@ class SegmentValidator extends BaseValidator {
       })
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -66,7 +66,7 @@ class SegmentValidator extends BaseValidator {
       })
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }

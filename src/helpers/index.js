@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+import { txnTypes } from '../utils/constants'
 import logger from '../utils/logger'
 import UserService from '../services/user.service'
 
@@ -164,6 +166,13 @@ export const applyFees = (amount, fees) => {
   return parseFloat(netValue.toFixed(2))
 }
 
+/**
+ * Computes the repayment and total repayment.
+ * @param {number} amount The loan amount.
+ * @param {number} interestRate The interest rate.
+ * @param {number} tenor The loan tenor.
+ * @returns {number[]}
+ */
 export const computeRepaymentSet = (amount, interestRate, tenor) => {
   const repayment = (amount * (interestRate / 100) + amount / tenor).toFixed(2)
   const totalRepayment = (repayment * tenor).toFixed(2)
@@ -171,8 +180,40 @@ export const computeRepaymentSet = (amount, interestRate, tenor) => {
   return [parseFloat(repayment), parseFloat(totalRepayment)]
 }
 
+/**
+ *  Calculates the Deb-to-Income ratio.
+ * @param {number} repayment The monthly repayment value.
+ * @param {number} income The loanee's monthly income.
+ * @returns {number}
+ */
 export const computeDTI = (repayment, income) => {
   const dti = (repayment / income) * 100
 
   return parseFloat(dti.toFixed(2))
+}
+
+export class TxnObj {
+  constructor ({
+    tenantId,
+    reference,
+    status,
+    type,
+    purpose,
+    desc,
+    amount,
+    balance,
+    fees
+  }) {
+    this.tenantId = tenantId
+    this.reference = reference
+    this.status = status
+    this.type = type
+    this.purpose = purpose
+    this.description = desc
+    this.amount = amount
+    this.fees = fees
+    this.balance_before = balance
+    this.balance_after =
+      type === txnTypes.DEBIT ? balance - amount : balance + amount
+  }
 }

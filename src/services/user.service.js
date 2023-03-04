@@ -5,7 +5,7 @@ import { startSession } from 'mongoose'
 import events from '../pubsub/events'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
-import pubsub from '../pubsub/PubSub'
+import pubsub from '../pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
@@ -23,8 +23,13 @@ class UserService {
 
       const newUser = await UserDAO.insert(dto, trx || txn)
 
-      // * Emitting  new user sign up event.
-      pubsub.publish(events.user.new, { userId: newUser._id, ...newUser._doc }, trx || txn)
+      // * Emitting  new user event.
+      pubsub.publish(
+        events.user.new,
+        null,
+        { userId: newUser._id, ...newUser._doc },
+        trx || txn
+      )
 
       await mailer({
         to: newUser.email,
@@ -53,8 +58,8 @@ class UserService {
     }
   }
 
-  static async getUsers (filter) {
-    const projection = {
+  static async getUsers (filter, projection) {
+    projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -78,9 +83,9 @@ class UserService {
     return foundUser
   }
 
-  static async getUserByField (filter) {
+  static async getUserByField (filter, projection) {
     if (!filter) throw new Error('Filter is required.')
-    const projection = {
+    projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -92,8 +97,8 @@ class UserService {
     return foundUser
   }
 
-  static async updateUser (userId, dto) {
-    const projection = {
+  static async updateUser (userId, dto, projection) {
+    projection = projection || {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
@@ -109,15 +114,9 @@ class UserService {
   }
 
   static async deleteUser (userId) {
-    const projection = {
-      password: 0,
-      resetPwd: 0,
-      refreshTokens: 0,
-      otp: 0
-    }
-    const deletedUser = await UserDAO.remove(userId, projection)
+    const deletedUser = await UserDAO.remove(userId)
 
-    await pubsub.publish(events.user.delete, { userId: deletedUser._doc._id })
+    await pubsub.publish(events.user.delete, deletedUser._id)
 
     return deletedUser
   }

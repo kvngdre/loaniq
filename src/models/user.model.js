@@ -97,11 +97,6 @@ const userSchema = new Schema(
       required: true
     },
 
-    // segments: {
-    //   type: [Schema.Types.ObjectId],
-    //   ref: 'Segment'
-    // },
-
     resetPwd: {
       type: Boolean,
       default: true
@@ -158,7 +153,7 @@ userSchema.methods.generateAccessToken = function () {
       id: this._id.toString(),
       tenantId: this.tenantId,
       role: userRoles[this.role],
-      active: true
+      active: this.active
     },
     constants.jwt.secret.access,
     {

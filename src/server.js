@@ -1,6 +1,7 @@
 import 'express-async-errors'
 import { constants } from './config'
 import loaders from './loaders'
+import logger from './utils/logger'
 import routes from './routers'
 
 function startServer () {
@@ -10,9 +11,8 @@ function startServer () {
   loaders.init({ expressApp: app, expressRoutes: routes })
 
   app.listen(port, (err) => {
-    if (err) console.error(err)
-
-    console.log(`Server running on port: ${port}`)
+    if (err) logger.error(err)
+    logger.info(`Server running on port: ${port}`)
   })
 }
 

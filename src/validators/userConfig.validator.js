@@ -23,7 +23,7 @@ class UserConfigValidator extends BaseValidator {
       timezone: this.#timezoneSchema
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -42,7 +42,7 @@ class UserConfigValidator extends BaseValidator {
       timezone: this.#timezoneSchema
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }

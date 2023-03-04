@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
+import { generateOTP, similarity } from '../helpers'
 import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
-import { generateOTP, similarity } from '../helpers'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
-import pubsub from '../pubsub/PubSub'
+import pubsub from '../pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
 import ValidationError from '../errors/ValidationError'
@@ -65,7 +65,7 @@ class AuthService {
     await foundUser.save()
 
     // ! Emitting user login event.
-    pubsub.publish(events.user.login, { userId: foundUser._doc._id })
+    pubsub.publish(events.user.login, foundUser._id, { last_login_time: new Date() })
 
     delete foundUser._doc.password
     delete foundUser._doc.otp
@@ -75,7 +75,11 @@ class AuthService {
   }
 
   static async login ({ email, password }, token) {
-    const foundUser = await UserService.getUserByField({ email }, {})
+    const foundUser = await UserService.getUserByField({ email }, {}).catch(
+      (_) => {
+        throw new UnauthorizedError('Invalid credentials.')
+      }
+    )
 
     const isMatch = await foundUser.comparePasswords(password)
     if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
@@ -143,11 +147,8 @@ class AuthService {
     foundUser.refreshTokens.push(refreshToken)
     await foundUser.save()
 
-    // * Emitting user login event.
-    pubsub.publish(events.user.login, {
-      userId: foundUser._id,
-      ...foundUser._doc
-    })
+    // ! Emitting user login event.
+    pubsub.publish(events.user.login, foundUser._id, { last_login_time: new Date() })
 
     return [
       { email, role: foundUser.role, accessToken, redirect: null },
@@ -166,16 +167,27 @@ class AuthService {
       const foundUser = await UserService.getUserByField(
         {
           refreshTokens: { $elemMatch: { token } }
-        },
-        {}
-      )
+        }, {}
+      ).catch((err) => {
+        // ! Refresh token reuse detected.
+        logger.fatal('Refresh token reuse detected', err.stack)
+        const decoded = jwt.verify(token, constants.jwt.secret.refresh)
+
+        UserService.getUserById(decoded.id)
+          .then(async (foundUser) => {
+            await foundUser.updateOne({ refreshTokens: [] })
+          }).catch(() => {})
+
+        throw new ForbiddenError('Forbidden')
+      })
+
       const { id, iss, aud } = jwt.verify(token, constants.jwt.secret.refresh)
       const { issuer, audience } = constants.jwt
       if (
-        // Validating token
+      // Validating token
         id !== foundUser._id.toString() ||
-        iss !== issuer ||
-        aud !== audience
+      iss !== issuer ||
+      aud !== audience
       ) {
         throw new ForbiddenError('Invalid token')
       }
@@ -193,19 +205,10 @@ class AuthService {
       foundUser.refreshTokens.push(refreshToken)
       await foundUser.save()
 
-      return { accessToken, refreshToken }
+      return [accessToken, refreshToken]
     } catch (exception) {
-      logger.fatal(
-        'Refresh token reuse detected ' + exception.message,
-        exception.stack
-      )
-
-      const decoded = jwt.verify(token, constants.jwt.secret.refresh)
-      UserService.getUserById(decoded.id)
-        .then(async (foundUser) => {
-          await foundUser.updateOne({ refreshTokens: [] })
-        })
-        .catch(() => {})
+      logger.error(exception.message, exception.stack)
+      throw new ForbiddenError(exception.message)
     }
   }
 

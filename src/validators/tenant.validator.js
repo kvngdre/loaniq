@@ -47,7 +47,7 @@ class TenantValidator extends BaseValidator {
       }).required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -64,7 +64,7 @@ class TenantValidator extends BaseValidator {
       phone_number: this._phoneNumberSchema
     }).min(1)
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -82,7 +82,7 @@ class TenantValidator extends BaseValidator {
       cac_number: this.#cacNumberSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -93,7 +93,7 @@ class TenantValidator extends BaseValidator {
       otp: this._otpSchema(8)
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }

@@ -11,7 +11,7 @@ const getStorageOpts = (req, file) => {
   switch (file.fieldname) {
     case 'passport':
       return [
-        './src/uploads/customers/passport',
+        './src/uploads/customers/passports',
         `${Date.now()}.${body?.staff_id}${extname(file.originalname)}`
       ]
 

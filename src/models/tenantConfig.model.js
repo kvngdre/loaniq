@@ -79,7 +79,7 @@ const tenantConfigSchema = new Schema(
       sparse: true
     },
 
-    form_data: {
+    form_theme: {
       background_color: { type: String }
     },
 
@@ -94,6 +94,10 @@ const tenantConfigSchema = new Schema(
         type: String,
         default: null
       }
+    },
+
+    reset_period: {
+      type: Number
     }
   },
   schemaOptions

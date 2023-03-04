@@ -26,7 +26,7 @@ class BankValidator extends BaseValidator {
       code: this.#codeSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -38,7 +38,7 @@ class BankValidator extends BaseValidator {
       code: this.#codeSchema
     }).min(1)
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }

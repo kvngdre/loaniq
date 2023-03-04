@@ -7,7 +7,7 @@ import ValidationError from '../errors/ValidationError'
 class SegConfigController extends BaseController {
   static createSegConfig = async (req, res) => {
     const { value, error } = segConfigValidator.validateCreate(req.currentUser.tenantId, req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const newSegConfig = await SegConfigService.createConfig(value)
     const response = this.apiResponse(
@@ -41,7 +41,7 @@ class SegConfigController extends BaseController {
 
   static updateConfig = async (req, res) => {
     const { value, error } = segConfigValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const segConfig = await SegConfigService.updateConfig(
       req.params.segConfigId,

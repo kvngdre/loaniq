@@ -1,5 +1,5 @@
 import events from '../pubsub/events'
-import pubsub from '../pubsub/PubSub.js'
+import pubsub from '../pubsub/index.js'
 import TenantConfigDAO from '../daos/tenantConfig.dao'
 
 class TenantConfigService {
@@ -9,7 +9,6 @@ class TenantConfigService {
 
   async createConfig (dto, trx) {
     const newConfig = await TenantConfigDAO.insert(dto, trx)
-
     return newConfig
   }
 
@@ -20,21 +19,18 @@ class TenantConfigService {
     return [count, foundConfigs]
   }
 
-  async getConfig (tenantId) {
-    const foundConfig = await TenantConfigDAO.findByField({ tenantId })
-
+  async getConfig (filter) {
+    const foundConfig = await TenantConfigDAO.findByField(filter)
     return foundConfig
   }
 
-  async updateConfig (tenantId, dto) {
-    const updateConfig = await TenantConfigDAO.update({ tenantId }, dto)
-
+  async updateConfig (filter, dto) {
+    const updateConfig = await TenantConfigDAO.update(filter, dto)
     return updateConfig
   }
 
-  async deleteConfig (tenantId) {
-    const deletedTenantConfig = await TenantConfigDAO.remove({ tenantId })
-
+  async deleteConfig (filter) {
+    const deletedTenantConfig = await TenantConfigDAO.remove(filter)
     return deletedTenantConfig
   }
 }

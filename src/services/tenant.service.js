@@ -1,14 +1,16 @@
 /* eslint-disable camelcase */
+import { constants } from '../config'
 import { genRandomStr } from '../helpers'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError'
+import CryptoJS from 'crypto-js'
 import driverUploader from '../utils/driveUploader'
 import events from '../pubsub/events'
 import fs from 'fs'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import path from 'path'
-import pubsub from '../pubsub/PubSub'
+import pubsub from '../pubsub'
 import tenantConfigService from './tenantConfig.service'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
@@ -31,6 +33,7 @@ class TenantService {
       // * Emitting new tenant and user sign up event.
       pubsub.publish(
         events.tenant.signUp,
+        null,
         { tenantId: newTenant._id, ...newTenant._doc },
         trx
       )
@@ -168,11 +171,22 @@ class TenantService {
   }
 
   static async getPublicFormData (formId) {
-    const { _id, form_data, socials, support } =
-      await tenantConfigService.getConfigByField({ formId })
-    const { logo, company_name } = await TenantDAO.findById(_id)
+    const foundTConfig = await tenantConfigService.getConfig({ formId })
+    const foundTenant = await TenantDAO.findById(foundTConfig.tenantId)
+    const token = foundTenant.generateFormToken()
 
-    return { ...form_data, logo, company_name, socials, support }
+    const { logo, company_name } = foundTenant
+    const { form_data, socials, support } = foundTConfig
+
+    const hash = CryptoJS.AES.encrypt(
+      JSON.stringify({ token }),
+      constants.api.encrypt_key
+    )
+
+    return [
+      { ...form_data, logo, company_name, socials, support },
+      hash.toString()
+    ]
   }
 
   static async uploadDocs (tenantId, uploadFiles) {

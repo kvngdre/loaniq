@@ -69,7 +69,7 @@ class TenantConfigValidator extends BaseValidator {
       support: this.#supportSchema
     })
 
-    let { value, error } = schema.validate(dto, { convert: false })
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -92,7 +92,7 @@ class TenantConfigValidator extends BaseValidator {
       support: this.#supportSchema
     }).min(1)
 
-    let { value, error } = schema.validate(dto, { convert: false })
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }

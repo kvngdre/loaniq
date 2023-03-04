@@ -1,13 +1,13 @@
-import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
 import ValidationError from '../errors/ValidationError'
-import Wallet from '../models/wallet.model'
+import Transaction from '../models/transaction.model'
+import BaseDAO from './base.dao'
 
-class WalletDAO extends BaseDAO {
-  static async insert (dto, trx) {
+class TransactionDAO extends BaseDAO {
+  static async insert (dto) {
     try {
-      const newRecord = new Wallet(dto)
-      await newRecord.save({ session: trx })
+      const newRecord = new Transaction(dto)
+      await newRecord.save()
 
       return newRecord
     } catch (exception) {
@@ -17,29 +17,33 @@ class WalletDAO extends BaseDAO {
       }
 
       if (exception.name === 'ValidationError') {
-        const errMsg = this.getValidationErrorMsg(exception)
-        throw new ValidationError(errMsg)
+        const message = this.getValidationErrorMsg(exception)
+        throw new ValidationError(message)
       }
-
-      throw exception
     }
   }
 
-  static async findAll (filter = {}) {
-    const foundRecords = await Wallet.find(filter)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await Transaction.find(filter).select(projection)
 
     return foundRecords
   }
 
+  static async findById (id, projection = {}) {
+    const foundRecord = await Transaction.findById(id).select(projection)
+
+    return foundRecord
+  }
+
   static async findOne (filter, projection = {}) {
-    const foundRecord = await Wallet.findOne(filter).select(projection)
+    const foundRecord = await Transaction.findOne(filter).select(projection)
 
     return foundRecord
   }
 
   static async update (filter, dto, projection = {}) {
     try {
-      const foundRecord = await Wallet.findOne(filter).select(projection)
+      const foundRecord = await Transaction.findOne(filter).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -60,11 +64,11 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async remove (filter) {
-    const foundRecord = await Wallet.findOneAndDelete(filter)
+  static async remove (id) {
+    const deletedRecord = await Transaction.findByIdAndDelete(id)
 
-    return foundRecord
+    return deletedRecord
   }
 }
 
-export default WalletDAO
+export default TransactionDAO

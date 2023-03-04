@@ -6,7 +6,7 @@ import ValidationError from '../errors/ValidationError'
 class BankController extends BaseController {
   static createBank = async (req, res) => {
     const { value, error } = bankValidator.validateCreate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const newBank = await BankService.create(value)
     const response = this.apiResponse('Bank created.', newBank)
@@ -31,7 +31,7 @@ class BankController extends BaseController {
 
   static updateBank = async (req, res) => {
     const { value, error } = bankValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const bank = await BankService.updateBank(req.params.bankId, value)
     const response = this.apiResponse('Bank updated', bank)

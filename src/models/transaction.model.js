@@ -1,24 +1,28 @@
-import { txnStatus } from '../utils/constants'
+import { txnPurposes, txnStatus, txnTypes } from '../utils/constants'
 import { randomBytes } from 'crypto'
 import { Schema, model } from 'mongoose'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
 const transactionSchema = new Schema(
   {
-    lender: {
+    tenantId: {
       type: Schema.Types.ObjectId,
+      ref: 'Tenant',
       required: true
     },
 
-    txnId: {
+    txn_id: {
       type: String,
-      default: null
+      unique: true,
+      default: () => randomBytes(4).toString('hex')
     },
 
-    gateway: {
+    reference: {
       type: String,
-      default: null
+      unique: true,
+      required: true
     },
 
     status: {
@@ -27,34 +31,19 @@ const transactionSchema = new Schema(
       required: true
     },
 
-    reference: {
+    type: {
       type: String,
-      unique: true,
-      default: () => randomBytes(4).toString('hex')
-    },
-
-    category: {
-      type: String,
-      enum: ['Debit', 'Credit'],
+      enum: Object.values(txnTypes),
       required: true
     },
 
-    desc: {
+    purpose: {
       type: String,
-      default: null
+      enum: Object.values(txnPurposes),
+      required: true
     },
 
-    channel: {
-      type: String,
-      default: null
-    },
-
-    bank: {
-      type: String,
-      default: null
-    },
-
-    cardType: {
+    description: {
       type: String,
       default: null
     },
@@ -64,20 +53,19 @@ const transactionSchema = new Schema(
       required: true
     },
 
+    channel: {
+      type: String,
+      default: null
+    },
+
     currency: {
       type: String,
       default: 'NGN'
     },
 
-    fee: {
+    fees: {
       type: Number,
       default: null
-    },
-
-    balance: {
-      type: Number,
-      required: true,
-      set: (v) => Math.floor(v * 100) / 100
     },
 
     balance_before: {
@@ -90,20 +78,18 @@ const transactionSchema = new Schema(
       type: Number,
       required: true,
       set: (v) => Math.floor(v * 100) / 100
-    },
-
-    paidAt: {
-      type: Date,
-      default: null
-    },
-
-    modifiedBy: {
-      type: Schema.Types.ObjectId,
-      default: null
     }
   },
   schemaOptions
 )
+
+transactionSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Transactions not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Transaction not found.')
+})
 
 const Transaction = model('Transaction', transactionSchema)
 

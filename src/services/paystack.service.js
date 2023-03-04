@@ -1,108 +1,79 @@
-import axios from 'axios'
 import { constants } from '../config'
-const debug = require('debug')('app:paystack')
-const logger = require('../utils/logger')
+import axios from 'axios'
+import DependencyError from '../errors/DependencyError'
+import TenantService from './tenant.service'
+import logger from '../utils/logger'
 
 class PaystackService {
   #headers
+  #initTxnUrl
   #payment_channels
-  #payment_url
-  #verify_txn_url
+  #verifyTxnUrl
 
   constructor () {
     this.#headers = {
       'Content-Type': 'application/json',
-      authorization: `Bearer ${constants.paystack.secret}`
+      Authorization: `Bearer ${constants.paystack.key.private}`
     }
-    this.#payment_channels = ['card', 'bank', 'ussd', 'bank_transfer']
-    this.#payment_url = 'https://api.paystack.co/transaction/initialize'
-    this.#verify_txn_url =
-            'https://api.paystack.co/transaction/verify/:reference'
+    this.#initTxnUrl = 'https://api.paystack.co/transaction/initialize'
+    this.#payment_channels = ['card', 'bank_transfer']
+    this.#verifyTxnUrl = 'https://api.paystack.co/transaction/verify/:reference'
   }
 
-  /**
-     * Calculates the transaction fee.
-     * @param {number} amount
-     * @returns {number} fee
-     */
   #calcFee (amount) {
     let fee = 0.015 * amount
     if (amount < 2_500) return fee
 
     fee += 100
-
     if (fee > 2_000) return 2_000
 
     return fee
   }
 
-  /**
-     * Generates a payment link.
-     * @param {Object} params - Function Parameters
-     * @property {number} params.amount - The amount to charge customer.
-     * @property {string} params.email - The customer's email.
-     * @property {string} [params.currency='NGN'] - The transaction currency.
-     * @returns {Object} Returns a payment link from paystack.
-     */
-  async getPaymentLink (params) {
+  async initTransaction (tenantId, amount) {
     try {
-      const amount = params.amount
-      if (!amount) { return { errorCode: 400, message: 'Amount is required.' } }
+      if (!tenantId || !amount) {
+        throw new Error('Missing arguments.')
+      }
 
-      const email = params.email
-      if (!email) { return { errorCode: 400, message: 'Email is required.' } }
+      const { email } = await TenantService.getTenant(tenantId)
 
-      const currency = params?.currency
-        ? params.currency
-        : 'NGN'
-
+      // const fee = this.#calcFee(amount)
       const payload = {
-        amount,
+        amount: (amount) * 100,
         email,
-        currency,
-        channels: this.#payment_channels
+        channels: this.#payment_channels,
+        metadata: {
+          tenantId,
+          amount
+        }
       }
 
-      const fee = this.#calcFee(payload.amount)
-      payload.amount = (payload.amount + fee) * 100
-
-      payload.metadata = {
-        amount: payload.amount,
-        fee
-      }
-
-      const response = await axios.post(this.#payment_url, payload, {
+      const response = await axios.post(this.#initTxnUrl, payload, {
         headers: this.#headers
       })
 
-      return response
+      return { url: response.data.data.authorization_url }
     } catch (exception) {
-      logger.error({
-        method: 'getPaymentLink',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return exception
+      if (exception.response) {
+        throw new DependencyError('Error initializing transaction.')
+      }
+
+      throw exception
     }
   }
 
-  async verifyTxn (ref) {
+  async verifyTransaction (ref) {
     try {
       const response = await axios.get(
-        this.#verify_txn_url.replace(':reference', ref.toString()),
+        this.#verifyTxnUrl.replace(':reference', ref.toString()),
         { headers: this.#headers }
       )
 
-      return response
+      return response.data
     } catch (exception) {
-      logger.error({
-        method: 'verifyTxn',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return exception
+      logger.error(exception.message, exception.stack)
+      throw exception
     }
   }
 }

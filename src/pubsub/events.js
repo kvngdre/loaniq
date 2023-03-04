@@ -1,9 +1,4 @@
 export default {
-  wallet: {
-    credit: 'onWalletCredit',
-    debit: 'onWalletDebit'
-  },
-
   tenant: {
     signUp: 'onTenantSignUp'
   },
@@ -12,5 +7,16 @@ export default {
     new: 'onCreateUser',
     login: 'onUserLogin',
     delete: 'onUserDelete'
+  },
+
+  wallet: {
+    credit: 'onWalletCredit',
+    debit: 'onWalletDebit'
+  },
+
+  webhook: {
+    success: 'onWebhookSuccessEvent',
+    failure: 'onWebhookFailedEvent',
+    pending: 'onWebhookPendingEvent'
   }
 }

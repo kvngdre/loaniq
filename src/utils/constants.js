@@ -32,28 +32,28 @@ export const loanStatus = {
 }
 
 export const loanRemarks = [
-  'Duplicate request',
-  'Ok for disbursement',
-  'Net pay below threshold',
-  'Inconsistent net pay',
-  'Incorrect staff id',
+  'Age above threshold',
+  'Bad loan with other institution',
+  'Client discontinued',
+  'Confirm account number',
+  'Confirm BVN and account number',
+  'Confirm BVN',
+  'Confirm loan amount and tenor',
   'Confirm loan amount',
   'Confirm tenor',
-  'Confirm loan amount and tenor',
-  'Confirm account number',
-  'Confirm BVN',
-  'Confirm BVN and account number',
-  'Age above threshold',
-  'Length of service above threshold',
-  'Bad loan with other institution',
   'Department not eligible',
-  'Negative net pay',
-  'Not eligible for top up',
+  'Duplicate request',
+  'Failed to provide valid documentations',
   'High exposure',
+  'Inconsistent net pay',
+  'Incorrect staff id',
+  'Length of service above threshold',
   'Name mismatch',
+  'Negative net pay',
+  'Net pay below threshold',
   'Net pay not available',
-  'Client discontinued',
-  'Failed to provide valid documentations'
+  'Not eligible for top up',
+  'Ok for disbursement'
 ]
 
 export const maritalStatus = [
@@ -82,22 +82,30 @@ export const txnStatus = {
   ABANDONED: 'abandoned',
   FAILED: 'failed',
   PENDING: 'pending',
-  SUCCESS: 'successful'
+  SUCCESS: 'success'
+}
+
+export const txnTypes = {
+  CREDIT: 'credit',
+  DEBIT: 'debit'
+}
+
+export const txnPurposes = {
+  DEPOSIT: 'deposit',
+  TRANSFER: 'transfer',
+  WITHDRAW: 'withdrawal',
+  LOAN: 'loan application'
 }
 
 export const validIds = [
-  'Voters card',
-  'International passport',
-  'Staff ID card',
+  'Voters Card',
+  'International Passport',
+  'Staff ID Card',
   'National ID card',
-  "Driver's license"
+  "Driver's License"
 ]
 
-export const companyCategory = [
-  'MFB',
-  'Finance House',
-  'Money Lender'
-]
+export const companyCategory = ['MFB', 'Finance House', 'Money Lender']
 
 export const socials = [
   'website',

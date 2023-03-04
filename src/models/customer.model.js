@@ -1,9 +1,11 @@
 import { computeAge, computeTenure } from '../helpers'
-import { loanStatus, maritalStatus, relationships, validIds } from '../utils/constants'
-import Loan from './loanModel'
+import {
+  maritalStatus,
+  relationships,
+  validIds
+} from '../utils/constants'
 import { Schema, model } from 'mongoose'
-import Segment from './segment.model'
-const logger = require('../utils/logger')
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
@@ -24,29 +26,27 @@ const customerSchema = new Schema(
       default: null
     },
 
-    name: {
-      first: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        trim: true,
-        required: true
-      },
+    first_name: {
+      type: String,
+      minLength: 3,
+      maxLength: 50,
+      trim: true,
+      required: true
+    },
 
-      last: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        trim: true,
-        required: true
-      },
+    last_name: {
+      type: String,
+      minLength: 3,
+      maxLength: 50,
+      trim: true,
+      required: true
+    },
 
-      middle: {
-        type: String,
-        minLength: 3,
-        maxLength: 50,
-        trim: true
-      }
+    middle_name: {
+      type: String,
+      minLength: 3,
+      maxLength: 50,
+      trim: true
     },
 
     gender: {
@@ -55,43 +55,26 @@ const customerSchema = new Schema(
       required: true
     },
 
-    birthDate: {
+    birth_date: {
       type: Date,
       required: true
     },
 
-    residentialAddress: {
-      address: {
-        type: String,
-        trim: true,
-        maxLength: 255,
-        lowercase: true,
-        required: true
-      },
-
-      state: {
-        type: String,
-        required: true
-      },
-
-      stateCode: {
-        type: String,
-        uppercase: true,
-        required: true
-      },
-
-      lga: {
-        type: String,
-        required: true
-      },
-
-      geo: {
-        type: String,
-        required: true
-      }
+    address: {
+      type: String,
+      trim: true,
+      maxLength: 255,
+      lowercase: true,
+      required: true
     },
 
-    phone: {
+    state: {
+      type: Schema.Types.ObjectId,
+      ref: 'State',
+      required: true
+    },
+
+    phone_number: {
       type: String,
       trim: true,
       required: true
@@ -104,7 +87,7 @@ const customerSchema = new Schema(
       default: null
     },
 
-    maritalStatus: {
+    marital_status: {
       type: String,
       enum: maritalStatus,
       required: true
@@ -116,38 +99,20 @@ const customerSchema = new Schema(
       required: true
     },
 
-    ippis: {
+    staff_id: {
       type: String,
       uppercase: true,
       trim: true,
-      required: true,
-      validate: {
-        validator: async function (ippis) {
-          const foundSegment = await findOne({
-            _id: this.employer.segment,
-            active: true
-          })
-          if (!foundSegment) { return new ServerResponse('Segment not found') }
-
-          const prefixMatch = ippis.match(/^[A-Z]{2,3}(?=[0-9])/)
-          if (
-            foundSegment.prefix !==
-                        (prefixMatch == null ? prefixMatch : prefixMatch[0])
-          ) { return false }
-
-          return true
-        },
-        message: 'IPPIS number does not match segment selected'
-      }
+      required: true
     },
 
-    idType: {
+    id_type: {
       type: String,
       enum: validIds,
       required: true
     },
 
-    idNo: {
+    id_number: {
       type: String,
       minLength: 4,
       maxLength: 50,
@@ -155,138 +120,99 @@ const customerSchema = new Schema(
       required: true
     },
 
-    employer: {
-      name: {
-        type: String,
-        minLength: 3,
-        maxLength: 255,
-        trim: true,
-        required: true
-      },
-
-      command: {
-        type: String,
-        trim: true,
-        default: null
-      },
-
-      segment: {
-        type: Schema.Types.ObjectId,
-        required: true
-      },
-
-      location: {
-        address: {
-          type: String,
-          trim: true,
-          maxLength: 255,
-          lowercase: true,
-          required: true
-        },
-
-        state: {
-          type: String,
-          required: true
-        },
-
-        lga: {
-          type: String,
-          required: true
-        }
-      },
-
-      hireDate: {
-        type: Date,
-        required: true
-      }
+    segment: {
+      type: Schema.Types.ObjectId,
+      ref: 'Segment',
+      required: true
     },
 
-    nok: {
-      fullName: {
-        type: String,
-        trim: true,
-        required: true
-      },
-
-      location: {
-        address: {
-          type: String,
-          trim: true,
-          maxLength: 255,
-          lowercase: true,
-          required: true
-        },
-
-        state: {
-          type: String,
-          required: true
-        },
-        lga: {
-          type: String,
-          required: true
-        }
-      },
-
-      phone: {
-        type: String,
-        trim: true,
-        required: true
-      },
-
-      relationship: {
-        type: String,
-        enum: relationships,
-        required: true
-      }
+    command: {
+      type: String,
+      trim: true,
+      default: null
     },
 
-    accountName: {
+    employer_address: {
+      type: String,
+      trim: true,
+      maxLength: 255,
+      lowercase: true,
+      required: true
+    },
+
+    employer_state: {
+      type: String,
+      required: true
+    },
+
+    hire_date: {
+      type: Date,
+      required: true
+    },
+
+    income: {
+      type: Number,
+      required: true
+    },
+
+    nok_full_name: {
+      type: String,
+      trim: true,
+      required: true
+    },
+
+    nok_address: {
+      type: String,
+      trim: true,
+      maxLength: 255,
+      lowercase: true,
+      required: true
+    },
+
+    nok_state: {
+      type: Schema.Types.ObjectId,
+      ref: 'State',
+      required: true
+    },
+
+    nok_phone_number: {
+      type: String,
+      trim: true,
+      required: true
+    },
+
+    nok_relationship: {
+      type: String,
+      enum: relationships,
+      required: true
+    },
+
+    account_name: {
       type: String,
       lowercase: true,
       required: true,
       trim: true
     },
 
-    accountNo: {
+    account_number: {
       type: String,
       trim: true,
       required: true
     },
 
     bank: {
-      name: {
-        type: String,
-        required: true
-      },
-
-      code: {
-        type: String,
-        maxLength: 6,
-        required: true
-      }
-    },
-
-    // below are set programmatically. No user can edit.
-    netPay: {
-      type: Number,
-      default: 80_000.27
-    },
-
-    validBvn: {
-      type: Boolean
-    },
-
-    validAccNo: {
-      type: Boolean
+      type: Schema.Types.ObjectId,
+      ref: 'Bank',
+      required: true
     }
   },
   schemaOptions
 )
 
 // ! Creating compound indexes
-customerSchema.index({ ippis: 1, tenantId: 1 }, { unique: true })
+customerSchema.index({ staff_id: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true })
-customerSchema.index({ accountNo: 1, tenantId: 1 }, { unique: true })
+customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true })
 
 customerSchema.virtual('full_name').get(function () {
   return this.first_name.concat(
@@ -295,38 +221,20 @@ customerSchema.virtual('full_name').get(function () {
   )
 })
 
-// customerSchema.methods = function runCalulations () {}
+customerSchema.virtual('age').get(function () {
+  return computeAge(this.birth_date)
+})
 
-customerSchema.pre('save', async function (next) {
-  try {
-    const isPresent = (path) =>
-      ['birthDate', 'employer.hireDate'].includes(path)
-    if (this.modifiedPaths().some(isPresent)) {
-      console.log('triggered')
-      const age = computeAge(this.birthDate)
-      const serviceLen = computeTenure(this.employer.hireDate)
-      await updateMany(
-        {
-          customer: this._id,
-          status: loanStatus.pending
-        },
-        {
-          'params.age': age,
-          'params.serviceLen': serviceLen
-        }
-      )
-    }
+customerSchema.virtual('tenure').get(function () {
+  return computeTenure(this.hire_date)
+})
 
-    next()
-  } catch (exception) {
-    logger.error({
-      method: 'customer_pre_save',
-      message: exception.message,
-      meta: exception.meta
-    })
-    debug(exception)
-    next(new ServerResponse(500, 'Something went wrong'))
+customerSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Customers not found.')
   }
+
+  if (!doc) throw new NotFoundError('Customer not found.')
 })
 
 const Customer = model('Customer', customerSchema)

@@ -19,7 +19,7 @@ class PubSub {
     }
   }
 
-  async publish (eventName, data, trx) {
+  async publish (eventName, id, data, trx) {
     logger.silly(`Making a broadcast about ${eventName} event.`)
 
     // Emit or publish the event to anyone who is subscribed.
@@ -27,7 +27,8 @@ class PubSub {
       const handlerFns = this.#events[eventName]
 
       for (const fn of handlerFns) {
-        await fn(data, trx)
+        if (id == null) await fn(data, trx)
+        else await fn(id, data, trx)
       }
     }
   }

@@ -52,7 +52,7 @@ class UserValidator extends BaseValidator {
       // segments: this.#segmentsSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -73,7 +73,7 @@ class UserValidator extends BaseValidator {
       // segments: this.#segmentsSchema
     }).min(1)
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -86,7 +86,7 @@ class UserValidator extends BaseValidator {
       confirm_password: this._confirmPasswordSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }

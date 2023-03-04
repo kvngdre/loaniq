@@ -7,7 +7,7 @@ import ValidationError from '../errors/ValidationError'
 class TenantController extends BaseController {
   static signUp = async (req, res) => {
     const { value, error } = tenantValidator.validateSignUp(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const newTenant = await TenantService.createTenant(value)
     const response = this.apiResponse(
@@ -43,7 +43,7 @@ class TenantController extends BaseController {
 
   static updateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const tenant = await TenantService.updateTenant(req.params.tenantId, value)
     const response = this.apiResponse('Tenant updated.', tenant)
@@ -93,8 +93,10 @@ class TenantController extends BaseController {
   }
 
   static getPublicFormData = async (req, res) => {
-    const formData = await TenantService.getPublicFormData(req.params.formId)
+    const [formData, hash] = await TenantService.getPublicFormData(req.params.formId)
+
     const response = this.apiResponse('Fetched tenant public form data.', formData)
+    res.set('hash', hash)
 
     res.status(httpCodes.OK).json(response)
   }

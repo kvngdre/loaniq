@@ -8,7 +8,6 @@ export default function auth (req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form
-     *
      * Authorization: Bearer ${JWT}
      *
      */

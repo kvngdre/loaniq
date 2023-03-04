@@ -10,7 +10,7 @@ class AuthValidator extends BaseValidator {
       confirm_password: this._confirmPasswordSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -22,7 +22,7 @@ class AuthValidator extends BaseValidator {
       password: Joi.string().max(256).label('Password').required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -34,7 +34,7 @@ class AuthValidator extends BaseValidator {
       len: Joi.number().valid(6, 8).required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }

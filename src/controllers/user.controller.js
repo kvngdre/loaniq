@@ -11,7 +11,7 @@ class UserController extends BaseController {
       req.currentUser.tenantId
     )
     console.log(value)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const newUser = await UserService.createUser(value)
     const response = this.apiResponse(
@@ -40,7 +40,7 @@ class UserController extends BaseController {
 
   static updateUser = async (req, res) => {
     const { value, error } = userValidator.validateUpdate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const user = await UserService.updateUser(req.params.userId, value)
     const response = this.apiResponse('User account update.', user)

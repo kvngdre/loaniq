@@ -79,7 +79,7 @@ class AuthController extends BaseController {
       secure: constants.secure_cookie
     })
 
-    const { accessToken, refreshToken } = await AuthService.getNewTokenSet(
+    const [accessToken, refreshToken] = await AuthService.getNewTokenSet(
       token
     )
 

@@ -1,12 +1,12 @@
 import { joiPassword } from 'joi-password'
 import { userRoles } from '../utils/userRoles'
-import { feeTypes } from '../utils/constants'
+import { feeTypes, maritalStatus } from '../utils/constants'
 import Joi from 'joi'
 
 class BaseValidator {
   #formatErrorMessage = (error) => {
     const regex = /(?<!.*ISO \d)\B(?=(\d{3})+(?!\d))/g
-    const errorMsg = error.details[0].message
+    const errorMsg = error.message
 
     // Remove quotation marks.
     let formattedMsg = `${errorMsg.replaceAll('"', '')}.`
@@ -25,17 +25,20 @@ class BaseValidator {
     }
 
     if (error) {
-      error = {
-        message: this.#formatErrorMessage(error),
-        path: error.details[0].path.reduce(reducer, '')
+      const _error = {}
+      for (const detail of error.details) {
+        _error[detail.path.reduce(reducer, '')] =
+          this.#formatErrorMessage(detail)
       }
+
+      return _error
     }
 
     return error
   }
 
   _objectIdSchema = Joi.alternatives(
-    Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    Joi.string().regex(/^[0-9a-fA-F]{24}$/).messages({ 'string.pattern.base': 'Invalid object id' }),
     Joi.object().keys({
       id: Joi.any(),
       _bsontype: Joi.allow('ObjectId')
@@ -79,7 +82,7 @@ class BaseValidator {
         'string.min': '{#label} is not valid',
         'string.max': '{#label} is too long'
       })
-  }).min(1)
+  })
 
   _genderSchema = Joi.string()
     .label('Gender')
@@ -181,15 +184,35 @@ class BaseValidator {
     .max(100.0)
     .precision(2)
 
-  _feesSchema = Joi.array().label('Fees').items(Joi.object({
-    name: Joi.string().label('Fee name').trim().required(),
-    type: Joi.number().label('Fee type').valid(...Object.values(feeTypes)).required(),
-    value: Joi.when('type', {
-      is: feeTypes.percent,
-      then: this._percentageSchema.label('Fee value'),
-      otherwise: this._amountSchema.label('Fee value')
-    }).required()
-  }))
+  _feesSchema = Joi.array()
+    .label('Fees')
+    .items(
+      Joi.object({
+        name: Joi.string().label('Fee name').trim().required(),
+        type: Joi.number()
+          .label('Fee type')
+          .valid(...Object.values(feeTypes))
+          .required(),
+        value: Joi.when('type', {
+          is: feeTypes.percent,
+          then: this._percentageSchema.label('Fee value'),
+          otherwise: this._amountSchema.label('Fee value')
+        }).required()
+      })
+    )
+
+  _maritalSchema = Joi.string()
+    .label('Marital status')
+    .valid(...maritalStatus)
+
+  _accountNumberSchema = Joi.string()
+    .pattern(/^[0-9]{10}$/)
+    .messages({
+      'string.pattern.base': 'Invalid account number.',
+      'any.required': 'Account number is required'
+    })
+
+  _descSchema = Joi.string().label('Description').trim().max(100)
 }
 
 export default BaseValidator

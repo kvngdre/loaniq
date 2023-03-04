@@ -25,7 +25,7 @@ class SegmentConfigValidator extends BaseValidator {
       max_dti: this._percentageSchema.label('Maximum D.T.I').required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -51,7 +51,7 @@ class SegmentConfigValidator extends BaseValidator {
       max_dti: this._percentageSchema.label('Maximum D.T.I')
     }).min(1)
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }

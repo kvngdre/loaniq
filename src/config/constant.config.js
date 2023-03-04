@@ -11,7 +11,8 @@ if (foundEnv.error || env === 'production') {
 export default {
   api: {
     prefix: '/api',
-    version: '/v1'
+    version: '/v1',
+    encrypt_key: process.env.ENCRYPTION_KEY
   },
   charge: process.env.RATE,
   db: {
@@ -32,6 +33,7 @@ export default {
   jwt: {
     secret: {
       access: process.env.JWT_ACCESS_KEY,
+      form: process.env.JWT_FORM_KEY,
       refresh: process.env.JWT_REFRESH_KEY
     },
     exp_time: {
@@ -53,7 +55,10 @@ export default {
   },
   max_similarity: parseInt(process.env.MAX_SIMILARITY),
   paystack: {
-    secret: process.env.PAYSTACK_PRIVATE_KEY
+    key: {
+      private: process.env.PSK_SECRET_KEY,
+      public: process.env.PSK_PUBLIC_KEY
+    }
   },
   port: process.env.PORT,
   salt: process.env.SALT,

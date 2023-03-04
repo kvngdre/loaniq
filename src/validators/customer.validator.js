@@ -1,413 +1,179 @@
-import DateTime from 'luxon'
+import { relationships, validIds } from '../utils/constants'
+import BaseValidator from './base.validator'
+import { DateTime } from 'luxon'
 import Joi from 'joi'
-import objectId from 'joi-objectid'
-Joi.objectId = objectId(Joi)
 
-function isValidDOB (dob, helper) {
-  const dobFormatted = DateTime.fromISO(new Date(dob).toISOString()).toFormat(
-    'yyyy-MM-dd'
-  )
-  const minDob = DateTime.now().minus({ years: 18 }).toFormat('yyyy-MM-dd')
+const isOver18 = (dob, helper) => {
+  const dateEighteenYearsBack = DateTime.now()
+    .minus({ years: 18 })
 
-  if (dobFormatted > minDob) return helper.error('date.less')
+  if (dateEighteenYearsBack >= dob) return dob
 
-  return dob
+  return helper.error('any.invalid')
 }
 
-const nameSchema = Joi.object({
-  first: Joi.string().label('First name').min(1).max(30).messages({
-    'string.min': '{#label} is too short',
-    'string.max': '{#label} is too long'
-  }),
-  last: Joi.string().label('Last name').min(3).max(30).messages({
-    'string.min': '{#label} is too short',
-    'string.max': '{#label} is too long'
-  }),
-  middle: Joi.string().label('Middle name').min(1).max(30).messages({
-    'string.min': '{#label} is too short',
-    'string.max': '{#label} is too long'
-  })
-})
+class CustomerValidation extends BaseValidator {
+  #bvnSchema
+  #birthDateSchema
+  #commandSchema
+  #idSchema
+  #idTypeSchema
+  #hireDateSchema
+  #addressSchema
+  #relationshipSchema
 
-const genderSchema = Joi.string().valid('Male', 'Female').messages({
-  'any.only': 'Invalid gender',
-  'any.required': 'Gender is required'
-})
+  constructor () {
+    super()
 
-const birthDateSchema = Joi.date().label('Birth date').custom(isValidDOB).message({
-  'date.less': 'Must be 18 years or older.',
-  'any.required': 'Birth date is required'
-})
+    this.#bvnSchema = Joi.string()
+      .label('BVN')
+      .pattern(/^22[0-9]{9}$/)
+      .messages({
+        'string.pattern.base': '{#label} is not valid'
+      })
 
-const phoneSchema = Joi
-  .string()
-  .min(13)
-  .max(14)
-  .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-  .messages({
-    'string.min': 'Invalid phone number.',
-    'string.max': 'Phone number is too long',
-    'string.pattern.base':
-            'Invalid phone number, please include international dialling code',
-    'any.required': 'Phone number is required'
-  })
+    this.#birthDateSchema = Joi.date()
+      .iso()
+      .label('Birth date')
+      .custom(isOver18).less('now')
+      .messages({ 'any.invalid': 'Must be 18 or older to apply' })
 
-const emailSchema = Joi.string().email().min(10).max(50).messages({
-  'string.min': 'Invalid email address',
-  'string.max': 'Invalid email address',
-  'string.email': 'Please enter a valid email',
-  'any.required': 'Email address is required'
-})
+    this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
+      'string.pattern.base': 'Invalid staff id number'
+    })
 
-const maritalStatusSchema = Joi
-  .string()
-  .valid('Single', 'Married', 'Divorced', 'Separated', 'Widow', 'Widower')
-  .messages({
-    'any.required': 'Marital status is required',
-    'any.only': 'Invalid marital status'
-  })
+    this.#commandSchema = Joi.string().label('Command')
+    this.#hireDateSchema = Joi.date()
+      .iso()
+      .label('Hire date')
+      .min(
+        Joi.ref('birth_date', {
+          adjust: (doe) => {
+            doe.setFullYear(doe.getFullYear() + 18)
+            return doe
+          }
+        })
+      ).less('now')
+      .messages({
+        'date.min': '{#label} is not valid'
+      })
 
-const ippisSchema = Joi
-  .string()
-  .pattern(/^([a-zA-Z]{2,5})?.[0-9]{3,8}$/)
-  .uppercase()
-  .messages({
-    'string.pattern.base': 'Invalid IPPIS number',
-    'any.required': 'Ippis number is required'
-  })
+    this.#idTypeSchema = Joi.string()
+      .label('Id type')
+      .valid(...validIds)
 
-const employerSchema = Joi.object({
-  name: Joi.string().min(2).max(70).messages({
-    'string.min': 'Employer name is not valid.',
-    'string.max': 'Employer name is too long.',
-    'any.required': 'Employer name is required'
-  }),
-  command: Joi.string().min(3).max(50).messages({
-    'string.min': 'Command is not valid.',
-    'string.max': 'Command is too long.',
-    'any.required': 'Command is required'
-  }),
-  segment: Joi.objectId().messages({
-    'any.required': 'Segment is required'
-  }),
-  location: Joi.object({
-    address: Joi
-      .string()
+    this.#relationshipSchema = Joi.string()
+      .valid(...relationships)
+      .label('Relationship')
+
+    this.#addressSchema = Joi.string()
+      .trim()
+      .label('Address')
       .min(5)
       .max(100)
+      .required()
       .messages({
-        'string.min': 'Address is too short.',
-        'string.max': 'Address is too long.',
-        'any.required': 'Employer address is required'
+        'string.min': '{#label} is too short.',
+        'string.max': '{#label} is too long.'
       })
-      .required(),
-    state: Joi.string().messages({
-      'any.required': 'Employer state is required'
-    }),
-    lga: Joi.string().messages({
-      'any.required': 'Employer L.G.A is required'
+  }
+
+  validateCreate = (dto, tenantId) => {
+    const schema = Joi.object({
+      tenantId: this._objectIdSchema.default(tenantId),
+      passport: Joi.string(),
+      id_card: Joi.string(),
+      first_name: this._nameSchema.extract('first').required(),
+      last_name: this._nameSchema.extract('last').required(),
+      middle_name: this._nameSchema.extract('middle'),
+      gender: this._genderSchema.required(),
+      birth_date: this.#birthDateSchema.required(),
+      address: this.#addressSchema.required(),
+      state: this._objectIdSchema.label('State').required(),
+      phone_number: this._phoneNumberSchema.required(),
+      email: this._emailSchema,
+      marital_status: this._maritalSchema.required(),
+      bvn: this.#bvnSchema.required(),
+      staff_id: this.#idSchema.label('staff id').required(),
+      id_type: this.#idTypeSchema.required(),
+      id_number: this.#idSchema.label('Id number').required(),
+      segment: this._objectIdSchema.label('Segment').required(),
+      command: this.#commandSchema.required(),
+      employer_address: this.#addressSchema
+        .label('Employer address')
+        .required(),
+      employer_state: this._objectIdSchema.label('State').required(),
+      hire_date: this.#hireDateSchema.required(),
+      income: this._amountSchema.label('Income').required(),
+      nok_full_name: this._nameSchema
+        .extract('first')
+        .label('Next of kin full name')
+        .required(),
+      nok_address: this.#addressSchema.label('Next of kin address').required(),
+      nok_state: this._objectIdSchema.label('Next of kin state').required(),
+      nok_phone_number: this._phoneNumberSchema
+        .label('Next of kin phone number')
+        .required(),
+      nok_relationship: this.#relationshipSchema.required(),
+      account_name: this._nameSchema
+        .extract('last')
+        .label('Salary account name')
+        .required(),
+      account_number: this._accountNumberSchema.required(),
+      bank: this._objectIdSchema.label('Bank').required()
     })
-  }),
-  hireDate: Joi
-    .date()
-    .min(
-      Joi.ref('...birthDate', {
-        adjust: (value) => {
-          value.setFullYear(value.getFullYear() + 18)
-          return value
-        }
-      })
-    )
-    .message({
-      'date.min': 'Hire date is not valid',
-      'any.required': 'Hire date is required'
-    })
-})
 
-const bvnSchema = Joi
-  .string()
-  .pattern(/^22[0-9]{9}$/)
-  .message({
-    'string.pattern.base': 'Invalid BVN',
-    'any.required': 'BVN is required'
-  })
+    let { value, error } = schema.validate(dto, { abortEarly: false })
+    error = this._refineError(error)
 
-const idTypeSchema = Joi
-  .string()
-  .valid(
-    'Voters card',
-    'International passport',
-    'Staff ID card',
-    'National ID card',
-    "Driver's license"
-  )
-  .messages({
-    'any.only': 'ID type is not valid',
-    'any.required': 'ID type is required'
-  })
-const idNoSchema = Joi
-  .string()
-  .pattern(/^([a-zA-Z]{2,7})?.[0-9]{3,11}$/)
-  .messages({
-    'string.pattern.base': 'Invalid ID number',
-    'any.required': 'ID card number is required'
-  })
+    return { value, error }
+  }
 
-const nokSchema = Joi.object({
-  fullName: Joi.string().min(10).max(70).messages({
-    'string.min': 'Next of kin name is too short.',
-    'string.max': 'Next of kin name is too long',
-    'any.required': 'Full name of next of kin is required'
-  }),
-  location: Joi.object({
-    address: Joi
-      .string()
-      .min(9)
-      .max(100)
-      .messages({
-        'string.min': 'Next of kin address is too short',
-        'string.max': 'Next of kin address is too long',
-        'any.required': 'Next of kin address is required'
-      })
-      .required(),
-    state: Joi.string().messages({
-      'any.required': 'Next of kin state is required'
-    }),
-    lga: Joi.string().messages({
-      'any.required': 'Next of kin L.G.A is required'
-    })
-  }),
-  phone: Joi
-    .string()
-    .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-    .message({
-      'string.pattern.base':
-                'Invalid next of kin phone number, please include international dialling code',
-      'any.required': 'Next of kin phone number is required'
-    }),
-  relationship: Joi.string().messages({
-    'any.required': 'Relationship to next of kin is required'
-  })
-})
+  validateUpdate = async (dto) => {
+    const schema = Joi.object({
+      passport: Joi.string(),
+      id_card: Joi.string(),
+      first_name: this._nameSchema.extract('first'),
+      last_name: this._nameSchema.extract('last'),
+      middle_name: this._nameSchema.extract('middle'),
+      gender: this._genderSchema,
+      birth_date: this.#birthDateSchema,
+      address: this.#addressSchema,
+      state: this._objectIdSchema.label('State'),
+      phone_number: this._phoneNumberSchema,
+      email: this._emailSchema,
+      marital_status: this._maritalSchema,
+      bvn: this.#bvnSchema,
+      staff_id: this.#idSchema.label('staff id'),
+      id_type: this.#idTypeSchema,
+      id_number: this.#idSchema.label('Id number'),
+      segment: this._objectIdSchema.label('Segment'),
+      command: this.#commandSchema,
+      employer_address: this.#addressSchema.label('Employer address'),
+      employer_state: this._objectIdSchema.label('State'),
+      hire_date: this.#hireDateSchema,
+      income: this._amountSchema.label('Income'),
+      nok_full_name: this._nameSchema
+        .extract('first')
+        .label('Next of kin full name'),
+      nok_address: this.#addressSchema.label('Next of kin address'),
+      nok_state: this._objectIdSchema.label('Next of kin state'),
+      nok_phone_number: this._phoneNumberSchema.label(
+        'Next of kin phone number'
+      ),
+      nok_relationship: this.#relationshipSchema,
+      account_name: this._nameSchema
+        .extract('last')
+        .label('Salary account name'),
+      account_number: this._accountNumberSchema,
+      bank: this._objectIdSchema.label('Bank')
+    }).min(1)
 
-const accountNameSchema = Joi.string().min(8).max(100).messages({
-  'string.min': 'Account name is not valid',
-  'string.max': 'Account name is too long',
-  'any.required': 'Account name is required'
-})
-const accountNoSchema = Joi
-  .string()
-  .pattern(/^[0-9]{10}$/)
-  .messages({
-    'string.pattern.base': 'Invalid account number.',
-    'any.required': 'Account number is required'
-  })
-const bankSchema = Joi.object({
-  name: Joi.string().messages({
-    'any.required': 'Bank name is required'
-  }),
-  code: Joi.string().messages({
-    'any.required': 'Bank code is required'
-  })
-})
+    let { value, error } = schema.validate(dto)
+    error = this._refineError(error)
 
-const netPaySchema = Joi.number().min(0).precision(2).messages({
-  'any.required': 'Net pay is required',
-  'number.min': 'Net pay cannot be less than zero'
-})
-
-const validators = {
-  validateCreateCustomer: function (user, customer) {
-    const schema = Joi.alternatives().try(
-      Joi.objectId().required(),
-      Joi.object({
-        lender: Joi.objectId().default(user.lender),
-        name: Joi.object({
-          first: Joi.string().label('First name').min(1).max(30).messages({
-            'string.min': '{#label} is too short',
-            'string.max': '{#label} is too long'
-          }).required(),
-          last: Joi.string().label('Last name').min(3).max(30).messages({
-            'string.min': '{#label} is too short',
-            'string.max': '{#label} is too long'
-          }).required(),
-          middle: Joi.string().label('Middle name').min(1).max(30).messages({
-            'string.min': '{#label} is too short',
-            'string.max': '{#label} is too long'
-          })
-        }),
-        gender: genderSchema.required(),
-        birthDate: birthDateSchema.required(),
-        residentialAddress: Joi.object({
-          address: Joi.string().min(9).max(70).required().messages({
-            'string.min': 'Address is too short.',
-            'string.max': 'Address is too long.'
-          }),
-          state: Joi.string().required().messages({
-            'any.required': 'Employer state is required'
-          }),
-          stateCode: Joi.string().length(2).required().messages({
-            'any.required': 'State code is required'
-          }),
-          lga: Joi.string().required().messages({
-            'any.required': 'L.G.A is required'
-          }),
-          geo: Joi.string().required().messages({
-            'any.required': 'Geo-political zone is required'
-          })
-        }),
-        phone: phoneSchema.required(),
-        email: emailSchema.required(),
-        maritalStatus: maritalStatusSchema.required(),
-        bvn: bvnSchema.required(),
-        ippis: ippisSchema.required(),
-        idType: idTypeSchema.required(),
-        idNo: idNoSchema.required(),
-        employer: Joi.object({
-          name: Joi.string().min(2).max(70).required().messages({
-            'string.min': 'Employer name is not valid.',
-            'string.max': 'Employer name is too long.',
-            'any.required': 'Employer name is required'
-          }),
-          command: Joi.string().min(3).max(50).messages({
-            'string.min': 'Command is not valid.',
-            'string.max': 'Command is too long.',
-            'any.required': 'Command is required'
-          }),
-          segment: Joi.string().required().messages({
-            'any.required': 'Segment is required'
-          }),
-          location: Joi.object({
-            address: Joi
-              .string()
-              .min(5)
-              .max(100)
-              .required()
-              .messages({
-                'string.min': 'Address is too short.',
-                'string.max': 'Address is too long.',
-                'any.required': 'Employer address is required'
-              }),
-            state: Joi.string().required().messages({
-              'any.required': 'Employer state is required'
-            }),
-            lga: Joi.string().required().messages({
-              'any.required': 'Employer L.G.A is required'
-            })
-          }),
-          hireDate: Joi
-            .date()
-            .min(
-              Joi.ref('...birthDate', {
-                adjust: (value) => {
-                  try {
-                    value.setFullYear(value.getFullYear() + 18)
-                    return value
-                  } catch (err) {
-                    return '1900-01-01'
-                  }
-                }
-              })
-            )
-            .required()
-            .messages({
-              'date.min': 'Hire date is not valid',
-              'any.required': 'Hire date is required'
-            })
-        }),
-        nok: Joi.object({
-          fullName: Joi.string().min(10).max(70).required().messages({
-            'string.min': 'Next of kin name is too short.',
-            'string.max': 'Next of kin name is too long.',
-            'any.required': 'Full name of next of kin is required'
-          }),
-          location: Joi.object({
-            address: Joi
-              .string()
-              .min(9)
-              .max(100)
-              .required()
-              .messages({
-                'string.min':
-                                    'Next of kin address is too short.',
-                'string.max':
-                                    'Next of kin address is too long.',
-                'any.required':
-                                    'Next of kin address is required'
-              }),
-            state: Joi.string().required().messages({
-              'any.required': 'Next of kin state is required'
-            }),
-            lga: Joi.string().required().messages({
-              'any.required': 'Next of kin L.G.A is required'
-            })
-          }),
-          phone: Joi
-            .string()
-            .pattern(/^\+?([0-9]){3}([7-9])([0,1])[0-9]{8}$/)
-            .required()
-            .messages({
-              'string.pattern.base':
-                                'Invalid next of kin phone number, please include international dialling code',
-              'any.required':
-                                'Next of kin phone number is required'
-            }),
-          relationship: Joi.string().required().messages({
-            'any.required':
-                            'Relationship to next of kin is required'
-          })
-        }),
-        accountName: accountNameSchema.required(),
-        accountNo: accountNoSchema.required(),
-        bank: Joi.object({
-          name: Joi.string().required().messages({
-            'any.required': 'Bank name is required'
-          }),
-          code: Joi.string().required().messages({
-            'any.required': 'Bank code is required'
-          })
-        }),
-        netPay: netPaySchema.required()
-      })
-    )
-
-    return schema.validate(customer, { abortEarly: false })
-  },
-
-  validateUpdateCustomer: function (customer) {
-    const schema = Joi
-      .object({
-        name: nameSchema,
-        gender: genderSchema,
-        birthDate: birthDateSchema,
-        residentialAddress: Joi.object({
-          address: Joi.string().min(9).max(70).messages({
-            'string.min': 'Address is too short.',
-            'string.max': 'Address is too long.'
-          }),
-          state: Joi.string(),
-          stateCode: Joi.string().length(2),
-          lga: Joi.string(),
-          geo: Joi.string()
-        }),
-        phone: phoneSchema,
-        email: emailSchema,
-        maritalStatus: maritalStatusSchema,
-        bvn: bvnSchema,
-        ippis: ippisSchema,
-        idType: idTypeSchema,
-        idNo: idNoSchema,
-        employer: employerSchema,
-        nok: nokSchema,
-        accountName: accountNameSchema,
-        accountNo: accountNoSchema,
-        bank: bankSchema
-      })
-      .min(1)
-      .messages({ 'object.min': 'No changes detected' })
-
-    return schema.validate(customer)
+    return { value, error }
   }
 }
 
-export default validators
+export default new CustomerValidation()

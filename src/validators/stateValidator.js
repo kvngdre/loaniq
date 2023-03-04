@@ -36,7 +36,7 @@ class StateValidator extends BaseValidator {
       geo: this.#regionSchema.required()
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
@@ -50,7 +50,7 @@ class StateValidator extends BaseValidator {
       geo: this.#regionSchema
     })
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
