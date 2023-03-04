@@ -237,7 +237,12 @@ class UserService {
   }
 
   static async uploadImage ({ id, tenantId }, uploadFile) {
-    const foundUser = await UserDAO.findById(id)
+    const foundUser = await UserDAO.findById(id, {
+      password: 0,
+      resetPwd: 0,
+      refreshTokens: 0,
+      otp: 0
+    })
     const folderName = `t-${tenantId.toString()}`
 
     const [foundFolder] = await driverUploader.findFolder(folderName)
@@ -246,6 +251,8 @@ class UserService {
     const folderId = foundFolder?.id
       ? foundFolder.id
       : await driverUploader.createFolder(folderName)
+
+    // const newFolderId = await driverUploader.createFolder('users', folderId)
 
     const name = uploadFile.originalname
     const filePath = path.resolve(__dirname, `../../${uploadFile.path}`)

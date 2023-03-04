@@ -28,7 +28,7 @@ class DriveUploader {
       parents: ['1e3EHHWZ5gKVQFpo3DQlOVL5-9ysLe-C-']
     }
 
-    const file = await driveService.files.create({
+    const file = driveService.files.create({
       resource: fileMetadata,
       fields: 'id'
     })
