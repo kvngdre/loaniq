@@ -34,6 +34,6 @@ router.patch('/:tenantId', [validateId], TenantController.updateTenant)
 
 router.delete('/:tenantId', [validateId], TenantController.deleteTenant)
 
-router.post('/uploads', [auth, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'avatar', maxCount: 1 }])], TenantController.uploadFiles)
+router.post('/uploads', [auth, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cred', maxCount: 5 }])], TenantController.uploadFiles)
 
 export default router

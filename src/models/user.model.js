@@ -20,6 +20,11 @@ const userSchema = new Schema(
       required: true
     },
 
+    avatar: {
+      type: String,
+      default: null
+    },
+
     first_name: {
       type: String,
       trim: true,

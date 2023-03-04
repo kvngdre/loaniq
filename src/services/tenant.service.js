@@ -227,7 +227,7 @@ class TenantService {
       fs.unlinkSync(filePath)
     }
 
-    await foundTenant.save({})
+    await foundTenant.save()
     return foundTenant
   }
 }

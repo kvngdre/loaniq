@@ -95,9 +95,10 @@ class UserController extends BaseController {
   }
 
   static uploadFiles = async (req, res) => {
-    console.log(req.files)
+    const user = await UserService.uploadImage(req.currentUser, req.file)
+    const response = this.apiResponse('File uploaded.', user)
 
-    res.status(httpCodes.OK).json({ files: req.files })
+    res.status(httpCodes.OK).json(response)
   }
 }
 

@@ -2,9 +2,12 @@
 import { constants } from '../config'
 import { genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
+import driverUploader from '../utils/driveUploader'
 import events from '../pubsub/events'
+import fs from 'fs'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
+import path from 'path'
 import pubsub from '../pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
@@ -230,6 +233,40 @@ class UserService {
     delete foundUser._doc.refreshTokens
     delete foundUser._doc.resetPwd
 
+    return foundUser
+  }
+
+  static async uploadImage ({ id, tenantId }, uploadFile) {
+    const foundUser = await UserDAO.findById(id)
+    const folderName = `t-${tenantId.toString()}`
+
+    const [foundFolder] = await driverUploader.findFolder(folderName)
+
+    // Selecting folder
+    const folderId = foundFolder?.id
+      ? foundFolder.id
+      : await driverUploader.createFolder(folderName)
+
+    const name = uploadFile.originalname
+    const filePath = path.resolve(__dirname, `../../${uploadFile.path}`)
+    const mimeType = uploadFile.mimetype
+
+    const response = await driverUploader.createFile(
+      name,
+      filePath,
+      folderId,
+      mimeType
+    )
+    logger.debug(response.data.id)
+
+    foundUser.set({
+      avatar: response.data.id
+    })
+
+    // ! Delete uploaded file from file system
+    fs.unlinkSync(filePath)
+
+    await foundUser.save()
     return foundUser
   }
 }
