@@ -1,24 +1,29 @@
 import { Schema, model } from 'mongoose'
 import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
 import { loanStatus, loanRemarks } from '../utils/constants'
-import ServerError from '../errors/serverError'
-const logger = require('../utils/logger')
+import logger from '../utils/logger'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
 const loanSchema = new Schema(
   {
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      required: true
+    },
+
     amount: {
       type: Number,
       required: true
     },
 
-    recommendedAmount: {
+    proposed_amount: {
       type: Number,
       default: (self = this) => self.amount
     },
 
-    amountInWords: {
+    amount_in_words: {
       type: String,
       trim: true,
       lowercase: true,
@@ -30,21 +35,20 @@ const loanSchema = new Schema(
       required: true
     },
 
-    recommendedTenor: {
+    proposed_tenor: {
       type: Number,
       default: (self = this) => self.tenor
     },
 
-    loanType: {
-      type: String,
-      enum: ['New', 'Top Up'],
-      default: 'New'
+    isTopUp: {
+      type: Boolean,
+      default: false
     },
 
     status: {
       type: String,
       enum: Object.values(loanStatus),
-      default: loanStatus.pending
+      default: loanStatus.PENDING
     },
 
     remark: {
@@ -52,34 +56,22 @@ const loanSchema = new Schema(
       enum: loanRemarks
     },
 
-    upfrontFee: {
-      type: Number
-    },
+    upfront_fee: Number,
 
-    netValue: {
-      type: Number,
-      default: null
-    },
+    net_value: Number,
 
-    repayment: {
-      type: Number
-    },
+    repayment: Number,
 
-    totalRepayment: {
-      type: Number
-    },
+    total_repayment: Number,
 
-    dti: {
-      type: Number,
-      default: null
-    },
+    dti: Number,
 
     customer: {
       type: Schema.Types.ObjectId,
       required: true
     },
 
-    creditUser: {
+    analyst: {
       type: Schema.Types.ObjectId,
       required: true
     },
@@ -94,34 +86,30 @@ const loanSchema = new Schema(
       default: false
     },
 
+    income: {
+      type: Number,
+      required: true
+    },
+
     params: {
-      interestRate: {
+      interest_rate: {
         type: Number,
         required: true
       },
 
-      upfrontFeePercent: {
-        type: Number,
-        require: true
+      fees: {
+        type: [Schema.Types.Mixed],
+        default: null
       },
 
-      transferFee: {
-        type: Number,
-        required: true
-      },
-
-      maxDti: {
+      max_dti: {
         type: Number,
         required: true
       },
 
-      minNetPay: {
+      min_income: {
         type: Number,
         required: true
-      },
-
-      netPay: {
-        type: Number
       },
 
       age: {
@@ -129,7 +117,7 @@ const loanSchema = new Schema(
         default: null
       },
 
-      serviceLen: {
+      tenure: {
         type: Number,
         default: null
       }
@@ -140,13 +128,13 @@ const loanSchema = new Schema(
       default: null
     },
 
-    dateLiquidated: {
+    date_liquidated: {
       type: Date,
       default: null
     },
 
-    maturityDate: {
-      type: String,
+    maturity_date: {
+      type: Date,
       default: null
     },
 
@@ -209,13 +197,17 @@ loanSchema.pre('save', function (next) {
 
     next()
   } catch (exception) {
-    logger.error({
-      method: 'loan_pre_save',
-      message: exception.message,
-      meta: exception.meta
-    })
-    next(new ServerError(500, 'Something went wrong'))
+    logger.error(exception.message, exception.meta)
+    next(new Error(500, 'Something went wrong'))
   }
+})
+
+loanSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Loans not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Loan not found.')
 })
 
 const Loan = model('Loan', loanSchema)

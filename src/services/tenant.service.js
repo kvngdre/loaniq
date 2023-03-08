@@ -1,9 +1,7 @@
 /* eslint-disable camelcase */
-import { constants } from '../config'
 import { genRandomStr } from '../helpers'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError'
-import CryptoJS from 'crypto-js'
 import driverUploader from '../utils/driveUploader'
 import events from '../pubsub/events'
 import fs from 'fs'
@@ -107,9 +105,9 @@ class TenantService {
     return foundTenant
   }
 
-  static async deactivateTenant ({ id, tenantId }, { otp }) {
+  static async deactivateTenant ({ _id, tenantId }, { otp }) {
     const foundTenant = await TenantDAO.findById(tenantId)
-    const foundOwner = await UserService.getUserById(id, {})
+    const foundOwner = await UserService.getUserById(_id, {})
 
     validateOTP(foundOwner, otp)
     function validateOTP (owner, otp) {
@@ -170,23 +168,14 @@ class TenantService {
     }
   }
 
-  static async getPublicFormData (formId) {
+  static async getFormData (formId) {
     const foundTConfig = await tenantConfigService.getConfig({ formId })
     const foundTenant = await TenantDAO.findById(foundTConfig.tenantId)
-    const token = foundTenant.generateFormToken()
 
     const { logo, company_name } = foundTenant
     const { form_data, socials, support } = foundTConfig
 
-    const hash = CryptoJS.AES.encrypt(
-      JSON.stringify({ token }),
-      constants.api.encrypt_key
-    )
-
-    return [
-      { ...form_data, logo, company_name, socials, support },
-      hash.toString()
-    ]
+    return { ...form_data, logo, company_name, socials, support }
   }
 
   static async uploadDocs (tenantId, uploadFiles) {

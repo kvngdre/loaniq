@@ -37,6 +37,12 @@ class CustomerDAO extends BaseDAO {
     return foundRecord
   }
 
+  static async findOne (filter, projection = {}) {
+    const foundRecord = await Customer.findOne(filter).select(projection)
+
+    return foundRecord
+  }
+
   static async update (id, dto, projection = {}) {
     try {
       const foundRecord = await Customer.findById(id).select(projection)

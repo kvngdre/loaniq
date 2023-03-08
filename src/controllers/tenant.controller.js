@@ -60,7 +60,7 @@ class TenantController extends BaseController {
 
   static activateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateActivate(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     await TenantService.activateTenant(req.params.tenantId, value)
     const response = this.apiResponse('Tenant activated')
@@ -70,7 +70,7 @@ class TenantController extends BaseController {
 
   static deactivateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateDeactivate(req.query)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     await TenantService.deactivateTenant(req.currentUser, value)
     const response = this.apiResponse('Tenant deactivated')
@@ -93,10 +93,8 @@ class TenantController extends BaseController {
   }
 
   static getPublicFormData = async (req, res) => {
-    const [formData, hash] = await TenantService.getPublicFormData(req.params.formId)
-
+    const formData = await TenantService.getFormData(req.params.formId)
     const response = this.apiResponse('Fetched tenant public form data.', formData)
-    res.set('hash', hash)
 
     res.status(httpCodes.OK).json(response)
   }

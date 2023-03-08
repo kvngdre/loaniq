@@ -6,7 +6,10 @@ import ValidationError from '../errors/ValidationError'
 
 class TenantConfigController extends BaseController {
   static createConfig = async (req, res) => {
-    const { value, error } = tenantConfigValidator.validateCreate(req.body)
+    const { value, error } = tenantConfigValidator.validateCreate(
+      req.body,
+      req.currentUser.tenantId
+    )
     if (error) throw new ValidationError(null, error)
 
     const newConfiguration = await tenantConfigService.createConfig(value)
@@ -28,9 +31,7 @@ class TenantConfigController extends BaseController {
   }
 
   static getConfig = async (req, res) => {
-    const { tenantId } = req.params
-    const tenantConfig = await tenantConfigService.getConfig({ tenantId })
-
+    const tenantConfig = await tenantConfigService.getConfig(req.params.tenantId)
     const response = this.apiResponse(
       'Fetched tenant configuration.',
       tenantConfig
@@ -40,14 +41,13 @@ class TenantConfigController extends BaseController {
   }
 
   static updateConfig = async (req, res) => {
-    const { tenantId } = req.params
-    const { value, error } = tenantConfigValidator.validateUpdate(
-      req.body,
-      { tenantId }
-    )
+    const { value, error } = tenantConfigValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
-    const tenantConfig = await tenantConfigService.updateConfig(tenantId, value)
+    const tenantConfig = await tenantConfigService.updateConfig(
+      req.params.tenantId,
+      value
+    )
     const response = this.apiResponse(
       'Tenant configuration updated.',
       tenantConfig
@@ -57,8 +57,7 @@ class TenantConfigController extends BaseController {
   }
 
   static deleteConfig = async (req, res) => {
-    const { tenantId } = req.params
-    await tenantConfigService.deleteConfig({ tenantId })
+    await tenantConfigService.deleteConfig(req.params.tenantId)
     const response = this.apiResponse('Tenant configuration deleted.')
 
     res.status(httpCodes.OK).json(response)

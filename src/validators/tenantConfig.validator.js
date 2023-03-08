@@ -47,9 +47,9 @@ class TenantConfigValidator extends BaseValidator {
     }).min(1)
   }
 
-  validateCreate = (dto) => {
+  validateCreate = (dto, tenantId) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id').required(),
+      tenantId: this._objectIdSchema.label('Tenant id').default(tenantId).forbidden(),
       default_params: Joi.object()
         .keys({
           min_loan_amount: this._amountSchema
@@ -75,7 +75,7 @@ class TenantConfigValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateUpdate = (dto, tenantId) => {
+  validateUpdate = (dto) => {
     const schema = Joi.object({
       default_params: Joi.object({
         min_loan_amount: this._amountSchema.label('Minimum loan amount'),

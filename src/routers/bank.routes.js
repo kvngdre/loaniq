@@ -1,6 +1,6 @@
 import auth from '../middleware/auth'
 import BankController from '../controllers/bank.controller'
-import Router from 'express'
+import { Router } from 'express'
 import validateObjectId from '../middleware/validateId'
 
 const router = Router()

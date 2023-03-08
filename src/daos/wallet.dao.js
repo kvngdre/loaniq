@@ -31,6 +31,12 @@ class WalletDAO extends BaseDAO {
     return foundRecords
   }
 
+  static async findById (id, projection = {}) {
+    const foundRecord = await Wallet.findById(id).select(projection)
+
+    return foundRecord
+  }
+
   static async findOne (filter, projection = {}) {
     const foundRecord = await Wallet.findOne(filter).select(projection)
 
@@ -62,7 +68,6 @@ class WalletDAO extends BaseDAO {
 
   static async remove (filter) {
     const foundRecord = await Wallet.findOneAndDelete(filter)
-
     return foundRecord
   }
 }

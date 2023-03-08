@@ -1,6 +1,6 @@
 import auth from '../middleware/auth'
 import CustomerController from '../controllers/customer.controller'
-import Router from 'express'
+import { Router } from 'express'
 import upload from '../middleware/fileUploader'
 import validateId from '../middleware/validateId'
 

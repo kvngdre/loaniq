@@ -1,34 +1,34 @@
-import authRoutes from './auth.routes'
-import bankRoutes from './bank.routes'
-import customerRoutes from './customer.routes'
-import dashboardRoutes from './dashboard.routes'
-import loanRoutes from './loan.routes'
-import reviewRoutes from './review.routes.js'
-import segmentRoutes from './segment.routes'
-import stateRoutes from './state.routes'
-import tenantRoutes from './tenant.routes'
+import authRouter from './auth.routes'
+import bankRouter from './bank.routes'
+import customerRouter from './customer.routes'
+import dashboardRouter from './dashboard.routes'
+import loanRouter from './loan.routes'
+import reviewRouter from './review.routes.js'
+import segmentRouter from './segment.routes'
+import stateRouter from './state.routes'
+import baseTenantRouter from './base.tenant.routes'
 import testRoutes from './test.routes'
-import transactionRoutes from './transaction.routes'
-import userRoutes from './user.routes'
-import webhookRoutes from './webhook.routes'
-import Router from 'express'
+import transactionRouter from './transaction.routes'
+// import userRoutes from './user.routes'
+import webhookRouter from './webhook.routes'
+import { Router } from 'express'
 
 const router = Router()
 
 export default () => {
-  router.use('/auth', authRoutes)
-  router.use('/banks', bankRoutes)
-  router.use('/customers', customerRoutes)
-  router.use('/dashboard', dashboardRoutes)
-  router.use('/loans', loanRoutes)
-  router.use('/reviews', reviewRoutes)
-  router.use('/segments', segmentRoutes)
-  router.use('/states', stateRoutes)
-  router.use('/tenants', tenantRoutes)
+  router.use('/auth', authRouter)
+  router.use('/banks', bankRouter)
+  router.use('/customers', customerRouter)
+  router.use('/dashboard', dashboardRouter)
+  router.use('/loans', loanRouter)
+  router.use('/reviews', reviewRouter)
+  router.use('/segments', segmentRouter)
+  router.use('/states', stateRouter)
+  router.use('/tenants', baseTenantRouter)
   router.use('/test', testRoutes)
-  router.use('/transactions', transactionRoutes)
-  router.use('/users', userRoutes)
-  router.use('/webhooks', webhookRoutes)
+  router.use('/transactions', transactionRouter)
+  // router.use('/users', userRoutes)
+  router.use('/webhooks', webhookRouter)
 
   return router
 }

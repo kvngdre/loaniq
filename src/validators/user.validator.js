@@ -1,4 +1,4 @@
-import { userRoles, getUserRoleKeys } from '../utils/userRoles'
+import { roles } from '../utils/constants'
 import BaseValidator from './base.validator'
 import Joi from 'joi'
 
@@ -17,24 +17,14 @@ class UserValidator extends BaseValidator {
 
     this.#displayNameSchema = Joi.string().label('Display name').max(255)
 
-    this.#segmentsSchema = Joi.alternatives()
-      .try(
-        Joi.array()
-          .items(this._objectIdSchema)
-          .min(1)
-          .messages({ 'array.min': '{#label} array cannot be empty' }),
-        Joi.string().valid('ALL')
-      )
+    this.#segmentsSchema = Joi.array()
+      .items(this._objectIdSchema)
+      .min(1)
+      .messages({ 'array.min': '{#label} array cannot be empty' })
       .label('Segments')
-      .messages({
-        'alternatives.types':
-          "{#label} must be an array of object ids or string 'ALL'"
-      })
   }
 
   validateCreate = (dto, tenantId) => {
-    const invalidRoles = getUserRoleKeys(userRoles.OWNER)
-
     const schema = Joi.object({
       tenantId: this._objectIdSchema.label('Tenant id').default(tenantId),
       first_name: this._nameSchema.extract('first').required(),
@@ -48,8 +38,12 @@ class UserValidator extends BaseValidator {
       }),
       phone_number: this._phoneNumberSchema.required(),
       email: this._emailSchema.required(),
-      role: this._roleSchema.invalid(...invalidRoles).required()
-      // segments: this.#segmentsSchema.required()
+      role: this._roleSchema.invalid(roles.DIRECTOR).required(),
+      segments: this.#segmentsSchema.when('role', {
+        is: roles.AGENT,
+        then: Joi.required(),
+        otherwise: Joi.forbidden()
+      })
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -59,8 +53,6 @@ class UserValidator extends BaseValidator {
   }
 
   validateUpdate = (dto) => {
-    const invalidRoles = getUserRoleKeys(userRoles.OWNER)
-
     const schema = Joi.object({
       first_name: this._nameSchema.extract('first'),
       last_name: this._nameSchema.extract('last'),
@@ -69,8 +61,12 @@ class UserValidator extends BaseValidator {
       gender: this._genderSchema,
       dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema,
-      role: this._roleSchema.invalid(...invalidRoles)
-      // segments: this.#segmentsSchema
+      role: this._roleSchema.invalid(roles.DIRECTOR),
+      segments: this.#segmentsSchema.when('role', {
+        is: roles.AGENT,
+        then: Joi.optional(),
+        otherwise: Joi.forbidden()
+      })
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false })

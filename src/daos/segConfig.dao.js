@@ -37,6 +37,12 @@ class SegConfigDAO extends BaseDAO {
     return foundRecord
   }
 
+  static async findOne (filter, projection = {}) {
+    const foundRecord = await SegConfig.findOne(filter).select(projection)
+
+    return foundRecord
+  }
+
   static async update (id, dto, projection = {}) {
     try {
       const foundRecord = await SegConfig.findById(id).select(projection)

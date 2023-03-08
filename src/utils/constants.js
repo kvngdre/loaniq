@@ -1,10 +1,14 @@
+export const companyCategory = ['mfb', 'finance house', 'money lender']
+
+export const feeTypes = { percent: 'percent', decimal: 'decimal' }
+
 export const geoZones = [
-  'North Central',
-  'North East',
-  'North West',
-  'South East',
-  'South South',
-  'South West'
+  'north central',
+  'north east',
+  'north west',
+  'south east',
+  'south south',
+  'south west'
 ]
 
 export const httpCodes = {
@@ -19,16 +23,6 @@ export const httpCodes = {
   CONFLICT: 409,
   DEPENDENCY: 424,
   INTERNAL_SERVER: 500
-}
-
-export const loanStatus = {
-  APPROVED: 'approved',
-  DENIED: 'denied',
-  DISCONTINUED: 'discontinued',
-  LIQUIDATED: 'liquidated',
-  MATURED: 'matured',
-  NEW: 'new',
-  PENDING: 'pending'
 }
 
 export const loanRemarks = [
@@ -56,27 +50,54 @@ export const loanRemarks = [
   'Ok for disbursement'
 ]
 
+export const loanStatus = {
+  APPROVED: 'approved',
+  DENIED: 'denied',
+  DISCONTINUED: 'discontinued',
+  LIQUIDATED: 'liquidated',
+  MATURED: 'matured',
+  NEW: 'new',
+  PENDING: 'pending'
+}
+
 export const maritalStatus = [
-  'Single',
-  'Married',
-  'Divorced',
-  'Separated',
-  'Widow',
-  'Widower'
+  'single',
+  'married',
+  'divorced',
+  'separated',
+  'widow',
+  'widower'
 ]
 
 export const relationships = [
-  'Daughter',
-  'Brother',
-  'Cousin',
-  'Father',
-  'Mother',
-  'Nephew',
-  'Sister',
-  'Spouse',
-  'Niece',
-  'Son'
+  'daughter',
+  'brother',
+  'cousin',
+  'father',
+  'mother',
+  'nephew',
+  'sister',
+  'spouse',
+  'niece',
+  'son'
 ]
+
+export const socials = [
+  'website',
+  'facebook',
+  'twitter',
+  'instagram',
+  'youtube',
+  'linkedin',
+  'tictok'
+]
+
+export const txnPurposes = {
+  DEPOSIT: 'deposit',
+  TRANSFER: 'transfer',
+  WITHDRAW: 'withdrawal',
+  LOAN: 'loan application'
+}
 
 export const txnStatus = {
   ABANDONED: 'abandoned',
@@ -90,42 +111,10 @@ export const txnTypes = {
   DEBIT: 'debit'
 }
 
-export const txnPurposes = {
-  DEPOSIT: 'deposit',
-  TRANSFER: 'transfer',
-  WITHDRAW: 'withdrawal',
-  LOAN: 'loan application'
-}
-
 export const validIds = [
-  'Voters Card',
-  'International Passport',
-  'Staff ID Card',
-  'National ID card',
-  "Driver's License"
+  'voters card',
+  'international passport',
+  'staff id card',
+  'national id card',
+  'drivers license'
 ]
-
-export const companyCategory = ['MFB', 'Finance House', 'Money Lender']
-
-export const socials = [
-  'website',
-  'facebook',
-  'twitter',
-  'instagram',
-  'youtube',
-  'linkedin',
-  'tictok'
-]
-
-export const userRoles = {
-  ADMIN: 'E4',
-  AGENT: 'Y5',
-  ANALYST: 'R3',
-  MASTER: 'Z0',
-  OPERATIONS: 'T6',
-  OWNER: 'W1',
-  S_ADMIN: 'Q2',
-  SUPPORT: 'U8'
-}
-
-export const feeTypes = { percent: 'percent', decimal: 'decimal' }

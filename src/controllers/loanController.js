@@ -8,7 +8,7 @@ import Loan, {
   findOne as _findOne,
   aggregate,
   findById as __findById
-} from '../models/loanModel'
+} from '../models/loan.model'
 import LoanValidator from '../validators/loanValidator'
 import { startSession, isValidObjectId } from 'mongoose'
 import PendingEdit from '../models/review.model'

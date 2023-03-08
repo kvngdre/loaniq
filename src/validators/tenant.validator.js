@@ -57,7 +57,8 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       logo: Joi.string(),
       company_name: this.#companyNameSchema,
-      location: this._locationSchema,
+      address: this._locationSchema.extract('address'),
+      state: this._locationSchema.extract('state'),
       cac_number: this.#cacNumberSchema,
       category: this.#categorySchema,
       email: this._emailSchema,
@@ -72,14 +73,9 @@ class TenantValidator extends BaseValidator {
 
   validateActivate = (dto) => {
     const schema = Joi.object({
-      location: Joi.object()
-        .keys({
-          address: this._locationSchema.extract('address').required(),
-          lga: this._locationSchema.extract('lga').required(),
-          state: this._locationSchema.extract('state').required()
-        })
-        .required(),
-      cac_number: this.#cacNumberSchema.required()
+      cac_number: this.#cacNumberSchema.required(),
+      address: this._locationSchema.extract('address').required(),
+      state: this._locationSchema.extract('state').required()
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })

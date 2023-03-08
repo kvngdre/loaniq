@@ -1,39 +1,36 @@
-import auth from '../middleware/auth'
-import Router from 'express'
+import { roles } from '../config'
+import { Router } from 'express'
+import grantAccess from '../middleware/grantAccess'
 import tenantConfigRoutes from './tenantConfig.routes'
 import TenantController from '../controllers/tenant.controller'
 import upload from '../middleware/fileUploader'
-import validateId from '../middleware/validateId'
+import userRoutes from './user.routes'
 import walletRoutes from './wallet.routes'
 
-const router = Router()
+const { SUPER_ADMIN, DIRECTOR } = roles
 
-router.use('/configurations', [auth], tenantConfigRoutes)
+const router = Router({ mergeParams: true })
 
-router.use('/wallets', [auth], walletRoutes)
+router.get('/', [grantAccess(SUPER_ADMIN, DIRECTOR)], TenantController.getTenant)
 
-router.post('/sign_up', TenantController.signUp)
+router.patch('/', [grantAccess(SUPER_ADMIN, DIRECTOR)], TenantController.updateTenant)
 
-router.post('/:tenantId/activate', [validateId], TenantController.activateTenant)
+router.delete('/', [grantAccess(SUPER_ADMIN)], TenantController.deleteTenant)
 
-router.get('/', TenantController.getTenants)
+router.post('/activate', [grantAccess(DIRECTOR)], TenantController.activateTenant)
 
-router.get('/deactivate', [auth, validateId], TenantController.deactivateTenant)
+router.use('/configurations', tenantConfigRoutes)
 
-router.get('/forms/:formId', TenantController.getPublicFormData)
+router.get('/deactivate', [grantAccess(DIRECTOR)], TenantController.deactivateTenant)
 
-router.get('/self', TenantController.getCurrentTenant)
+router.get('/public_url', [grantAccess(DIRECTOR)], TenantController.generatePublicUrl)
 
-router.get('/:tenantId/public_url', [validateId], TenantController.generatePublicUrl)
+router.get('/reactivate', [grantAccess(SUPER_ADMIN)], TenantController.reactivateTenant)
 
-router.get('/:tenantId/reactivate', [validateId], TenantController.reactivateTenant)
+router.post('/uploads', [grantAccess(DIRECTOR), upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'documents', maxCount: 5 }])], TenantController.uploadFiles)
 
-router.get('/:tenantId', [validateId], TenantController.getTenants)
+router.use('/users', userRoutes)
 
-router.patch('/:tenantId', [validateId], TenantController.updateTenant)
-
-router.delete('/:tenantId', [validateId], TenantController.deleteTenant)
-
-router.post('/uploads', [auth, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cred', maxCount: 5 }])], TenantController.uploadFiles)
+router.use('/wallet', walletRoutes)
 
 export default router

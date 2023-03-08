@@ -1,11 +1,13 @@
 import { Schema, model } from 'mongoose'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { strict: false, timestamps: true, versionKey: false }
 
 const reviewSchema = new Schema(
   {
-    lender: {
-      type: String,
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Tenant',
       required: true
     },
 
@@ -16,7 +18,7 @@ const reviewSchema = new Schema(
 
     type: {
       type: String,
-      enum: ['Customer', 'Loan'],
+      enum: ['customer', 'loan'],
       required: true
     },
 
@@ -32,18 +34,32 @@ const reviewSchema = new Schema(
       default: null
     },
 
+    alteration: {
+      type: Schema.Types.Mixed
+    },
+
     createdBy: {
       type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
 
     modifiedBy: {
       type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     }
   },
   schemaOptions
 )
+
+reviewSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Reviews not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Review not found.')
+})
 
 const Review = model('Review', reviewSchema)
 

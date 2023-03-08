@@ -204,6 +204,11 @@ const customerSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Bank',
       required: true
+    },
+
+    agent: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
     }
   },
   schemaOptions

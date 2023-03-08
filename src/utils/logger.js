@@ -48,14 +48,15 @@ class Logger {
     })
 
     const prodTransport = new transports.File({
-      format: prodFormatter,
+      level: 'error',
       filename: 'src/logs/error.log',
+      format: prodFormatter,
       handleExceptions: true,
       json: true
     })
 
     this.logger = createLogger({
-      level: isDevEnvironment() ? 'silly' : 'warn',
+      level: isDevEnvironment() ? 'silly' : 'error',
       levels: custom.levels,
       transports: [isDevEnvironment() ? devTransport : prodTransport]
     })

@@ -1,5 +1,5 @@
 import { handleRefreshToken } from '../controllers/refreshToken.controller'
-import Router from 'express'
+import { Router } from 'express'
 
 const router = Router()
 

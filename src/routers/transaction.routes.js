@@ -1,5 +1,5 @@
 import auth from '../middleware/auth'
-import Router from 'express'
+import { Router } from 'express'
 import TransactionController from '../controllers/transaction.controller'
 
 const router = Router()

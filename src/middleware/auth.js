@@ -1,10 +1,11 @@
 import { constants } from '../config'
+import { httpCodes } from '../utils/constants'
 import BaseError from '../errors/BaseError'
-import ForbiddenError from '../errors/ForbiddenError'
+import ErrorResponse from '../utils/ErrorResponse'
 import jwt from 'jsonwebtoken'
-import UnauthorizedError from '../errors/UnauthorizedError'
+import UserService from '../services/user.service'
 
-export default function auth (req, res, next) {
+export default async function auth (req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form
@@ -12,29 +13,46 @@ export default function auth (req, res, next) {
      *
      */
     function getTokenFromHeader (req) {
-      if (
-        req.headers?.authorization?.split(' ')[0] === 'Bearer' ||
-        req.headers?.authorization?.split(' ')[0] === 'Token'
-      ) {
+      if (req.headers?.authorization?.split(' ')[0] === 'Bearer') {
         return req.headers.authorization.split(' ')[1]
       }
 
-      throw new UnauthorizedError('No token provided.')
+      return res.status(httpCodes.UNAUTHORIZED).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message: 'Invalid token provided.'
+        })
+      )
     }
 
     const token = getTokenFromHeader(req)
     const decoded = jwt.verify(token, constants.jwt.secret.access)
 
+    // Checking if token claims are valid.
     if (
       decoded.iss !== constants.jwt.issuer ||
       decoded.aud !== constants.jwt.audience
     ) {
-      throw new UnauthorizedError('Invalid token provided.')
+      return res.status(httpCodes.UNAUTHORIZED).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message: 'Invalid token provided.'
+        })
+      )
     }
 
-    if (!decoded.active) throw new ForbiddenError('Account deactivated. Contact administrator.')
+    // Checking if user is inactive.
+    const foundUser = await UserService.getUserById(decoded.id)
+    if (!foundUser.active) {
+      return res.status(httpCodes.FORBIDDEN).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message: 'Account deactivated. Contact administrator.'
+        })
+      )
+    }
 
-    req.currentUser = decoded
+    req.currentUser = foundUser._doc
 
     next()
   } catch (exception) {
@@ -42,6 +60,11 @@ export default function auth (req, res, next) {
       throw exception
     }
 
-    throw new ForbiddenError(exception.message)
+    res.status(httpCodes.FORBIDDEN).json(
+      new ErrorResponse({
+        name: 'Auth Error',
+        message: exception.message
+      })
+    )
   }
 }

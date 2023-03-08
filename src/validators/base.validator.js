@@ -1,6 +1,6 @@
 import { joiPassword } from 'joi-password'
-import { userRoles } from '../utils/userRoles'
 import { feeTypes, maritalStatus } from '../utils/constants'
+import { roles } from '../config'
 import Joi from 'joi'
 
 class BaseValidator {
@@ -38,7 +38,9 @@ class BaseValidator {
   }
 
   _objectIdSchema = Joi.alternatives(
-    Joi.string().regex(/^[0-9a-fA-F]{24}$/).messages({ 'string.pattern.base': 'Invalid object id' }),
+    Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .messages({ 'string.pattern.base': 'Invalid object id' }),
     Joi.object().keys({
       id: Joi.any(),
       _bsontype: Joi.allow('ObjectId')
@@ -145,26 +147,16 @@ class BaseValidator {
 
   _roleSchema = Joi.string()
     .label('Role')
-    .uppercase()
-    .valid(...Object.keys(userRoles))
+    .valid(...Object.values(roles))
     .messages({
       'any.only': '{#label} is not valid',
       'any.invalid': "{#label} '{#value}', cannot be assigned to this user"
     })
 
   _locationSchema = Joi.object({
-    address: Joi.string().trim().label('Address').invalid('').messages({
-      'any.invalid': '{#label} is required'
-    }),
-    lga: Joi.string().trim().label('LGA').invalid('').messages({
-      'any.invalid': '{#label} is required'
-    }),
-    state: Joi.string().trim().label('State').invalid('').messages({
-      'any.invalid': '{#label} is required'
-    })
+    address: Joi.string().trim().label('Address').invalid(''),
+    state: this._objectIdSchema.label('State')
   })
-    .min(1)
-    .label('Location')
 
   _activeSchema = Joi.boolean().label('Active').messages({
     'any.invalid': 'Must be a boolean value'

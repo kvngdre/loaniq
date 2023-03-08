@@ -24,7 +24,13 @@ const getStorageOpts = (req, file) => {
     case 'avatar':
       return [
         './src/uploads/users/avatars',
-        `${Date.now()}.${currentUser.id}${extname(file.originalname)}`
+        `${Date.now()}.${currentUser._id}${extname(file.originalname)}`
+      ]
+
+    case 'documents':
+      return [
+        './src/uploads/tenants/documents',
+        `${Date.now()}.${currentUser.tenantId}${extname(file.originalname)}`
       ]
 
     case 'logo':

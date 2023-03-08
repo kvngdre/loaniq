@@ -1,6 +1,5 @@
-import { constants } from '../config'
+import { constants, roles } from '../config'
 import { hashSync, compare } from 'bcryptjs'
-import { getUserRoleKeys, userRoles } from '../utils/userRoles'
 import { Schema, model } from 'mongoose'
 import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
@@ -97,8 +96,8 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      enum: Object.keys(userRoles),
-      default: getUserRoleKeys(userRoles.OWNER)[0],
+      enum: Object.values(roles),
+      default: roles.DIRECTOR,
       required: true
     },
 
@@ -110,6 +109,11 @@ const userSchema = new Schema(
     active: {
       type: Boolean,
       default: false
+    },
+
+    segments: {
+      type: [Schema.Types.ObjectId],
+      default: null
     },
 
     otp: {
@@ -155,10 +159,7 @@ userSchema.methods.comparePasswords = async function (password) {
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
-      id: this._id.toString(),
-      tenantId: this.tenantId,
-      role: userRoles[this.role],
-      active: this.active
+      id: this._id.toString()
     },
     constants.jwt.secret.access,
     {

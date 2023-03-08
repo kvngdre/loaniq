@@ -1,17 +1,18 @@
-import Router from 'express'
+import { Router } from 'express'
+import { roles } from '../config'
+import grantAccess from '../middleware/grantAccess'
 import TenantConfigController from '../controllers/tenantConfig.controller'
-import validateId from '../middleware/validateId'
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
-router.post('/', TenantConfigController.createConfig)
+const { SUPER_ADMIN, DIRECTOR } = roles
 
-router.get('/', TenantConfigController.getConfigs)
+router.post('/', [grantAccess(SUPER_ADMIN, DIRECTOR)], TenantConfigController.createConfig)
 
-router.get('/:tenantId', [validateId], TenantConfigController.getConfig)
+router.get('/', TenantConfigController.getConfig)
 
-router.patch('/:tenantId', [validateId], TenantConfigController.updateConfig)
+router.patch('/', [grantAccess(DIRECTOR)], TenantConfigController.updateConfig)
 
-router.delete('/:tenantId', [validateId], TenantConfigController.deleteConfig)
+router.delete('/', [grantAccess(SUPER_ADMIN)], TenantConfigController.deleteConfig)
 
 export default router

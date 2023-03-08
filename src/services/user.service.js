@@ -95,7 +95,7 @@ class UserService {
       otp: 0
     }
 
-    const foundUser = await UserDAO.findByField(filter, projection)
+    const foundUser = await UserDAO.findOne(filter, projection)
 
     return foundUser
   }

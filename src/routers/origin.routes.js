@@ -1,4 +1,4 @@
-import Router from 'express'
+import { Router } from 'express'
 import verifyRole from '../middleware/verifyRole'
 import verifyToken from '../middleware/verifyToken'
 import { create, update } from '../validators/originValidator'

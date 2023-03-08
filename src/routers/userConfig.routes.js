@@ -1,8 +1,8 @@
-import Router from 'express'
+import { Router } from 'express'
 import UserConfigController from '../controllers/userConfig.controller'
 import validateId from '../middleware/validateId'
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
 router.post('/', UserConfigController.createSettings)
 

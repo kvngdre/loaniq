@@ -1,4 +1,4 @@
-import Router from 'express'
+import { Router } from 'express'
 import { getLoanData } from '../controllers/dashboardController'
 import ServerError from '../errors/serverError'
 import auth from '../middleware/auth'

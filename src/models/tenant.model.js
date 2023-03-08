@@ -1,8 +1,6 @@
 import { companyCategory } from '../utils/constants'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
-import jwt from 'jsonwebtoken'
-import { constants } from '../config'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
@@ -20,20 +18,16 @@ const tenantSchema = new Schema(
       required: true
     },
 
-    location: {
-      address: {
-        type: String,
-        trim: true,
-        default: null
-      },
-      lga: {
-        type: String,
-        default: null
-      },
-      state: {
-        type: String,
-        default: null
-      }
+    address: {
+      type: String,
+      trim: true,
+      default: null
+    },
+
+    state: {
+      type: Schema.Types.ObjectId,
+      ref: 'State',
+      default: null
     },
 
     cac_number: {
@@ -95,20 +89,6 @@ const tenantSchema = new Schema(
   },
   schemaOptions
 )
-
-tenantSchema.methods.generateFormToken = function () {
-  return jwt.sign(
-    {
-      id: this._id.toString()
-    },
-    constants.jwt.secret.form,
-    {
-      audience: constants.jwt.audience,
-      expiresIn: constants.jwt.exp_time.form,
-      issuer: constants.jwt.issuer
-    }
-  )
-}
 
 tenantSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {

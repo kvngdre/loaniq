@@ -1,8 +1,8 @@
 import { create, getAll, getOne, update, delete_ } from '../controllers/review.controller.js'
 import { create as _create, update as _update } from '../validators/pendingEditValidator'
-import Router from 'express'
+import { Router } from 'express'
 import ServerError from '../errors/serverError'
-import verifyRole from '../middleware/verifyRole'
+import grantAccess from '../middleware/grantAccess'
 import auth from '../middleware/auth'
 
 const router = Router()

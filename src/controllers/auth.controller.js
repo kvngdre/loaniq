@@ -62,7 +62,7 @@ class AuthController extends BaseController {
   }
 
   static getLoggedInUser = async (req, res) => {
-    const user = await AuthService.getCurrentUser(req.currentUser.id)
+    const user = await AuthService.getCurrentUser(req.currentUser._id)
     const response = this.apiResponse('Fetched current logged in user.', user)
 
     res.status(httpCodes.OK).json(response)
@@ -121,7 +121,7 @@ class AuthController extends BaseController {
   }
 
   static logoutAllSessions = async (req, res) => {
-    await AuthService.logout(req.currentUser.id, req.cookies?.jwt)
+    await AuthService.logout(req.currentUser._id, req.cookies?.jwt)
 
     const response = this.apiResponse('Signed out of all devices.')
 

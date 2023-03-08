@@ -1,5 +1,5 @@
 import auth from '../middleware/auth'
-import Router from 'express'
+import { Router } from 'express'
 import StateController from '../controllers/state.controller'
 import validateId from '../middleware/validateId'
 

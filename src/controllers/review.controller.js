@@ -1,7 +1,7 @@
 import { roles } from '../utils/constants'
 import { findById } from '../models/customer.model'
 import { flatten } from '../helpers'
-import { findById as _findById } from '../models/loanModel'
+import { findById as _findById } from '../models/loan.model'
 import { Types } from 'mongoose'
 import Review, { aggregate, findOne } from '../models/review.model'
 import ServerError from '../errors/serverError'
@@ -11,7 +11,7 @@ const logger = require('../utils/logger')
 export async function create (user, payload) {
   try {
     const newPendingEdit = new Review({
-      lender: user.lender,
+      tenantId: user.tenantId,
       docId: payload.docId,
       type: payload.type,
       createdBy: user.id,

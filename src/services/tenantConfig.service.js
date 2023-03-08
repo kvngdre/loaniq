@@ -1,3 +1,4 @@
+import { Types } from 'mongoose'
 import events from '../pubsub/events'
 import pubsub from '../pubsub/index.js'
 import TenantConfigDAO from '../daos/tenantConfig.dao'
@@ -12,25 +13,26 @@ class TenantConfigService {
     return newConfig
   }
 
-  async getConfigs (filters) {
-    const foundConfigs = await TenantConfigDAO.findAll(filters)
+  async getConfigs (filters, projection) {
+    const foundConfigs = await TenantConfigDAO.findAll(filters, projection)
     const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
     return [count, foundConfigs]
   }
 
-  async getConfig (filter) {
-    const foundConfig = await TenantConfigDAO.findByField(filter)
+  async getConfig (filter, projection) {
+    filter = Types.ObjectId.isValid
+    const foundConfig = await TenantConfigDAO.findOne(filter, projection)
     return foundConfig
   }
 
-  async updateConfig (filter, dto) {
-    const updateConfig = await TenantConfigDAO.update(filter, dto)
+  async updateConfig (tenantId, dto, projection) {
+    const updateConfig = await TenantConfigDAO.update({ tenantId }, dto, projection)
     return updateConfig
   }
 
-  async deleteConfig (filter) {
-    const deletedTenantConfig = await TenantConfigDAO.remove(filter)
+  async deleteConfig (tenantId) {
+    const deletedTenantConfig = await TenantConfigDAO.remove({ tenantId })
     return deletedTenantConfig
   }
 }

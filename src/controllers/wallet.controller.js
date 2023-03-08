@@ -6,7 +6,7 @@ import ValidationError from '../errors/ValidationError'
 
 class WalletController extends BaseController {
   static createWallet = async (req, res) => {
-    const { value, error } = walletValidator.validateCreate(req.body)
+    const { value, error } = walletValidator.validateCreate(req.body, req.params.tenantId)
     if (error) throw new ValidationError(null, error)
 
     const newWallet = await walletService.createWallet(value)

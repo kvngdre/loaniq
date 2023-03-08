@@ -50,8 +50,7 @@ export default {
     clientSecret: process.env.CLIENT_SECRET,
     oauthPlayground: process.env.OAUTH_PLAYGROUND,
     clientId: process.env.CLIENT_ID,
-    refreshToken: process.env.REFRESH_TOKEN,
-    password: process.env.USER_EMAIL_PASSWORD
+    refreshToken: process.env.REFRESH_TOKEN
   },
   max_similarity: parseInt(process.env.MAX_SIMILARITY),
   paystack: {

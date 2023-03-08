@@ -1,5 +1,5 @@
-import BaseError from './BaseError'
-import logger from '../utils/logger'
+import BaseError from '../errors/BaseError'
+import logger from './logger'
 
 class ErrorHandler {
   static isTrustedError (error) {

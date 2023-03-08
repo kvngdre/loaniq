@@ -1,7 +1,7 @@
 import { loanStatus } from '../utils/constants'
 import Customer from '../models/customer.model'
 import Tenant from '../models/tenant.model'
-import { aggregate } from '../models/loanModel'
+import { aggregate } from '../models/loan.model'
 import ServerError from '../errors/serverError'
 import User from '../models/user.model'
 const debug = require('debug')('dashController')

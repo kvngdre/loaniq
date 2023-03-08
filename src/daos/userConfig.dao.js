@@ -33,7 +33,13 @@ class UserConfigDAO extends BaseDAO {
   }
 
   // todo see if RBAC can narrow down so that we can do an upsert if not found
-  static async findByField (filter, projection = {}) {
+  static async findById (id, projection = {}) {
+    const foundRecord = await UserConfig.findById(id).select(projection)
+
+    return foundRecord
+  }
+
+  static async findOne (filter, projection = {}) {
     const foundRecord = await UserConfig.findOne(filter).select(projection)
 
     return foundRecord

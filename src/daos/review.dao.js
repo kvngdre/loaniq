@@ -1,22 +1,22 @@
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import Segment from '../models/segment.model'
+import Review from '../models/review.model'
 import ValidationError from '../errors/ValidationError'
 
-class SegmentDAO extends BaseDAO {
-  static async insert (dto, trx) {
+class ReviewDAO extends BaseDAO {
+  static async insert (dto) {
     try {
-      const newRecord = new Segment(dto)
-      await newRecord.save({ session: trx })
+      const newReview = new Review(dto)
+      await newReview.save()
 
-      return newRecord
+      return newReview
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
+        throw new ConflictError(`${field} already un use.`)
       }
 
-      if (exception.name === 'ValidationError') {
+      if (exception.name === 'Validation Error') {
         const errMsg = this.getValidationErrorMsg(exception)
         throw new ValidationError(errMsg)
       }
@@ -25,27 +25,27 @@ class SegmentDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter, projection = {}) {
-    const foundRecords = await Segment.find(filter).select(projection)
+  static async findAll (filter = {}, projection = {}) {
+    const foundRecords = await Review.find(filter).select(projection)
 
     return foundRecords
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await Segment.findById(id).select(projection)
+    const foundRecord = await Review.findById(id).select(projection)
 
     return foundRecord
   }
 
   static async findOne (filter, projection = {}) {
-    const foundRecord = await Segment.findOne(filter).select(projection)
+    const foundRecord = await Review.findOne(filter).select(projection)
 
     return foundRecord
   }
 
   static async update (id, dto, projection = {}) {
     try {
-      const foundRecord = await Segment.findById(id).select(projection)
+      const foundRecord = await Review.findById(id).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -67,10 +67,10 @@ class SegmentDAO extends BaseDAO {
   }
 
   static async remove (id) {
-    const deletedRecord = await Segment.findByIdAndDelete(id)
+    const deletedRecord = await Review.findByIdAndDelete(id)
 
     return deletedRecord
   }
 }
 
-export default SegmentDAO
+export default ReviewDAO
