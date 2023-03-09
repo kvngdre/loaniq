@@ -1,5 +1,7 @@
-import { roles } from '../utils/constants'
+import { canUserResetPwd } from '../helpers'
+import { roles } from '../config'
 import BaseValidator from './base.validator'
+import ForbiddenError from '../errors/ForbiddenError'
 import Joi from 'joi'
 
 class UserValidator extends BaseValidator {
@@ -86,6 +88,36 @@ class UserValidator extends BaseValidator {
     error = this._refineError(error)
 
     return { value, error }
+  }
+
+  validateForgotPassword = async (dto) => {
+    const schema = Joi.object().keys({
+      email: this._emailSchema.required()
+    }).min(1)
+    let { value, error } = schema.validate(dto, { abortEarly: false })
+
+    if (error) {
+      error = this._refineError(error)
+      return { value, error }
+    }
+
+    const canReset = await canUserResetPwd(value.email)
+    if (!canReset) {
+      throw new ForbiddenError(
+        "You can't reset your own password. If you can't sign in, you need to contact your administrator to reset your password for you."
+      )
+    }
+
+    schema.keys({
+      new_password: this._passwordSchema.required(),
+      confirm_password: this._confirmPasswordSchema.required(),
+      canReset: Joi.boolean().default(canReset)
+    })
+
+    const result = schema.validate(dto, { abortEarly: false })
+    result.error = this._refineError(result.error)
+
+    return result
   }
 }
 

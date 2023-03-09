@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { constants } from '../config'
-import { generateOTP, similarity } from '../helpers'
+import { generateOTP, similarity, validateOTP } from '../helpers'
 import ConflictError from '../errors/ConflictError'
 import events from '../pubsub/events'
 import ForbiddenError from '../errors/ForbiddenError'
@@ -25,15 +25,6 @@ class AuthService {
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
 
     validateOTP(foundUser, otp)
-    function validateOTP (user, otp) {
-      if (otp !== user.otp.pin) {
-        throw new UnauthorizedError('Invalid OTP.')
-      }
-
-      if (Date.now() > user.otp.expires) {
-        throw new UnauthorizedError('OTP has expired.')
-      }
-    }
 
     // * Measuring similarity of new password to the current password.
     const percentageSimilarity =

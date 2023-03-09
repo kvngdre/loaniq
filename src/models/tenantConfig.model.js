@@ -13,6 +13,11 @@ const tenantConfigSchema = new Schema(
       required: [true, 'Tenant Id is required.']
     },
 
+    allowUserPwdReset: {
+      type: Boolean,
+      default: false
+    },
+
     default_params: {
       min_loan_amount: {
         type: Number,

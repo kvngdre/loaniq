@@ -10,7 +10,6 @@ class UserController extends BaseController {
       req.body,
       req.currentUser.tenantId
     )
-    console.log(value)
     if (error) throw new ValidationError(null, error)
 
     const newUser = await UserService.createUser(value)
@@ -57,7 +56,7 @@ class UserController extends BaseController {
 
   static changePassword = async (req, res) => {
     const { value, error } = userValidator.validateChangePassword(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     await UserService.changePassword(req.params.userId, value)
     const response = this.apiResponse('Password updated.')
@@ -65,15 +64,18 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static resetPassword = async (req, res) => {
-    await UserService.resetPassword(req.params.userId)
+  // todo Discuss with Vic your ideas on forgot password flow.
+  static forgotPassword = async (req, res) => {
+    const { value, error } = await userValidator.validateForgotPassword(req.body)
+    if (error) throw new ValidationError(null, error)
+
+    await UserService.resetPassword(value)
     const response = this.apiResponse('User password has been reset.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  // todo Discuss with Vic your ideas on forgot password flow.
-  static forgotPassword = async (req, res) => {
+  static resetPassword = async (req, res) => {
     await UserService.resetPassword(req.params.userId)
     const response = this.apiResponse('User password has been reset.')
 
@@ -95,7 +97,7 @@ class UserController extends BaseController {
   }
 
   static uploadFiles = async (req, res) => {
-    const user = await UserService.uploadImage(req.currentUser, req.file)
+    const user = await UserService.uploadImage(req.params, req.file)
     const response = this.apiResponse('File uploaded.', user)
 
     res.status(httpCodes.OK).json(response)

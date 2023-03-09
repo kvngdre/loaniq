@@ -19,8 +19,7 @@ class UserConfigController extends BaseController {
   }
 
   static getUserConfigs = async (req, res) => {
-    const [count, userConfigs] = await userConfigService.getAllConfigs()
-
+    const [count, userConfigs] = await userConfigService.getConfigs()
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, userConfigs)
 
@@ -28,12 +27,11 @@ class UserConfigController extends BaseController {
   }
 
   static getUserConfig = async (req, res) => {
-    const userConfig = await userConfigService.getUserConfig(req.params.userId)
+    const userConfig = await userConfigService.getConfig({
+      userId: req.params.userId
+    })
 
-    const response = this.apiResponse(
-      'Fetched user configuration.',
-      userConfig
-    )
+    const response = this.apiResponse('Fetched user configuration.', userConfig)
 
     res.status(httpCodes.OK).json(response)
   }
@@ -42,21 +40,19 @@ class UserConfigController extends BaseController {
     const { value, error } = userConfigValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
-    const userConfig = await userConfigService.updateConfig(req.params.userId, value)
-    const response = this.apiResponse(
-      'Updated user configuration.',
-      userConfig
+    const userConfig = await userConfigService.updateConfig(
+      { userId: req.params.userId },
+      value
     )
+    const response = this.apiResponse('Updated user configuration.', userConfig)
 
     res.status(httpCodes.OK).json(response)
   }
 
   static deleteUserConfig = async (req, res) => {
-    await userConfigService.deleteConfig(req.params.userId)
+    await userConfigService.deleteConfig({ userId: req.params.userId })
 
-    const response = this.apiResponse(
-      'Deleted user configuration.'
-    )
+    const response = this.apiResponse('Deleted user configuration.')
 
     res.status(httpCodes.OK).json(response)
   }

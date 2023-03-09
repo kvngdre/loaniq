@@ -3,8 +3,8 @@ import { httpCodes } from '../utils/constants'
 import AuthService from '../services/auth.service'
 import authValidator from '../validators/auth.validator'
 import BaseController from './base.controller'
+import ErrorResponse from '../utils/ErrorResponse'
 import ValidationError from '../errors/ValidationError'
-import UnauthorizedError from '../errors/UnauthorizedError'
 
 class AuthController extends BaseController {
   static verifyRegistration = async (req, res) => {
@@ -16,7 +16,7 @@ class AuthController extends BaseController {
     })
 
     const { value, error } = authValidator.validateVerifyReg(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const [accessToken, refreshToken, user] = await AuthService.verifySignUp(
       value,
@@ -45,7 +45,7 @@ class AuthController extends BaseController {
     })
 
     const { value, error } = authValidator.validateLogin(req.body)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     const [data, refreshToken] = await AuthService.login(value, token)
 
@@ -70,7 +70,14 @@ class AuthController extends BaseController {
 
   static getNewTokenSet = async (req, res) => {
     const token = req.cookies?.jwt
-    if (!token) throw new UnauthorizedError('No refresh token provided.')
+    if (!token) {
+      return res.status(httpCodes.UNAUTHORIZED).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message: 'No refresh token provided.'
+        })
+      )
+    }
 
     // Clear jwt cookie
     res.clearCookie('jwt', {
@@ -79,9 +86,7 @@ class AuthController extends BaseController {
       secure: constants.secure_cookie
     })
 
-    const [accessToken, refreshToken] = await AuthService.getNewTokenSet(
-      token
-    )
+    const [accessToken, refreshToken] = await AuthService.getNewTokenSet(token)
 
     //  ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken.token, {
@@ -99,7 +104,7 @@ class AuthController extends BaseController {
 
   static sendOTP = async (req, res) => {
     const { value, error } = authValidator.validateSendOTP(req.query)
-    if (error) throw new ValidationError(error.message, error.path)
+    if (error) throw new ValidationError(null, error)
 
     await AuthService.sendOTP(value)
     const response = this.apiResponse('OTP sent to email.')

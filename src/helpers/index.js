@@ -2,6 +2,8 @@
 import { txnTypes } from '../utils/constants'
 import logger from '../utils/logger'
 import UserService from '../services/user.service'
+import UnauthorizedError from '../errors/UnauthorizedError'
+import tenantConfigService from '../services/tenantConfig.service'
 
 const ONE_MINUTE_IN_MILLISECONDS = 60_000
 const epochYear = 1970
@@ -216,4 +218,23 @@ export class TxnObj {
     this.balance_after =
       type === txnTypes.DEBIT ? balance - amount : balance + amount
   }
+}
+
+export const validateOTP = (user, otp) => {
+  if (otp !== user.otp.pin) {
+    throw new UnauthorizedError('Invalid OTP.')
+  }
+
+  if (Date.now() > user.otp.expires) {
+    throw new UnauthorizedError('OTP has expired.')
+  }
+}
+
+export const canUserResetPwd = async (userEmail) => {
+  const { tenantId } = await UserService.getUserByField({ email: userEmail })
+  const { allowUserPwdReset } = await tenantConfigService.getConfig({
+    tenantId
+  })
+
+  return allowUserPwdReset
 }

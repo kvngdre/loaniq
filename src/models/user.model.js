@@ -1,5 +1,5 @@
 import { constants, roles } from '../config'
-import { hashSync, compare } from 'bcryptjs'
+import { hashSync, compareSync } from 'bcryptjs'
 import { Schema, model } from 'mongoose'
 import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
@@ -152,8 +152,8 @@ userSchema.virtual('full_name').get(function () {
   )
 })
 
-userSchema.methods.comparePasswords = async function (password) {
-  return await compare(password, this.password)
+userSchema.methods.comparePasswords = function (password) {
+  return compareSync(password, this.password)
 }
 
 userSchema.methods.generateAccessToken = function () {

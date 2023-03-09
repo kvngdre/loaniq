@@ -31,7 +31,9 @@ class TenantConfigController extends BaseController {
   }
 
   static getConfig = async (req, res) => {
-    const tenantConfig = await tenantConfigService.getConfig(req.params.tenantId)
+    const tenantConfig = await tenantConfigService.getConfig({
+      tenantId: req.params.tenantId
+    })
     const response = this.apiResponse(
       'Fetched tenant configuration.',
       tenantConfig
@@ -45,7 +47,7 @@ class TenantConfigController extends BaseController {
     if (error) throw new ValidationError(null, error)
 
     const tenantConfig = await tenantConfigService.updateConfig(
-      req.params.tenantId,
+      { tenantId: req.params.tenantId },
       value
     )
     const response = this.apiResponse(
@@ -57,7 +59,7 @@ class TenantConfigController extends BaseController {
   }
 
   static deleteConfig = async (req, res) => {
-    await tenantConfigService.deleteConfig(req.params.tenantId)
+    await tenantConfigService.deleteConfig({ tenantId: req.params.tenantId })
     const response = this.apiResponse('Tenant configuration deleted.')
 
     res.status(httpCodes.OK).json(response)

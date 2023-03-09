@@ -9,12 +9,13 @@ import ErrorResponse from '../utils/ErrorResponse'
  * @returns
  */
 function grantAccess (...allowedRoles) {
+  allowedRoles = allowedRoles[0] === 'all' ? Object.values(roles) : allowedRoles
   return (req, res, next) => {
     if (!req.currentUser.role) {
       return res.status(httpCodes.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
-          message: 'No user role.'
+          message: 'Forbidden'
         })
       )
     }
@@ -23,8 +24,7 @@ function grantAccess (...allowedRoles) {
 
     if (
       allowedRoles.includes(currentUser.role) &&
-      (params?.userId == currentUser._id ||
-        params?.tenantId == currentUser.tenantId ||
+      (params?.tenantId == currentUser.tenantId ||
         currentUser.role === roles.SUPER_ADMIN)
     ) {
       return next()

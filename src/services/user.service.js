@@ -160,10 +160,45 @@ class UserService {
     return foundUser
   }
 
+  static async forgotPassword (dto) {
+    const { email, current_password, new_password } = dto
+    const foundUser = await UserDAO.findOne({ email })
+
+    const isMatch = foundUser.comparePasswords(current_password)
+    if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
+
+    const percentageSimilarity =
+      similarity(new_password, current_password) * 100
+    const similarityThreshold = constants.max_similarity
+    if (percentageSimilarity >= similarityThreshold) {
+      throw new ValidationError('Password is too similar to old password.')
+    }
+
+    /**
+     * ! Notify user of password change
+     */
+    logger.info('Sending password change email...')
+    mailer({
+      to: foundUser.email,
+      subject: 'Password changed',
+      name: foundUser.first_name,
+      template: 'password-change'
+    })
+
+    foundUser.set({ password: new_password })
+    await foundUser.save()
+
+    delete foundUser._doc.password
+    delete foundUser._doc.otp
+    delete foundUser._doc.refreshTokens
+    delete foundUser._doc.resetPwd
+
+    return foundUser
+  }
+
   static async resetPassword (userId) {
     const foundUser = await UserDAO.findById(userId)
 
-    const generatedOTP = generateOTP(10)
     const randomPwd = genRandomStr(6)
 
     logger.info('Sending password reset mail...')
@@ -172,21 +207,20 @@ class UserService {
       subject: 'Password reset triggered',
       name: foundUser.first_name,
       template: 'password-reset',
-      payload: { otp: generatedOTP.pin, password: randomPwd }
+      payload: { password: randomPwd }
     })
 
     foundUser.set({
       resetPwd: true,
-      otp: generatedOTP,
       password: randomPwd,
       refreshTokens: []
     })
     await foundUser.save()
 
-    delete foundUser._doc.password
     delete foundUser._doc.otp
     delete foundUser._doc.refreshTokens
     delete foundUser._doc.resetPwd
+    foundUser._doc.password = randomPwd
 
     return foundUser
   }
@@ -236,8 +270,8 @@ class UserService {
     return foundUser
   }
 
-  static async uploadImage ({ id, tenantId }, uploadFile) {
-    const foundUser = await UserDAO.findById(id, {
+  static async uploadImage ({ userId, tenantId }, uploadFile) {
+    const foundUser = await UserDAO.findById(userId, {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
