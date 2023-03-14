@@ -1,17 +1,19 @@
+import { roles } from '../config'
 import { Router } from 'express'
+import grantAccess from '../middleware/grantAccess'
+import isOwner from '../middleware/isOwner.middleware'
 import UserConfigController from '../controllers/userConfig.controller'
-import validateId from '../middleware/validateId'
 
 const router = Router({ mergeParams: true })
 
-router.post('/', UserConfigController.createSettings)
+const { SUPER_ADMIN } = roles
 
-router.get('/', UserConfigController.getUserConfigs)
+router.post('/', [grantAccess(SUPER_ADMIN)], UserConfigController.createConfig)
 
-router.get('/:userId', [validateId], UserConfigController.getUserConfig)
+router.get('/', [grantAccess('all'), isOwner('all')], UserConfigController.getUserConfig)
 
-router.patch('/:userId', [validateId], UserConfigController.updateUserConfig)
+router.patch('/', [grantAccess('all'), isOwner('all')], UserConfigController.updateUserConfig)
 
-router.delete('/:userId', [validateId], UserConfigController.deleteUserConfig)
+router.delete('/', [grantAccess(SUPER_ADMIN)], UserConfigController.deleteUserConfig)
 
 export default router

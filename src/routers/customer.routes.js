@@ -1,30 +1,38 @@
-import auth from '../middleware/auth'
-import CustomerController from '../controllers/customer.controller'
 import { Router } from 'express'
+import CustomerController from '../controllers/customer.controller'
+import grantAccess from '../middleware/grantAccess'
 import upload from '../middleware/fileUploader'
 import validateId from '../middleware/validateId'
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
-router.post('/', [auth], CustomerController.createCustomer)
+router.post('/', [grantAccess('all')], CustomerController.createCustomer)
 
-router.get('/', [auth], CustomerController.getCustomers)
+router.get('/', [grantAccess('all')], CustomerController.getCustomers)
 
-router.get('/:customerId', [auth, validateId], CustomerController.getCustomer)
+router.get(
+  '/:customerId',
+  [validateId, grantAccess('all')],
+  CustomerController.getCustomer
+)
 
 router.patch(
   '/:customerId',
-  [auth, validateId],
+  [validateId, grantAccess('all')],
   CustomerController.updateCustomer
 )
 
-router.delete('/:customerId', [auth, validateId], CustomerController.deleteCustomer)
+router.delete(
+  '/:customerId',
+  [validateId, grantAccess('all')],
+  CustomerController.deleteCustomer
+)
 
 router.post(
   '/:customerId/uploads',
   [
-    auth,
     validateId,
+    grantAccess('all'),
     upload.fields([{ name: 'passport' }, { name: 'id_card' }])
   ],
   CustomerController.uploadDocs

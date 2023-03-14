@@ -82,6 +82,12 @@ export const relationships = [
   'son'
 ]
 
+export const reviewStatus = {
+  APPROVED: 'approved',
+  DENIED: 'denied',
+  PENDING: 'pending'
+}
+
 export const socials = [
   'website',
   'facebook',

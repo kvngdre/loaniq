@@ -6,31 +6,34 @@ import validateId from '../middleware/validateId'
 import { roles } from '../config'
 import grantAccess from '../middleware/grantAccess'
 import isOwner from '../middleware/isOwner.middleware'
+import UserConfigController from '../controllers/userConfig.controller'
 
 const router = Router({ mergeParams: true })
 
 const { SUPER_ADMIN, DIRECTOR, ADMIN, EDITOR } = roles
 
-router.use('/:userId/configurations', userConfigRoutes)
+router.post('/', [grantAccess(SUPER_ADMIN)], UserController.createUser)
 
-router.post('/', [grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN)], UserController.createUser)
+router.post('/uploads', [upload.single('avatar')], UserController.uploadFiles)
+
+router.post('/:userId/change_password', [validateId, grantAccess('all'), isOwner('all')], UserController.changePassword)
 
 router.get('/', [grantAccess('all')], UserController.getUsers)
 
-router.get('/:userId', [grantAccess('all'), validateId], UserController.getUser)
+router.get('/configurations', [grantAccess(SUPER_ADMIN)], UserConfigController.getUserConfigs)
 
-router.post('/:userId/change_password', [grantAccess('all'), isOwner('all'), validateId], UserController.changePassword)
+router.get('/:userId', [validateId, grantAccess('all')], UserController.getUser)
 
-router.get('/:userId/deactivate', [grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN), isOwner(ADMIN), validateId], UserController.deactivateUser)
+router.get('/:userId/deactivate', [validateId, grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN)], UserController.deactivateUser)
 
-router.get('/:userId/reactivate', [grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN), validateId], UserController.reactivateUser)
+router.get('/:userId/reactivate', [validateId, grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN)], UserController.reactivateUser)
 
-router.get('/:userId/reset_password', [grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN), validateId], UserController.resetPassword)
+router.get('/:userId/reset_password', [validateId, grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN)], UserController.resetPassword)
 
-router.patch('/:userId', [grantAccess('all'), isOwner(EDITOR), validateId], UserController.updateUser)
+router.patch('/:userId', [validateId, grantAccess('all'), isOwner(EDITOR)], UserController.updateUser)
 
-router.delete('/:userId', [grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN), validateId], UserController.deleteUser)
+router.delete('/:userId', [validateId, grantAccess(SUPER_ADMIN, DIRECTOR, ADMIN)], UserController.deleteUser)
 
-router.post('/uploads', [upload.single('avatar')], UserController.uploadFiles)
+router.use('/:userId/configurations', [validateId], userConfigRoutes)
 
 export default router

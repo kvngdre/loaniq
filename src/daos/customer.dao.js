@@ -16,7 +16,7 @@ class CustomerDAO extends BaseDAO {
         throw new ConflictError(`${field} already in use.`)
       }
 
-      if (exception.name === 'Validation Error') {
+      if (exception.name === 'ValidationError') {
         const errMsg = this.getValidationErrorMsg(exception)
         throw new ValidationError(errMsg)
       }

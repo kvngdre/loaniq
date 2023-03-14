@@ -4,15 +4,15 @@ import loaders from './loaders'
 import logger from './utils/logger'
 import routes from './routers'
 
-function startServer () {
+async function startServer () {
   const app = require('express')()
   const port = constants.port
 
-  loaders.init({ expressApp: app, expressRoutes: routes })
+  await loaders.init({ expressApp: app, expressRoutes: routes })
 
   app.listen(port, (err) => {
-    if (err) logger.error(err)
-    logger.info(`Server running on port: ${port}`)
+    if (err) logger.fatal(err.message, err.stack)
+    logger.info(`Server listening on port: ${port} 🚀`)
   })
 }
 

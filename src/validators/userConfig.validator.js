@@ -18,8 +18,8 @@ class UserConfigValidator extends BaseValidator {
 
   validateCreate = (dto) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema().label('Tenant id').required(),
-      userId: this._objectIdSchema().label('User id').required(),
+      tenantId: this._objectIdSchema.label('Tenant id').required(),
+      userId: this._objectIdSchema.label('User id').required(),
       timezone: this.#timezoneSchema
     })
 
@@ -29,16 +29,10 @@ class UserConfigValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateUpdate = (dto, tenantId, userId) => {
+  validateUpdate = (dto) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema()
-        .label('Tenant id')
-        .default(tenantId)
-        .forbidden(),
-      userId: this._objectIdSchema()
-        .label('User id')
-        .default(userId)
-        .forbidden(),
+      tenantId: this._objectIdSchema.label('Tenant id'),
+      userId: this._objectIdSchema.label('User id'),
       timezone: this.#timezoneSchema
     })
 

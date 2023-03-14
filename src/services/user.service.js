@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { constants } from '../config'
+import { constants, roles } from '../config'
 import { genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
 import driverUploader from '../utils/driveUploader'
@@ -12,6 +12,7 @@ import pubsub from '../pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
+import ForbiddenError from '../errors/ForbiddenError'
 
 class UserService {
   static async createUser (dto, trx) {
@@ -61,52 +62,63 @@ class UserService {
     }
   }
 
-  static async getUsers (filter, projection) {
-    projection = projection || {
+  static async getUsers (
+    currentUser,
+    projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
+  ) {
+    const filter = { tenantId: currentUser.tenantId }
+
     const foundUsers = await UserDAO.findAll(filter, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, users: foundUsers }
   }
 
-  static async getUserById (userId) {
-    const projection = {
+  static async getUserById (
+    userId,
+    projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
+  ) {
     const foundUser = await UserDAO.findById(userId, projection)
 
     return foundUser
   }
 
-  static async getUserByField (filter, projection) {
-    if (!filter) throw new Error('Filter is required.')
-    projection = projection || {
+  static async getUser (
+    filter,
+    projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
+  ) {
+    if (!filter) throw new Error('Filter is required.')
 
     const foundUser = await UserDAO.findOne(filter, projection)
 
     return foundUser
   }
 
-  static async updateUser (userId, dto, projection) {
-    projection = projection || {
+  static async updateUser (
+    userId,
+    dto,
+    projection = {
       password: 0,
       resetPwd: 0,
       refreshTokens: 0,
       otp: 0
     }
+  ) {
     const updatedUser = await UserDAO.update(userId, dto, projection)
 
     return updatedUser
@@ -161,22 +173,13 @@ class UserService {
   }
 
   static async forgotPassword (dto) {
-    const { email, current_password, new_password } = dto
+    const { email, new_password } = dto
     const foundUser = await UserDAO.findOne({ email })
 
-    const isMatch = foundUser.comparePasswords(current_password)
-    if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
+    foundUser.set({ password: new_password })
+    await foundUser.save()
 
-    const percentageSimilarity =
-      similarity(new_password, current_password) * 100
-    const similarityThreshold = constants.max_similarity
-    if (percentageSimilarity >= similarityThreshold) {
-      throw new ValidationError('Password is too similar to old password.')
-    }
-
-    /**
-     * ! Notify user of password change
-     */
+    // ! Notify user of password change.
     logger.info('Sending password change email...')
     mailer({
       to: foundUser.email,
@@ -184,9 +187,6 @@ class UserService {
       name: foundUser.first_name,
       template: 'password-change'
     })
-
-    foundUser.set({ password: new_password })
-    await foundUser.save()
 
     delete foundUser._doc.password
     delete foundUser._doc.otp
@@ -225,29 +225,52 @@ class UserService {
     return foundUser
   }
 
-  static async deactivateUser (userId) {
-    const deactivatedUser = await UserDAO.update(
-      userId,
-      {
-        active: false,
-        refreshTokens: []
-      },
-      { password: 0, refreshTokens: 0, otp: 0, resetPwd: 0 }
-    )
+  static async deactivateUser (currentUser, userId) {
+    const foundUser = await UserDAO.findById(userId, {
+      password: 0,
+      refreshTokens: 0,
+      otp: 0,
+      resetPwd: 0
+    })
 
-    return deactivatedUser
+    if (
+      currentUser.role !== roles.SUPER_ADMIN &&
+      foundUser.role === roles.DIRECTOR
+    ) {
+      throw new ForbiddenError(
+        'You do not have sufficient permissions to perform this action.'
+      )
+    }
+
+    foundUser.set({
+      active: false,
+      refreshTokens: []
+    })
+    await foundUser.save()
+    // ? Should a notification email be sent to the user?
+
+    return foundUser
   }
 
-  static async reactivateUser (userId) {
+  static async reactivateUser (currentUser, userId) {
     const foundUser = await UserDAO.findById(userId)
+    if (
+      currentUser.role !== roles.SUPER_ADMIN &&
+      foundUser.role === roles.DIRECTOR
+    ) {
+      throw new ForbiddenError(
+        'You do not have sufficient permissions to perform this action.'
+      )
+    }
 
     const generatedOTP = generateOTP(10)
     const randomPwd = genRandomStr(6)
 
-    logger.info('Sending password reset mail...')
+    // todo Create reactivate email template
+    logger.info('Sending account reactivation mail...')
     await mailer({
       to: foundUser.email,
-      subject: 'Account reactivation',
+      subject: 'Account reactivation initiated',
       name: foundUser.first_name,
       template: 'password-reset',
       payload: { otp: generatedOTP.pin, password: randomPwd }

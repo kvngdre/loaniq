@@ -12,7 +12,8 @@ const schemaOptions = { timestamps: true, versionKey: false }
 const customerSchema = new Schema(
   {
     tenantId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Tenant',
       required: true
     },
 

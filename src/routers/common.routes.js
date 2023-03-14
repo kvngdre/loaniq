@@ -6,8 +6,8 @@ const router = Router()
 
 router.post('/forgot_password', UserController.forgotPassword)
 
-router.get('/forms/:formId', TenantController.getPublicFormData)
-
 router.post('/sign_up', TenantController.signUp)
+
+router.get('/forms/:formId', TenantController.getPublicFormData)
 
 export default router

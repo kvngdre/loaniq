@@ -78,7 +78,7 @@ class CustomerValidation extends BaseValidator {
       })
   }
 
-  validateCreate = (dto, tenantId) => {
+  validateCreate = (tenantId, dto) => {
     const schema = Joi.object({
       tenantId: this._objectIdSchema.default(tenantId),
       passport: Joi.string(),

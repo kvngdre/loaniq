@@ -1,7 +1,8 @@
+import { reviewStatus } from '../utils/constants'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
-const schemaOptions = { strict: false, timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false }
 
 const reviewSchema = new Schema(
   {
@@ -11,21 +12,10 @@ const reviewSchema = new Schema(
       required: true
     },
 
-    docId: {
-      type: Schema.Types.ObjectId,
-      required: true
-    },
-
-    type: {
-      type: String,
-      enum: ['customer', 'loan'],
-      required: true
-    },
-
     status: {
       type: String,
-      enum: ['Approved', 'Denied', 'Pending'],
-      default: 'Pending'
+      enum: Object.values(reviewStatus),
+      default: reviewStatus.PENDING
     },
 
     remark: {
@@ -34,31 +24,60 @@ const reviewSchema = new Schema(
       default: null
     },
 
+    type: {
+      type: String,
+      enum: ['Customer', 'Loan'],
+      required: true
+    },
+
+    document: {
+      type: Schema.Types.ObjectId,
+      ref: (self = this) => self.type,
+      required: true
+    },
+
     alteration: {
-      type: Schema.Types.Mixed
+      type: Schema.Types.Mixed,
+      required: true
     },
 
-    createdBy: {
+    comment: {
+      type: String,
+      trim: true,
+      default: null
+    },
+
+    created_by: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
 
-    modifiedBy: {
+    modified_by: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      ref: 'User'
     }
   },
   schemaOptions
 )
 
-reviewSchema.post(/^find/, function (doc) {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Reviews not found.')
-  }
+reviewSchema.post(/^find/, async function (docs) {
+  if (Array.isArray(docs)) {
+    if (docs.length === 0) throw new NotFoundError('Reviews not found.')
 
-  if (!doc) throw new NotFoundError('Review not found.')
+    for (const doc of docs) {
+      await doc.populate({
+        path: 'document',
+        select: (() => Object.keys(doc.alteration))()
+      })
+    }
+  } else {
+    if (!docs) throw new NotFoundError('Review not found.')
+
+    await docs.populate([
+      { path: 'document', select: (() => Object.keys(docs.alteration))() }
+    ])
+  }
 })
 
 const Review = model('Review', reviewSchema)

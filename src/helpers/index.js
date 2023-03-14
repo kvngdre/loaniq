@@ -62,7 +62,7 @@ export function similarity (s1, s2) {
  */
 export function genRandomStr (len = 5) {
   let randStr = ''
-  const str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const str = 'ABCDEFGHJKMNOPQRSTUVWXYZ0123456789abcdefghjkmnopqrstuvwxyz9876543210'
 
   for (let i = 1; i <= len; i++) {
     const char = Math.floor(Math.random() * str.length)
@@ -231,7 +231,7 @@ export const validateOTP = (user, otp) => {
 }
 
 export const canUserResetPwd = async (userEmail) => {
-  const { tenantId } = await UserService.getUserByField({ email: userEmail })
+  const { tenantId } = await UserService.getUser({ email: userEmail })
   const { allowUserPwdReset } = await tenantConfigService.getConfig({
     tenantId
   })

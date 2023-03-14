@@ -16,7 +16,7 @@ class AuthService {
   static async verifySignUp (dto, token) {
     const { email, otp, current_password, new_password } = dto
 
-    const foundUser = await UserService.getUserByField({ email }, {})
+    const foundUser = await UserService.getUser({ email }, {})
     if (foundUser.active) {
       throw new ConflictError('User already verified, please sign in.')
     }
@@ -56,7 +56,9 @@ class AuthService {
     await foundUser.save()
 
     // ! Emitting user login event.
-    pubsub.publish(events.user.login, foundUser._id, { last_login_time: new Date() })
+    pubsub.publish(events.user.login, foundUser._id, {
+      last_login_time: new Date()
+    })
 
     delete foundUser._doc.password
     delete foundUser._doc.otp
@@ -66,8 +68,8 @@ class AuthService {
   }
 
   static async login ({ email, password }, token) {
-    const foundUser = await UserService.getUserByField({ email }, {}).catch(
-      (_) => {
+    const foundUser = await UserService.getUser({ email }, {}).catch(
+      () => {
         throw new UnauthorizedError('Invalid credentials.')
       }
     )
@@ -78,7 +80,7 @@ class AuthService {
     permitLogin(foundUser)
     function permitLogin (user) {
       const data = {
-        email: user.email,
+        id: user._id,
         accessToken: null,
         redirect: {}
       }
@@ -117,7 +119,7 @@ class AuthService {
        * * 2) The refresh token gets stolen
        * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
        */
-      await UserService.getUserByField(
+      await UserService.getUser(
         {
           refreshTokens: { $elemMatch: { token } }
         },
@@ -139,10 +141,14 @@ class AuthService {
     await foundUser.save()
 
     // ! Emitting user login event.
-    pubsub.publish(events.user.login, foundUser._id, { last_login_time: new Date() })
+    pubsub.publish(
+      events.user.login,
+      { userId: foundUser._id },
+      { last_login_time: new Date() }
+    )
 
     return [
-      { email, role: foundUser.role, accessToken, redirect: null },
+      { id: foundUser._id, role: foundUser.role, accessToken, redirect: null },
       refreshToken
     ]
   }
@@ -155,10 +161,11 @@ class AuthService {
 
   static async getNewTokenSet (token) {
     try {
-      const foundUser = await UserService.getUserByField(
+      const foundUser = await UserService.getUser(
         {
           refreshTokens: { $elemMatch: { token } }
-        }, {}
+        },
+        {}
       ).catch((err) => {
         // ! Refresh token reuse detected.
         logger.fatal('Refresh token reuse detected', err.stack)
@@ -167,7 +174,8 @@ class AuthService {
         UserService.getUserById(decoded.id)
           .then(async (foundUser) => {
             await foundUser.updateOne({ refreshTokens: [] })
-          }).catch(() => {})
+          })
+          .catch(() => {})
 
         throw new ForbiddenError('Forbidden')
       })
@@ -175,10 +183,10 @@ class AuthService {
       const { id, iss, aud } = jwt.verify(token, constants.jwt.secret.refresh)
       const { issuer, audience } = constants.jwt
       if (
-      // Validating token
+        // Validating token
         id !== foundUser._id.toString() ||
-      iss !== issuer ||
-      aud !== audience
+        iss !== issuer ||
+        aud !== audience
       ) {
         throw new ForbiddenError('Invalid token')
       }
@@ -204,7 +212,7 @@ class AuthService {
   }
 
   static async sendOTP ({ email, len }) {
-    const foundUser = await UserService.getUserByField({ email }, {})
+    const foundUser = await UserService.getUser({ email }, {})
 
     const generatedOTP = generateOTP(10, len)
     foundUser.set({ otp: generatedOTP })
@@ -222,7 +230,7 @@ class AuthService {
 
   static async logout (token) {
     try {
-      const foundUser = await UserService.getUserByField(
+      const foundUser = await UserService.getUser(
         {
           refreshTokens: { $elemMatch: { token } }
         },

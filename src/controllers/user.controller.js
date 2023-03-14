@@ -22,7 +22,7 @@ class UserController extends BaseController {
   }
 
   static getUsers = async (req, res) => {
-    const { count, users } = await UserService.getUsers()
+    const { count, users } = await UserService.getUsers(req.currentUser)
 
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, users)
@@ -69,7 +69,7 @@ class UserController extends BaseController {
     const { value, error } = await userValidator.validateForgotPassword(req.body)
     if (error) throw new ValidationError(null, error)
 
-    await UserService.resetPassword(value)
+    await UserService.forgotPassword(value)
     const response = this.apiResponse('User password has been reset.')
 
     res.status(httpCodes.OK).json(response)
@@ -83,14 +83,14 @@ class UserController extends BaseController {
   }
 
   static deactivateUser = async (req, res) => {
-    await UserService.deactivateUser(req.params.userId)
+    await UserService.deactivateUser(req.currentUser, req.params.userId)
     const response = this.apiResponse('User account deactivated.')
 
     res.status(httpCodes.OK).json(response)
   }
 
   static reactivateUser = async (req, res) => {
-    await UserService.reactivateUser(req.params.userId)
+    await UserService.reactivateUser(req.currentUser, req.params.userId)
     const response = this.apiResponse('User account has been reactivated.')
 
     res.status(httpCodes.OK).json(response)

@@ -12,11 +12,11 @@ export default async function auth (req, res, next) {
      * Authorization: Bearer ${JWT}
      *
      */
+    console.log(req.originalUrl)
     function getTokenFromHeader (req) {
       if (req.headers?.authorization?.split(' ')[0] === 'Bearer') {
         return req.headers.authorization.split(' ')[1]
       }
-
       return res.status(httpCodes.UNAUTHORIZED).json(
         new ErrorResponse({
           name: 'Auth Error',

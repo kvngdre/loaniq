@@ -16,7 +16,7 @@ class ReviewDAO extends BaseDAO {
         throw new ConflictError(`${field} already un use.`)
       }
 
-      if (exception.name === 'Validation Error') {
+      if (exception.name === 'ValidationError') {
         const errMsg = this.getValidationErrorMsg(exception)
         throw new ValidationError(errMsg)
       }
@@ -26,13 +26,35 @@ class ReviewDAO extends BaseDAO {
   }
 
   static async findAll (filter = {}, projection = {}) {
-    const foundRecords = await Review.find(filter).select(projection)
+    const foundRecords = await Review.find(filter)
+      .select(projection)
+      .populate([
+        {
+          path: 'created_by',
+          select: ['first_name', 'last_name', 'job_title', 'role']
+        },
+        {
+          path: 'modified_by',
+          select: ['first_name', 'last_name', 'job_title', 'role']
+        }
+      ])
 
     return foundRecords
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await Review.findById(id).select(projection)
+    const foundRecord = await Review.findById(id)
+      .select(projection)
+      .populate([
+        {
+          path: 'created_by',
+          select: ['first_name', 'last_name', 'job_title', 'role']
+        },
+        {
+          path: 'modified_by',
+          select: ['first_name', 'last_name', 'job_title', 'role']
+        }
+      ])
 
     return foundRecord
   }
@@ -68,7 +90,6 @@ class ReviewDAO extends BaseDAO {
 
   static async remove (id) {
     const deletedRecord = await Review.findByIdAndDelete(id)
-
     return deletedRecord
   }
 }

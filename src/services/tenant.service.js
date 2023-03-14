@@ -13,6 +13,7 @@ import tenantConfigService from './tenantConfig.service'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
+import TenantConfigDAO from '../daos/tenantConfig.dao'
 
 class TenantService {
   static async createTenant (dto) {

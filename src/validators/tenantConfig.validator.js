@@ -5,6 +5,7 @@ import Joi from 'joi'
 class TenantConfigValidator extends BaseValidator {
   #socialSchema
   #supportSchema
+  #allowUserPwdResetSchema
 
   constructor () {
     super()
@@ -45,6 +46,8 @@ class TenantConfigValidator extends BaseValidator {
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
     }).min(1)
+
+    this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false)
   }
 
   validateCreate = (dto, tenantId) => {
@@ -66,7 +69,8 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
-      support: this.#supportSchema
+      support: this.#supportSchema,
+      allowUserPwdReset: this.#allowUserPwdResetSchema
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
@@ -89,7 +93,8 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
-      support: this.#supportSchema
+      support: this.#supportSchema,
+      allowUserPwdReset: this.#allowUserPwdResetSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })

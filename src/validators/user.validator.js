@@ -17,7 +17,7 @@ class UserValidator extends BaseValidator {
       'string.max': '{#label} is too long'
     })
 
-    this.#displayNameSchema = Joi.string().label('Display name').max(255)
+    this.#displayNameSchema = Joi.string().label('Display name').min(1).max(255).invalid('', ' ', '  ')
 
     this.#segmentsSchema = Joi.array()
       .items(this._objectIdSchema)
@@ -91,7 +91,7 @@ class UserValidator extends BaseValidator {
   }
 
   validateForgotPassword = async (dto) => {
-    const schema = Joi.object().keys({
+    let schema = Joi.object().keys({
       email: this._emailSchema.required()
     }).min(1)
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -108,7 +108,7 @@ class UserValidator extends BaseValidator {
       )
     }
 
-    schema.keys({
+    schema = schema.keys({
       new_password: this._passwordSchema.required(),
       confirm_password: this._confirmPasswordSchema.required(),
       canReset: Joi.boolean().default(canReset)

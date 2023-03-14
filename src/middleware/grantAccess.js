@@ -9,7 +9,10 @@ import ErrorResponse from '../utils/ErrorResponse'
  * @returns
  */
 function grantAccess (...allowedRoles) {
-  allowedRoles = allowedRoles[0] === 'all' ? Object.values(roles) : allowedRoles
+  if (allowedRoles[0] === 'all') {
+    allowedRoles = Object.values(roles)
+  }
+
   return (req, res, next) => {
     if (!req.currentUser.role) {
       return res.status(httpCodes.FORBIDDEN).json(
@@ -20,23 +23,17 @@ function grantAccess (...allowedRoles) {
       )
     }
 
-    const { currentUser, params } = req
-
-    if (
-      allowedRoles.includes(currentUser.role) &&
-      (params?.tenantId == currentUser.tenantId ||
-        currentUser.role === roles.SUPER_ADMIN)
-    ) {
-      return next()
+    if (!allowedRoles.includes(req.currentUser.role)) {
+      return res.status(httpCodes.FORBIDDEN).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message:
+            'You do not have sufficient permissions to perform this action.'
+        })
+      )
     }
 
-    res.status(httpCodes.FORBIDDEN).json(
-      new ErrorResponse({
-        name: 'Auth Error',
-        message:
-          'You do not have sufficient permissions to perform this action.'
-      })
-    )
+    next()
   }
 }
 

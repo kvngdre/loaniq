@@ -12,7 +12,7 @@ export default {
   api: {
     prefix: '/api',
     version: '/v1',
-    encrypt_key: process.env.ENCRYPTION_KEY
+    encryption_key: process.env.ENCRYPTION_KEY
   },
   charge: process.env.RATE,
   db: {
@@ -38,8 +38,8 @@ export default {
     },
     exp_time: {
       access: parseInt(process.env.JWT_ACCESS_TIME),
-      refresh: parseInt(process.env.JWT_REFRESH_TIME),
-      form: parseInt(process.env.JWT_FORM_TIME)
+      form: parseInt(process.env.JWT_FORM_TIME),
+      refresh: parseInt(process.env.JWT_REFRESH_TIME)
     },
     audience: process.env.JWT_TOKEN_AUDIENCE,
     issuer: process.env.JWT_ISSUER
@@ -63,6 +63,6 @@ export default {
   salt: process.env.SALT,
   secure_cookie: false,
   support: {
-    email: 'support@apexxialtd.com'
+    email: 'support@apex.com'
   }
 }

@@ -6,7 +6,7 @@ import ValidationError from '../errors/ValidationError'
 
 class CustomerController extends BaseController {
   static createCustomer = async (req, res) => {
-    const { value, error } = customerValidator.validateCreate(req.body, req.currentUser.tenantId)
+    const { value, error } = customerValidator.validateCreate(req.currentUser.tenantId, req.body)
     if (error) throw new ValidationError(null, error)
 
     const newCustomer = await CustomerService.create(value)

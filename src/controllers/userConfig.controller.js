@@ -5,13 +5,13 @@ import userConfigValidator from '../validators/userConfig.validator'
 import ValidationError from '../errors/ValidationError'
 
 class UserConfigController extends BaseController {
-  static createSettings = async (req, res) => {
+  static createConfig = async (req, res) => {
     const { value, error } = userConfigValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
     const newUserConfig = await userConfigService.createConfig(value)
     const response = this.apiResponse(
-      'User configuration created.',
+      'User configurations created.',
       newUserConfig
     )
 
@@ -30,8 +30,10 @@ class UserConfigController extends BaseController {
     const userConfig = await userConfigService.getConfig({
       userId: req.params.userId
     })
-
-    const response = this.apiResponse('Fetched user configuration.', userConfig)
+    const response = this.apiResponse(
+      'Fetched user configurations.',
+      userConfig
+    )
 
     res.status(httpCodes.OK).json(response)
   }
@@ -44,15 +46,17 @@ class UserConfigController extends BaseController {
       { userId: req.params.userId },
       value
     )
-    const response = this.apiResponse('Updated user configuration.', userConfig)
+    const response = this.apiResponse(
+      'Updated user configurations.',
+      userConfig
+    )
 
     res.status(httpCodes.OK).json(response)
   }
 
   static deleteUserConfig = async (req, res) => {
     await userConfigService.deleteConfig({ userId: req.params.userId })
-
-    const response = this.apiResponse('Deleted user configuration.')
+    const response = this.apiResponse('Deleted user configurations.')
 
     res.status(httpCodes.OK).json(response)
   }

@@ -5,6 +5,6 @@ export default {
   init: async ({ expressApp = null, expressRoutes = null }) => {
     await dbLoader()
 
-    expressLoader(expressApp, expressRoutes)
+    await expressLoader(expressApp, expressRoutes)
   }
 }

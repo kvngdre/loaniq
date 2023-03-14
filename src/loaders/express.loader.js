@@ -22,7 +22,6 @@ export default async function expressLoader (app, routes) {
   // Parse JSON bodies (as sent by API clients)
   app.use(json())
   app.use(urlencoded({ extended: true }))
-
   app.use(cookieParser())
 
   // Load API routes
@@ -30,7 +29,7 @@ export default async function expressLoader (app, routes) {
 
   // Catch and handle 404
   app.use((_req, _res, next) => {
-    const err = new NotFoundError('Page not found.')
+    const err = new NotFoundError('Resource not found.')
     next(err)
   })
 

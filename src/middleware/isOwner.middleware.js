@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import { httpCodes } from '../utils/constants'
 import { roles } from '../config'
 import ErrorResponse from '../utils/ErrorResponse'
@@ -15,7 +16,7 @@ const isOwner = (...rolesToCheck) => {
 
   return (req, res, next) => {
     if (
-      req.params.userId !== req.currentUser._id &&
+      req.params.userId != req.currentUser._id &&
       disallowedRoles.includes(req.currentUser.role)
     ) {
       return res.status(httpCodes.FORBIDDEN).json(

@@ -11,7 +11,6 @@ class UserConfigService {
 
   async createConfig (dto, trx) {
     const newConfig = await UserConfigDAO.insert(dto, trx)
-
     return newConfig
   }
 
@@ -23,20 +22,17 @@ class UserConfigService {
   }
 
   async getConfig (filter) {
-    const foundConfig = await UserConfigDAO.findByField(filter)
-
+    const foundConfig = await UserConfigDAO.findOne(filter)
     return foundConfig
   }
 
   async updateConfig (filter, dto) {
     const updatedConfig = await UserConfigDAO.update(filter, dto)
-
     return updatedConfig
   }
 
   async deleteConfig (filter) {
     const deletedConfig = await UserConfigDAO.remove(filter)
-
     return deletedConfig
   }
 }

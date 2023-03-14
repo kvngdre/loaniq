@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose'
+import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
@@ -54,6 +55,14 @@ const segmentSchema = new Schema(
   },
   schemaOptions
 )
+
+segmentSchema.post(/^find/, function (doc) {
+  if (Array.isArray(doc) && doc.length === 0) {
+    throw new NotFoundError('Segments not found.')
+  }
+
+  if (!doc) throw new NotFoundError('Segment not found.')
+})
 
 const Segment = model('Segment', segmentSchema)
 

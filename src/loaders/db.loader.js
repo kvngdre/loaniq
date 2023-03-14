@@ -7,7 +7,7 @@ export default async () => {
 
   await mongoose
     .connect(dbSetup.uri, dbSetup.options)
-    .then(() => logger.info(`Connected to ${dbSetup.env} DB 🚀`))
+    .then(() => logger.info(`Connected to ${dbSetup.env} DB.`))
     .catch((error) => {
       logger.fatal('⚠ Failed to connect to DB ⚠', error.stack)
       process.exit(1)

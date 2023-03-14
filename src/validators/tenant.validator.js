@@ -5,8 +5,11 @@ class TenantValidator extends BaseValidator {
   #companyNameSchema
   #cacNumberSchema
   #categorySchema
+  #socialSchema
+  #supportSchema
+  #allowUserPwdResetSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#companyNameSchema = Joi.string()
@@ -31,6 +34,47 @@ class TenantValidator extends BaseValidator {
       .label('Category')
       .valid(...companyCategory)
       .messages({ 'any.only': 'Not a valid category' })
+
+    this.#socialSchema = Joi.array().items(
+      Joi.object({
+        platform: Joi.string()
+          .label('Platform')
+          .trim()
+          .valid(...socials)
+          // .messages({ 'any.only': '{#label} is not supported' })
+          .required(),
+        url: Joi.string()
+          .label('URL')
+          .trim()
+          .custom((value, helpers) => {
+            try {
+              const regex = /^www\./
+              if (regex.test(value)) value = 'https://' + value
+
+              const url = new URL(value)
+              if (url.protocol !== 'https:') return helpers.error('any.only')
+
+              return url.href
+            } catch (error) {
+              return helpers.error('any.invalid')
+            }
+          })
+          .messages({
+            'any.only': 'Must be a secure {#label}',
+            'any.invalid': '{#label} is invalid'
+          })
+          .required()
+      })
+    )
+
+    this.#supportSchema = Joi.object({
+      email: this._emailSchema.label('Support email'),
+      phone_number: this._phoneNumberSchema.label('Support phone number')
+    }).min(1)
+
+    this.#allowUserPwdResetSchema = Joi.boolean()
+      .label('Allow user password reset')
+      .default(false)
   }
 
   validateSignUp = (dto) => {
@@ -90,6 +134,35 @@ class TenantValidator extends BaseValidator {
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateCreateConfig = (dto, tenantId) => {
+    const schema = Joi.object({
+      tenantId: this._objectIdSchema.label('Tenant id').default(tenantId).forbidden(),
+      default_params: Joi.object()
+        .keys({
+          min_loan_amount: this._amountSchema
+            .label('Minimum loan amount')
+            .required(),
+          max_loan_amount: this._amountSchema
+            .label('Maximum loan amount')
+            .required(),
+          min_tenor: this._tenorSchema.label('Minimum loan tenor').required(),
+          max_tenor: this._tenorSchema.label('Maximum loan tenor').required(),
+          interest_rate: this._percentageSchema.required(),
+          max_dti: this._percentageSchema.label('Maximum D.T.I').required()
+        })
+        .label('Default parameters'),
+      fees: this._feesSchema,
+      socials: this.#socialSchema.min(1),
+      support: this.#supportSchema,
+      allowUserPwdReset: this.#allowUserPwdResetSchema
+    })
+
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }

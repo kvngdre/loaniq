@@ -146,7 +146,7 @@ const userSchema = new Schema(
 )
 
 userSchema.virtual('full_name').get(function () {
-  return this.first_name.concat(
+  return this.first_name?.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
     ` ${this.last_name}`
   )
