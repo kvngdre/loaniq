@@ -4,10 +4,10 @@ import TenantConfig from '../models/tenantConfig.model'
 import ValidationError from '../errors/ValidationError'
 
 class TenantConfigDAO extends BaseDAO {
-  static async insert (dto, trx) {
+  static async insert (dto) {
     try {
       const newRecord = new TenantConfig(dto)
-      await newRecord.save({ session: trx })
+      await newRecord.save()
 
       return newRecord
     } catch (exception) {

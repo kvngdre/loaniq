@@ -66,7 +66,9 @@ class UserController extends BaseController {
 
   // todo Discuss with Vic your ideas on forgot password flow.
   static forgotPassword = async (req, res) => {
-    const { value, error } = await userValidator.validateForgotPassword(req.body)
+    const { value, error } = await userValidator.validateForgotPassword(
+      req.body
+    )
     if (error) throw new ValidationError(null, error)
 
     await UserService.forgotPassword(value)
@@ -99,6 +101,27 @@ class UserController extends BaseController {
   static uploadFiles = async (req, res) => {
     const user = await UserService.uploadImage(req.params, req.file)
     const response = this.apiResponse('File uploaded.', user)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static getConfig = async (req, res) => {
+    const config = await UserService.getConfig({
+      userId: req.params.userId
+    })
+    const response = this.apiResponse('Fetched configurations.', config)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static updateUserConfig = async (req, res) => {
+    const { value, error } = userValidator.validateUpdateConfig(req.body)
+    if (error) throw new ValidationError(null, error)
+
+    const config = await UserService.updateConfig(req.params.userId, {
+      configurations: value
+    })
+    const response = this.apiResponse('Configurations updated.', config)
 
     res.status(httpCodes.OK).json(response)
   }

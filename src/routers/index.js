@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import authRouter from './auth.routes'
 import bankRouter from './bank.routes'
-import commonRouter from './common.routes'
 import customerRouter from './customer.routes'
 import dashboardRouter from './dashboard.routes'
 import loanRouter from './loan.routes'
@@ -20,7 +19,6 @@ const router = Router()
 export default () => {
   router.use('/auth', authRouter)
   router.use('/banks', bankRouter)
-  router.use('/common', commonRouter)
   router.use('/customers', customerRouter)
   router.use('/dashboard', dashboardRouter)
   router.use('/loans', loanRouter)
@@ -31,7 +29,7 @@ export default () => {
   router.use('/test', testRoutes)
   router.use('/transactions', transactionRouter)
   router.use('/users', userRoutes)
-  router.use('/wallet', walletRoutes)
+  router.use('/wallets', walletRoutes)
   router.use('/webhooks', webhookRouter)
 
   return router

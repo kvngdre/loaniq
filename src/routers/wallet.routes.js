@@ -1,26 +1,28 @@
 import { roles } from '../config'
 import { Router } from 'express'
+import auth from '../middleware/auth'
 import grantAccess from '../middleware/grantAccess'
+import validateId from '../middleware/validateId'
 import WalletController from '../controllers/wallet.controller'
 
-const router = Router({ mergeParams: true })
+const router = Router()
 
 const { SUPER_ADMIN } = roles
 
-router.post('/', [grantAccess(SUPER_ADMIN)], WalletController.createWallet)
+router.post('/', [auth, grantAccess(SUPER_ADMIN)], WalletController.createWallet)
 
-router.post('/credit', [grantAccess(SUPER_ADMIN)], WalletController.creditWallet)
+router.post('/:tenantId/credit', [auth, grantAccess(SUPER_ADMIN)], WalletController.creditWallet)
 
-router.post('/debit', [grantAccess(SUPER_ADMIN)], WalletController.debitWallet)
+router.post('/:tenantId/debit', [auth, grantAccess(SUPER_ADMIN)], WalletController.debitWallet)
 
-router.get('/', [ grantAccess(SUPER_ADMIN)], WalletController.getWallets)
+router.get('/', [auth, grantAccess(SUPER_ADMIN)], WalletController.getWallets)
 
-router.get('/:tenantId', [grantAccess('all')], WalletController.getWallet)
+router.get('/:tenantId', [auth, validateId, grantAccess('all')], WalletController.getWallet)
 
-router.get('/balance', [grantAccess('all')], WalletController.getBalance)
+router.get('/:tenantId/balance', [auth, grantAccess('all')], WalletController.getBalance)
 
-router.patch('/', [grantAccess(SUPER_ADMIN)], WalletController.updateWallet)
+router.patch('/:tenantId', [auth, validateId, grantAccess(SUPER_ADMIN)], WalletController.updateWallet)
 
-router.delete('/', [grantAccess(SUPER_ADMIN)], WalletController.deleteWallet)
+router.delete('/:tenantId', [auth, validateId, grantAccess(SUPER_ADMIN)], WalletController.deleteWallet)
 
 export default router

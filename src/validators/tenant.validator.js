@@ -1,4 +1,4 @@
-import { companyCategory } from '../utils/constants'
+import { companyCategory, socials } from '../utils/constants'
 import BaseValidator from './base.validator'
 import Joi from 'joi'
 class TenantValidator extends BaseValidator {
@@ -9,7 +9,7 @@ class TenantValidator extends BaseValidator {
   #supportSchema
   #allowUserPwdResetSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#companyNameSchema = Joi.string()
@@ -161,6 +161,30 @@ class TenantValidator extends BaseValidator {
       support: this.#supportSchema,
       allowUserPwdReset: this.#allowUserPwdResetSchema
     })
+
+    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateUpdateConfig = (dto) => {
+    const schema = Joi.object({
+      default_params: Joi.object({
+        min_loan_amount: this._amountSchema.label('Minimum loan amount'),
+        max_loan_amount: this._amountSchema.label('Maximum loan amount'),
+        min_tenor: this._tenorSchema.label('Minimum loan tenor'),
+        max_tenor: this._tenorSchema.label('Maximum loan tenor'),
+        interest_rate: this._percentageSchema,
+        max_dti: this._percentageSchema.label('Maximum D.T.I')
+      })
+        .min(1)
+        .label('Default parameters'),
+      fees: this._feesSchema,
+      socials: this.#socialSchema.min(1),
+      support: this.#supportSchema,
+      allowUserPwdReset: this.#allowUserPwdResetSchema
+    }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)

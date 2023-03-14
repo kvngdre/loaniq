@@ -115,18 +115,51 @@ class TenantController extends BaseController {
 
     const configurations = await TenantService.createConfig(value)
     const response = this.apiResponse(
-      'Tenant configuration created.',
+      'Configurations created.',
       configurations
     )
 
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getConfigs = async (req, res) => {
+  static getConfigs = async (_req, res) => {
     const [count, configurations] = await TenantService.getConfigs()
 
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, configurations)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static getConfig = async (req, res) => {
+    const tenantConfig = await TenantService.getConfig(req.params.tenantId)
+    const response = this.apiResponse(
+      'Fetched configurations.',
+      tenantConfig
+    )
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static updateConfig = async (req, res) => {
+    const { value, error } = tenantValidator.validateUpdateConfig(req.body)
+    if (error) throw new ValidationError(null, error)
+
+    const tenantConfig = await TenantService.updateConfig(
+      { tenantId: req.params.tenantId },
+      value
+    )
+    const response = this.apiResponse(
+      'Tenant configuration updated.',
+      tenantConfig
+    )
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static deleteConfig = async (req, res) => {
+    await TenantService.deleteConfig({ tenantId: req.params.tenantId })
+    const response = this.apiResponse('Tenant configuration deleted.')
 
     res.status(httpCodes.OK).json(response)
   }

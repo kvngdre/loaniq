@@ -7,7 +7,7 @@ class ReviewController extends BaseController {
   static createReview = async (req, res) => {
     const { value, error } = reviewValidator.validateCreate(
       req.currentUser._id,
-      req.params.tenantId,
+      req.currentUser.tenantId,
       req.body
     )
     if (error) throw new ValidationError(null, error)

@@ -3,7 +3,7 @@ import { txnTypes } from '../utils/constants'
 import logger from '../utils/logger'
 import UserService from '../services/user.service'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import tenantConfigService from '../services/tenantConfig.service'
+import TenantService from '../services/tenant.service'
 
 const ONE_MINUTE_IN_MILLISECONDS = 60_000
 const epochYear = 1970
@@ -62,7 +62,8 @@ export function similarity (s1, s2) {
  */
 export function genRandomStr (len = 5) {
   let randStr = ''
-  const str = 'ABCDEFGHJKMNOPQRSTUVWXYZ0123456789abcdefghjkmnopqrstuvwxyz9876543210'
+  const str =
+    'ABCDEFGHJKMNOPQRSTUVWXYZ0123456789abcdefghjkmnopqrstuvwxyz9876543210'
 
   for (let i = 1; i <= len; i++) {
     const char = Math.floor(Math.random() * str.length)
@@ -232,7 +233,7 @@ export const validateOTP = (user, otp) => {
 
 export const canUserResetPwd = async (userEmail) => {
   const { tenantId } = await UserService.getUser({ email: userEmail })
-  const { allowUserPwdReset } = await tenantConfigService.getConfig({
+  const { allowUserPwdReset } = await TenantService.getConfig({
     tenantId
   })
 

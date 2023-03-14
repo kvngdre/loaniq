@@ -8,6 +8,7 @@ class UserValidator extends BaseValidator {
   #jobTitle
   #displayNameSchema
   #segmentsSchema
+  #timezoneSchema
 
   constructor () {
     super()
@@ -17,13 +18,25 @@ class UserValidator extends BaseValidator {
       'string.max': '{#label} is too long'
     })
 
-    this.#displayNameSchema = Joi.string().label('Display name').min(1).max(255).invalid('', ' ', '  ')
+    this.#displayNameSchema = Joi.string()
+      .label('Display name')
+      .min(1)
+      .max(255)
+      .invalid('', ' ', '  ')
 
     this.#segmentsSchema = Joi.array()
       .items(this._objectIdSchema)
       .min(1)
       .messages({ 'array.min': '{#label} array cannot be empty' })
       .label('Segments')
+
+    const supportedTimeZones = Intl.supportedValuesOf('timeZone')
+    this.#timezoneSchema = Joi.string()
+      .label('Timezone')
+      .valid(...supportedTimeZones)
+      .messages({
+        'any.only': '{#label} is not supported'
+      })
   }
 
   validateCreate = (dto, tenantId) => {
@@ -45,6 +58,9 @@ class UserValidator extends BaseValidator {
         is: roles.AGENT,
         then: Joi.required(),
         otherwise: Joi.forbidden()
+      }),
+      configurations: Joi.object({
+        timezone: this.#timezoneSchema
       })
     })
 
@@ -68,7 +84,21 @@ class UserValidator extends BaseValidator {
         is: roles.AGENT,
         then: Joi.optional(),
         otherwise: Joi.forbidden()
+      }),
+      configurations: Joi.object({
+        timezone: this.#timezoneSchema
       })
+    }).min(1)
+
+    let { value, error } = schema.validate(dto, { abortEarly: false })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateUpdateConfig = (dto) => {
+    const schema = Joi.object({
+      timezone: this.#timezoneSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -91,9 +121,11 @@ class UserValidator extends BaseValidator {
   }
 
   validateForgotPassword = async (dto) => {
-    let schema = Joi.object().keys({
-      email: this._emailSchema.required()
-    }).min(1)
+    let schema = Joi.object()
+      .keys({
+        email: this._emailSchema.required()
+      })
+      .min(1)
     let { value, error } = schema.validate(dto, { abortEarly: false })
 
     if (error) {

@@ -1,14 +1,12 @@
 /* eslint-disable camelcase */
 import { constants, roles } from '../config'
-import { genRandomStr, generateOTP, similarity } from '../helpers'
+import { flatten, genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
 import driverUploader from '../utils/driveUploader'
-import events from '../pubsub/events'
 import fs from 'fs'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import path from 'path'
-import pubsub from '../pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
@@ -26,14 +24,6 @@ class UserService {
       txn?.startTransaction()
 
       const newUser = await UserDAO.insert(dto, trx || txn)
-
-      // * Emitting  new user event.
-      pubsub.publish(
-        events.user.new,
-        null,
-        { userId: newUser._id, ...newUser._doc },
-        trx || txn
-      )
 
       await mailer({
         to: newUser.email,
@@ -109,6 +99,12 @@ class UserService {
     return foundUser
   }
 
+  static async getConfig (userId) {
+    const { configurations } = await UserDAO.findOne(userId)
+
+    return configurations
+  }
+
   static async updateUser (
     userId,
     dto,
@@ -120,8 +116,13 @@ class UserService {
     }
   ) {
     const updatedUser = await UserDAO.update(userId, dto, projection)
-
     return updatedUser
+  }
+
+  static async updateConfig (userId, dto) {
+    const { configurations } = await UserDAO.update(userId, flatten(dto))
+
+    return configurations
   }
 
   static async updateUsers (filter, dto) {
@@ -130,8 +131,6 @@ class UserService {
 
   static async deleteUser (userId) {
     const deletedUser = await UserDAO.remove(userId)
-
-    await pubsub.publish(events.user.delete, deletedUser._id)
 
     return deletedUser
   }
@@ -150,10 +149,8 @@ class UserService {
       throw new ValidationError('Password is too similar to old password.')
     }
 
-    /**
-     * ! Notify user of password change
-     */
-    logger.info('Sending password change email...')
+    // ! Notify user of password change
+    logger.debug('Sending password change email...')
     mailer({
       to: foundUser.email,
       subject: 'Password changed',

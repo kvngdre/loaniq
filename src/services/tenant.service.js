@@ -3,17 +3,14 @@ import { genRandomStr } from '../helpers'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError'
 import driverUploader from '../utils/driveUploader'
-import events from '../pubsub/events'
 import fs from 'fs'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import path from 'path'
-import pubsub from '../pubsub'
-import tenantConfigService from './tenantConfig.service'
+import TenantConfigDAO from '../daos/tenantConfig.dao'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
-import TenantConfigDAO from '../daos/tenantConfig.dao'
 
 class TenantService {
   static async createTenant (dto) {
@@ -26,16 +23,9 @@ class TenantService {
       trx.startTransaction()
 
       const newTenant = await TenantDAO.insert(tenant, trx)
+      await TenantConfigDAO.insert({ tenantId: newTenant._id })
       user.tenantId = newTenant._id
       const newUser = await UserService.createUser(user, trx)
-
-      // * Emitting new tenant and user sign up event.
-      pubsub.publish(
-        events.tenant.signUp,
-        null,
-        { tenantId: newTenant._id, ...newTenant._doc },
-        trx
-      )
 
       // * Send welcome mail...
       mailer({
@@ -71,26 +61,21 @@ class TenantService {
 
   static async getTenant (tenantId) {
     const foundTenant = await TenantDAO.findById(tenantId)
-
     return foundTenant
   }
 
   static async updateTenant (tenantId, dto) {
     const updateTenant = await TenantDAO.update(tenantId, dto)
-
     return updateTenant
   }
 
   static async deleteTenant (tenantId) {
     const deletedTenant = await TenantDAO.remove(tenantId)
-
     return deletedTenant
   }
 
   static async activateTenant (tenantId, dto) {
-    const { cac_number, support } = dto
     const foundTenant = await TenantDAO.findById(tenantId)
-
     if (foundTenant.activated) {
       throw new ConflictError('Tenant has already been activated.')
     }
@@ -98,8 +83,8 @@ class TenantService {
     foundTenant.set({
       emailVerified: true,
       activated: true,
-      cac_number,
-      support
+      cac_number: dto.cac_number,
+      support: dto.support
     })
     await foundTenant.save()
 
@@ -128,9 +113,7 @@ class TenantService {
       name: foundOwner.first_name
     })
 
-    /**
-     * ? send a deactivate email to Apex!
-     */
+    // ? send a deactivate email to Apex!
     foundTenant.set({ active: false })
     UserService.updateUsers({ tenantId }, { active: false })
     await foundTenant.save()
@@ -153,30 +136,27 @@ class TenantService {
   }
 
   static async generateFormId (tenantId) {
-    const baseurl = 'http://localhost:8480/api/v1/loans/form/'
-    const formId = genRandomStr(5)
     try {
-      const updatedTenantConfig = await tenantConfigService.updateConfig(
-        tenantId,
-        { formId }
-      )
+      const formId = genRandomStr(5)
+      const updatedConfig = await TenantConfigDAO.update(tenantId, { formId })
 
-      updatedTenantConfig._doc.formId = baseurl + formId
-
-      return updatedTenantConfig
+      return updatedConfig
     } catch (error) {
       await this.generateFormId(tenantId)
     }
   }
 
   static async getFormData (formId) {
-    const foundTConfig = await tenantConfigService.getConfig({ formId })
-    const foundTenant = await TenantDAO.findById(foundTConfig.tenantId)
+    const { form_data, socials, support, tenantId } =
+      await TenantConfigDAO.findOne({ formId }).populate('tenantId')
 
-    const { logo, company_name } = foundTenant
-    const { form_data, socials, support } = foundTConfig
-
-    return { ...form_data, logo, company_name, socials, support }
+    return {
+      logo: tenantId.logo,
+      name: tenantId.company_name,
+      socials,
+      support,
+      ...form_data
+    }
   }
 
   static async uploadDocs (tenantId, uploadFiles) {
@@ -219,6 +199,33 @@ class TenantService {
 
     await foundTenant.save()
     return foundTenant
+  }
+
+  static async createConfig (dto) {
+    const newConfig = await TenantConfigDAO.insert(dto)
+    return newConfig
+  }
+
+  static async getConfigs (filters, projection) {
+    const foundConfigs = await TenantConfigDAO.findAll(filters, projection)
+    const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
+
+    return [count, foundConfigs]
+  }
+
+  static async getConfig (filter, projection) {
+    const foundConfig = await TenantConfigDAO.findOne(filter, projection)
+    return foundConfig
+  }
+
+  static async updateConfig (filter, dto, projection) {
+    const updateConfig = await TenantConfigDAO.update(filter, dto, projection)
+    return updateConfig
+  }
+
+  static async deleteConfig (filter) {
+    const deletedConfig = await TenantConfigDAO.remove(filter)
+    return deletedConfig
   }
 }
 

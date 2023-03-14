@@ -1,19 +1,19 @@
 import { Router } from 'express'
+import auth from '../middleware/auth'
 import grantAccess from '../middleware/grantAccess'
 import ReviewController from '../controllers/review.controller.js'
 import validateId from '../middleware/validateId'
-import finder from '../middleware/finder'
 
-const router = Router({ mergeParams: true })
+const router = Router()
 
-router.post('/', [grantAccess('all')], ReviewController.createReview)
+router.post('/', [auth, grantAccess('all')], ReviewController.createReview)
 
-router.get('/', [grantAccess('all')], ReviewController.getReviews)
+router.get('/', [auth, grantAccess('all')], ReviewController.getReviews)
 
-router.get('/:reviewId', [validateId, grantAccess('all')], ReviewController.getReview)
+router.get('/:reviewId', [auth, validateId, grantAccess('all')], ReviewController.getReview)
 
-router.patch('/:reviewId', [validateId, grantAccess('all')], ReviewController.updateReview)
+router.patch('/:reviewId', [auth, validateId, grantAccess('all')], ReviewController.updateReview)
 
-router.delete('/:reviewId', [validateId, grantAccess('all')], ReviewController.deleteReview)
+router.delete('/:reviewId', [auth, validateId, grantAccess('all')], ReviewController.deleteReview)
 
 export default router
