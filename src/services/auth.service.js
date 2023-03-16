@@ -7,7 +7,7 @@ import ForbiddenError from '../errors/ForbiddenError'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
-import pubsub from '../pubsub'
+import pubsub from '../pubsub/pubsub'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
 import ValidationError from '../errors/ValidationError'
@@ -56,9 +56,7 @@ class AuthService {
     await foundUser.save()
 
     // ! Emitting user login event.
-    pubsub.publish(events.user.login, foundUser._id, {
-      last_login_time: new Date()
-    })
+    pubsub.publish(events.user.login, { user: foundUser._id })
 
     delete foundUser._doc.password
     delete foundUser._doc.otp
@@ -68,11 +66,9 @@ class AuthService {
   }
 
   static async login ({ email, password }, token) {
-    const foundUser = await UserService.getUser({ email }, {}).catch(
-      () => {
-        throw new UnauthorizedError('Invalid credentials.')
-      }
-    )
+    const foundUser = await UserService.getUser({ email }, {}).catch(() => {
+      throw new UnauthorizedError('Invalid credentials.')
+    })
 
     const isMatch = await foundUser.comparePasswords(password)
     if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
@@ -141,11 +137,7 @@ class AuthService {
     await foundUser.save()
 
     // ! Emitting user login event.
-    pubsub.publish(
-      events.user.login,
-      { userId: foundUser._id },
-      { last_login_time: new Date() }
-    )
+    pubsub.publish(events.user.login, { user: foundUser._id })
 
     return [
       { id: foundUser._id, role: foundUser.role, accessToken, redirect: null },

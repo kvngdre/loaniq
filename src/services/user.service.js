@@ -2,6 +2,7 @@
 import { constants, roles } from '../config'
 import { flatten, genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
+import { events, pubsub } from '../pubsub'
 import driverUploader from '../utils/driveUploader'
 import fs from 'fs'
 import logger from '../utils/logger'
@@ -24,6 +25,14 @@ class UserService {
       txn?.startTransaction()
 
       const newUser = await UserDAO.insert(dto, trx || txn)
+
+      // * Emitting  new user event.
+      pubsub.publish(
+        events.user.new,
+        null,
+        { userId: newUser._id, ...newUser._doc },
+        trx || txn
+      )
 
       await mailer({
         to: newUser.email,
@@ -99,12 +108,6 @@ class UserService {
     return foundUser
   }
 
-  static async getConfig (userId) {
-    const { configurations } = await UserDAO.findOne(userId)
-
-    return configurations
-  }
-
   static async updateUser (
     userId,
     dto,
@@ -119,18 +122,14 @@ class UserService {
     return updatedUser
   }
 
-  static async updateConfig (userId, dto) {
-    const { configurations } = await UserDAO.update(userId, flatten(dto))
-
-    return configurations
-  }
-
   static async updateUsers (filter, dto) {
     await UserDAO.updateMany(filter, dto)
   }
 
   static async deleteUser (userId) {
     const deletedUser = await UserDAO.remove(userId)
+
+    await pubsub.publish(events.user.delete, deletedUser._id)
 
     return deletedUser
   }

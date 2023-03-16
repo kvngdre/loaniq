@@ -13,6 +13,12 @@ const tenantConfigSchema = new Schema(
       required: [true, 'Tenant Id is required.']
     },
 
+    resetPwdFrequency: {
+      // In  number of days
+      type: Number,
+      default: null
+    },
+
     allowUserPwdReset: {
       type: Boolean,
       default: false
@@ -30,11 +36,13 @@ const tenantConfigSchema = new Schema(
       },
 
       min_tenor: {
+        // In  months
         type: Number,
         default: null
       },
 
       max_tenor: {
+        // In months
         type: Number,
         default: null
       },
@@ -108,12 +116,12 @@ const tenantConfigSchema = new Schema(
   schemaOptions
 )
 
-tenantConfigSchema.post(/^find/, function (doc) {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Tenant configurations not found.')
+tenantConfigSchema.post(/^find/, function (docs) {
+  if (Array.isArray(docs) && docs.length === 0) {
+    throw new NotFoundError('Tenants configurations not found.')
   }
 
-  if (!doc) throw new NotFoundError('Tenant configuration not found.')
+  if (!docs) throw new NotFoundError('Tenant configurations not found.')
 })
 
 const TenantConfig = model('TenantConfig', tenantConfigSchema)

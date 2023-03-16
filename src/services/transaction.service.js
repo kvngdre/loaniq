@@ -1,6 +1,5 @@
+import { events, pubsub } from '../pubsub'
 import TransactionDAO from '../daos/transaction.dao'
-import events from '../pubsub/events'
-import pubsub from '../pubsub'
 
 class TransactionService {
   constructor () {

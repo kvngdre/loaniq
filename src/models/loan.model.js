@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
+// import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
 import { loanStatus, loanRemarks } from '../utils/constants'
 import logger from '../utils/logger'
 import NotFoundError from '../errors/NotFoundError'
@@ -11,6 +11,17 @@ const loanSchema = new Schema(
     tenantId: {
       type: Schema.Types.ObjectId,
       required: true
+    },
+
+    customer: {
+      type: Schema.Types.ObjectId,
+      ref: 'Customer',
+      required: true
+    },
+
+    active: {
+      type: Boolean,
+      default: false
     },
 
     amount: {
@@ -66,28 +77,15 @@ const loanSchema = new Schema(
 
     dti: Number,
 
-    customer: {
-      type: Schema.Types.ObjectId,
-      required: true
-    },
-
     analyst: {
       type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
 
     agent: {
       type: Schema.Types.ObjectId,
-      required: true
-    },
-
-    active: {
-      type: Boolean,
-      default: false
-    },
-
-    income: {
-      type: Number,
+      ref: 'User',
       required: true
     },
 
@@ -112,31 +110,21 @@ const loanSchema = new Schema(
         required: true
       },
 
-      age: {
+      income: {
         type: Number,
-        default: null
+        required: true
       },
 
-      tenure: {
-        type: Number,
-        default: null
-      }
+      age: Number,
+
+      tenure: Number
     },
 
-    approveDenyDate: {
-      type: Date,
-      default: null
-    },
+    date_approved_or_denied: Date,
 
-    date_liquidated: {
-      type: Date,
-      default: null
-    },
+    date_liquidated: Date,
 
-    maturity_date: {
-      type: Date,
-      default: null
-    },
+    maturity_date: Date,
 
     isBooked: {
       type: Boolean,
@@ -160,8 +148,8 @@ loanSchema.pre('save', function (next) {
   try {
     const isPresent = (path) => ['amount', 'tenor'].includes(path)
     if (this.modifiedPaths().some(isPresent)) {
-      this.recommendedAmount = this.amount
-      this.recommendedTenor = this.tenor
+      this.proposed_amount = this.amount
+      this.proposed_tenor = this.tenor
     }
 
     // setting loan metrics

@@ -1,12 +1,13 @@
+import { Types } from 'mongoose'
 import BaseDAO from './base.dao'
 import ConflictError from '../errors/ConflictError'
-import Customer from '../models/customer.model'
+import UserConfig from '../models/userConfig.model'
 import ValidationError from '../errors/ValidationError'
 
-class CustomerDAO extends BaseDAO {
+class UserConfigDAO extends BaseDAO {
   static async insert (dto, trx) {
     try {
-      const newRecord = new Customer(dto)
+      const newRecord = new UserConfig(dto)
       await newRecord.save({ session: trx })
 
       return newRecord
@@ -25,30 +26,25 @@ class CustomerDAO extends BaseDAO {
     }
   }
 
+  // todo see if RBAC can narrow down so that we can do an upsert if not found
+  static async findByField (filter, projection = {}) {
+    const foundRecord = await UserConfig.findOne(filter).select(projection)
+
+    return foundRecord
+  }
+
   static async findAll (filter = {}, projection = {}) {
-    const foundRecords = await Customer.find(filter).select(projection)
+    const foundRecords = await UserConfig.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async findById (id, projection = {}) {
-    const foundRecord = await Customer.findById(id).select(projection)
-
-    return foundRecord
-  }
-
-  static async findOne (filter, projection = {}) {
-    const foundRecord = await Customer.findOne(filter).select(projection)
-
-    return foundRecord
-  }
-
-  static async update (id, dto, projection = {}) {
+  static async update (filter, dto, projection = {}) {
     try {
-      const foundRecord = await Customer.findById(id).select(projection)
-
-      foundRecord.set(dto)
-      await foundRecord.save()
+      const foundRecord = await UserConfig.findOneAndUpdate(filter, dto, {
+        upsert: true,
+        new: true
+      }).select(projection)
 
       return foundRecord
     } catch (exception) {
@@ -66,11 +62,12 @@ class CustomerDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
-    const deletedRecord = await Customer.findByIdAndDelete(id)
+  static async remove (filter) {
+    filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter }
+    const deletedRecord = await UserConfig.findOneAndDelete(filter)
 
     return deletedRecord
   }
 }
 
-export default CustomerDAO
+export default UserConfigDAO

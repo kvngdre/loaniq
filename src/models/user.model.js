@@ -140,20 +140,6 @@ const userSchema = new Schema(
         }
       ],
       default: null
-    },
-
-    configurations: {
-      type: {
-        last_login_time: {
-          type: Date,
-          default: null
-        },
-
-        timezone: {
-          type: String,
-          default: 'Africa/Lagos'
-        }
-      }
     }
   },
   schemaOptions

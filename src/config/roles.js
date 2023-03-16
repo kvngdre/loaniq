@@ -1,7 +1,5 @@
 export const roles = {
-  SUPPORT: 'support',
   AGENT: 'agent',
-  // OPERATIONS: 'Y3',
   ANALYST: 'analyst',
   EDITOR: 'editor',
   ADMIN: 'admin',

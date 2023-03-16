@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { genRandomStr } from '../helpers'
 import { startSession } from 'mongoose'
+import { events, pubsub } from '../pubsub'
 import ConflictError from '../errors/ConflictError'
 import driverUploader from '../utils/driveUploader'
 import fs from 'fs'
@@ -23,9 +24,16 @@ class TenantService {
       trx.startTransaction()
 
       const newTenant = await TenantDAO.insert(tenant, trx)
-      await TenantConfigDAO.insert({ tenantId: newTenant._id })
       user.tenantId = newTenant._id
       const newUser = await UserService.createUser(user, trx)
+
+      // * Emitting new tenant and user sign up event.
+      pubsub.publish(
+        events.tenant.signUp,
+        null,
+        { tenantId: newTenant._id, ...newTenant._doc },
+        trx
+      )
 
       // * Send welcome mail...
       mailer({
@@ -148,7 +156,7 @@ class TenantService {
 
   static async getFormData (formId) {
     const { form_data, socials, support, tenantId } =
-      await TenantConfigDAO.findOne({ formId }).populate('tenantId')
+      await TenantConfigDAO.findOne({ formId })
 
     return {
       logo: tenantId.logo,

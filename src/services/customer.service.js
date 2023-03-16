@@ -1,8 +1,8 @@
 import CustomerDAO from '../daos/customer.dao'
 
 class CustomerService {
-  static async create (dto) {
-    const newCustomer = await CustomerDAO.insert(dto)
+  static async create (dto, trx) {
+    const newCustomer = await CustomerDAO.insert(dto, trx)
 
     return newCustomer
   }

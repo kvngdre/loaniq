@@ -1,19 +1,19 @@
-import ConflictError from '../errors/ConflictError'
-import ValidationError from '../errors/ValidationError'
-import Bank from '../models/bank.model'
 import BaseDAO from './base.dao'
+import ConflictError from '../errors/ConflictError'
+import Loan from '../models/loan.model'
+import ValidationError from '../errors/ValidationError'
 
-class BankDAO extends BaseDAO {
+class LoanDAO extends BaseDAO {
   static async insert (dto) {
     try {
-      const newRecord = new Bank(dto)
+      const newRecord = new Loan(dto)
       await newRecord.save()
 
       return newRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already un use.`)
+        throw new ConflictError(`${field} already in use.`)
       }
 
       if (exception.name === 'ValidationError') {
@@ -26,20 +26,26 @@ class BankDAO extends BaseDAO {
   }
 
   static async findAll (filter = {}, projection = {}) {
-    const foundRecords = await Bank.find(filter).select(projection)
+    const foundRecords = await Loan.find(filter).select(projection)
 
     return foundRecords
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await Bank.findById(id).select(projection)
+    const foundRecord = await Loan.findById(id).select(projection)
+
+    return foundRecord
+  }
+
+  static async findOne (filter, projection = {}) {
+    const foundRecord = await Loan.findOne(filter).select(projection)
 
     return foundRecord
   }
 
   static async update (id, dto, projection = {}) {
     try {
-      const foundRecord = await Bank.findById(id).select(projection)
+      const foundRecord = await Loan.findById(id).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -61,10 +67,10 @@ class BankDAO extends BaseDAO {
   }
 
   static async remove (id) {
-    const deletedRecord = await Bank.findByIdAndDelete(id)
+    const deletedRecord = await Loan.findByIdAndDelete(id)
 
     return deletedRecord
   }
 }
 
-export default BankDAO
+export default LoanDAO
