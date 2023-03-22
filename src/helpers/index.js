@@ -4,6 +4,9 @@ import logger from '../utils/logger'
 import UserService from '../services/user.service'
 import UnauthorizedError from '../errors/UnauthorizedError'
 import TenantService from '../services/tenant.service'
+import ForbiddenError from '../errors/ForbiddenError'
+import jwt from 'jsonwebtoken'
+import { constants } from '../config'
 
 const ONE_MINUTE_IN_MILLISECONDS = 60_000
 const epochYear = 1970
@@ -31,6 +34,32 @@ function editDistance (s1, s2) {
     if (i > 0) costs[s2.length] = lastValue
   }
   return costs[s2.length]
+}
+
+/**
+ * Generates a json web token
+ * @param {object} payload Payload to be carried in the token.
+ * @returns {string}
+ */
+export function genAccessToken (payload) {
+  return jwt.sign(payload, constants.jwt.secret.access, {
+    audience: constants.jwt.audience,
+    expiresIn: constants.jwt.exp_time.access,
+    issuer: constants.jwt.issuer
+  })
+}
+
+export function genRefreshToken (payload) {
+  const refreshToken = jwt.sign(payload, constants.jwt.secret.refresh, {
+    audience: constants.jwt.audience,
+    expiresIn: constants.jwt.exp_time.refresh,
+    issuer: constants.jwt.issuer
+  })
+
+  return {
+    token: refreshToken,
+    expiresIn: Date.now() + constants.jwt.exp_time.refresh * 1000
+  }
 }
 
 /**
@@ -105,6 +134,31 @@ export function flatten (obj, newObj = {}, prefix = '') {
     }
   }
   return newObj
+}
+
+export function permitLogin (user) {
+  const data = {
+    id: user._id,
+    redirect: {}
+  }
+
+  if (!user.isEmailVerified && !user.active) {
+    data.redirect.verify_signUp = true
+    throw new ForbiddenError('Your email has not been verified.', data)
+  }
+
+  if (user.resetPwd) {
+    data.redirect.reset_password = true
+    throw new ForbiddenError('Your password reset has been triggered.', data)
+  }
+
+  if (!user.active) {
+    data.redirect = null
+    throw new ForbiddenError(
+      'Account deactivated. Contact your administrator.',
+      data
+    )
+  }
 }
 
 /**
@@ -226,7 +280,7 @@ export const validateOTP = (user, otp) => {
     throw new UnauthorizedError('Invalid OTP.')
   }
 
-  if (Date.now() > user.otp.expires) {
+  if (Date.now() > user.otp.expiresIn) {
     throw new UnauthorizedError('OTP has expired.')
   }
 }

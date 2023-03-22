@@ -1,7 +1,6 @@
-import { constants, roles } from '../config'
 import { hashSync, compareSync } from 'bcryptjs'
+import { roles } from '../config'
 import { Schema, model } from 'mongoose'
-import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = {
@@ -122,7 +121,7 @@ const userSchema = new Schema(
         default: null
       },
 
-      expires: {
+      expiresIn: {
         type: Number,
         default: null
       }
@@ -156,37 +155,10 @@ userSchema.methods.comparePasswords = function (password) {
   return compareSync(password, this.password)
 }
 
-userSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    {
-      id: this._id.toString()
-    },
-    constants.jwt.secret.access,
-    {
-      audience: constants.jwt.audience,
-      expiresIn: constants.jwt.exp_time.access,
-      issuer: constants.jwt.issuer
-    }
-  )
-}
-
-userSchema.methods.generateRefreshToken = function () {
-  const refreshToken = jwt.sign(
-    {
-      id: this._id.toString()
-    },
-    constants.jwt.secret.refresh,
-    {
-      audience: constants.jwt.audience,
-      expiresIn: constants.jwt.exp_time.refresh,
-      issuer: constants.jwt.issuer
-    }
-  )
-
-  return {
-    token: refreshToken,
-    expires: Date.now() + constants.jwt.exp_time.refresh * 1000
-  }
+userSchema.methods.purgeSensitiveData = function () {
+  delete this._doc.password
+  delete this._doc.otp
+  delete this._doc.resetPwd
 }
 
 // Hashing password before insert

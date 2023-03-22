@@ -9,6 +9,12 @@ if (foundEnv.error || env === 'production') {
 }
 
 export default {
+  auth0: {
+    secret: process.env.AUTH0_SECRET,
+    base_url: process.env.AUTH0_BASE_URL,
+    issuer_base_url: process.env.AUTH0_ISSUER_BASE_URL,
+    client_id: process.env.AUTH0_CLIENT_ID
+  },
   api: {
     prefix: '/api',
     version: '/v1',

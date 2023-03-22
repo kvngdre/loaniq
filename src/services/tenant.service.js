@@ -109,7 +109,7 @@ class TenantService {
         throw new UnauthorizedError('Invalid OTP.')
       }
 
-      if (Date.now() > owner.otp.expires) {
+      if (Date.now() > owner.otp.expiresIn) {
         throw new UnauthorizedError('OTP has expired.')
       }
     }

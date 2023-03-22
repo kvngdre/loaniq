@@ -8,12 +8,13 @@ router.post('/verify_registration', AuthController.verifyRegistration)
 
 router.post('/login', AuthController.login)
 
+router.post('/callback', AuthController.callback)
+
 router.get('/logout', AuthController.logout)
 
-// todo improve the route name
-router.get('/logout_all', [auth], AuthController.logoutAllSessions)
+router.get('/sessions/logout', [auth], AuthController.logoutAllSessions)
 
-router.get('/me', [auth], AuthController.getLoggedInUser)
+router.get('/me', [auth], AuthController.getCurrentUser)
 
 router.get('/request_otp', AuthController.sendOTP)
 

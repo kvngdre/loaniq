@@ -1,3 +1,4 @@
+// import { requiresAuth } from 'express-openid-connect'
 import { roles } from '../config'
 import { Router } from 'express'
 import auth from '../middleware/auth'

@@ -1,6 +1,8 @@
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
+const schemaOptions = { timestamps: true, versionKey: false }
+
 const configSchema = new Schema({
   tenantId: {
     type: Schema.Types.ObjectId,
@@ -8,7 +10,7 @@ const configSchema = new Schema({
     required: true
   },
 
-  user: {
+  userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -31,10 +33,19 @@ const configSchema = new Schema({
 
   // todo, move the refresh tokens here
   sessions: {
-    type: Schema.Types.Mixed
+    type: [
+      {
+        os: String,
+        location: String,
+        client: String,
+        token: String,
+        expiresIn: Number
+      }
+    ],
+    default: null
   }
 
-})
+}, schemaOptions)
 
 configSchema.post(/^find/, function (docs) {
   if (Array.isArray(docs) && docs.length === 0) {

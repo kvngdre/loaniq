@@ -26,17 +26,17 @@ class UserConfigDAO extends BaseDAO {
     }
   }
 
-  // todo see if RBAC can narrow down so that we can do an upsert if not found
-  static async findByField (filter, projection = {}) {
-    const foundRecord = await UserConfig.findOne(filter).select(projection)
-
-    return foundRecord
-  }
-
   static async findAll (filter = {}, projection = {}) {
     const foundRecords = await UserConfig.find(filter).select(projection)
 
     return foundRecords
+  }
+
+  // todo see if RBAC can narrow down so that we can do an upsert if not found
+  static async findOne (filter, projection = {}) {
+    const foundRecord = await UserConfig.findOne(filter).select(projection)
+
+    return foundRecord
   }
 
   static async update (filter, dto, projection = {}) {

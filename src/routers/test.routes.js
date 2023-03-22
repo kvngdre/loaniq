@@ -1,6 +1,8 @@
 import express from 'express'
 import { httpCodes } from '../utils/constants'
 import pkg from '../../package.json'
+import { requiresAuth } from 'express-openid-connect'
+
 
 const app = express()
 app.set('pkg', pkg)
@@ -15,7 +17,7 @@ router.get('/status', (_req, res) => {
   }
 })
 
-router.get('/', (_req, res) => {
+router.get('/info', (_req, res) => {
   const info = {
     appName: app.get('pkg').name,
     appDescription: app.get('pkg').description,
@@ -24,6 +26,11 @@ router.get('/', (_req, res) => {
   }
 
   res.status(httpCodes.OK).json(info)
+})
+
+router.get('/', [requiresAuth()], (req, res) => {
+  // res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
+  res.send(JSON.stringify(req.oidc.user))
 })
 
 export default router

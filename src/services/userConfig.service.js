@@ -1,6 +1,7 @@
 import events from '../pubsub/events'
 import pubsub from '../pubsub/pubsub'
 import UserConfigDAO from '../daos/userConfig.dao'
+import { Types } from 'mongoose'
 
 class UserConfigService {
   constructor () {
@@ -23,19 +24,20 @@ class UserConfigService {
   }
 
   async getConfig (filter) {
-    const foundConfig = await UserConfigDAO.findByField(filter)
+    filter = Types.ObjectId.isValid(filter) ? { userId: filter } : filter
+    const foundConfig = await UserConfigDAO.findOne(filter)
 
     return foundConfig
   }
 
-  async updateConfig (filter, dto) {
-    const updatedConfig = await UserConfigDAO.update(filter, dto)
+  async updateConfig (userId, dto) {
+    const updatedConfig = await UserConfigDAO.update({ userId }, dto)
 
     return updatedConfig
   }
 
-  async deleteConfig (filter) {
-    const deletedConfig = await UserConfigDAO.remove(filter)
+  async deleteConfig (userId) {
+    const deletedConfig = await UserConfigDAO.remove({ userId })
 
     return deletedConfig
   }

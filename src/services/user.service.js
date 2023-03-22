@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { constants, roles } from '../config'
-import { flatten, genRandomStr, generateOTP, similarity } from '../helpers'
+import { genRandomStr, generateOTP, similarity } from '../helpers'
 import { startSession } from 'mongoose'
 import { events, pubsub } from '../pubsub'
 import driverUploader from '../utils/driveUploader'
@@ -66,7 +66,6 @@ class UserService {
     projection = {
       password: 0,
       resetPwd: 0,
-      refreshTokens: 0,
       otp: 0
     }
   ) {
@@ -83,7 +82,6 @@ class UserService {
     projection = {
       password: 0,
       resetPwd: 0,
-      refreshTokens: 0,
       otp: 0
     }
   ) {
@@ -97,7 +95,6 @@ class UserService {
     projection = {
       password: 0,
       resetPwd: 0,
-      refreshTokens: 0,
       otp: 0
     }
   ) {
@@ -114,7 +111,6 @@ class UserService {
     projection = {
       password: 0,
       resetPwd: 0,
-      refreshTokens: 0,
       otp: 0
     }
   ) {
@@ -224,7 +220,6 @@ class UserService {
   static async deactivateUser (currentUser, userId) {
     const foundUser = await UserDAO.findById(userId, {
       password: 0,
-      refreshTokens: 0,
       otp: 0,
       resetPwd: 0
     })
@@ -293,7 +288,6 @@ class UserService {
     const foundUser = await UserDAO.findById(userId, {
       password: 0,
       resetPwd: 0,
-      refreshTokens: 0,
       otp: 0
     })
     const folderName = `t-${tenantId.toString()}`
