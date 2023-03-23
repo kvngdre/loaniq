@@ -2,7 +2,7 @@ import { httpCodes } from '../utils/constants'
 import ErrorHandler from '../utils/ErrorHandler'
 import ErrorResponse from '../utils/ErrorResponse'
 
-export default (err, req, res, next) => {
+export default (err, _req, res, _next) => {
   // Catch errors for bad req json.
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(httpCodes.BAD_REQUEST).json(
@@ -12,6 +12,7 @@ export default (err, req, res, next) => {
       })
     )
   }
+
   ErrorHandler.handleError(err)
 
   if (ErrorHandler.isTrustedError(err)) {

@@ -12,6 +12,7 @@ class ErrorHandler {
     if (this.isTrustedError(error)) {
       logger.error(error.message, error.stack)
     } else {
+      // todo should send an email to super admin on fatal error.
       logger.fatal(error.message, error.stack)
     }
   }

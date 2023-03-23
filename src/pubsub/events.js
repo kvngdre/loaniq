@@ -5,8 +5,8 @@ export default {
 
   user: {
     new: 'onCreateUser',
-    login: 'onUserLogin',
-    delete: 'onUserDelete'
+    delete: 'onUserDelete',
+    updateConfig: 'onUserUpdateConfigRequest'
   },
 
   wallet: {

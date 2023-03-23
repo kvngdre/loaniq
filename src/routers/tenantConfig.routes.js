@@ -1,21 +1,21 @@
 import { Router } from 'express'
 import { roles } from '../config'
-import auth from '../middleware/auth'
+import verifyJwt from '../middleware/verifyJwt'
 import grantAccess from '../middleware/grantAccess'
 import TenantConfigController from '../controllers/tenantConfig.controller'
 
 const router = Router()
 
-const { SUPER_ADMIN, DIRECTOR } = roles
+const { SUPER_ADMIN } = roles
 
-router.post('/', [auth, grantAccess(SUPER_ADMIN, DIRECTOR)], TenantConfigController.createConfig)
+router.post('/', [verifyJwt, grantAccess(SUPER_ADMIN)], TenantConfigController.createConfig)
 
-router.get('/', [auth, grantAccess(SUPER_ADMIN)], TenantConfigController.getConfigs)
+router.get('/', [verifyJwt, grantAccess(SUPER_ADMIN)], TenantConfigController.getConfigs)
 
-router.get('/:tenantId', [auth], TenantConfigController.getConfig)
+router.get('/:tenantId', [verifyJwt], TenantConfigController.getConfig)
 
-router.patch('/:tenantId', [auth, grantAccess(DIRECTOR)], TenantConfigController.updateConfig)
+router.patch('/:tenantId', [verifyJwt], TenantConfigController.updateConfig)
 
-router.delete('/:tenantId', [auth, grantAccess(SUPER_ADMIN)], TenantConfigController.deleteConfig)
+router.delete('/:tenantId', [verifyJwt, grantAccess(SUPER_ADMIN)], TenantConfigController.deleteConfig)
 
 export default router

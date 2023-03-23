@@ -1,18 +1,18 @@
-import auth from '../middleware/auth'
+import verifyJwt from '../middleware/verifyJwt'
 import { Router } from 'express'
 import StateController from '../controllers/state.controller'
 import validateId from '../middleware/validateId'
 
 const router = Router()
 
-router.post('/', [auth], StateController.createState)
+router.post('/', [verifyJwt], StateController.createState)
 
 router.get('/', StateController.getStates)
 
-router.get('/:stateId', [auth, validateId], StateController.getState)
+router.get('/:stateId', [verifyJwt, validateId], StateController.getState)
 
-router.patch('/:stateId', [auth, validateId], StateController.updateState)
+router.patch('/:stateId', [verifyJwt, validateId], StateController.updateState)
 
-router.delete('/:stateId', [auth, validateId], StateController.deleteState)
+router.delete('/:stateId', [verifyJwt, validateId], StateController.deleteState)
 
 export default router

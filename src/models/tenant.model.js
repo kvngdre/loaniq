@@ -13,6 +13,7 @@ const tenantSchema = new Schema(
 
     company_name: {
       type: String,
+      lowercase: true,
       unique: true,
       trim: true,
       required: true
@@ -20,14 +21,12 @@ const tenantSchema = new Schema(
 
     address: {
       type: String,
-      trim: true,
-      default: null
+      trim: true
     },
 
     state: {
       type: Schema.Types.ObjectId,
-      ref: 'State',
-      default: null
+      ref: 'State'
     },
 
     cac_number: {
@@ -35,23 +34,6 @@ const tenantSchema = new Schema(
       unique: true,
       sparse: true
     },
-
-    directors: [
-      {
-        name: {
-          type: String,
-          trim: true
-        },
-        email: {
-          type: String,
-          trim: true
-        },
-        id: {
-          type: String,
-          trim: true
-        }
-      }
-    ],
 
     category: {
       type: String,
@@ -85,6 +67,36 @@ const tenantSchema = new Schema(
     activated: {
       type: Boolean,
       default: false
+    },
+
+    id_type: {
+      type: String
+      // enum: validIds
+    },
+
+    id_number: {
+      type: String
+    },
+
+    licenses: {
+      type: [{
+        name: String,
+        url: String,
+        expires: Date
+      }]
+    },
+
+    support: {
+      email: {
+        type: String,
+        trim: true,
+        default: null
+      },
+
+      phone_number: {
+        type: String,
+        default: null
+      }
     }
   },
   schemaOptions

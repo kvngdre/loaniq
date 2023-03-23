@@ -1,13 +1,14 @@
+import { Types } from 'mongoose'
 import events from '../pubsub/events'
 import pubsub from '../pubsub/pubsub'
 import UserConfigDAO from '../daos/userConfig.dao'
-import { Types } from 'mongoose'
 
 class UserConfigService {
   constructor () {
-    pubsub.subscribe(events.user.new, this.createConfig)
-    pubsub.subscribe(events.user.login, this.updateConfig)
     pubsub.subscribe(events.user.delete, this.deleteConfig)
+    // pubsub.subscribe(events.user.login, this.updateConfig)
+    pubsub.subscribe(events.user.new, this.createConfig)
+    pubsub.subscribe(events.user.updateConfig, this.updateConfig)
   }
 
   async createConfig (dto, trx) {

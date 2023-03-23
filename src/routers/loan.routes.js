@@ -1,17 +1,17 @@
 import { Router } from 'express'
-import auth from '../middleware/auth'
+import verifyJwt from '../middleware/verifyJwt'
 import LoanController from '../controllers/loan.controller'
 
 const router = Router()
 
-router.post('/', [auth], LoanController.createLoan)
+router.post('/', [verifyJwt], LoanController.createLoan)
 
-router.get('/', [auth], LoanController.getLoans)
+router.get('/', [verifyJwt], LoanController.getLoans)
 
-router.get('/:loanId', [auth], LoanController.getLoans)
+router.get('/:loanId', [verifyJwt], LoanController.getLoans)
 
-router.patch('/:loanId', [auth], LoanController.updateLoan)
+router.patch('/:loanId', [verifyJwt], LoanController.updateLoan)
 
-router.delete('/:loanId', [auth], LoanController.deleteLoan)
+router.delete('/:loanId', [verifyJwt], LoanController.deleteLoan)
 
 export default router

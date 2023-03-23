@@ -1,6 +1,7 @@
-import { companyCategory, socials } from '../utils/constants'
+import { companyCategory, socials, validIds } from '../utils/constants'
 import BaseValidator from './base.validator'
 import Joi from 'joi'
+import { Types } from 'mongoose'
 class TenantValidator extends BaseValidator {
   #companyNameSchema
   #cacNumberSchema
@@ -8,6 +9,8 @@ class TenantValidator extends BaseValidator {
   #socialSchema
   #supportSchema
   #allowUserPwdResetSchema
+  #idTypeSchema
+  #idSchema
 
   constructor () {
     super()
@@ -16,6 +19,7 @@ class TenantValidator extends BaseValidator {
       .label('Company name')
       .min(2)
       .max(255)
+      .lowercase()
       .messages({
         'string.min': '{#label} is not valid',
         'string.max': '{#label} is too long'
@@ -67,10 +71,18 @@ class TenantValidator extends BaseValidator {
       })
     )
 
+    this.#idTypeSchema = Joi.string()
+      .label('Id type')
+      .valid(...validIds.filter((id) => id !== 'staff id card'))
+
+    this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
+      'string.pattern.base': 'Invalid staff id number'
+    })
+
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
-    }).min(1)
+    }).min(1).label('S  upport')
 
     this.#allowUserPwdResetSchema = Joi.boolean()
       .label('Allow user password reset')
@@ -78,15 +90,16 @@ class TenantValidator extends BaseValidator {
   }
 
   validateSignUp = (dto) => {
+    const newTenantId = new Types.ObjectId()
     const schema = Joi.object({
       tenant: Joi.object({
-        company_name: this.#companyNameSchema.required(),
-        category: this.#categorySchema.required(),
-        email: this._emailSchema.label('Company email').required()
+        _id: Joi.any().default(newTenantId),
+        company_name: this.#companyNameSchema.required()
       }).required(),
       user: Joi.object({
+        tenantId: Joi.any().default(newTenantId).forbidden(),
         name: this._nameSchema.and('first', 'last').required(),
-        email: this._emailSchema.label('User email').required(),
+        email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required()
       }).required()
     })
@@ -106,7 +119,8 @@ class TenantValidator extends BaseValidator {
       cac_number: this.#cacNumberSchema,
       category: this.#categorySchema,
       email: this._emailSchema,
-      phone_number: this._phoneNumberSchema
+      phone_number: this._phoneNumberSchema,
+      support: this.#supportSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -117,9 +131,15 @@ class TenantValidator extends BaseValidator {
 
   validateActivate = (dto) => {
     const schema = Joi.object({
+      category: this.#categorySchema.required(),
       cac_number: this.#cacNumberSchema.required(),
+      email: this._emailSchema.required(),
+      phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
-      state: this._locationSchema.extract('state').required()
+      state: this._locationSchema.extract('state').required(),
+      id_type: this.#idTypeSchema.required(),
+      id_number: this.#idSchema.label('Id number').required(),
+      support: this.#supportSchema.required()
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -134,59 +154,6 @@ class TenantValidator extends BaseValidator {
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
-
-    return { value, error }
-  }
-
-  validateCreateConfig = (dto, tenantId) => {
-    const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id').default(tenantId).forbidden(),
-      default_params: Joi.object()
-        .keys({
-          min_loan_amount: this._amountSchema
-            .label('Minimum loan amount')
-            .required(),
-          max_loan_amount: this._amountSchema
-            .label('Maximum loan amount')
-            .required(),
-          min_tenor: this._tenorSchema.label('Minimum loan tenor').required(),
-          max_tenor: this._tenorSchema.label('Maximum loan tenor').required(),
-          interest_rate: this._percentageSchema.required(),
-          max_dti: this._percentageSchema.label('Maximum D.T.I').required()
-        })
-        .label('Default parameters'),
-      fees: this._feesSchema,
-      socials: this.#socialSchema.min(1),
-      support: this.#supportSchema,
-      allowUserPwdReset: this.#allowUserPwdResetSchema
-    })
-
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
-    error = this._refineError(error)
-
-    return { value, error }
-  }
-
-  validateUpdateConfig = (dto) => {
-    const schema = Joi.object({
-      default_params: Joi.object({
-        min_loan_amount: this._amountSchema.label('Minimum loan amount'),
-        max_loan_amount: this._amountSchema.label('Maximum loan amount'),
-        min_tenor: this._tenorSchema.label('Minimum loan tenor'),
-        max_tenor: this._tenorSchema.label('Maximum loan tenor'),
-        interest_rate: this._percentageSchema,
-        max_dti: this._percentageSchema.label('Maximum D.T.I')
-      })
-        .min(1)
-        .label('Default parameters'),
-      fees: this._feesSchema,
-      socials: this.#socialSchema.min(1),
-      support: this.#supportSchema,
-      allowUserPwdReset: this.#allowUserPwdResetSchema
-    }).min(1)
-
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
     error = this._refineError(error)
 
     return { value, error }

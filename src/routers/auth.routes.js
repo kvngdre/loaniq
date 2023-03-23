@@ -1,6 +1,6 @@
-import AuthController from '../controllers/auth.controller'
 import { Router } from 'express'
-import auth from '../middleware/auth'
+import AuthController from '../controllers/auth.controller'
+import verifyJwt from '../middleware/verifyJwt'
 
 const router = Router()
 
@@ -12,9 +12,9 @@ router.post('/callback', AuthController.callback)
 
 router.get('/logout', AuthController.logout)
 
-router.get('/sessions/logout', [auth], AuthController.logoutAllSessions)
+router.get('/sessions/logout', [verifyJwt], AuthController.logoutAllSessions)
 
-router.get('/me', [auth], AuthController.getCurrentUser)
+router.get('/me', [verifyJwt], AuthController.getCurrentUser)
 
 router.get('/request_otp', AuthController.sendOTP)
 

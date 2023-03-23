@@ -1,18 +1,18 @@
-import auth from '../middleware/auth'
-import BankController from '../controllers/bank.controller'
 import { Router } from 'express'
-import validateObjectId from '../middleware/validateId'
+import BankController from '../controllers/bank.controller'
+import validateId from '../middleware/validateId'
+import verifyJwt from '../middleware/verifyJwt'
 
 const router = Router()
 
-router.post('/', [auth], BankController.createBank)
+router.post('/', [verifyJwt], BankController.createBank)
 
 router.get('/', BankController.getBanks)
 
-router.get('/:bankId', [auth, validateObjectId], BankController.getBank)
+router.get('/:bankId', [verifyJwt, validateId], BankController.getBank)
 
-router.patch('/:bankId', [auth, validateObjectId], BankController.updateBank)
+router.patch('/:bankId', [verifyJwt, validateId], BankController.updateBank)
 
-router.delete('/:bankId', [auth, validateObjectId], BankController.deleteBank)
+router.delete('/:bankId', [verifyJwt, validateId], BankController.deleteBank)
 
 export default router

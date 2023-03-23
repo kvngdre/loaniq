@@ -1,54 +1,44 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable camelcase */
 import { constants } from '../config'
-import {
-  generateOTP,
-  genAccessToken,
-  genRefreshToken,
-  permitLogin,
-  similarity,
-  validateOTP
-} from '../helpers'
+import { generateOTP, similarity } from '../helpers/universal.helpers'
+import { pubsub, events } from '../pubsub'
 import ConflictError from '../errors/ConflictError'
+import DeviceDetector from 'node-device-detector'
 import ForbiddenError from '../errors/ForbiddenError'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import UserService from './user.service'
-import userConfigService from './userConfig.service'
+import UserDAO from '../daos/user.dao'
 import ValidationError from '../errors/ValidationError'
-import DeviceDetector from 'node-device-detector'
+
+function detectAgent (agent) {
+  const detector = new DeviceDetector({
+    clientIndexes: true,
+    deviceIndexes: true,
+    deviceAliasCode: false
+  })
+
+  const result = detector.detect(agent)
+  return {
+    os: result.os.name,
+    client: result.client.name
+  }
+}
 
 class AuthService {
-  static #detect = function (agent) {
-    const detector = new DeviceDetector({
-      clientIndexes: true,
-      deviceIndexes: true,
-      deviceAliasCode: false
-    })
+  static async verifySignUp (dto, token, userAgent, clientIp) {
+    const { email, current_password, new_password } = dto
 
-    const result = detector.detect(agent)
-
-    return {
-      os: result.os.name,
-      client: result.client.name
-    }
-  }
-
-  static async verifySignUp (dto, token, userAgent) {
-    const { email, otp, current_password, new_password } = dto
-
-    const foundUser = await UserService.getUser({ email }, {})
+    const foundUser = await UserDAO.findOne({ email })
     if (foundUser.isEmailVerified) {
       throw new ConflictError('User already verified, please sign in.')
     }
 
     // Authenticate password.
-    const isMatch = await foundUser.comparePasswords(current_password)
+    const isMatch = foundUser.comparePasswords(current_password)
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
-
-    validateOTP(foundUser, otp) // throws an error if OTP is invalid or expired.
 
     // * Measuring similarity of new password to the current password.
     const percentageSimilarity =
@@ -58,25 +48,36 @@ class AuthService {
       throw new ValidationError('Password is too similar to old password.')
     }
 
-    const foundUserConfig = await userConfigService.getConfig({
-      userId: foundUser._id
-    })
-
     if (token) {
       // ! Prune user refresh tokens array for expired tokens.
-      foundUserConfig.sessions = foundUserConfig.sessions.filter(
+      foundUser.sessions = foundUser.sessions.filter(
         (s) => s.token !== token && Date.now() < s.expiresIn
       )
     }
-    // * Generating new token set.
-    const accessToken = genAccessToken({ id: foundUser._id })
-    const refreshToken = genRefreshToken({ id: foundUser._id })
 
-    const { os, client } = AuthService.#detect(userAgent)
+    // Generating new token set.
+    const accessToken = foundUser.genAccessToken()
+    const refreshToken = foundUser.genRefreshToken()
+    const { os, client } = detectAgent(userAgent)
 
-    foundUserConfig.set({ last_login_time: new Date() })
-    foundUserConfig.sessions.unshift({ os, client, ...refreshToken })
+    // Emitting event to update last login time on user config.
+    pubsub.publish(
+      events.user.updateConfig,
+      { userId: foundUser._id },
+      { last_login_time: new Date() }
+    )
+
     foundUser.set({
+      sessions: [
+        {
+          os,
+          client,
+          ip: clientIp,
+          login_time: new Date(),
+          ...refreshToken
+        },
+        ...foundUser.sessions
+      ],
       isEmailVerified: true,
       password: new_password,
       'otp.pin': null,
@@ -84,28 +85,27 @@ class AuthService {
       active: true,
       resetPwd: false
     })
-
     await foundUser.save()
-    await foundUserConfig.save()
+
     foundUser.purgeSensitiveData()
 
     return [accessToken, refreshToken, foundUser]
   }
 
-  static async login ({ email, password }, token, userAgent) {
-    const foundUser = await UserService.getUser({ email }, {}).catch(() => {
+  static async login ({ email, password }, token, userAgent, clientIp) {
+    const foundUser = await UserDAO.findOne({ email }).catch(() => {
       throw new UnauthorizedError('Invalid credentials.')
     })
-    const foundUserConfig = await userConfigService.getConfig(foundUser._id)
 
-    const isMatch = await foundUser.comparePasswords(password)
+    const isMatch = foundUser.comparePasswords(password)
     if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
 
-    permitLogin(foundUser)
+    const { isGranted, message, data } = foundUser.permitLogin()
+    if (!isGranted) throw new ForbiddenError(message, data)
 
     if (token) {
       // ! Prune user sessions for expired refresh tokens.
-      foundUserConfig.sessions = foundUserConfig.sessions.filter(
+      foundUser.sessions = foundUser.sessions.filter(
         (s) => s.token !== token && Date.now() < s.expiresIn
       )
 
@@ -115,27 +115,33 @@ class AuthService {
        * * 2) The refresh token gets stolen
        * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
        */
-      await userConfigService
-        .getConfig({ 'sessions.token': token })
-        .catch(() => {
-          // ! Refresh token reuse detected. Purge user sessions.
-          logger.warn('Attempted refresh token reuse at login.')
-          foundUserConfig.set({ sessions: [] })
-        })
+      await UserDAO.findOne({ 'sessions.token': token }).catch(() => {
+        // ! Refresh token reuse detected. Purge user sessions.
+        logger.warn('Attempted refresh token reuse at login.')
+        foundUser.set({ sessions: [] })
+      })
     }
 
     // Generating new token set.
-    const accessToken = genAccessToken({ id: foundUser._id })
-    const refreshToken = genRefreshToken({ id: foundUser._id })
+    const accessToken = foundUser.genAccessToken()
+    const refreshToken = foundUser.genRefreshToken()
+    const { os, client } = detectAgent(userAgent)
 
-    const { os, client } = AuthService.#detect(userAgent)
-    foundUserConfig.sessions.push({
+    // Emitting event to update last login time on user config.
+    pubsub.publish(
+      events.user.updateConfig,
+      { userId: foundUser._id },
+      { last_login_time: new Date() }
+    )
+
+    foundUser.sessions.unshift({
       os,
       client,
+      ip: clientIp,
+      login_time: new Date(),
       ...refreshToken
     })
-    foundUserConfig.set({ last_login_time: new Date() })
-    await foundUserConfig.save()
+    foundUser.save()
 
     return [
       {
@@ -148,7 +154,9 @@ class AuthService {
   }
 
   static async getCurrentUser (userId) {
-    const foundUser = await UserService.getUserById(userId)
+    const foundUser = await UserDAO.findById(userId)
+
+    foundUser.purgeSensitiveData()
 
     return foundUser
   }
@@ -156,62 +164,65 @@ class AuthService {
   static async getNewTokenSet (token, userAgent) {
     const { issuer, audience, secret } = constants.jwt
 
-    const userConfig = await userConfigService
-      .getConfig({ 'sessions.token': token })
-      .catch(() => {
+    const foundUser = await UserDAO.findOne({ 'sessions.token': token }).catch(
+      () => {
         logger.warn('Attempted refresh token reuse detected.')
-        jwt.verify(token, secret.refresh, (err, decoded) => {
-          if (err) throw err
+        jwt.verify(
+          token,
+          secret.refresh,
+          { audience, issuer },
+          (err, decoded) => {
+            if (err) throw err
 
-          userConfigService
-            .updateConfig(decoded.id, { sessions: [] })
-            .catch((err) => {
+            UserDAO.update(decoded.id, { sessions: [] }).catch((err) => {
               logger.error(err.message, err.stack)
             })
-        })
+          }
+        )
 
         throw new ForbiddenError('Forbidden')
-      })
+      }
+    )
 
     jwt.verify(token, secret.refresh, { audience, issuer }, (err, decoded) => {
-      if (decoded.id != userConfig.userId) {
-        throw new ForbiddenError('Invalid token.')
-      }
       if (err) throw new ForbiddenError(err.message)
+
+      if (decoded.id != foundUser._Id) {
+        throw new ForbiddenError('Invalid token')
+      }
     })
 
-    // Generating new token set.
-    const accessToken = genAccessToken({ id: userConfig.userId })
-    const refreshToken = genRefreshToken({ id: userConfig.userId })
-
     // ! Prune user sessions for expired refresh tokens.
-    userConfig.sessions = userConfig.sessions.filter(
+    foundUser.sessions = foundUser.sessions.filter(
       (s) => s.token !== token && Date.now() < s.expiresIn
     )
 
-    // Updating user refresh token array
-    const { os, client } = AuthService.#detect(userAgent)
-    userConfig.sessions.push({
+    // Generating new token set.
+    const accessToken = foundUser.genAccessToken()
+    const refreshToken = foundUser.genRefreshToken()
+    const { os, client } = detectAgent(userAgent)
+
+    foundUser.sessions.unshift({
       os,
       client,
       ...refreshToken
     })
-    await userConfig.save()
+    foundUser.save()
 
     return [accessToken, refreshToken]
   }
 
   static async sendOTP ({ email, len }) {
-    const foundUser = await UserService.getUser({ email }, {})
-
     const generatedOTP = generateOTP(10, len)
-    foundUser.set({ otp: generatedOTP })
-    await foundUser.save()
 
+    const foundUser = await UserDAO.findOne({ email })
+    await foundUser.updateOne({ otp: generatedOTP })
+
+    // todo pass the time to live of the otp to the mail.
     logger.info('Sending OTP mail...')
     await mailer({
       to: email,
-      subject: `Account verification code: ${generatedOTP.pin}`,
+      subject: `Your one-time-pin: ${generatedOTP.pin}`,
       name: foundUser.first_name,
       template: 'otp-request',
       payload: { otp: generatedOTP.pin }
@@ -219,33 +230,27 @@ class AuthService {
   }
 
   static async logout (token) {
-    //  todo merge the two and collapse the try-catch
     try {
-      const foundUserConfig = await userConfigService.getConfig({
-        'sessions.token': token
-      })
+      const foundUser = await UserDAO.findOne({ 'sessions.token': token })
 
-      foundUserConfig.sessions = foundUserConfig.sessions.filter(
+      foundUser.sessions = foundUser.sessions.filter(
         (s) => s.token !== token && Date.now() < s.expiresIn
       )
-      await foundUserConfig.save()
 
-      return [200, 'User logged out']
+      await foundUser.save()
     } catch (exception) {
-      return [204, null]
+      logger.warn(exception.message)
     }
   }
 
   static async logoutAllSessions (userId, token) {
-    const foundUserConfig = await userConfigService.getConfig(userId)
+    const foundUser = await UserDAO.findById(userId)
 
     // ! Prune refresh token array for expired refresh tokens.
-    foundUserConfig.sessions = foundUserConfig.sessions.filter(
-      (s) => s.token !== token
-    )
-    await foundUserConfig.save()
+    foundUser.sessions = foundUser.sessions.filter((s) => s.token !== token)
+    await foundUser.save()
 
-    return foundUserConfig
+    return foundUser
   }
 }
 

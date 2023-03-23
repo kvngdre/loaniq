@@ -5,6 +5,7 @@ import authValidator from '../validators/auth.validator'
 import BaseController from './base.controller'
 import ErrorResponse from '../utils/ErrorResponse'
 import ValidationError from '../errors/ValidationError'
+import requestIp from 'request-ip'
 class AuthController extends BaseController {
   static verifyRegistration = async (req, res) => {
     const token = res.cookies?.jwt
@@ -20,7 +21,8 @@ class AuthController extends BaseController {
     const [accessToken, refreshToken, user] = await AuthService.verifySignUp(
       value,
       token,
-      req.headers['user-agent']
+      req.headers['user-agent'],
+      requestIp.getClientIp(req)
     )
 
     //  ! Create secure cookie with refresh token.
@@ -50,7 +52,8 @@ class AuthController extends BaseController {
     const [data, refreshToken] = await AuthService.login(
       value,
       token,
-      req.headers['user-agent']
+      req.headers['user-agent'],
+      requestIp.getClientIp(req)
     )
     const response = this.apiResponse('Login successful.', data)
 
@@ -117,7 +120,7 @@ class AuthController extends BaseController {
   }
 
   static logout = async (req, res) => {
-    const [httpCode, message] = await AuthService.logout(req.cookies?.jwt)
+    await AuthService.logout(req.cookies?.jwt)
 
     res.clearCookie('jwt', {
       httpOnly: true,
@@ -125,13 +128,12 @@ class AuthController extends BaseController {
       secure: constants.secure_cookie
     })
 
-    const response = this.apiResponse(message)
-    res.status(httpCode).json(response)
+    const response = this.apiResponse('Logged out')
+    res.status(httpCodes.NO_CONTENT).json(response)
   }
 
   static logoutAllSessions = async (req, res) => {
     await AuthService.logoutAllSessions(req.currentUser._id, req.cookies?.jwt)
-
     const response = this.apiResponse('Signed out of all devices.')
 
     res.status(httpCodes.OK).json(response)

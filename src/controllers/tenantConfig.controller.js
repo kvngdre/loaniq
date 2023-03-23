@@ -6,15 +6,12 @@ import ValidationError from '../errors/ValidationError'
 
 class TenantConfigController extends BaseController {
   static createConfig = async (req, res) => {
-    const { value, error } = tenantConfigValidator.validateCreate(
-      req.body,
-      req.currentUser.tenantId
-    )
+    const { value, error } = tenantConfigValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
     const newConfiguration = await tenantConfigService.createConfig(value)
     const response = this.apiResponse(
-      'Tenant configuration created.',
+      'Tenant configurations created.',
       newConfiguration
     )
 
@@ -31,11 +28,11 @@ class TenantConfigController extends BaseController {
   }
 
   static getConfig = async (req, res) => {
-    const tenantConfig = await tenantConfigService.getConfig({
-      tenantId: req.params.tenantId
-    })
+    const tenantConfig = await tenantConfigService.getConfig(
+      req.params.tenantId
+    )
     const response = this.apiResponse(
-      'Fetched tenant configuration.',
+      'Fetched tenant configurations.',
       tenantConfig
     )
 
@@ -47,11 +44,11 @@ class TenantConfigController extends BaseController {
     if (error) throw new ValidationError(null, error)
 
     const tenantConfig = await tenantConfigService.updateConfig(
-      { tenantId: req.params.tenantId },
+      req.params.tenantId,
       value
     )
     const response = this.apiResponse(
-      'Tenant configuration updated.',
+      'Tenant configurations updated.',
       tenantConfig
     )
 
@@ -59,8 +56,8 @@ class TenantConfigController extends BaseController {
   }
 
   static deleteConfig = async (req, res) => {
-    await tenantConfigService.deleteConfig({ tenantId: req.params.tenantId })
-    const response = this.apiResponse('Tenant configuration deleted.')
+    await tenantConfigService.deleteConfig(req.params.tenantId)
+    const response = this.apiResponse('Tenant configurations deleted.')
 
     res.status(httpCodes.OK).json(response)
   }

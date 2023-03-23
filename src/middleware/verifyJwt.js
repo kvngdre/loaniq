@@ -5,14 +5,13 @@ import ErrorResponse from '../utils/ErrorResponse'
 import jwt from 'jsonwebtoken'
 import UserService from '../services/user.service'
 
-export default async function auth (req, res, next) {
+export default async function verifyJwt (req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form
      * Authorization: Bearer ${JWT}
      *
      */
-    console.log(req.originalUrl)
     function getTokenFromHeader (req) {
       if (req.headers?.authorization?.split(' ')[0] === 'Bearer') {
         return req.headers.authorization.split(' ')[1]

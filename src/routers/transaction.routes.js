@@ -1,19 +1,19 @@
-import auth from '../middleware/auth'
+import verifyJwt from '../middleware/verifyJwt'
 import { Router } from 'express'
 import TransactionController from '../controllers/transaction.controller'
 
 const router = Router()
 
-router.post('/', [auth], TransactionController.createTxn)
+router.post('/', [verifyJwt], TransactionController.createTxn)
 
-router.get('/', [auth], TransactionController.getTxns)
+router.get('/', [verifyJwt], TransactionController.getTxns)
 
-router.get('/init', [auth], TransactionController.getPaymentLink)
+router.get('/init', [verifyJwt], TransactionController.getPaymentLink)
 
-router.get('/:txnId', [auth], TransactionController.getTxn)
+router.get('/:txnId', [verifyJwt], TransactionController.getTxn)
 
-router.patch('/:txnId', [auth], TransactionController.updateTxn)
+router.patch('/:txnId', [verifyJwt], TransactionController.updateTxn)
 
-router.delete('/:txnId', [auth], TransactionController.deleteTxn)
+router.delete('/:txnId', [verifyJwt], TransactionController.deleteTxn)
 
 export default router

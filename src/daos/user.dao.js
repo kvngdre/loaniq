@@ -66,8 +66,8 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  static async updateMany (matchObj, dto) {
-    const result = await User.updateMany(matchObj, dto)
+  static async updateMany (filter, dto) {
+    const result = await User.updateMany(filter, dto)
 
     return result
   }

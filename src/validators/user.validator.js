@@ -1,4 +1,4 @@
-import { canUserResetPwd } from '../helpers'
+import { canUserResetPwd } from '../helpers/universal.helpers'
 import { roles } from '../config'
 import BaseValidator from './base.validator'
 import ForbiddenError from '../errors/ForbiddenError'
@@ -76,6 +76,17 @@ class UserValidator extends BaseValidator {
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateDeactivation = (dto) => {
+    const schema = Joi.object({
+      password: Joi.string().label('Password').max(255).required()
+    })
+
+    let { value, error } = schema.validate(dto)
     error = this._refineError(error)
 
     return { value, error }

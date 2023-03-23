@@ -5,12 +5,12 @@ import { create as _create, getAll, getDisbursement, getOne, update, delete_ } f
 import { Router } from 'express'
 import ServerError from '../errors/serverError'
 import grantAccess from '../middleware/grantAccess'
-import auth from '../middleware/auth'
-import validateObjectId from '../middleware/validateId'
+import verifyJwt from '../middleware/verifyJwt'
+import validateId from '../middleware/validateId'
 
 const router = Router()
 
-router.post('/', [auth], async (req, res) => {
+router.post('/', [verifyJwt], async (req, res) => {
   const { value, error } = create(
     req.user,
     req.body.customer
@@ -36,7 +36,7 @@ router.post('/', [auth], async (req, res) => {
  * @queryParam end Filter by date the loan was created. end date.
  * @queryParam sort Sort order. Defaults to 'first name'. [asc, desc, first, last]
  */
-router.get('/', [auth], async (req, res) => {
+router.get('/', [verifyJwt], async (req, res) => {
   const loans = await getAll(req.user, req.query)
   if (loans instanceof ServerError) { return res.status(loans.errorCode).json(loans.message) }
 
@@ -56,7 +56,7 @@ router.get(
   }
 )
 
-router.get('/:id', [auth, validateObjectId], async (req, res) => {
+router.get('/:id', [verifyJwt, validateId], async (req, res) => {
   // TODO: add all
   const loan = await getOne(req.params.id)
   if (loan instanceof ServerError) { return res.status(loan.errorCode).json(loan.message) }
@@ -64,7 +64,7 @@ router.get('/:id', [auth, validateObjectId], async (req, res) => {
   return res.status(200).json(loan)
 })
 
-router.patch('/:id', [auth, validateObjectId], async (req, res) => {
+router.patch('/:id', [verifyJwt, validateId], async (req, res) => {
   const loan = await update(req.params.id, req.user, req.body)
   if (loan instanceof ServerError) { return res.status(loan.errorCode).json(loan.message) }
 
@@ -72,7 +72,7 @@ router.patch('/:id', [auth, validateObjectId], async (req, res) => {
 })
 
 router.delete(
-  '/:id', [validateObjectId],
+  '/:id', [validateId],
   async (req, res) => {
     const deletedLoan = await delete (req.params.id)
     if (deletedLoan instanceof ServerError) { return res.status(deletedLoan.errorCode).json(deletedLoan.message) }

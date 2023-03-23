@@ -22,7 +22,7 @@ class UserController extends BaseController {
   }
 
   static getUsers = async (req, res) => {
-    const { count, users } = await UserService.getUsers(req.currentUser)
+    const { count, users } = await UserService.getUsers(req.currentUser.tenantId)
 
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, users)
@@ -85,15 +85,18 @@ class UserController extends BaseController {
   }
 
   static deactivateUser = async (req, res) => {
-    await UserService.deactivateUser(req.currentUser, req.params.userId)
-    const response = this.apiResponse('User account deactivated.')
+    const { value, error } = userValidator.validateDeactivation(req.body)
+    if (error) throw new ValidationError(null, error)
+
+    await UserService.deactivateUser(req.params.userId, value)
+    const response = this.apiResponse('User deactivated')
 
     res.status(httpCodes.OK).json(response)
   }
 
   static reactivateUser = async (req, res) => {
-    await UserService.reactivateUser(req.currentUser, req.params.userId)
-    const response = this.apiResponse('User account has been reactivated.')
+    await UserService.reactivateUser(req.params.userId)
+    const response = this.apiResponse('User has been reactivated.')
 
     res.status(httpCodes.OK).json(response)
   }
@@ -101,27 +104,6 @@ class UserController extends BaseController {
   static uploadFiles = async (req, res) => {
     const user = await UserService.uploadImage(req.params, req.file)
     const response = this.apiResponse('File uploaded.', user)
-
-    res.status(httpCodes.OK).json(response)
-  }
-
-  static getConfig = async (req, res) => {
-    const config = await UserService.getConfig({
-      userId: req.params.userId
-    })
-    const response = this.apiResponse('Fetched configurations.', config)
-
-    res.status(httpCodes.OK).json(response)
-  }
-
-  static updateUserConfig = async (req, res) => {
-    const { value, error } = userValidator.validateUpdateConfig(req.body)
-    if (error) throw new ValidationError(null, error)
-
-    const config = await UserService.updateConfig(req.params.userId, {
-      configurations: value
-    })
-    const response = this.apiResponse('Configurations updated.', config)
 
     res.status(httpCodes.OK).json(response)
   }

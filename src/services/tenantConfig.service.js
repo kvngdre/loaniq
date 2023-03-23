@@ -19,18 +19,18 @@ class TenantConfigService {
     return [count, foundConfigs]
   }
 
-  async getConfig (filter, projection) {
-    const foundConfig = await TenantConfigDAO.findOne(filter, projection)
+  async getConfig (tenantId, projection) {
+    const foundConfig = await TenantConfigDAO.findOne({ tenantId }, projection)
     return foundConfig
   }
 
-  async updateConfig (filter, dto, projection) {
-    const updateConfig = await TenantConfigDAO.update(filter, dto, projection)
+  async updateConfig (tenantId, dto, projection) {
+    const updateConfig = await TenantConfigDAO.update({ tenantId }, dto, projection)
     return updateConfig
   }
 
-  async deleteConfig (filter) {
-    const deletedConfig = await TenantConfigDAO.remove(filter)
+  async deleteConfig (tenantId) {
+    const deletedConfig = await TenantConfigDAO.remove({ tenantId })
     return deletedConfig
   }
 }

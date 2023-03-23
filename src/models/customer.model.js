@@ -1,4 +1,4 @@
-import { computeAge, computeTenure } from '../helpers'
+import { computeAge, computeTenure } from '../helpers/universal.helpers'
 import {
   maritalStatus,
   relationships,

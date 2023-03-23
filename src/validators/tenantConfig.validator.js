@@ -50,9 +50,9 @@ class TenantConfigValidator extends BaseValidator {
     this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false)
   }
 
-  validateCreate = (dto, tenantId) => {
+  validateCreate = (dto) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id').default(tenantId).forbidden(),
+      tenantId: this._objectIdSchema.label('Tenant id').required(),
       default_params: Joi.object()
         .keys({
           min_loan_amount: this._amountSchema
@@ -69,7 +69,6 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
-      support: this.#supportSchema,
       allowUserPwdReset: this.#allowUserPwdResetSchema
     })
 
@@ -93,7 +92,6 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
-      support: this.#supportSchema,
       allowUserPwdReset: this.#allowUserPwdResetSchema
     }).min(1)
 

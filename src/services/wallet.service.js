@@ -1,6 +1,6 @@
 import { events, pubsub } from '../pubsub'
 import { startSession } from 'mongoose'
-import { TxnObj } from '../helpers'
+import { TxnObj } from '../helpers/universal.helpers'
 import InsufficientError from '../errors/InsufficientError'
 import WalletDAO from '../daos/wallet.dao'
 

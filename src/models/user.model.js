@@ -1,6 +1,7 @@
+import { constants, roles } from '../config'
 import { hashSync, compareSync } from 'bcryptjs'
-import { roles } from '../config'
 import { Schema, model } from 'mongoose'
+import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = {
@@ -127,15 +128,16 @@ const userSchema = new Schema(
       }
     },
 
-    refreshTokens: {
+    sessions: {
       type: [
         {
-          token: {
-            type: String
-          },
-          expires: {
-            type: Number
-          }
+          os: String,
+          location: String,
+          client: String,
+          ip: String,
+          login_time: Date,
+          token: String,
+          expiresIn: Number
         }
       ],
       default: null
@@ -155,10 +157,69 @@ userSchema.methods.comparePasswords = function (password) {
   return compareSync(password, this.password)
 }
 
+userSchema.methods.genAccessToken = function () {
+  return jwt.sign({ id: this._id.toString() }, constants.jwt.secret.access, {
+    audience: constants.jwt.audience,
+    expiresIn: constants.jwt.exp_time.access,
+    issuer: constants.jwt.issuer
+  })
+}
+
+userSchema.methods.genRefreshToken = function () {
+  const refreshToken = jwt.sign(
+    { id: this._id.toString() },
+    constants.jwt.secret.refresh,
+    {
+      audience: constants.jwt.audience,
+      expiresIn: constants.jwt.exp_time.refresh,
+      issuer: constants.jwt.issuer
+    }
+  )
+
+  return {
+    token: refreshToken,
+    expiresIn: Date.now() + constants.jwt.exp_time.refresh * 1000
+  }
+}
+
+userSchema.methods.permitLogin = function () {
+  const data = { id: this._id, redirect: {} }
+
+  if (!this.isEmailVerified && !this.active) {
+    data.redirect.verify_signUp = true
+    return {
+      isGranted: false,
+      message: 'Your email has not been verified.',
+      data
+    }
+  }
+
+  if (this.resetPwd) {
+    data.redirect.reset_password = true
+    return {
+      isGranted: false,
+      message: 'Your password reset has been triggered.',
+      data
+    }
+  }
+
+  if (!this.active) {
+    data.redirect.inactive = true
+    return {
+      isGranted: false,
+      message: 'Account deactivated. Contact your administrator.',
+      data
+    }
+  }
+
+  return { isGranted: true }
+}
+
 userSchema.methods.purgeSensitiveData = function () {
-  delete this._doc.password
-  delete this._doc.otp
-  delete this._doc.resetPwd
+  delete this._doc?.password
+  delete this._doc?.otp
+  delete this._doc?.resetPwd
+  delete this._doc?.sessions
 }
 
 // Hashing password before insert

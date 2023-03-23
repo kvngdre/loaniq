@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { genRandomStr } from '../helpers'
+import { genRandomStr, validateOTP } from '../helpers/universal.helpers'
 import { startSession } from 'mongoose'
 import { events, pubsub } from '../pubsub'
 import ConflictError from '../errors/ConflictError'
@@ -10,8 +10,9 @@ import mailer from '../utils/mailer'
 import path from 'path'
 import TenantConfigDAO from '../daos/tenantConfig.dao'
 import TenantDAO from '../daos/tenant.dao'
-import UnauthorizedError from '../errors/UnauthorizedError'
 import UserService from './user.service'
+import UserDAO from '../daos/user.dao'
+import UnauthorizedError from '../errors/UnauthorizedError'
 
 class TenantService {
   static async createTenant (dto) {
@@ -23,9 +24,10 @@ class TenantService {
       // ! Starting transaction.
       trx.startTransaction()
 
-      const newTenant = await TenantDAO.insert(tenant, trx)
-      user.tenantId = newTenant._id
-      const newUser = await UserService.createUser(user, trx)
+      const [newTenant, newUser] = await Promise.all([
+        TenantDAO.insert(tenant, trx),
+        UserService.createUser(user, trx)
+      ])
 
       // * Emitting new tenant and user sign up event.
       pubsub.publish(
@@ -35,15 +37,17 @@ class TenantService {
         trx
       )
 
-      // * Send welcome mail...
-      mailer({
-        to: newTenant.email,
-        subject: 'Great to have you onboard',
-        name: newTenant.company_name,
-        template: 'new-tenant'
-      })
+      // Send welcome mail...
+      setTimeout(() => {
+        mailer({
+          to: newUser.email,
+          subject: 'Welcome to Apex!',
+          name: newUser.first_name,
+          template: 'new-tenant'
+        })
+      }, 120_000)
 
-      // * Email sent successfully, committing changes.
+      // Committing changes.
       await trx.commitTransaction()
       trx.endSession()
 
@@ -89,10 +93,9 @@ class TenantService {
     }
 
     foundTenant.set({
-      emailVerified: true,
+      isEmailVerified: true,
       activated: true,
-      cac_number: dto.cac_number,
-      support: dto.support
+      ...dto
     })
     await foundTenant.save()
 
@@ -100,19 +103,13 @@ class TenantService {
   }
 
   static async deactivateTenant ({ _id, tenantId }, { otp }) {
-    const foundTenant = await TenantDAO.findById(tenantId)
-    const foundOwner = await UserService.getUserById(_id, {})
+    const [foundTenant, foundOwner] = await Promise.all([
+      TenantDAO.findById(tenantId),
+      UserDAO.findById(_id)
+    ])
 
-    validateOTP(foundOwner, otp)
-    function validateOTP (owner, otp) {
-      if (otp !== owner.otp.pin) {
-        throw new UnauthorizedError('Invalid OTP.')
-      }
-
-      if (Date.now() > owner.otp.expiresIn) {
-        throw new UnauthorizedError('OTP has expired.')
-      }
-    }
+    const { isValid, message } = validateOTP(foundOwner, otp)
+    if (!isValid) throw new UnauthorizedError(message)
 
     await mailer({
       to: foundOwner.email,
@@ -123,22 +120,22 @@ class TenantService {
 
     // ? send a deactivate email to Apex!
     foundTenant.set({ active: false })
-    UserService.updateUsers({ tenantId }, { active: false })
+    await UserDAO.updateMany({ tenantId }, { active: false })
     await foundTenant.save()
 
     return foundTenant
   }
 
   static async reactivateTenant (tenantId) {
-    const foundTenant = await TenantDAO.findById(tenantId)
+    const [foundTenant] = await Promise.all([
+      TenantDAO.update(tenantId, { active: true }),
+      UserDAO.updateMany({ tenantId }, { active: true })
+    ])
 
     /**
      * todo should only the owner user be reactivated,
      * todo and they activate every other user?
      */
-    foundTenant.set({ active: true })
-    UserService.updateUsers({ tenantId }, { active: true })
-    await foundTenant.save()
 
     return foundTenant
   }
@@ -155,15 +152,16 @@ class TenantService {
   }
 
   static async getFormData (formId) {
-    const { form_data, socials, support, tenantId } =
-      await TenantConfigDAO.findOne({ formId })
+    const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
+      formId
+    })
 
     return {
       logo: tenantId.logo,
       name: tenantId.company_name,
+      support: tenantId.support,
       socials,
-      support,
-      ...form_data
+      theme: form_theme
     }
   }
 
@@ -207,33 +205,6 @@ class TenantService {
 
     await foundTenant.save()
     return foundTenant
-  }
-
-  static async createConfig (dto) {
-    const newConfig = await TenantConfigDAO.insert(dto)
-    return newConfig
-  }
-
-  static async getConfigs (filters, projection) {
-    const foundConfigs = await TenantConfigDAO.findAll(filters, projection)
-    const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
-
-    return [count, foundConfigs]
-  }
-
-  static async getConfig (filter, projection) {
-    const foundConfig = await TenantConfigDAO.findOne(filter, projection)
-    return foundConfig
-  }
-
-  static async updateConfig (filter, dto, projection) {
-    const updateConfig = await TenantConfigDAO.update(filter, dto, projection)
-    return updateConfig
-  }
-
-  static async deleteConfig (filter) {
-    const deletedConfig = await TenantConfigDAO.remove(filter)
-    return deletedConfig
   }
 }
 

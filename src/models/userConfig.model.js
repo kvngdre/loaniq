@@ -29,20 +29,6 @@ const configSchema = new Schema({
   resetPwdDate: {
     type: Date,
     default: null
-  },
-
-  // todo, move the refresh tokens here
-  sessions: {
-    type: [
-      {
-        os: String,
-        location: String,
-        client: String,
-        token: String,
-        expiresIn: Number
-      }
-    ],
-    default: null
   }
 
 }, schemaOptions)

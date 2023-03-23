@@ -96,19 +96,6 @@ const tenantConfigSchema = new Schema(
       background_color: { type: String }
     },
 
-    support: {
-      email: {
-        type: String,
-        trim: true,
-        default: null
-      },
-
-      phone_number: {
-        type: String,
-        default: null
-      }
-    },
-
     reset_period: {
       type: Number
     }
