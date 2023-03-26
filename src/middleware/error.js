@@ -19,10 +19,10 @@ export default (err, _req, res, _next) => {
     return res.status(err.code).json(new ErrorResponse(err))
   }
 
-  return res.status(httpCodes.INTERNAL_SERVER).json(
-    new ErrorResponse({
-      name: 'Server Error',
-      message: 'Something went wrong.'
-    })
-  )
+  // return res.status(httpCodes.INTERNAL_SERVER).json(
+  //   new ErrorResponse({
+  //     name: 'Server Error',
+  //     message: 'Something went wrong.'
+  //   })
+  // )
 }

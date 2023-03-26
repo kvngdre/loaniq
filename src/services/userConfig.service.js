@@ -6,7 +6,6 @@ import UserConfigDAO from '../daos/userConfig.dao'
 class UserConfigService {
   constructor () {
     pubsub.subscribe(events.user.delete, this.deleteConfig)
-    // pubsub.subscribe(events.user.login, this.updateConfig)
     pubsub.subscribe(events.user.new, this.createConfig)
     pubsub.subscribe(events.user.updateConfig, this.updateConfig)
   }

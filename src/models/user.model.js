@@ -183,7 +183,7 @@ userSchema.methods.genRefreshToken = function () {
 }
 
 userSchema.methods.permitLogin = function () {
-  const data = { id: this._id, redirect: {} }
+  const data = { id: this._doc._id, redirect: {} }
 
   if (!this.isEmailVerified && !this.active) {
     data.redirect.verify_signUp = true

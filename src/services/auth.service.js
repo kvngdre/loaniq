@@ -63,7 +63,7 @@ class AuthService {
     // Emitting event to update last login time on user config.
     pubsub.publish(
       events.user.updateConfig,
-      { userId: foundUser._id },
+      foundUser._id,
       { last_login_time: new Date() }
     )
 
@@ -130,7 +130,7 @@ class AuthService {
     // Emitting event to update last login time on user config.
     pubsub.publish(
       events.user.updateConfig,
-      { userId: foundUser._id },
+      foundUser._id,
       { last_login_time: new Date() }
     )
 
@@ -141,7 +141,7 @@ class AuthService {
       login_time: new Date(),
       ...refreshToken
     })
-    foundUser.save()
+    await foundUser.save()
 
     return [
       {

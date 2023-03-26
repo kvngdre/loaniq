@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
+import { events, pubsub } from '../pubsub'
 import { genRandomStr, validateOTP } from '../helpers/universal.helpers'
 import { startSession } from 'mongoose'
-import { events, pubsub } from '../pubsub'
 import ConflictError from '../errors/ConflictError'
 import driverUploader from '../utils/driveUploader'
 import fs from 'fs'
@@ -10,9 +10,9 @@ import mailer from '../utils/mailer'
 import path from 'path'
 import TenantConfigDAO from '../daos/tenantConfig.dao'
 import TenantDAO from '../daos/tenant.dao'
-import UserService from './user.service'
-import UserDAO from '../daos/user.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
+import UserDAO from '../daos/user.dao'
+import UserService from './user.service'
 
 class TenantService {
   static async createTenant (dto) {
