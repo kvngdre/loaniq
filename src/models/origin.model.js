@@ -88,6 +88,11 @@ const originSchema = new Schema(
       required: true
     },
 
+    isPhoneVerified: {
+      type: Boolean,
+      default: false
+    },
+
     email: {
       type: String,
       lowercase: true,

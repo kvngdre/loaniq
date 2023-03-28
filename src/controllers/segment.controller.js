@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import SegmentService from '../services/segment.service'
 import segmentValidator from '../validators/segment.validator'

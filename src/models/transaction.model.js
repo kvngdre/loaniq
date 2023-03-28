@@ -1,4 +1,4 @@
-import { txnPurposes, txnStatus, txnTypes } from '../utils/constants'
+import { txnPurposes, txnStatus, txnTypes } from '../utils/common'
 import { randomBytes } from 'crypto'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
@@ -70,13 +70,11 @@ const transactionSchema = new Schema(
 
     balance_before: {
       type: Number,
-      required: true,
       set: (v) => Math.floor(v * 100) / 100
     },
 
     balance_after: {
       type: Number,
-      required: true,
       set: (v) => Math.floor(v * 100) / 100
     }
   },
@@ -94,3 +92,27 @@ transactionSchema.post(/^find/, function (doc) {
 const Transaction = model('Transaction', transactionSchema)
 
 export default Transaction
+
+/**
+ * Creates a transaction data transfer object.
+ * @param {TransactionAdd} params
+ * @returns {Object}
+ */
+export function TransactionDTO (params) {
+  this.tenantId = params.tenantId
+  this.reference = params.reference
+  this.status = params.status
+  this.type = params.type
+  this.purpose = params.purpose
+  this.amount = params.amount
+  this.fees = params.fees
+  this.description = params.desc
+  this.channel = params.channel
+  this.balance_before = params.balance
+  this.balance_after =
+    params.balance !== null
+      ? params.type === txnTypes.DEBIT
+        ? params.balance - params.amount
+        : params.balance + params.amount
+      : undefined
+}

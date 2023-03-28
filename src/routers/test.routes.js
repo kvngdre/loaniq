@@ -1,5 +1,5 @@
 import express from 'express'
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import pkg from '../../package.json'
 
 const app = express()

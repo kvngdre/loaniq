@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import tenantConfigService from '../services/tenantConfig.service'
 import tenantConfigValidator from '../validators/tenantConfig.validator'
@@ -29,7 +29,7 @@ class TenantConfigController extends BaseController {
 
   static getConfig = async (req, res) => {
     const tenantConfig = await tenantConfigService.getConfig(
-      req.params.tenantId
+      { tenantId: req.params.tenantId }
     )
     const response = this.apiResponse(
       'Fetched tenant configurations.',

@@ -1,18 +1,18 @@
-import verifyJwt from '../middleware/verifyJwt'
+import verifyJWT from '../middleware/verifyJWT'
 import { Router } from 'express'
 import StateController from '../controllers/state.controller'
 import validateId from '../middleware/validateId'
 
 const router = Router()
 
-router.post('/', [verifyJwt], StateController.createState)
+router.post('/', [verifyJWT], StateController.createState)
 
 router.get('/', StateController.getStates)
 
-router.get('/:stateId', [verifyJwt, validateId], StateController.getState)
+router.get('/:stateId', [verifyJWT, validateId], StateController.getState)
 
-router.patch('/:stateId', [verifyJwt, validateId], StateController.updateState)
+router.patch('/:stateId', [verifyJWT, validateId], StateController.updateState)
 
-router.delete('/:stateId', [verifyJwt, validateId], StateController.deleteState)
+router.delete('/:stateId', [verifyJWT, validateId], StateController.deleteState)
 
 export default router

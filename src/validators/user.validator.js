@@ -1,4 +1,4 @@
-import { canUserResetPwd } from '../helpers/universal.helpers'
+import { canUserResetPwd } from '../helpers/user.helpers'
 import { roles } from '../config'
 import BaseValidator from './base.validator'
 import ForbiddenError from '../errors/ForbiddenError'
@@ -30,7 +30,7 @@ class UserValidator extends BaseValidator {
       .label('Segments')
   }
 
-  validateCreate = (dto, tenantId) => {
+  validateCreateUser = (dto, tenantId) => {
     const schema = Joi.object({
       tenantId: this._objectIdSchema.label('Tenant id').default(tenantId),
       first_name: this._nameSchema.extract('first').required(),
@@ -50,6 +50,21 @@ class UserValidator extends BaseValidator {
         then: Joi.required(),
         otherwise: Joi.forbidden()
       })
+    })
+
+    let { value, error } = schema.validate(dto, { abortEarly: false })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateVerifySignUp = (dto) => {
+    const schema = Joi.object({
+      email: this._emailSchema.required(),
+      otp: this._otpSchema(6).required(),
+      current_password: Joi.string().trim().label('Current password').required(),
+      new_password: this._passwordSchema.required(),
+      confirm_password: this._confirmPasswordSchema.required()
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -92,7 +107,7 @@ class UserValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateChangePassword = (dto) => {
+  validateUpdatePassword = (dto) => {
     const schema = Joi.object({
       current_password: Joi.string().label('Current password').required(),
       new_password: this._passwordSchema.required(),

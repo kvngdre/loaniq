@@ -1,4 +1,4 @@
-import { companyCategory, socials, validIds } from '../utils/constants'
+import { companyCategory, socials, validIds } from '../utils/common'
 import BaseValidator from './base.validator'
 import Joi from 'joi'
 import { Types } from 'mongoose'

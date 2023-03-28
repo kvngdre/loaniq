@@ -1,4 +1,4 @@
-import { feeTypes } from '../utils/constants'
+import { feeTypes } from '../utils/common'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
@@ -93,7 +93,8 @@ const tenantConfigSchema = new Schema(
     },
 
     form_theme: {
-      background_color: { type: String }
+      background_color: String,
+      font: String
     },
 
     reset_period: {

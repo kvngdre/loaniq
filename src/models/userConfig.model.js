@@ -3,7 +3,7 @@ import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 
-const configSchema = new Schema({
+const userConfigSchema = new Schema({
   tenantId: {
     type: Schema.Types.ObjectId,
     ref: 'Tenant',
@@ -13,12 +13,8 @@ const configSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
+    unique: true,
     required: true
-  },
-
-  last_login_time: {
-    type: Date,
-    default: null
   },
 
   timezone: {
@@ -29,11 +25,25 @@ const configSchema = new Schema({
   resetPwdDate: {
     type: Date,
     default: null
+  },
+
+  sessions: {
+    type: [
+      {
+        os: String,
+        location: String,
+        client: String,
+        ip: String,
+        login_time: Date,
+        token: String,
+        expiresIn: Number
+      }
+    ]
   }
 
 }, schemaOptions)
 
-configSchema.post(/^find/, function (docs) {
+userConfigSchema.post(/^find/, function (docs) {
   if (Array.isArray(docs) && docs.length === 0) {
     throw new NotFoundError('Users configurations not found.')
   }
@@ -41,6 +51,6 @@ configSchema.post(/^find/, function (docs) {
   if (!docs) throw new NotFoundError('User configurations not found.')
 })
 
-const UserConfig = model('UserConfig', configSchema)
+const UserConfig = model('User_Config', userConfigSchema)
 
 export default UserConfig

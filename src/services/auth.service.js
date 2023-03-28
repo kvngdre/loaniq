@@ -1,213 +1,107 @@
-/* eslint-disable eqeqeq */
 /* eslint-disable camelcase */
+/* eslint-disable eqeqeq */
 import { constants } from '../config'
-import { generateOTP, similarity } from '../helpers/universal.helpers'
-import { pubsub, events } from '../pubsub'
+import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT'
 import ConflictError from '../errors/ConflictError'
-import DeviceDetector from 'node-device-detector'
 import ForbiddenError from '../errors/ForbiddenError'
+import generateOTP from '../utils/generateOTP'
+import generateSession from '../utils/generateSession'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import UserDAO from '../daos/user.dao'
-import ValidationError from '../errors/ValidationError'
-
-function detectAgent (agent) {
-  const detector = new DeviceDetector({
-    clientIndexes: true,
-    deviceIndexes: true,
-    deviceAliasCode: false
-  })
-
-  const result = detector.detect(agent)
-  return {
-    os: result.os.name,
-    client: result.client.name
-  }
-}
+import userConfigService from './userConfig.service'
+import UserService from './user.service'
 
 class AuthService {
-  static async verifySignUp (dto, token, userAgent, clientIp) {
-    const { email, current_password, new_password } = dto
-
-    const foundUser = await UserDAO.findOne({ email })
-    if (foundUser.isEmailVerified) {
-      throw new ConflictError('User already verified, please sign in.')
-    }
-
-    // Authenticate password.
-    const isMatch = foundUser.comparePasswords(current_password)
-    if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
-
-    // * Measuring similarity of new password to the current password.
-    const percentageSimilarity =
-      similarity(new_password, current_password) * 100
-
-    if (percentageSimilarity >= constants.max_similarity) {
-      throw new ValidationError('Password is too similar to old password.')
-    }
-
-    if (token) {
-      // ! Prune user refresh tokens array for expired tokens.
-      foundUser.sessions = foundUser.sessions.filter(
-        (s) => s.token !== token && Date.now() < s.expiresIn
-      )
-    }
-
-    // Generating new token set.
-    const accessToken = foundUser.genAccessToken()
-    const refreshToken = foundUser.genRefreshToken()
-    const { os, client } = detectAgent(userAgent)
-
-    // Emitting event to update last login time on user config.
-    pubsub.publish(
-      events.user.updateConfig,
-      foundUser._id,
-      { last_login_time: new Date() }
-    )
-
-    foundUser.set({
-      sessions: [
-        {
-          os,
-          client,
-          ip: clientIp,
-          login_time: new Date(),
-          ...refreshToken
-        },
-        ...foundUser.sessions
-      ],
-      isEmailVerified: true,
-      password: new_password,
-      'otp.pin': null,
-      'otp.expiresIn': null,
-      active: true,
-      resetPwd: false
-    })
-    await foundUser.save()
-
-    foundUser.purgeSensitiveData()
-
-    return [accessToken, refreshToken, foundUser]
-  }
-
   static async login ({ email, password }, token, userAgent, clientIp) {
-    const foundUser = await UserDAO.findOne({ email }).catch(() => {
-      throw new UnauthorizedError('Invalid credentials.')
+    const user = await UserService.getUser({ email }, {}).catch(() => {
+      throw new UnauthorizedError('Invalid credentials')
     })
 
-    const isMatch = foundUser.comparePasswords(password)
-    if (!isMatch) throw new UnauthorizedError('Invalid credentials.')
+    const isMatch = user.comparePasswords(password)
+    if (!isMatch) throw new UnauthorizedError('Invalid credentials')
 
-    const { isGranted, message, data } = foundUser.permitLogin()
+    const { isGranted, message, data } = user.permitLogin()
     if (!isGranted) throw new ForbiddenError(message, data)
 
+    const userConfig = await userConfigService.getConfig({ userId: user._id })
+
+    // ! Prune user sessions for expired refresh tokens.
     if (token) {
-      // ! Prune user sessions for expired refresh tokens.
-      foundUser.sessions = foundUser.sessions.filter(
+      userConfig.sessions = userConfig.sessions.filter(
         (s) => s.token !== token && Date.now() < s.expiresIn
       )
-
-      /**
-       * * Scenario simulated here:
-       * * 1) User logs in, never uses the refresh token and does not logout.
-       * * 2) The refresh token gets stolen
-       * * 3) if 1 & 2, reuse detection is needed to clear all RTs when user logs in.
-       */
-      await UserDAO.findOne({ 'sessions.token': token }).catch(() => {
-        // ! Refresh token reuse detected. Purge user sessions.
-        logger.warn('Attempted refresh token reuse at login.')
-        foundUser.set({ sessions: [] })
-      })
+    } else {
+      userConfig.sessions = userConfig.sessions.filter(
+        (s) => Date.now() < s.expiresIn
+      )
     }
 
-    // Generating new token set.
-    const accessToken = foundUser.genAccessToken()
-    const refreshToken = foundUser.genRefreshToken()
-    const { os, client } = detectAgent(userAgent)
+    if (userConfig.sessions.length === 3) {
+      throw new ConflictError('Maximum allowed devices reached.')
+    }
 
-    // Emitting event to update last login time on user config.
-    pubsub.publish(
-      events.user.updateConfig,
-      foundUser._id,
-      { last_login_time: new Date() }
-    )
+    const accessToken = generateAccessToken({ id: user._id })
+    const refreshToken = generateRefreshToken({ id: user._id })
+    const newSession = generateSession(userAgent, clientIp, refreshToken)
 
-    foundUser.sessions.unshift({
-      os,
-      client,
-      ip: clientIp,
-      login_time: new Date(),
-      ...refreshToken
-    })
-    await foundUser.save()
+    await Promise.all([
+      user.updateOne({ last_login_time: new Date() }),
+      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] })
+    ])
 
-    return [
-      {
-        id: foundUser._id,
-        accessToken,
-        redirect: null
-      },
-      refreshToken
-    ]
+    user.purgeSensitiveData()
+
+    return [{ user, accessToken, redirect: null }, refreshToken]
   }
 
-  static async getCurrentUser (userId) {
-    const foundUser = await UserDAO.findById(userId)
+  static async getNewTokens (token) {
+    const { issuer, secret } = constants.jwt
 
-    foundUser.purgeSensitiveData()
-
-    return foundUser
-  }
-
-  static async getNewTokenSet (token, userAgent) {
-    const { issuer, audience, secret } = constants.jwt
-
-    const foundUser = await UserDAO.findOne({ 'sessions.token': token }).catch(
-      () => {
+    const userConfig = await userConfigService
+      .getConfig({ 'sessions.token': token })
+      .catch(() => {
         logger.warn('Attempted refresh token reuse detected.')
-        jwt.verify(
-          token,
-          secret.refresh,
-          { audience, issuer },
-          (err, decoded) => {
-            if (err) throw err
 
-            UserDAO.update(decoded.id, { sessions: [] }).catch((err) => {
+        jwt.verify(token, secret.refresh, { issuer }, (err, decoded) => {
+          if (err) throw err
+
+          userConfigService
+            .updateConfig(decoded.id, { sessions: [] })
+            .catch((err) => {
               logger.error(err.message, err.stack)
             })
-          }
-        )
+        })
 
         throw new ForbiddenError('Forbidden')
-      }
-    )
+      })
 
-    jwt.verify(token, secret.refresh, { audience, issuer }, (err, decoded) => {
+    jwt.verify(token, secret.refresh, { issuer }, (err, decoded) => {
       if (err) throw new ForbiddenError(err.message)
 
-      if (decoded.id != foundUser._Id) {
+      if (decoded.id != userConfig.userId) {
         throw new ForbiddenError('Invalid token')
       }
     })
 
+    const currentSession = userConfig.sessions.find((s) => s.token === token)
+    const accessToken = generateAccessToken({ id: userConfig.userId })
+    const refreshToken = generateRefreshToken({ id: userConfig.userId })
+
     // ! Prune user sessions for expired refresh tokens.
-    foundUser.sessions = foundUser.sessions.filter(
+    const filteredSessions = userConfig.sessions.filter(
       (s) => s.token !== token && Date.now() < s.expiresIn
     )
 
-    // Generating new token set.
-    const accessToken = foundUser.genAccessToken()
-    const refreshToken = foundUser.genRefreshToken()
-    const { os, client } = detectAgent(userAgent)
+    currentSession.token = refreshToken
+    currentSession.expiresIn =
+      Date.now() + constants.jwt.exp_time.refresh * 1_000
 
-    foundUser.sessions.unshift({
-      os,
-      client,
-      ...refreshToken
+    userConfig.set({
+      sessions: [currentSession, ...filteredSessions]
     })
-    foundUser.save()
+    await userConfig.save()
 
     return [accessToken, refreshToken]
   }
@@ -215,42 +109,43 @@ class AuthService {
   static async sendOTP ({ email, len }) {
     const generatedOTP = generateOTP(10, len)
 
-    const foundUser = await UserDAO.findOne({ email })
-    await foundUser.updateOne({ otp: generatedOTP })
+    // TODO: pass the time to live of the otp to the mail.
+    const [user] = await Promise.all([
+      UserService.updateUser({ email }, { otp: generatedOTP }),
+      mailer({
+        to: email,
+        subject: `Your one-time-pin: ${generatedOTP.pin}`,
+        template: 'otp-request',
+        payload: { otp: generatedOTP.pin }
+      })
+    ])
 
-    // todo pass the time to live of the otp to the mail.
-    logger.info('Sending OTP mail...')
-    await mailer({
-      to: email,
-      subject: `Your one-time-pin: ${generatedOTP.pin}`,
-      name: foundUser.first_name,
-      template: 'otp-request',
-      payload: { otp: generatedOTP.pin }
-    })
+    return user
   }
 
   static async logout (token) {
     try {
-      const foundUser = await UserDAO.findOne({ 'sessions.token': token })
+      const userConfig = await userConfigService.getConfig({
+        'sessions.token': token
+      })
 
-      foundUser.sessions = foundUser.sessions.filter(
+      userConfig.sessions = userConfig.sessions.filter(
         (s) => s.token !== token && Date.now() < s.expiresIn
       )
-
-      await foundUser.save()
+      await userConfig.save()
     } catch (exception) {
       logger.warn(exception.message)
     }
   }
 
-  static async logoutAllSessions (userId, token) {
-    const foundUser = await UserDAO.findById(userId)
+  static async signOutAllSessions (userId, token) {
+    const userConfig = await userConfigService.getConfig({ userId })
 
     // ! Prune refresh token array for expired refresh tokens.
-    foundUser.sessions = foundUser.sessions.filter((s) => s.token !== token)
-    await foundUser.save()
+    userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token)
+    await userConfig.save()
 
-    return foundUser
+    return userConfig
   }
 }
 

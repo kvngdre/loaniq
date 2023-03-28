@@ -1,7 +1,5 @@
-import { constants, roles } from '../config'
 import { hashSync, compareSync } from 'bcryptjs'
 import { Schema, model } from 'mongoose'
-import jwt from 'jsonwebtoken'
 import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = {
@@ -96,8 +94,6 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      enum: Object.values(roles),
-      default: roles.DIRECTOR,
       required: true
     },
 
@@ -128,18 +124,8 @@ const userSchema = new Schema(
       }
     },
 
-    sessions: {
-      type: [
-        {
-          os: String,
-          location: String,
-          client: String,
-          ip: String,
-          login_time: Date,
-          token: String,
-          expiresIn: Number
-        }
-      ],
+    last_login_time: {
+      type: Date,
       default: null
     }
   },
@@ -157,36 +143,11 @@ userSchema.methods.comparePasswords = function (password) {
   return compareSync(password, this.password)
 }
 
-userSchema.methods.genAccessToken = function () {
-  return jwt.sign({ id: this._id.toString() }, constants.jwt.secret.access, {
-    audience: constants.jwt.audience,
-    expiresIn: constants.jwt.exp_time.access,
-    issuer: constants.jwt.issuer
-  })
-}
-
-userSchema.methods.genRefreshToken = function () {
-  const refreshToken = jwt.sign(
-    { id: this._id.toString() },
-    constants.jwt.secret.refresh,
-    {
-      audience: constants.jwt.audience,
-      expiresIn: constants.jwt.exp_time.refresh,
-      issuer: constants.jwt.issuer
-    }
-  )
-
-  return {
-    token: refreshToken,
-    expiresIn: Date.now() + constants.jwt.exp_time.refresh * 1000
-  }
-}
-
 userSchema.methods.permitLogin = function () {
-  const data = { id: this._doc._id, redirect: {} }
+  const data = { id: this._id, redirect: {} }
 
   if (!this.isEmailVerified && !this.active) {
-    data.redirect.verify_signUp = true
+    data.redirect.verifyNewUser = true
     return {
       isGranted: false,
       message: 'Your email has not been verified.',
@@ -219,7 +180,6 @@ userSchema.methods.purgeSensitiveData = function () {
   delete this._doc?.password
   delete this._doc?.otp
   delete this._doc?.resetPwd
-  delete this._doc?.sessions
 }
 
 // Hashing password before insert
@@ -233,10 +193,10 @@ userSchema.pre('save', function (next) {
 
 userSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('User accounts not found.')
+    throw new NotFoundError('Users not found.')
   }
 
-  if (!doc) throw new NotFoundError('User account not found.')
+  if (!doc) throw new NotFoundError('User not found.')
 })
 
 const User = model('User', userSchema)

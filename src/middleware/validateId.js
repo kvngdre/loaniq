@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import { Types } from 'mongoose'
 import ErrorResponse from '../utils/ErrorResponse'
 

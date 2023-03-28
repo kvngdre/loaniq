@@ -2,7 +2,7 @@ import txnService from '../services/transaction.service'
 import BaseController from './base.controller'
 import txnValidator from '../validators/transactionValidator'
 import ValidationError from '../errors/ValidationError'
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import paystackService from '../services/paystack.service'
 
 class TransactionController extends BaseController {

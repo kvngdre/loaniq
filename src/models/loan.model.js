@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose'
 // import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
-import { loanStatus, loanRemarks } from '../utils/constants'
+import { loanStatus, loanRemarks } from '../utils/common'
 import logger from '../utils/logger'
 import NotFoundError from '../errors/NotFoundError'
 

@@ -1,12 +1,14 @@
-import { httpCodes } from '../utils/constants'
+import { constants } from '../config'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import UserService from '../services/user.service'
 import userValidator from '../validators/user.validator'
 import ValidationError from '../errors/ValidationError'
+import requestIp from 'request-ip'
 
 class UserController extends BaseController {
   static createUser = async (req, res) => {
-    const { value, error } = userValidator.validateCreate(
+    const { value, error } = userValidator.validateCreateUser(
       req.body,
       req.currentUser.tenantId
     )
@@ -21,6 +23,29 @@ class UserController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
+  static verifySignUp = async (req, res) => {
+    const { value, error } = userValidator.validateVerifySignUp(req.body)
+    if (error) throw new ValidationError(null, error)
+
+    const [accessToken, refreshToken, user] = await UserService.verifyNewUser(
+      value,
+      req.headers['user-agent'],
+      requestIp.getClientIp(req)
+    )
+
+    //  ! Create secure cookie with refresh token.
+    res.cookie('jwt', refreshToken.token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: constants.secure_cookie,
+      maxAge: constants.jwt.exp_time.refresh * 1000
+    })
+
+    const response = this.apiResponse('User verified.', { user, accessToken })
+
+    return res.status(httpCodes.OK).json(response)
+  }
+
   static getUsers = async (req, res) => {
     const { count, users } = await UserService.getUsers(req.currentUser.tenantId)
 
@@ -33,6 +58,13 @@ class UserController extends BaseController {
   static getUser = async (req, res) => {
     const user = await UserService.getUserById(req.params.userId)
     const response = this.apiResponse('Fetched user.', user)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  static getCurrentUser = async (req, res) => {
+    const user = await UserService.getCurrentUser(req.currentUser._id)
+    const response = this.apiResponse('Fetched current user.', user)
 
     res.status(httpCodes.OK).json(response)
   }
@@ -54,11 +86,11 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static changePassword = async (req, res) => {
-    const { value, error } = userValidator.validateChangePassword(req.body)
+  static updatePassword = async (req, res) => {
+    const { value, error } = userValidator.validateUpdatePassword(req.body)
     if (error) throw new ValidationError(null, error)
 
-    await UserService.changePassword(req.params.userId, value)
+    await UserService.updatePassword(req.params.userId, value)
     const response = this.apiResponse('Password updated.')
 
     res.status(httpCodes.OK).json(response)

@@ -1,4 +1,4 @@
-import { reviewStatus } from '../utils/constants'
+import { reviewStatus } from '../utils/common'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 

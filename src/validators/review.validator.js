@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { reviewStatus } from '../utils/constants'
+import { reviewStatus } from '../utils/common'
 import BaseValidator from './base.validator'
 
 class ReviewValidator extends BaseValidator {

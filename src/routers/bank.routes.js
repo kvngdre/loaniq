@@ -1,18 +1,18 @@
 import { Router } from 'express'
 import BankController from '../controllers/bank.controller'
 import validateId from '../middleware/validateId'
-import verifyJwt from '../middleware/verifyJwt'
+import verifyJWT from '../middleware/verifyJWT'
 
 const router = Router()
 
-router.post('/', [verifyJwt], BankController.createBank)
+router.post('/', [verifyJWT], BankController.createBank)
 
 router.get('/', BankController.getBanks)
 
-router.get('/:bankId', [verifyJwt, validateId], BankController.getBank)
+router.get('/:bankId', [verifyJWT, validateId], BankController.getBank)
 
-router.patch('/:bankId', [verifyJwt, validateId], BankController.updateBank)
+router.patch('/:bankId', [verifyJWT, validateId], BankController.updateBank)
 
-router.delete('/:bankId', [verifyJwt, validateId], BankController.deleteBank)
+router.delete('/:bankId', [verifyJWT, validateId], BankController.deleteBank)
 
 export default router

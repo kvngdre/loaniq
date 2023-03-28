@@ -1,11 +1,11 @@
 import { Router } from 'express'
-import verifyJwt from '../middleware/verifyJwt'
+import verifyJWT from '../middleware/verifyJWT'
 import SegConfigController from '../controllers/segConfig.controller'
 import validateId from '../middleware/validateId'
 
 const router = Router()
 
-router.post('/', [verifyJwt], SegConfigController.createSegConfig)
+router.post('/', [verifyJWT], SegConfigController.createSegConfig)
 
 router.get('/', SegConfigController.getSegConfigs)
 

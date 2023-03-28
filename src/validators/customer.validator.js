@@ -1,4 +1,4 @@
-import { relationships, validIds } from '../utils/constants'
+import { relationships, validIds } from '../utils/common'
 import BaseValidator from './base.validator'
 import { DateTime } from 'luxon'
 import Joi from 'joi'
@@ -12,7 +12,7 @@ const isOver18 = (dob, helper) => {
   return helper.error('any.invalid')
 }
 
-class CustomerValidation extends BaseValidator {
+class CustomerValidator extends BaseValidator {
   #bvnSchema
   #birthDateSchema
   #commandSchema
@@ -176,4 +176,4 @@ class CustomerValidation extends BaseValidator {
   }
 }
 
-export default new CustomerValidation()
+export default new CustomerValidator()

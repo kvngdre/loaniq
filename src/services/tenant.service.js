@@ -1,35 +1,30 @@
 /* eslint-disable camelcase */
 import { events, pubsub } from '../pubsub'
-import { genRandomStr, validateOTP } from '../helpers/universal.helpers'
 import { startSession } from 'mongoose'
+import randomString from '../utils/randomString'
+import validateOTP from '../utils/validateOTP'
 import ConflictError from '../errors/ConflictError'
 import driverUploader from '../utils/driveUploader'
 import fs from 'fs'
 import logger from '../utils/logger'
 import mailer from '../utils/mailer'
 import path from 'path'
-import TenantConfigDAO from '../daos/tenantConfig.dao'
 import TenantDAO from '../daos/tenant.dao'
 import UnauthorizedError from '../errors/UnauthorizedError'
-import UserDAO from '../daos/user.dao'
 import UserService from './user.service'
+import tenantConfigService from './tenantConfig.service'
 
 class TenantService {
-  static async createTenant (dto) {
-    // * Initializing transaction session.
+  static async createTenant ({ tenant, user }) {
     const trx = await startSession()
+    trx.startTransaction()
     try {
-      const { tenant, user } = dto
-
-      // ! Starting transaction.
-      trx.startTransaction()
-
       const [newTenant, newUser] = await Promise.all([
         TenantDAO.insert(tenant, trx),
         UserService.createUser(user, trx)
       ])
 
-      // * Emitting new tenant and user sign up event.
+      // * Emitting new tenant sign up event.
       pubsub.publish(
         events.tenant.signUp,
         null,
@@ -103,47 +98,42 @@ class TenantService {
   }
 
   static async deactivateTenant ({ _id, tenantId }, { otp }) {
-    const [foundTenant, foundOwner] = await Promise.all([
+    const [foundTenant, user] = await Promise.all([
       TenantDAO.findById(tenantId),
-      UserDAO.findById(_id)
+      UserService.getUserById(_id)
     ])
 
-    const { isValid, message } = validateOTP(foundOwner, otp)
+    const { isValid, message } = validateOTP(...user.otp, otp)
     if (!isValid) throw new UnauthorizedError(message)
 
     await mailer({
-      to: foundOwner.email,
+      to: user.email,
       subject: 'Tenant Deactivated',
       template: 'deactivate-tenant',
-      name: foundOwner.first_name
+      name: user.first_name
     })
 
-    // ? send a deactivate email to Apex!
+    // ? send a deactivate email to Apex
     foundTenant.set({ active: false })
-    await UserDAO.updateMany({ tenantId }, { active: false })
+    await UserService.updateBulk({ tenantId }, { active: false })
     await foundTenant.save()
 
     return foundTenant
   }
 
   static async reactivateTenant (tenantId) {
-    const [foundTenant] = await Promise.all([
+    const [tenant] = await Promise.all([
       TenantDAO.update(tenantId, { active: true }),
-      UserDAO.updateMany({ tenantId }, { active: true })
+      UserService.updateBulk({ tenantId }, { active: true })
     ])
 
-    /**
-     * todo should only the owner user be reactivated,
-     * todo and they activate every other user?
-     */
-
-    return foundTenant
+    return tenant
   }
 
   static async generateFormId (tenantId) {
     try {
-      const formId = genRandomStr(5)
-      const updatedConfig = await TenantConfigDAO.update(tenantId, { formId })
+      const formId = randomString(5)
+      const updatedConfig = await tenantConfigService.updateConfig(tenantId, { formId })
 
       return updatedConfig
     } catch (error) {
@@ -152,7 +142,7 @@ class TenantService {
   }
 
   static async getFormData (formId) {
-    const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
+    const { form_theme, socials, tenantId } = await tenantConfigService.getConfig({
       formId
     })
 

@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import ReviewService from '../services/review.service'
 import reviewValidator from '../validators/review.validator'

@@ -1,21 +1,6 @@
 import BaseValidator from './base.validator'
 import Joi from 'joi'
 class AuthValidator extends BaseValidator {
-  validateVerifyReg = (dto) => {
-    const schema = Joi.object({
-      email: this._emailSchema.required(),
-      otp: this._otpSchema(6).required(),
-      current_password: Joi.string().trim().label('Current password').required(),
-      new_password: this._passwordSchema.required(),
-      confirm_password: this._confirmPasswordSchema.required()
-    })
-
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
-
-    return { value, error }
-  }
-
   validateLogin = (dto) => {
     const schema = Joi.object({
       email: this._emailSchema.required(),

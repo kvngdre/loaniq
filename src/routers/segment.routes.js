@@ -1,4 +1,4 @@
-import verifyJwt from '../middleware/verifyJwt'
+import verifyJWT from '../middleware/verifyJWT'
 import { Router } from 'express'
 import SegmentController from '../controllers/segment.controller'
 import segConfigRoutes from './segConfig.routes'
@@ -8,14 +8,14 @@ const router = Router()
 
 router.use('/configurations', segConfigRoutes)
 
-router.post('/', [verifyJwt], SegmentController.createSegment)
+router.post('/', [verifyJWT], SegmentController.createSegment)
 
-router.get('/', [verifyJwt], SegmentController.getSegments)
+router.get('/', [verifyJWT], SegmentController.getSegments)
 
-router.get('/:segmentId', [verifyJwt, validateId], SegmentController.getSegment)
+router.get('/:segmentId', [verifyJWT, validateId], SegmentController.getSegment)
 
-router.patch('/:segmentId', [verifyJwt, validateId], SegmentController.updateSegment)
+router.patch('/:segmentId', [verifyJWT, validateId], SegmentController.updateSegment)
 
-router.delete('/:segmentId', [verifyJwt, validateId], SegmentController.deleteSegment)
+router.delete('/:segmentId', [verifyJWT, validateId], SegmentController.deleteSegment)
 
 export default router

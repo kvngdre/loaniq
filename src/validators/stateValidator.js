@@ -1,4 +1,4 @@
-import { geoZones } from '../utils/constants'
+import { geoZones } from '../utils/common'
 import Joi from 'joi'
 import BaseValidator from './base.validator'
 

@@ -1,4 +1,4 @@
-import { socials } from '../utils/constants'
+import { socials } from '../utils/common'
 import BaseValidator from './base.validator'
 import Joi from 'joi'
 

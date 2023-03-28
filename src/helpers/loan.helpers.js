@@ -1,30 +1,4 @@
 /**
- * Computes person age
- * @param {string} dob Date of birth in ISO 8601 format.
- * @returns {number}
- */
-export const computeAge = (dob) => {
-  const epochYear = 1970
-
-  const diff = Date.now() - new Date(dob).getTime()
-  const age = new Date(diff).getUTCFullYear() - epochYear
-
-  return age
-}
-
-/**
- * Computes employment tenure.
- * @param {string} doe Date of employment in ISO 8601 format.
- * @returns {number}
- */
-export const computeTenure = (doe) => {
-  const diff = Date.now() - new Date(doe).getTime()
-  const tenure = new Date(diff).getUTCFullYear() - 1970
-
-  return tenure
-}
-
-/**
  * Applies all fees to loan.
  * @param {number} amount The recommended loan amount.
  * @param  {array} fees The fees to be applied.

@@ -1,6 +1,6 @@
 import { events, pubsub } from '../pubsub'
 import { startSession } from 'mongoose'
-import { TxnObj } from '../helpers/universal.helpers'
+import { TransactionDTO } from '../models/transaction.model'
 import InsufficientError from '../errors/InsufficientError'
 import WalletDAO from '../daos/wallet.dao'
 
@@ -59,7 +59,7 @@ class WalletService {
       })
       await foundWallet.save({ session: trx })
 
-      await pubsub.publish(events.wallet.credit, null, new TxnObj(dto), trx)
+      await pubsub.publish(events.wallet.credit, null, new TransactionDTO(dto), trx)
 
       // * Committing changes.
       await trx.commitTransaction()
@@ -93,7 +93,7 @@ class WalletService {
       foundWallet.set({ balance: foundWallet.balance - dto.amount })
       await foundWallet.save({ session: trx })
 
-      pubsub.publish(events.wallet.debit, null, new TxnObj(dto), trx)
+      pubsub.publish(events.wallet.debit, null, new TransactionDTO(dto), trx)
 
       // * Committing changes.
       await trx.commitTransaction()

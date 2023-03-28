@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import walletService from '../services/wallet.service'
 import walletValidator from '../validators/wallet.validator'

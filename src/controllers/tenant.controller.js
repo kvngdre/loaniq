@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import TenantService from '../services/tenant.service'
 import tenantValidator from '../validators/tenant.validator'

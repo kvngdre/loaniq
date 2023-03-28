@@ -1,4 +1,4 @@
-import { geoZones } from '../utils/constants'
+import { geoZones } from '../utils/common'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 

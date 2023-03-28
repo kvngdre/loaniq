@@ -7,8 +7,8 @@ class TransactionService {
     pubsub.subscribe(events.wallet.debit, this.createTxn)
   }
 
-  async createTxn (dto) {
-    const newTransaction = await TransactionDAO.insert(dto)
+  async createTxn (newTransactionDTO) {
+    const newTransaction = await TransactionDAO.insert(newTransactionDTO)
     return newTransaction
   }
 

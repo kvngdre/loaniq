@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseController from './base.controller'
 import SegConfigService from '../services/segConfig.service'
 import segConfigValidator from '../validators/segConfig.validator'

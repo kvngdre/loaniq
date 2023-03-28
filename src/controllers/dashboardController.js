@@ -1,4 +1,4 @@
-import { loanStatus } from '../utils/constants'
+import { loanStatus } from '../utils/common'
 import Customer from '../models/customer.model'
 import Tenant from '../models/tenant.model'
 import { aggregate } from '../models/loan.model'

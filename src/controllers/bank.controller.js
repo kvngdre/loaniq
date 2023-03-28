@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BankService from '../services/bank.service'
 import bankValidator from '../validators/bank.validator'
 import BaseController from './base.controller'

@@ -1,10 +1,11 @@
-import { computeAge, computeTenure } from '../helpers/universal.helpers'
 import {
   maritalStatus,
   relationships,
   validIds
-} from '../utils/constants'
+} from '../utils/common'
 import { Schema, model } from 'mongoose'
+import computeAge from '../utils/computeAge'
+import computeTenure from '../utils/computeTenure'
 import NotFoundError from '../errors/NotFoundError'
 
 const schemaOptions = { timestamps: true, versionKey: false }

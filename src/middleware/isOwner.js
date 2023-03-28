@@ -1,5 +1,5 @@
 /* eslint-disable eqeqeq */
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import { roles } from '../config'
 import ErrorResponse from '../utils/ErrorResponse'
 

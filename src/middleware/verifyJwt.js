@@ -1,48 +1,47 @@
 import { constants } from '../config'
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseError from '../errors/BaseError'
 import ErrorResponse from '../utils/ErrorResponse'
 import jwt from 'jsonwebtoken'
 import UserService from '../services/user.service'
 
-export default async function verifyJwt (req, res, next) {
+export default async function verifyJWT (req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form
      * Authorization: Bearer ${JWT}
      *
      */
-    function getTokenFromHeader (req) {
-      if (req.headers?.authorization?.split(' ')[0] === 'Bearer') {
-        return req.headers.authorization.split(' ')[1]
+    const getTokenFromHeader = (req) => {
+      if (!req.headers?.authorization) {
+        return res.status(httpCodes.BAD_REQUEST).json(
+          new ErrorResponse({
+            name: 'Validation Error',
+            message: 'No token provided.'
+          })
+        )
       }
-      return res.status(httpCodes.UNAUTHORIZED).json(
-        new ErrorResponse({
-          name: 'Auth Error',
-          message: 'Invalid token provided.'
-        })
-      )
+
+      return req.headers.authorization.split(' ')
     }
 
-    const token = getTokenFromHeader(req)
+    const [scheme, token] = getTokenFromHeader(req)
     const decoded = jwt.verify(token, constants.jwt.secret.access)
 
     // Checking if token claims are valid.
-    if (
-      decoded.iss !== constants.jwt.issuer ||
-      decoded.aud !== constants.jwt.audience
-    ) {
+    if (scheme !== 'Bearer' || decoded.iss !== constants.jwt.issuer) {
       return res.status(httpCodes.UNAUTHORIZED).json(
         new ErrorResponse({
           name: 'Auth Error',
-          message: 'Invalid token provided.'
+          message: 'Invalid access token provided.'
         })
       )
     }
 
     // Checking if user is inactive.
-    const foundUser = await UserService.getUserById(decoded.id)
-    if (!foundUser.active) {
+    // TODO: Move this to redis
+    const user = await UserService.getUserById(decoded.id)
+    if (!user.active) {
       return res.status(httpCodes.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
@@ -51,7 +50,7 @@ export default async function verifyJwt (req, res, next) {
       )
     }
 
-    req.currentUser = foundUser._doc
+    req.currentUser = user._doc
 
     next()
   } catch (exception) {

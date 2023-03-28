@@ -58,7 +58,7 @@ async function getTransporter () {
  * @param {string} params.payload.password Password if to be sent in mail.
  * @returns {Promise}
  */
-const sendMail = async function ({ from, to, subject, template, name, payload }) {
+const sendMail = async function ({ from, to, subject, template, name = undefined, payload }) {
   // Defining the mailing options
   const mailOptions = {
     from: `"Apex" <${from || senderEmail}>`,

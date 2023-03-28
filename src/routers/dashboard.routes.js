@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { getLoanData } from '../controllers/dashboardController'
 import ServerError from '../errors/serverError'
-import verifyJwt from '../middleware/verifyJwt'
+import verifyJWT from '../middleware/verifyJWT'
 
 const router = Router()
 
-router.get('/charts', verifyJwt, async (req, res) => {
+router.get('/charts', verifyJWT, async (req, res) => {
   const data = await getLoanData(req.user)
   if (data instanceof ServerError) return res.status(data.errorCode).json(data.message)
 

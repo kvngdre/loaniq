@@ -1,4 +1,4 @@
-import { feeTypes } from '../utils/constants'
+import { feeTypes } from '../utils/common'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError'
 
@@ -117,6 +117,6 @@ segConfigSchema.post(/^find/, function (doc) {
   if (!doc) throw new NotFoundError('Segment configuration not found.')
 })
 
-const SegmentConfig = model('SegmentConfig', segConfigSchema)
+const SegmentConfig = model('Segment_Config', segConfigSchema)
 
 export default SegmentConfig

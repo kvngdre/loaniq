@@ -1,4 +1,4 @@
-import { httpCodes } from '../utils/constants'
+import { httpCodes } from '../utils/common'
 import BaseError from './BaseError'
 
 class DependencyError extends BaseError {
