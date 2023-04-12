@@ -1,6 +1,6 @@
-import verifyJWT from '../middleware/verifyJWT'
 import { Router } from 'express'
-import TransactionController from '../controllers/transaction.controller'
+import TransactionController from '../controllers/transaction.controller.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

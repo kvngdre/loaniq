@@ -1,4 +1,4 @@
-import SegmentDAO from '../daos/segment.dao'
+import SegmentDAO from '../daos/segment.dao.js'
 
 class SegmentService {
   static async createSegment (dto) {

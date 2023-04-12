@@ -1,4 +1,4 @@
-import BankDAO from '../daos/bank.dao'
+import BankDAO from '../daos/bank.dao.js'
 
 class BankService {
   static async create (dto) {

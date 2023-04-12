@@ -1,18 +1,21 @@
 import { Router } from 'express'
-import authRouter from './auth.routes'
-import bankRouter from './bank.routes'
-import customerRouter from './customer.routes'
-import dashboardRouter from './dashboard.routes'
-import loanRouter from './loan.routes'
+import authRouter from './auth.routes.js'
+import bankRouter from './bank.routes.js'
+import customerRouter from './customer.routes.js'
+import dashboardRouter from './dashboard.routes.js'
+import loanRouter from './loan.routes.js'
+import originRouter from './origin.routes.js'
+import permissionRouter from './permissions.routes.js'
 import reviewRouter from './review.routes.js'
-import segmentRouter from './segment.routes'
-import stateRouter from './state.routes'
-import tenantRouter from './tenant.routes'
-import testRoutes from './test.routes'
-import transactionRouter from './transaction.routes'
-import userRoutes from './user.routes'
-import walletRoutes from './wallet.routes'
-import webhookRouter from './webhook.routes'
+import roleRouter from './role.routes.js'
+import segmentRouter from './segment.routes.js'
+import stateRouter from './state.routes.js'
+import tenantRouter from './tenant.routes.js'
+import testRoutes from './test.routes.js'
+import transactionRouter from './transaction.routes.js'
+import userRoutes from './user.routes.js'
+import walletRoutes from './wallet.routes.js'
+import webhookRouter from './webhook.routes.js'
 
 const router = Router()
 
@@ -22,7 +25,10 @@ export default () => {
   router.use('/customers', customerRouter)
   router.use('/dashboard', dashboardRouter)
   router.use('/loans', loanRouter)
+  router.use('/origins', originRouter)
+  router.use('/permissions', permissionRouter)
   router.use('/reviews', reviewRouter)
+  router.use('/roles', roleRouter)
   router.use('/segments', segmentRouter)
   router.use('/states', stateRouter)
   router.use('/tenants', tenantRouter)

@@ -1,17 +1,17 @@
 /* eslint-disable camelcase */
 /* eslint-disable eqeqeq */
-import { constants } from '../config'
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT'
-import ConflictError from '../errors/ConflictError'
-import ForbiddenError from '../errors/ForbiddenError'
-import generateOTP from '../utils/generateOTP'
-import generateSession from '../utils/generateSession'
+import { constants } from '../config/index.js'
+import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js'
+import ConflictError from '../errors/ConflictError.js'
+import ForbiddenError from '../errors/ForbiddenError.js'
+import generateOTP from '../utils/generateOTP.js'
+import generateSession from '../utils/generateSession.js'
 import jwt from 'jsonwebtoken'
-import logger from '../utils/logger'
-import mailer from '../utils/mailer'
-import UnauthorizedError from '../errors/UnauthorizedError'
-import userConfigService from './userConfig.service'
-import UserService from './user.service'
+import logger from '../utils/logger.js'
+import mailer from '../utils/mailer.js'
+import UnauthorizedError from '../errors/UnauthorizedError.js'
+import userConfigService from './userConfig.service.js'
+import UserService from './user.service.js'
 
 class AuthService {
   static async login ({ email, password }, token, userAgent, clientIp) {

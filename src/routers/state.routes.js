@@ -1,7 +1,7 @@
-import verifyJWT from '../middleware/verifyJWT'
 import { Router } from 'express'
-import StateController from '../controllers/state.controller'
-import validateId from '../middleware/validateId'
+import StateController from '../controllers/state.controller.js'
+import validateId from '../middleware/validateId.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

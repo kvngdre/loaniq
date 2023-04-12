@@ -1,4 +1,4 @@
-import StateDAO from '../daos/state.dao'
+import StateDAO from '../daos/state.dao.js'
 
 class StateService {
   static async create (dto) {

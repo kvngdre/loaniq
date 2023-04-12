@@ -1,6 +1,6 @@
-import { geoZones } from '../utils/common'
+import { geoZones } from '../utils/common.js'
 import Joi from 'joi'
-import BaseValidator from './base.validator'
+import BaseValidator from './base.validator.js'
 
 class StateValidator extends BaseValidator {
   #codeSchema

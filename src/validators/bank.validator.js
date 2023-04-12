@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import BaseValidator from './base.validator'
+import BaseValidator from './base.validator.js'
 
 class BankValidator extends BaseValidator {
   #nameSchema

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import CustomerService from '../services/customer.service'
-import customerValidator from '../validators/customer.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import CustomerService from '../services/customer.service.js'
+import customerValidator from '../validators/customer.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class CustomerController extends BaseController {
   static createCustomer = async (req, res) => {

@@ -1,5 +1,5 @@
-import BaseError from '../errors/BaseError'
-import logger from './logger'
+import BaseError from '../errors/BaseError.js'
+import logger from './logger.js'
 
 class ErrorHandler {
   static isTrustedError (error) {

@@ -1,6 +1,6 @@
 import Joi from 'joi'
-import BaseValidator from './base.validator'
-import { txnStatus, txnTypes, txnPurposes } from '../utils/common'
+import BaseValidator from './base.validator.js'
+import { txnStatus, txnTypes, txnPurposes } from '../utils/common.js'
 
 class TransactionValidator extends BaseValidator {
   #refSchema

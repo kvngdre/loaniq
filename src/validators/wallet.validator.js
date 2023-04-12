@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
-import BaseValidator from './base.validator'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
-import { txnPurposes, txnStatus, txnTypes } from '../utils/common'
+import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js'
 
 class WalletValidator extends BaseValidator {
   #referenceSchema

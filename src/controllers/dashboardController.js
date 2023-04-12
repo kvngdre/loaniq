@@ -1,49 +1,45 @@
-import { loanStatus } from '../utils/common'
-import Customer from '../models/customer.model'
-import Tenant from '../models/tenant.model'
-import { aggregate } from '../models/loan.model'
-import ServerError from '../errors/serverError'
-import User from '../models/user.model'
-const debug = require('debug')('dashController')
-const logger = require('../utils/logger')
+import { loanStatus } from '../utils/common.js'
+import Customer from '../models/customer.model.js'
+import Tenant from '../models/tenant.model.js'
+import Loan from '../models/loan.model.js'
+import User from '../models/user.model.js'
+import logger from '../utils/logger.js'
 
-export default {
-  getLoanData: async (user, status) => {
-    try {
-      const currentYear = new Date().getUTCFullYear().toString()
+export const getLoanData = async (user, status) => {
+  try {
+    const currentYear = new Date().getUTCFullYear().toString()
 
-      const approvedLoans = await aggregate([
-        {
-          $match: {
-            creditUser: user.id,
-            status: loanStatus.approved
-          }
-        },
-        {
-          $group: {
-            _id: {
-              year: currentYear,
-              month: { $month: '$createdAt' }
-            },
-            value: { $sum: '$recommendedAmount' }
-          }
+    const approvedLoans = await Loan.aggregate([
+      {
+        $match: {
+          creditUser: user.id,
+          status: loanStatus.approved
         }
-      ])
-
-      if (approvedLoans.length == 0) { return new ServerError(404, 'No data available.') }
-
-      return {
-        message: 'success',
-        data: approvedLoans
+      },
+      {
+        $group: {
+          _id: {
+            year: currentYear,
+            month: { $month: '$createdAt' }
+          },
+          value: { $sum: '$recommendedAmount' }
+        }
       }
-    } catch (exception) {
-      logger.error({
-        method: 'get_loan_data',
-        message: exception.message,
-        meta: exception.stack
-      })
-      debug(exception)
-      return new ServerError(500, 'Something went wrong')
+    ])
+
+    if (approvedLoans.length === 0) {
+      return
     }
+
+    return {
+      message: 'success',
+      data: approvedLoans
+    }
+  } catch (exception) {
+    logger.error({
+      method: 'get_loan_data',
+      message: exception.message,
+      meta: exception.stack
+    })
   }
 }

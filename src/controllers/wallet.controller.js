@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import walletService from '../services/wallet.service'
-import walletValidator from '../validators/wallet.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import walletService from '../services/wallet.service.js'
+import walletValidator from '../validators/wallet.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class WalletController extends BaseController {
   static createWallet = async (req, res) => {

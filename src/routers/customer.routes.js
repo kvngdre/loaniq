@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import CustomerController from '../controllers/customer.controller'
-import grantAccess from '../middleware/grantAccess'
-import upload from '../middleware/fileUploader'
-import validateId from '../middleware/validateId'
+import CustomerController from '../controllers/customer.controller.js'
+import grantAccess from '../middleware/grantAccess.js'
+import upload from '../middleware/fileUploader.js'
+import validateId from '../middleware/validateId.js'
 
 const router = Router({ mergeParams: true })
 

@@ -1,10 +1,8 @@
 import { Router } from 'express'
-import UserConfigController from '../controllers/userConfig.controller'
-import validateId from '../middleware/validateId'
+import UserConfigController from '../controllers/userConfig.controller.js'
+import validateId from '../middleware/validateId.js'
 
 const router = Router({ mergeParams: true })
-
-// const { SUPER_ADMIN } = roles
 
 router.post('/', [], UserConfigController.createConfig)
 

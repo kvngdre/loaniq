@@ -1,6 +1,6 @@
-import { httpCodes } from '../utils/common'
-import ErrorHandler from '../utils/ErrorHandler'
-import ErrorResponse from '../utils/ErrorResponse'
+import { httpCodes } from '../utils/common.js'
+import ErrorHandler from '../utils/ErrorHandler.js'
+import ErrorResponse from '../utils/ErrorResponse.js'
 
 export default (err, _req, res, _next) => {
   // Catch errors for bad req json.

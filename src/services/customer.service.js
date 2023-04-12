@@ -1,4 +1,4 @@
-import CustomerDAO from '../daos/customer.dao'
+import CustomerDAO from '../daos/customer.dao.js'
 
 class CustomerService {
   static async create (dto, trx) {

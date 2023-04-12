@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import TenantService from '../services/tenant.service'
-import tenantValidator from '../validators/tenant.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import TenantService from '../services/tenant.service.js'
+import tenantValidator from '../validators/tenant.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class TenantController extends BaseController {
   static signUp = async (req, res) => {

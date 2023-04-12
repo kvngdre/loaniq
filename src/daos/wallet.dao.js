@@ -1,7 +1,7 @@
-import BaseDAO from './base.dao'
-import ConflictError from '../errors/ConflictError'
-import ValidationError from '../errors/ValidationError'
-import Wallet from '../models/wallet.model'
+import BaseDAO from './base.dao.js'
+import ConflictError from '../errors/ConflictError.js'
+import ValidationError from '../errors/ValidationError.js'
+import Wallet from '../models/wallet.model.js'
 
 class WalletDAO extends BaseDAO {
   static async insert (dto, trx) {

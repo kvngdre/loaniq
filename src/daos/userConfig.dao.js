@@ -1,8 +1,8 @@
 import { Types } from 'mongoose'
-import BaseDAO from './base.dao'
-import ConflictError from '../errors/ConflictError'
-import UserConfig from '../models/userConfig.model'
-import ValidationError from '../errors/ValidationError'
+import BaseDAO from './base.dao.js'
+import ConflictError from '../errors/ConflictError.js'
+import UserConfig from '../models/userConfig.model.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class UserConfigDAO extends BaseDAO {
   static async insert (dto, trx) {

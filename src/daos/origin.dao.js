@@ -1,7 +1,7 @@
-import BaseDAO from './base.dao'
-import ConflictError from '../errors/ConflictError'
-import Origin from '../models/origin.model'
-import ValidationError from '../errors/ValidationError'
+import BaseDAO from './base.dao.js'
+import ConflictError from '../errors/ConflictError.js'
+import Origin from '../models/origin.model.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class OriginDAO extends BaseDAO {
   static async insert (dto, trx) {

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import ReviewService from '../services/review.service'
-import reviewValidator from '../validators/review.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import ReviewService from '../services/review.service.js'
+import reviewValidator from '../validators/review.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 class ReviewController extends BaseController {
   static createReview = async (req, res) => {
     const { value, error } = reviewValidator.validateCreate(

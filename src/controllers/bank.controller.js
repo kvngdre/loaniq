@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BankService from '../services/bank.service'
-import bankValidator from '../validators/bank.validator'
-import BaseController from './base.controller'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BankService from '../services/bank.service.js'
+import bankValidator from '../validators/bank.validator.js'
+import BaseController from './base.controller.js'
+import ValidationError from '../errors/ValidationError.js'
 class BankController extends BaseController {
   static createBank = async (req, res) => {
     const { value, error } = bankValidator.validateCreate(req.body)

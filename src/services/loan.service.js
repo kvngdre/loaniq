@@ -1,4 +1,4 @@
-import LoanDAO from '../daos/loan.dao'
+import LoanDAO from '../daos/loan.dao.js'
 
 class LoanService {
   static async createLoan (dto, currentUser) {

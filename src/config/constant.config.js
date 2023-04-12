@@ -1,10 +1,7 @@
 import { config } from 'dotenv'
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'development'
-export const env = process.env.NODE_ENV
-
 const foundEnv = config()
-if (foundEnv.error || env === 'production') {
+if (foundEnv.error || process.env.NODE_ENV === 'production') {
   throw new Error('No .env file found.')
 }
 
@@ -21,15 +18,6 @@ export default {
     encryption_key: process.env.ENCRYPTION_KEY
   },
   charge: process.env.RATE,
-  db: {
-    uri: {
-      dev_local: process.env.DEV_DB_URI_LOCAL,
-      development: process.env.DEV_DB_URI_REMOTE,
-      test: process.env.TEST_DB_URI,
-      production: process.env.PROD_DB_URI
-    },
-    password: process.env.DB_PASSWORD
-  },
   flw: {
     public_key: process.env.FLW_PUBLIC_KEY,
     secret: process.env.FLW_PRIVATE_KEY,

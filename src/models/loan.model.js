@@ -1,8 +1,8 @@
 import { Schema, model } from 'mongoose'
 // import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
-import { loanStatus, loanRemarks } from '../utils/common'
-import logger from '../utils/logger'
-import NotFoundError from '../errors/NotFoundError'
+import { loanStatus, loanRemarks } from '../utils/common.js'
+import logger from '../utils/logger.js'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

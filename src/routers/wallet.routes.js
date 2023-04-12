@@ -1,9 +1,9 @@
-import { roles } from '../config'
+import { roles } from '../config/index.js'
 import { Router } from 'express'
-import verifyJWT from '../middleware/verifyJWT'
-import grantAccess from '../middleware/grantAccess'
-import validateId from '../middleware/validateId'
-import WalletController from '../controllers/wallet.controller'
+import verifyJWT from '../middleware/verifyJWT.js'
+import grantAccess from '../middleware/grantAccess.js'
+import validateId from '../middleware/validateId.js'
+import WalletController from '../controllers/wallet.controller.js'
 
 const router = Router()
 

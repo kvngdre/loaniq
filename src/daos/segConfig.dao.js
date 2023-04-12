@@ -1,7 +1,7 @@
-import BaseDAO from './base.dao'
-import ConflictError from '../errors/ConflictError'
-import SegConfig from '../models/segConfig.model'
-import ValidationError from '../errors/ValidationError'
+import BaseDAO from './base.dao.js'
+import ConflictError from '../errors/ConflictError.js'
+import SegConfig from '../models/segConfig.model.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class SegConfigDAO extends BaseDAO {
   static async insert (dto, trx) {

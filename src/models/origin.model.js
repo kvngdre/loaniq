@@ -1,14 +1,16 @@
-import {
-  maritalStatus,
-  relationships,
-  validIds
-} from '../utils/constants'
-import { computeAge, computeTenure } from '../helpers/universal.helpers'
-import { hashSync, compareSync } from 'bcryptjs'
+import { maritalStatus, relationships, validIds } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError'
+import bcrypt from 'bcryptjs'
+import computeAge from '../utils/computeAge.js'
+import computeTenure from '../utils/computeTenure.js'
+import NotFoundError from '../errors/NotFoundError.js'
 
-const schemaOptions = { timestamps: true, versionKey: false, toJSON: { virtuals: true } }
+const schemaOptions = {
+  timestamps: true,
+  versionKey: false,
+  toJSON: { virtuals: true }
+}
+const { hashSync, compareSync } = bcrypt
 
 const originSchema = new Schema(
   {
@@ -257,6 +259,7 @@ const originSchema = new Schema(
       type: Boolean,
       default: false
     },
+
     session: {
       os: String,
       location: String,
@@ -289,7 +292,7 @@ originSchema.methods.getMonthNetPay = function (year, month) {
   return this.income[year][month]
 }
 
-originSchema.methods.comparePasswords = function (password) {
+originSchema.methods.validatePassword = function (password) {
   return compareSync(password, this.password)
 }
 
@@ -303,10 +306,10 @@ originSchema.pre('save', function (next) {
 
 originSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Customers not found.')
+    throw new NotFoundError('Accounts not found.')
   }
 
-  if (!doc) throw new NotFoundError('Customer not found.')
+  if (!doc) throw new NotFoundError('Account not found.')
 })
 
 const Origin = model('Origin', originSchema)

@@ -1,4 +1,4 @@
-import ReviewDAO from '../daos/review.dao'
+import ReviewDAO from '../daos/review.dao.js'
 
 class ReviewService {
   static async createReview (dto) {

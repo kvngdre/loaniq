@@ -1,7 +1,7 @@
-import { txnPurposes, txnStatus, txnTypes } from '../utils/common'
+import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js'
 import { randomBytes } from 'crypto'
 import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

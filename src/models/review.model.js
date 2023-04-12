@@ -1,6 +1,6 @@
-import { reviewStatus } from '../utils/common'
+import { reviewStatus } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

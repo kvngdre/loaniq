@@ -1,9 +1,9 @@
-import { constants } from '../config'
-import { httpCodes } from '../utils/common'
-import BaseError from '../errors/BaseError'
-import ErrorResponse from '../utils/ErrorResponse'
+import { constants } from '../config/index.js'
+import { httpCodes } from '../utils/common.js'
+import BaseError from '../errors/BaseError.js'
+import ErrorResponse from '../utils/ErrorResponse.js'
 import jwt from 'jsonwebtoken'
-import UserService from '../services/user.service'
+import User from '../models/user.model.js'
 
 export default async function verifyJWT (req, res, next) {
   try {
@@ -40,7 +40,21 @@ export default async function verifyJWT (req, res, next) {
 
     // Checking if user is inactive.
     // TODO: Move this to redis
-    const user = await UserService.getUserById(decoded.id)
+    const user = await User.findById(decoded.id)
+      .populate({ path: 'role', populate: { path: 'permissions' } })
+      .exec()
+      .catch((error) => {
+        if (error instanceof BaseError) {
+          return res.status(httpCodes.NOT_FOUND).json(
+            new ErrorResponse({
+              name: 'Not Found Error',
+              message: 'User not found.'
+            })
+          )
+        }
+        throw error
+      })
+
     if (!user.active) {
       return res.status(httpCodes.FORBIDDEN).json(
         new ErrorResponse({

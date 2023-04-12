@@ -1,7 +1,7 @@
-import { canUserResetPwd } from '../helpers/user.helpers'
-import { roles } from '../config'
-import BaseValidator from './base.validator'
-import ForbiddenError from '../errors/ForbiddenError'
+import { canUserResetPwd } from '../helpers/user.helpers.js'
+import { roles } from '../config/index.js'
+import BaseValidator from './base.validator.js'
+import ForbiddenError from '../errors/ForbiddenError.js'
 import Joi from 'joi'
 
 class UserValidator extends BaseValidator {

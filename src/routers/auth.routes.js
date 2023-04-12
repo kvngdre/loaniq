@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import AuthController from '../controllers/auth.controller'
-import verifyJWT from '../middleware/verifyJWT'
+import AuthController from '../controllers/auth.controller.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

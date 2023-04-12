@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { roles } from '../config'
-import verifyJWT from '../middleware/verifyJWT'
-import grantAccess from '../middleware/grantAccess'
-import TenantConfigController from '../controllers/tenantConfig.controller'
+import { roles } from '../config/index.js'
+import verifyJWT from '../middleware/verifyJWT.js'
+import grantAccess from '../middleware/grantAccess.js'
+import TenantConfigController from '../controllers/tenantConfig.controller.js'
 
 const router = Router()
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import BankController from '../controllers/bank.controller'
-import validateId from '../middleware/validateId'
-import verifyJWT from '../middleware/verifyJWT'
+import BankController from '../controllers/bank.controller.js'
+import validateId from '../middleware/validateId.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import objectId from 'joi-objectid'
-const { roles } = require('../utils/constants')
+import { roles } from '../utils/constants'
 Joi.objectId = objectId(Joi)
 
 class LoanValidator {

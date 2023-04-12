@@ -1,13 +1,13 @@
-import { roles } from '../config'
+import { roles } from '../config/index.js'
 import { Router } from 'express'
-import verifyJWT from '../middleware/verifyJWT'
-import grantAccess from '../middleware/grantAccess'
-import isOwner from '../middleware/isOwner'
-import upload from '../middleware/fileUploader'
-import UserController from '../controllers/user.controller'
-import validateId from '../middleware/validateId'
-import userConfigRouter from './userConfig.routes'
-import finder from '../middleware/finder'
+import finder from '../middleware/finder.js'
+import grantAccess from '../middleware/grantAccess.js'
+import isOwner from '../middleware/isOwner.js'
+import upload from '../middleware/fileUploader.js'
+import userConfigRouter from './userConfig.routes.js'
+import UserController from '../controllers/user.controller.js'
+import validateId from '../middleware/validateId.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

@@ -1,5 +1,5 @@
-import { httpCodes } from '../utils/common'
-import BaseError from './BaseError'
+import { httpCodes } from '../utils/common.js'
+import BaseError from './BaseError.js'
 
 class InsufficientError extends BaseError {
   constructor (description, data) {

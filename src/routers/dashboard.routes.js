@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { getLoanData } from '../controllers/dashboardController'
-import ServerError from '../errors/serverError'
-import verifyJWT from '../middleware/verifyJWT'
+import { getLoanData } from '../controllers/dashboardController.js'
+import ServerError from '../errors/serverError.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

@@ -1,18 +1,19 @@
 /* eslint-disable camelcase */
-import { events, pubsub } from '../pubsub'
+import { events, pubsub } from '../pubsub/index.js'
+import { fileURLToPath } from 'url'
 import { startSession } from 'mongoose'
-import randomString from '../utils/randomString'
-import validateOTP from '../utils/validateOTP'
-import ConflictError from '../errors/ConflictError'
-import driverUploader from '../utils/driveUploader'
+import ConflictError from '../errors/ConflictError.js'
+import driverUploader from '../utils/driveUploader.js'
 import fs from 'fs'
-import logger from '../utils/logger'
-import mailer from '../utils/mailer'
+import logger from '../utils/logger.js'
+import mailer from '../utils/mailer.js'
 import path from 'path'
-import TenantDAO from '../daos/tenant.dao'
-import UnauthorizedError from '../errors/UnauthorizedError'
-import UserService from './user.service'
-import tenantConfigService from './tenantConfig.service'
+import randomString from '../utils/randomString.js'
+import tenantConfigService from './tenantConfig.service.js'
+import TenantDAO from '../daos/tenant.dao.js'
+import UnauthorizedError from '../errors/UnauthorizedError.js'
+import UserService from './user.service.js'
+import validateOTP from '../utils/validateOTP.js'
 
 class TenantService {
   static async createTenant ({ tenant, user }) {
@@ -172,6 +173,7 @@ class TenantService {
       const file = uploadFiles[key][0]
 
       const name = file.originalname
+      const __dirname = path.dirname(fileURLToPath(import.meta.url))
       const filePath = path.resolve(__dirname, `../../${file.path}`)
       const mimeType = file.mimetype
 

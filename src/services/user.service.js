@@ -1,23 +1,24 @@
 /* eslint-disable camelcase */
-import { constants } from '../config'
-import { events, pubsub } from '../pubsub'
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT'
+import { constants } from '../config/index.js'
+import { events, pubsub } from '../pubsub/index.js'
+import { fileURLToPath } from 'url'
+import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js'
 import { startSession } from 'mongoose'
-import ConflictError from '../errors/ConflictError'
-import driverUploader from '../utils/driveUploader'
+import ConflictError from '../errors/ConflictError.js'
+import driverUploader from '../utils/driveUploader.js'
 import fs from 'fs'
-import generateSession from '../utils/generateSession'
-import logger from '../utils/logger'
-import mailer from '../utils/mailer'
+import generateSession from '../utils/generateSession.js'
+import logger from '../utils/logger.js'
+import mailer from '../utils/mailer.js'
 import path from 'path'
-import randomString from '../utils/randomString'
-import similarity from '../utils/stringSimilarity'
-import UnauthorizedError from '../errors/UnauthorizedError'
-import userConfigService from './userConfig.service'
-import UserDAO from '../daos/user.dao'
-import ValidationError from '../errors/ValidationError'
+import randomString from '../utils/randomString.js'
+import similarity from '../utils/stringSimilarity.js'
+import UnauthorizedError from '../errors/UnauthorizedError.js'
+import userConfigService from './userConfig.service.js'
+import UserDAO from '../daos/user.dao.js'
+import ValidationError from '../errors/ValidationError.js'
 class UserService {
-  static async createUser (newUserDTO, trx) {
+  async createUser (newUserDTO, trx) {
     // * Initializing transaction session.
     const txn = !trx ? await startSession() : null
     try {
@@ -59,7 +60,7 @@ class UserService {
     }
   }
 
-  static async verifyNewUser (verifyNewUserDTO, userAgent, clientIp) {
+  async verifyNewUser (verifyNewUserDTO, userAgent, clientIp) {
     const { email, current_password, new_password } = verifyNewUserDTO
 
     const foundUser = await UserDAO.findOne({ email })
@@ -100,7 +101,7 @@ class UserService {
     return [accessToken, refreshToken, foundUser]
   }
 
-  static async getUsers (
+  async getUsers (
     tenantId,
     projection = {
       password: 0,
@@ -114,31 +115,34 @@ class UserService {
     return { count, users: foundUsers }
   }
 
-  static async getUserById ({
+  async getUserById (
     id,
     projection = {
       password: 0,
       resetPwd: 0,
       otp: 0
     }
-  }) {
+  ) {
     // console.log(id)
     const foundUser = await UserDAO.findById(id, projection)
 
     return foundUser
   }
 
-  static async getUser (filter, projection = {
-    password: 0,
-    resetPwd: 0,
-    otp: 0
-  }) {
+  async getUser (
+    filter,
+    projection = {
+      password: 0,
+      resetPwd: 0,
+      otp: 0
+    }
+  ) {
     const foundUser = await UserDAO.findOne(filter, projection)
 
     return foundUser
   }
 
-  static async getCurrentUser (userId) {
+  async getCurrentUser (userId) {
     const foundUser = await UserDAO.findById(userId)
 
     foundUser.purgeSensitiveData()
@@ -146,23 +150,27 @@ class UserService {
     return foundUser
   }
 
-  static async updateUser (userId, dto, projection = {
-    password: 0,
-    resetPwd: 0,
-    otp: 0
-  }) {
+  async updateUser (
+    userId,
+    dto,
+    projection = {
+      password: 0,
+      resetPwd: 0,
+      otp: 0
+    }
+  ) {
     const updatedUser = await UserDAO.update(userId, dto, projection)
 
     return updatedUser
   }
 
-  static async updateBulk (filter, updateDTO) {
+  async updateBulk (filter, updateDTO) {
     const result = await UserDAO.updateMany(filter, updateDTO)
 
     return result
   }
 
-  static async deleteUser (userId) {
+  async deleteUser (userId) {
     const deletedUser = await UserDAO.remove(userId)
 
     await pubsub.publish(events.user.delete, deletedUser._id)
@@ -170,7 +178,7 @@ class UserService {
     return deletedUser
   }
 
-  static async updatePassword (userId, dto) {
+  async updatePassword (userId, dto) {
     const { current_password, new_password } = dto
     const foundUser = await UserDAO.findById(userId)
 
@@ -201,7 +209,7 @@ class UserService {
     return foundUser
   }
 
-  static async forgotPassword ({ email, new_password }) {
+  async forgotPassword ({ email, new_password }) {
     logger.info('Sending password change email...')
     const [user] = await Promise.all([
       UserDAO.update({ email }, { password: new_password, resetPwd: false }),
@@ -217,7 +225,7 @@ class UserService {
     return user
   }
 
-  static async resetPassword (userId) {
+  async resetPassword (userId) {
     const randomPwd = randomString(6)
 
     const foundUser = await UserDAO.update(userId, {
@@ -239,7 +247,7 @@ class UserService {
     return foundUser
   }
 
-  static async deactivateUser (userId, { password }) {
+  async deactivateUser (userId, { password }) {
     const foundUser = await UserDAO.findById(userId)
 
     const isMatch = foundUser.comparePasswords(password)
@@ -256,7 +264,7 @@ class UserService {
     return foundUser
   }
 
-  static async reactivateUser (userId) {
+  async reactivateUser (userId) {
     const foundUser = await UserDAO.update(userId, { active: true })
 
     foundUser.purgeSensitiveData()
@@ -264,7 +272,7 @@ class UserService {
     return foundUser
   }
 
-  static async uploadImage ({ userId, tenantId }, uploadFile) {
+  async uploadImage ({ userId, tenantId }, uploadFile) {
     const foundUser = await UserDAO.findById(userId, {
       password: 0,
       resetPwd: 0,
@@ -282,6 +290,7 @@ class UserService {
     // const newFolderId = await driverUploader.createFolder('users', folderId)
 
     const name = uploadFile.originalname
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
     const filePath = path.resolve(__dirname, `../../${uploadFile.path}`)
     const mimeType = uploadFile.mimetype
 
@@ -305,4 +314,4 @@ class UserService {
   }
 }
 
-export default UserService
+export default new UserService()

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import SegmentService from '../services/segment.service'
-import segmentValidator from '../validators/segment.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import SegmentService from '../services/segment.service.js'
+import segmentValidator from '../validators/segment.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class SegmentController extends BaseController {
   static createSegment = async (req, res) => {

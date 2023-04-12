@@ -1,7 +1,7 @@
-import BaseDAO from './base.dao'
-import ConflictError from '../errors/ConflictError'
-import Tenant from '../models/tenant.model'
-import ValidationError from '../errors/ValidationError'
+import BaseDAO from './base.dao.js'
+import ConflictError from '../errors/ConflictError.js'
+import Tenant from '../models/tenant.model.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class TenantDAO extends BaseDAO {
   static async insert (dto, trx) {

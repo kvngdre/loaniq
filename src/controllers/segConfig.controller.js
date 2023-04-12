@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import SegConfigService from '../services/segConfig.service'
-import segConfigValidator from '../validators/segConfig.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import SegConfigService from '../services/segConfig.service.js'
+import segConfigValidator from '../validators/segConfig.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class SegConfigController extends BaseController {
   static createSegConfig = async (req, res) => {

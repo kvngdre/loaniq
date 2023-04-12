@@ -1,7 +1,7 @@
-import ConflictError from '../errors/ConflictError'
-import ValidationError from '../errors/ValidationError'
-import Transaction from '../models/transaction.model'
-import BaseDAO from './base.dao'
+import ConflictError from '../errors/ConflictError.js'
+import ValidationError from '../errors/ValidationError.js'
+import Transaction from '../models/transaction.model.js'
+import BaseDAO from './base.dao.js'
 
 class TransactionDAO extends BaseDAO {
   static async insert (dto) {

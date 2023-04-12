@@ -1,4 +1,4 @@
-import { constants } from '../config'
+import { constants } from '../config/index.js'
 import jwt from 'jsonwebtoken'
 
 export const generateAccessToken = (payload) => {

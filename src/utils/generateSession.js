@@ -1,5 +1,5 @@
 import DeviceDetector from 'node-device-detector'
-import { constants } from '../config'
+import { constants } from '../config/index.js'
 
 const detectAgent = (agent) => {
   const detector = new DeviceDetector({

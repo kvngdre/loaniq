@@ -1,6 +1,6 @@
 import { joiPassword } from 'joi-password'
-import { feeTypes, maritalStatus } from '../utils/common'
-import { roles } from '../config'
+import { feeTypes, maritalStatus } from '../utils/common.js'
+import { roles } from '../config/index.js'
 import Joi from 'joi'
 
 class BaseValidator {

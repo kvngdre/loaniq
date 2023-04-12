@@ -1,5 +1,6 @@
-import { companyCategory, socials, validIds } from '../utils/common'
-import BaseValidator from './base.validator'
+import { roles } from '../config/index.js'
+import { companyCategory, socials, validIds } from '../utils/common.js'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
 import { Types } from 'mongoose'
 class TenantValidator extends BaseValidator {
@@ -98,9 +99,11 @@ class TenantValidator extends BaseValidator {
       }).required(),
       user: Joi.object({
         tenantId: Joi.any().default(newTenantId).forbidden(),
-        name: this._nameSchema.and('first', 'last').required(),
+        first_name: this._nameSchema.extract('first').required(),
+        last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
-        phone_number: this._phoneNumberSchema.required()
+        phone_number: this._phoneNumberSchema.required(),
+        role: this._roleSchema.default(roles.ADMIN).forbidden()
       }).required()
     })
 

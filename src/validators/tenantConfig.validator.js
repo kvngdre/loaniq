@@ -1,5 +1,5 @@
-import { socials } from '../utils/common'
-import BaseValidator from './base.validator'
+import { socials } from '../utils/common.js'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
 
 class TenantConfigValidator extends BaseValidator {

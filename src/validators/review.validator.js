@@ -1,6 +1,6 @@
 import Joi from 'joi'
-import { reviewStatus } from '../utils/common'
-import BaseValidator from './base.validator'
+import { reviewStatus } from '../utils/common.js'
+import BaseValidator from './base.validator.js'
 
 class ReviewValidator extends BaseValidator {
   #typeSchema

@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { fileURLToPath } from 'url'
 import fs from 'fs'
 import path from 'path'
 
@@ -9,6 +10,7 @@ class DriveUploader {
   #driveService
 
   constructor () {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
     // * Service account key file from google cloud console.
     this.#KEY_FILE_PATH = path.resolve(__dirname, '../assets/credentials.json')
     this.#SCOPES = ['https://www.googleapis.com/auth/drive']

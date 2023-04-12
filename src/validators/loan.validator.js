@@ -1,4 +1,4 @@
-import BaseValidator from './base.validator'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
 
 class LoanValidator extends BaseValidator {

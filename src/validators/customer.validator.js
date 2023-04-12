@@ -1,6 +1,6 @@
-import { relationships, validIds } from '../utils/common'
-import BaseValidator from './base.validator'
 import { DateTime } from 'luxon'
+import { relationships, validIds } from '../utils/common.js'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
 
 const isOver18 = (dob, helper) => {

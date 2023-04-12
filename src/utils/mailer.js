@@ -1,13 +1,15 @@
-import { constants } from '../config'
+import { constants } from '../config/index.js'
 import { createTransport } from 'nodemailer'
+import { fileURLToPath } from 'url'
 import { google } from 'googleapis'
-import { resolve } from 'path'
-import DependencyError from '../errors/DependencyError'
+import path from 'path'
+import DependencyError from '../errors/DependencyError.js'
 import hbs from 'nodemailer-express-handlebars'
-import logger from './logger'
+import logger from './logger.js'
 
-const partialsPath = resolve(__dirname, '../assets/templates/partials/')
-const viewsPath = resolve(__dirname, '../assets/templates/views/')
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const partialsPath = path.resolve(__dirname, '../assets/templates/partials/')
+const viewsPath = path.resolve(__dirname, '../assets/templates/views/')
 
 // todo Clean up sendMail with domain name for sending mails
 const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =

@@ -2,11 +2,11 @@ import {
   maritalStatus,
   relationships,
   validIds
-} from '../utils/common'
+} from '../utils/common.js'
 import { Schema, model } from 'mongoose'
-import computeAge from '../utils/computeAge'
-import computeTenure from '../utils/computeTenure'
-import NotFoundError from '../errors/NotFoundError'
+import computeAge from '../utils/computeAge.js'
+import computeTenure from '../utils/computeTenure.js'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
 

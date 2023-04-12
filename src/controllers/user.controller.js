@@ -1,9 +1,9 @@
-import { constants } from '../config'
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import UserService from '../services/user.service'
-import userValidator from '../validators/user.validator'
-import ValidationError from '../errors/ValidationError'
+import { constants } from '../config/index.js'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import UserService from '../services/user.service.js'
+import userValidator from '../validators/user.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 import requestIp from 'request-ip'
 
 class UserController extends BaseController {
@@ -36,7 +36,7 @@ class UserController extends BaseController {
     //  ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie,
       maxAge: constants.jwt.exp_time.refresh * 1000
     })

@@ -1,6 +1,6 @@
-import { httpCodes, txnPurposes, txnTypes } from '../utils/common'
-import { events, pubsub } from '../pubsub'
-import { TransactionDTO } from '../models/transaction.model'
+import { httpCodes, txnPurposes, txnTypes } from '../utils/common.js'
+import { events, pubsub } from '../pubsub/index.js'
+import { TransactionDTO } from '../models/transaction.model.js'
 
 class WebhookService {
   static eventHandler = async (payload) => {

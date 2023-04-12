@@ -1,6 +1,6 @@
-import { hashSync, compareSync } from 'bcryptjs'
 import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError'
+import bcrypt from 'bcryptjs'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = {
   timestamps: true,
@@ -8,6 +8,7 @@ const schemaOptions = {
   toJSON: { virtuals: true },
   id: false
 }
+const { hashSync, compareSync } = bcrypt
 
 const userSchema = new Schema(
   {
@@ -93,7 +94,8 @@ const userSchema = new Schema(
     },
 
     role: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Role',
       required: true
     },
 

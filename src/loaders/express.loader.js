@@ -1,13 +1,13 @@
-import credentials from '../middleware/credentials'
-import { constants } from '../config'
+import credentials from '../middleware/credentials.js'
+import { constants } from '../config/index.js'
 import { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import corsOptions from '../config/corsOptions'
-import errorMiddleware from '../middleware/error'
+import corsOptions from '../config/corsOptions.js'
+import errorMiddleware from '../middleware/error.middleware.js'
 import helmet from 'helmet'
 import morgan from 'morgan'
-import NotFoundError from '../errors/NotFoundError'
+import NotFoundError from '../errors/NotFoundError.js'
 
 const { api } = constants
 

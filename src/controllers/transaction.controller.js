@@ -1,9 +1,9 @@
-import txnService from '../services/transaction.service'
-import BaseController from './base.controller'
-import txnValidator from '../validators/transactionValidator'
-import ValidationError from '../errors/ValidationError'
-import { httpCodes } from '../utils/common'
-import paystackService from '../services/paystack.service'
+import txnService from '../services/transaction.service.js'
+import BaseController from './base.controller.js'
+import txnValidator from '../validators/transactionValidator.js'
+import ValidationError from '../errors/ValidationError.js'
+import { httpCodes } from '../utils/common.js'
+import paystackService from '../services/paystack.service.js'
 
 class TransactionController extends BaseController {
   static createTxn = async (req, res) => {

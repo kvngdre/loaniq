@@ -1,6 +1,6 @@
-import { httpCodes } from '../utils/common'
+import { httpCodes } from '../utils/common.js'
 import { Types } from 'mongoose'
-import ErrorResponse from '../utils/ErrorResponse'
+import ErrorResponse from '../utils/ErrorResponse.js'
 
 export default function (req, res, next) {
   for (const key in req.params) {

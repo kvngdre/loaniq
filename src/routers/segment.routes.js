@@ -1,8 +1,8 @@
-import verifyJWT from '../middleware/verifyJWT'
 import { Router } from 'express'
-import SegmentController from '../controllers/segment.controller'
-import segConfigRoutes from './segConfig.routes'
-import validateId from '../middleware/validateId'
+import segConfigRoutes from './segConfig.routes.js'
+import SegmentController from '../controllers/segment.controller.js'
+import validateId from '../middleware/validateId.js'
+import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 

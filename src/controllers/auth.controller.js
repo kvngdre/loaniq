@@ -1,17 +1,17 @@
-import { constants } from '../config'
-import { httpCodes } from '../utils/common'
-import AuthService from '../services/auth.service'
-import authValidator from '../validators/auth.validator'
-import BaseController from './base.controller'
-import ErrorResponse from '../utils/ErrorResponse'
-import ValidationError from '../errors/ValidationError'
+import { constants } from '../config/index.js'
+import { httpCodes } from '../utils/common.js'
+import AuthService from '../services/auth.service.js'
+import authValidator from '../validators/auth.validator.js'
+import BaseController from './base.controller.js'
+import ErrorResponse from '../utils/ErrorResponse.js'
 import requestIp from 'request-ip'
+import ValidationError from '../errors/ValidationError.js'
 class AuthController extends BaseController {
   static login = async (req, res) => {
     const token = req.cookies?.jwt
     res.clearCookie('jwt', {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie
     })
 
@@ -29,7 +29,7 @@ class AuthController extends BaseController {
     //  ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie,
       maxAge: constants.jwt.exp_time.refresh * 1000
     })
@@ -51,7 +51,7 @@ class AuthController extends BaseController {
     // Clear jwt cookie
     res.clearCookie('jwt', {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie
     })
 
@@ -60,7 +60,7 @@ class AuthController extends BaseController {
     //! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie,
       maxAge: constants.jwt.exp_time.refresh * 1000
     })
@@ -84,7 +84,7 @@ class AuthController extends BaseController {
 
     res.clearCookie('jwt', {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'none',
       secure: constants.secure_cookie
     })
 

@@ -1,9 +1,9 @@
-import constantConfig from './constant.config'
-import databaseConnectionSetup from './db.config'
-import { roles } from './roles'
+import constantConfig from './constant.config.js'
+import databaseConnectionSetup from './db.config.js'
+import { roles } from './roles.js'
 
 export {
   constantConfig as constants,
-  databaseConnectionSetup as dbSetup,
+  databaseConnectionSetup as dbConfig,
   roles
 }

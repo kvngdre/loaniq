@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common'
-import BaseController from './base.controller'
-import LoanService from '../services/loan.service'
-import loanValidator from '../validators/loan.validator'
-import ValidationError from '../errors/ValidationError'
+import { httpCodes } from '../utils/common.js'
+import BaseController from './base.controller.js'
+import LoanService from '../services/loan.service.js'
+import loanValidator from '../validators/loan.validator.js'
+import ValidationError from '../errors/ValidationError.js'
 
 class LoanController extends BaseController {
   static createLoan = async (req, res) => {
