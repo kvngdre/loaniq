@@ -5,7 +5,7 @@ import customerValidator from '../validators/customer.validator.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class CustomerController extends BaseController {
-  static createCustomer = async (req, res) => {
+  static createCustomer = async(req, res) => {
     const { value, error } = customerValidator.validateCreate(req.currentUser.tenantId, req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -15,7 +15,7 @@ class CustomerController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getCustomers = async (req, res) => {
+  static getCustomers = async(req, res) => {
     const [count, customers] = await CustomerService.getCustomers(
       req.currentUser.tenantId
     )
@@ -25,14 +25,14 @@ class CustomerController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getCustomer = async (req, res) => {
+  static getCustomer = async(req, res) => {
     const customer = await CustomerService.getCustomer(req.params.customerId)
     const response = this.apiResponse('Fetched customer', customer)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateCustomer = async (req, res) => {
+  static updateCustomer = async(req, res) => {
     const { value, error } = customerValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -45,14 +45,14 @@ class CustomerController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteCustomer = async (req, res) => {
+  static deleteCustomer = async(req, res) => {
     await CustomerService.deleteCustomer(req.params.customerId)
     const response = this.apiResponse('Customer deleted.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static uploadDocs = async (req, res) => {
+  static uploadDocs = async(req, res) => {
     const customer = await CustomerService.uploadFiles(req.params.customerId, req.files)
     const response = this.apiResponse('Files uploaded', customer)
 

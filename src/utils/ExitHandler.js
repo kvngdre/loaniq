@@ -2,7 +2,7 @@ import { httpTerminator, server } from '../server'
 import { connection } from 'mongoose'
 
 class ExitHandler {
-  async handleExit (code, timeout = 5000) {
+  async handleExit(code, timeout = 5000) {
     try {
       console.log(`Attempting a graceful shutdown with code ${code}`)
 
@@ -16,7 +16,7 @@ class ExitHandler {
         await httpTerminator.terminate()
       }
 
-      connection.on('open', async () => {
+      connection.on('open', async() => {
         console.log('Closing database connection')
 
         await connection.close()

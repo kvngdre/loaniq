@@ -4,7 +4,7 @@ import objectId from 'joi-objectid'
 Joi.objectId = objectId(Joi)
 
 const validators = {
-  create: function (obj) {
+  create: function(obj) {
     const schema = Joi.object({
       docId: Joi.objectId().required().messages({
         'any.required': 'Document Id is required'
@@ -20,7 +20,7 @@ const validators = {
     return schema.validate(obj)
   },
 
-  update: function (user, payload) {
+  update: function(user, payload) {
     if ([roles.credit, roles.operations].includes(user.role)) {
       const schema = Joi.object({
         alteration: Joi.object()

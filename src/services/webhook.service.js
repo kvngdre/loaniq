@@ -3,7 +3,7 @@ import { events, pubsub } from '../pubsub/index.js'
 import { TransactionDTO } from '../models/transaction.model.js'
 
 class WebhookService {
-  static eventHandler = async (payload) => {
+  static eventHandler = async(payload) => {
     const { data } = payload
 
     if (data.status === 'success') {

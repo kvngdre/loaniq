@@ -61,7 +61,7 @@ const reviewSchema = new Schema(
   schemaOptions
 )
 
-reviewSchema.post(/^find/, async function (docs) {
+reviewSchema.post(/^find/, async function(docs) {
   if (Array.isArray(docs)) {
     if (docs.length === 0) throw new NotFoundError('Reviews not found.')
 

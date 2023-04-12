@@ -4,7 +4,7 @@ import Customer from '../models/customer.model.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class CustomerDAO extends BaseDAO {
-  static async insert (dto, trx) {
+  static async insert(dto, trx) {
     try {
       const newRecord = new Customer(dto)
       await newRecord.save({ session: trx })
@@ -25,25 +25,25 @@ class CustomerDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async findAll(filter = {}, projection = {}) {
     const foundRecords = await Customer.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async findById (id, projection = {}) {
+  static async findById(id, projection = {}) {
     const foundRecord = await Customer.findById(id).select(projection)
 
     return foundRecord
   }
 
-  static async findOne (filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     const foundRecord = await Customer.findOne(filter).select(projection)
 
     return foundRecord
   }
 
-  static async update (id, dto, projection = {}) {
+  static async update(id, dto, projection = {}) {
     try {
       const foundRecord = await Customer.findById(id).select(projection)
 
@@ -66,7 +66,7 @@ class CustomerDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
+  static async remove(id) {
     const deletedRecord = await Customer.findByIdAndDelete(id)
 
     return deletedRecord

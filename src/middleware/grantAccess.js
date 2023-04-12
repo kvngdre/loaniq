@@ -8,7 +8,7 @@ import ErrorResponse from '../utils/ErrorResponse.js'
  * @param {string[]} allowedRoles The role or array of roles permitted.
  * @returns
  */
-function grantAccess (...allowedRoles) {
+function grantAccess(...allowedRoles) {
   if (allowedRoles[0] === 'all') {
     allowedRoles = Object.values(roles)
   }

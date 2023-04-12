@@ -102,7 +102,7 @@ const tenantSchema = new Schema(
   schemaOptions
 )
 
-tenantSchema.post(/^find/, function (doc) {
+tenantSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Tenants not found.')
   }

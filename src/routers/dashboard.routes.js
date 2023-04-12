@@ -5,7 +5,7 @@ import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 
-router.get('/charts', verifyJWT, async (req, res) => {
+router.get('/charts', verifyJWT, async(req, res) => {
   const data = await getLoanData(req.user)
   if (data instanceof ServerError) return res.status(data.errorCode).json(data.message)
 

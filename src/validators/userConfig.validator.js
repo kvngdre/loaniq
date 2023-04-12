@@ -4,7 +4,7 @@ import Joi from 'joi'
 class UserConfigValidator extends BaseValidator {
   #timezoneSchema
 
-  constructor () {
+  constructor() {
     super()
 
     const supportedTimeZones = Intl.supportedValuesOf('timeZone')

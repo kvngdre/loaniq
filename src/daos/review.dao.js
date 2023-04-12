@@ -4,7 +4,7 @@ import Review from '../models/review.model.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class ReviewDAO extends BaseDAO {
-  static async insert (dto) {
+  static async insert(dto) {
     try {
       const newReview = new Review(dto)
       await newReview.save()
@@ -25,7 +25,7 @@ class ReviewDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async findAll(filter = {}, projection = {}) {
     const foundRecords = await Review.find(filter)
       .select(projection)
       .populate([
@@ -42,7 +42,7 @@ class ReviewDAO extends BaseDAO {
     return foundRecords
   }
 
-  static async findById (id, projection = {}) {
+  static async findById(id, projection = {}) {
     const foundRecord = await Review.findById(id)
       .select(projection)
       .populate([
@@ -59,13 +59,13 @@ class ReviewDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async findOne (filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     const foundRecord = await Review.findOne(filter).select(projection)
 
     return foundRecord
   }
 
-  static async update (id, dto, projection = {}) {
+  static async update(id, dto, projection = {}) {
     try {
       const foundRecord = await Review.findById(id).select(projection)
 
@@ -88,7 +88,7 @@ class ReviewDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
+  static async remove(id) {
     const deletedRecord = await Review.findByIdAndDelete(id)
     return deletedRecord
   }

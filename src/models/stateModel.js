@@ -35,7 +35,7 @@ const stateSchema = new Schema(
   schemaOptions
 )
 
-stateSchema.post(/^find/, function (doc) {
+stateSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('States not found.')
   }

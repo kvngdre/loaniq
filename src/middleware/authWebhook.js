@@ -2,8 +2,8 @@ import { constants } from '../config/index.js'
 import { createHmac } from 'crypto'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
 
-export default function authWebhook (req, res, next) {
-  function getSignatureFromHeader (req) {
+export default function authWebhook(req, res, next) {
+  function getSignatureFromHeader(req) {
     if (!req.headers['x-paystack-signature']) {
       throw new UnauthorizedError('No signature.')
     }

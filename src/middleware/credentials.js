@@ -1,6 +1,6 @@
 import allowedOrigins from '../config/allowedOrigins.js'
 
-function credentials (req, res, next) {
+function credentials(req, res, next) {
   const origin = req.headers.origin
 
   if (allowedOrigins.includes(origin)) {

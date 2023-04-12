@@ -7,7 +7,7 @@ import ValidationError from '../errors/ValidationError.js'
 import requestIp from 'request-ip'
 
 class UserController extends BaseController {
-  static createUser = async (req, res) => {
+  static createUser = async(req, res) => {
     const { value, error } = userValidator.validateCreateUser(
       req.body,
       req.currentUser.tenantId
@@ -23,7 +23,7 @@ class UserController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static verifySignUp = async (req, res) => {
+  static verifySignUp = async(req, res) => {
     const { value, error } = userValidator.validateVerifySignUp(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -46,7 +46,7 @@ class UserController extends BaseController {
     return res.status(httpCodes.OK).json(response)
   }
 
-  static getUsers = async (req, res) => {
+  static getUsers = async(req, res) => {
     const { count, users } = await UserService.getUsers(req.currentUser.tenantId)
 
     const message = this.getMsgFromCount(count)
@@ -55,21 +55,21 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getUser = async (req, res) => {
+  static getUser = async(req, res) => {
     const user = await UserService.getUserById(req.params.userId)
     const response = this.apiResponse('Fetched user.', user)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static getCurrentUser = async (req, res) => {
+  static getCurrentUser = async(req, res) => {
     const user = await UserService.getCurrentUser(req.currentUser._id)
     const response = this.apiResponse('Fetched current user.', user)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateUser = async (req, res) => {
+  static updateUser = async(req, res) => {
     const { value, error } = userValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -79,14 +79,14 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteUser = async (req, res) => {
+  static deleteUser = async(req, res) => {
     await UserService.deleteUser(req.params.userId)
     const response = this.apiResponse('User account deleted.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updatePassword = async (req, res) => {
+  static updatePassword = async(req, res) => {
     const { value, error } = userValidator.validateUpdatePassword(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -97,7 +97,7 @@ class UserController extends BaseController {
   }
 
   // todo Discuss with Vic your ideas on forgot password flow.
-  static forgotPassword = async (req, res) => {
+  static forgotPassword = async(req, res) => {
     const { value, error } = await userValidator.validateForgotPassword(
       req.body
     )
@@ -109,14 +109,14 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static resetPassword = async (req, res) => {
+  static resetPassword = async(req, res) => {
     await UserService.resetPassword(req.params.userId)
     const response = this.apiResponse('User password has been reset.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static deactivateUser = async (req, res) => {
+  static deactivateUser = async(req, res) => {
     const { value, error } = userValidator.validateDeactivation(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -126,14 +126,14 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static reactivateUser = async (req, res) => {
+  static reactivateUser = async(req, res) => {
     await UserService.reactivateUser(req.params.userId)
     const response = this.apiResponse('User has been reactivated.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static uploadFiles = async (req, res) => {
+  static uploadFiles = async(req, res) => {
     const user = await UserService.uploadImage(req.params, req.file)
     const response = this.apiResponse('File uploaded.', user)
 

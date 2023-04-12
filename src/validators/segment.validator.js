@@ -6,7 +6,7 @@ class SegmentValidator extends BaseValidator {
   #codeSchema
   #prefixSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#nameSchema = Joi.string()

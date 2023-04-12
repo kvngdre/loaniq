@@ -1,14 +1,14 @@
 import Permission from '../models/permission.model.js'
 
 class PermissionService {
-  create = async (newPermissionDTO) => {
+  create = async(newPermissionDTO) => {
     const newPermission = new Permission(newPermissionDTO)
     await newPermission.save()
 
     return newPermission
   }
 
-  getPermissions = async () => {
+  getPermissions = async() => {
     const permissions = Permission.find()
     const count = Intl.NumberFormat('en-US').format((await permissions).length)
 

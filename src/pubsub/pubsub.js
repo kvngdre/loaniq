@@ -19,7 +19,7 @@ class PubSub {
     }
   }
 
-  async publish (eventName, id, data, trx) {
+  async publish(eventName, id, data, trx) {
     logger.silly(`Making a broadcast about ${eventName} event.`)
 
     // Emit or publish the event to anyone who is subscribed.

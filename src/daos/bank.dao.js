@@ -4,7 +4,7 @@ import Bank from '../models/bank.model.js'
 import BaseDAO from './base.dao.js'
 
 class BankDAO extends BaseDAO {
-  static async insert (dto) {
+  static async insert(dto) {
     try {
       const newRecord = new Bank(dto)
       await newRecord.save()
@@ -25,19 +25,19 @@ class BankDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async findAll(filter = {}, projection = {}) {
     const foundRecords = await Bank.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async findById (id, projection = {}) {
+  static async findById(id, projection = {}) {
     const foundRecord = await Bank.findById(id).select(projection)
 
     return foundRecord
   }
 
-  static async update (id, dto, projection = {}) {
+  static async update(id, dto, projection = {}) {
     try {
       const foundRecord = await Bank.findById(id).select(projection)
 
@@ -60,7 +60,7 @@ class BankDAO extends BaseDAO {
     }
   }
 
-  static async remove (id) {
+  static async remove(id) {
     const deletedRecord = await Bank.findByIdAndDelete(id)
 
     return deletedRecord

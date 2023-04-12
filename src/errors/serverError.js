@@ -1,5 +1,5 @@
 class ServerError extends Error {
-  constructor (code, msg) {
+  constructor(code, msg) {
     super()
 
     this.errorCode = code

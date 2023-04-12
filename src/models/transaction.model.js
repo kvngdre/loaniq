@@ -81,7 +81,7 @@ const transactionSchema = new Schema(
   schemaOptions
 )
 
-transactionSchema.post(/^find/, function (doc) {
+transactionSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Transactions not found.')
   }
@@ -98,7 +98,7 @@ export default Transaction
  * @param {TransactionAdd} params
  * @returns {Object}
  */
-export function TransactionDTO (params) {
+export function TransactionDTO(params) {
   this.tenantId = params.tenantId
   this.reference = params.reference
   this.status = params.status

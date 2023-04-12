@@ -26,7 +26,7 @@ const walletSchema = new Schema(
   schemaOptions
 )
 
-walletSchema.post(/^find/, function (doc) {
+walletSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Wallets not found.')
   }

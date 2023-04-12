@@ -18,7 +18,7 @@ import userConfigService from './userConfig.service.js'
 import UserDAO from '../daos/user.dao.js'
 import ValidationError from '../errors/ValidationError.js'
 class UserService {
-  async createUser (newUserDTO, trx) {
+  async createUser(newUserDTO, trx) {
     // * Initializing transaction session.
     const txn = !trx ? await startSession() : null
     try {
@@ -60,7 +60,7 @@ class UserService {
     }
   }
 
-  async verifyNewUser (verifyNewUserDTO, userAgent, clientIp) {
+  async verifyNewUser(verifyNewUserDTO, userAgent, clientIp) {
     const { email, current_password, new_password } = verifyNewUserDTO
 
     const foundUser = await UserDAO.findOne({ email })
@@ -101,7 +101,7 @@ class UserService {
     return [accessToken, refreshToken, foundUser]
   }
 
-  async getUsers (
+  async getUsers(
     tenantId,
     projection = {
       password: 0,
@@ -115,7 +115,7 @@ class UserService {
     return { count, users: foundUsers }
   }
 
-  async getUserById (
+  async getUserById(
     id,
     projection = {
       password: 0,
@@ -129,7 +129,7 @@ class UserService {
     return foundUser
   }
 
-  async getUser (
+  async getUser(
     filter,
     projection = {
       password: 0,
@@ -142,7 +142,7 @@ class UserService {
     return foundUser
   }
 
-  async getCurrentUser (userId) {
+  async getCurrentUser(userId) {
     const foundUser = await UserDAO.findById(userId)
 
     foundUser.purgeSensitiveData()
@@ -150,7 +150,7 @@ class UserService {
     return foundUser
   }
 
-  async updateUser (
+  async updateUser(
     userId,
     dto,
     projection = {
@@ -164,13 +164,13 @@ class UserService {
     return updatedUser
   }
 
-  async updateBulk (filter, updateDTO) {
+  async updateBulk(filter, updateDTO) {
     const result = await UserDAO.updateMany(filter, updateDTO)
 
     return result
   }
 
-  async deleteUser (userId) {
+  async deleteUser(userId) {
     const deletedUser = await UserDAO.remove(userId)
 
     await pubsub.publish(events.user.delete, deletedUser._id)
@@ -178,7 +178,7 @@ class UserService {
     return deletedUser
   }
 
-  async updatePassword (userId, dto) {
+  async updatePassword(userId, dto) {
     const { current_password, new_password } = dto
     const foundUser = await UserDAO.findById(userId)
 
@@ -209,7 +209,7 @@ class UserService {
     return foundUser
   }
 
-  async forgotPassword ({ email, new_password }) {
+  async forgotPassword({ email, new_password }) {
     logger.info('Sending password change email...')
     const [user] = await Promise.all([
       UserDAO.update({ email }, { password: new_password, resetPwd: false }),
@@ -225,7 +225,7 @@ class UserService {
     return user
   }
 
-  async resetPassword (userId) {
+  async resetPassword(userId) {
     const randomPwd = randomString(6)
 
     const foundUser = await UserDAO.update(userId, {
@@ -247,7 +247,7 @@ class UserService {
     return foundUser
   }
 
-  async deactivateUser (userId, { password }) {
+  async deactivateUser(userId, { password }) {
     const foundUser = await UserDAO.findById(userId)
 
     const isMatch = foundUser.comparePasswords(password)
@@ -264,7 +264,7 @@ class UserService {
     return foundUser
   }
 
-  async reactivateUser (userId) {
+  async reactivateUser(userId) {
     const foundUser = await UserDAO.update(userId, { active: true })
 
     foundUser.purgeSensitiveData()
@@ -272,7 +272,7 @@ class UserService {
     return foundUser
   }
 
-  async uploadImage ({ userId, tenantId }, uploadFile) {
+  async uploadImage({ userId, tenantId }, uploadFile) {
     const foundUser = await UserDAO.findById(userId, {
       password: 0,
       resetPwd: 0,

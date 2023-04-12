@@ -1,5 +1,5 @@
 class BaseController {
-  static getMsgFromCount (count) {
+  static getMsgFromCount(count) {
     if (parseInt(count) === 1) return `${count} record found.`
     return `${count} records found.`
   }

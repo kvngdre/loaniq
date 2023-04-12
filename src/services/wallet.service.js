@@ -5,46 +5,46 @@ import InsufficientError from '../errors/InsufficientError.js'
 import WalletDAO from '../daos/wallet.dao.js'
 
 class WalletService {
-  constructor () {
+  constructor() {
     pubsub.subscribe(events.tenant.signUp, this.createWallet)
     pubsub.subscribe(events.webhook.success, this.creditWallet)
   }
 
-  async createWallet (dto, trx) {
+  async createWallet(dto, trx) {
     const newWallet = await WalletDAO.insert(dto, trx)
     return newWallet
   }
 
-  async getWallets (filter) {
+  async getWallets(filter) {
     const foundWallets = await WalletDAO.findAll(filter)
     const count = Intl.NumberFormat('en-US').format(foundWallets.length)
 
     return [count, foundWallets]
   }
 
-  async getWallet (tenantId) {
+  async getWallet(tenantId) {
     const foundWallet = await WalletDAO.findOne({ tenantId })
     return foundWallet
   }
 
-  async updateWallet (tenantId, dto) {
+  async updateWallet(tenantId, dto) {
     const updatedWallet = await WalletDAO.update({ tenantId }, dto)
 
     return updatedWallet
   }
 
-  async deleteWallet (tenantId) {
+  async deleteWallet(tenantId) {
     const deletedWallet = await WalletDAO.remove({ tenantId })
     return deletedWallet
   }
 
-  async getWalletBalance (tenantId) {
+  async getWalletBalance(tenantId) {
     const { balance } = await WalletDAO.findOne({ tenantId })
 
     return { balance }
   }
 
-  async creditWallet (dto) {
+  async creditWallet(dto) {
     const trx = await startSession()
     try {
       // ! Starting transaction.
@@ -75,7 +75,7 @@ class WalletService {
     }
   }
 
-  async debitWallet (dto) {
+  async debitWallet(dto) {
     const trx = await startSession()
     try {
       // ! Starting transaction.

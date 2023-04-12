@@ -4,7 +4,7 @@
  * @param {number} len The number of digits the otp should contain.
  * @returns {{pin: string, expires: number}}
  */
-export default function generateOTP (expiresIn = 5, len = 6) {
+export default function generateOTP(expiresIn = 5, len = 6) {
   const ONE_MINUTE_IN_MILLISECONDS = 60_000
   const val1 = 10 ** (len - 1)
   const val2 = val1 * 9

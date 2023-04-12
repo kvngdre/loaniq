@@ -4,7 +4,7 @@ import ReviewService from '../services/review.service.js'
 import reviewValidator from '../validators/review.validator.js'
 import ValidationError from '../errors/ValidationError.js'
 class ReviewController extends BaseController {
-  static createReview = async (req, res) => {
+  static createReview = async(req, res) => {
     const { value, error } = reviewValidator.validateCreate(
       req.currentUser._id,
       req.currentUser.tenantId,
@@ -18,7 +18,7 @@ class ReviewController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getReviews = async (req, res) => {
+  static getReviews = async(req, res) => {
     const [count, reviews] = await ReviewService.getReviews(req.currentUser)
 
     const message = this.getMsgFromCount(count)
@@ -27,14 +27,14 @@ class ReviewController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getReview = async (req, res) => {
+  static getReview = async(req, res) => {
     const review = await ReviewService.getReviewById(req.params.reviewId)
     const response = this.apiResponse('Fetched review.', review)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateReview = async (req, res) => {
+  static updateReview = async(req, res) => {
     const { value, error } = reviewValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -44,7 +44,7 @@ class ReviewController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteReview = async (req, res) => {
+  static deleteReview = async(req, res) => {
     await ReviewService.deleteReview(req.params.reviewId)
     const response = this.apiResponse('Review deleted.')
 

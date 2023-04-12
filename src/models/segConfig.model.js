@@ -109,7 +109,7 @@ segConfigSchema.index(
 )
 // segConfigSchema.index({ min_net_pay: 1, tenantId: 1 }, { unique: true })
 
-segConfigSchema.post(/^find/, function (doc) {
+segConfigSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Segment configurations not found.')
   }

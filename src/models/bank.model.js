@@ -25,7 +25,7 @@ const bankSchema = new Schema(
   schemaOptions
 )
 
-bankSchema.post(/^find/, function (doc) {
+bankSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Banks not found.')
   }

@@ -19,7 +19,13 @@ const roleSchema = new Schema(
 
     description: String,
 
-    permissions: [{ type: Schema.Types.ObjectId, ref: 'Permission', autoPopulate: true }]
+    permissions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Permission',
+        autopopulate: { select: ['name', 'description'] }
+      }
+    ]
   },
   schemaOptions
 )
@@ -28,7 +34,7 @@ roleSchema.plugin(autoPopulate)
 
 roleSchema.index({ name: 1, tenantId: 1 }, { unique: true })
 
-roleSchema.post(/^find/, function (doc) {
+roleSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Roles not found.')
   }

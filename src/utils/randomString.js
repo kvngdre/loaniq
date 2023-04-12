@@ -3,7 +3,7 @@
  * @param {number} len The number of characters
  * @returns {string}
  */
-export default function randomString (len = 6) {
+export default function randomString(len = 6) {
   let randomString = ''
   const charSet =
     'ABCDEFGHJKMNOPQRSTUVWXYZ0123456789abcdefghjkmnopqrstuvwxyz9876543210'

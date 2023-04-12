@@ -8,7 +8,7 @@ class TransactionValidator extends BaseValidator {
   #txnTypeSchema
   #txnPurposeSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#refSchema = Joi.string().alphanum().trim().label('Reference')

@@ -144,7 +144,7 @@ const loanSchema = new Schema(
   schemaOptions
 )
 
-loanSchema.pre('save', function (next) {
+loanSchema.pre('save', function(next) {
   try {
     const isPresent = (path) => ['amount', 'tenor'].includes(path)
     if (this.modifiedPaths().some(isPresent)) {
@@ -190,7 +190,7 @@ loanSchema.pre('save', function (next) {
   }
 })
 
-loanSchema.post(/^find/, function (doc) {
+loanSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Loans not found.')
   }

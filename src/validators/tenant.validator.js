@@ -13,7 +13,7 @@ class TenantValidator extends BaseValidator {
   #idTypeSchema
   #idSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#companyNameSchema = Joi.string()

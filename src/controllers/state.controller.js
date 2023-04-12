@@ -5,7 +5,7 @@ import stateValidator from '../validators/stateValidator.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class StateController extends BaseController {
-  static createState = async (req, res) => {
+  static createState = async(req, res) => {
     const { value, error } = stateValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -15,7 +15,7 @@ class StateController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getStates = async (req, res) => {
+  static getStates = async(req, res) => {
     const [count, states] = await StateService.getStates()
     const message = this.getMsgFromCount(count)
 
@@ -23,14 +23,14 @@ class StateController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getState = async (req, res) => {
+  static getState = async(req, res) => {
     const state = await StateService.getState(req.params.stateId)
     const response = this.apiResponse('Fetched state.', state)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateState = async (req, res) => {
+  static updateState = async(req, res) => {
     const { value, error } = stateValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -40,7 +40,7 @@ class StateController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteState = async (req, res) => {
+  static deleteState = async(req, res) => {
     await StateService.delete(req.params.stateId)
     const response = this.apiResponse('State deleted.')
 

@@ -16,7 +16,7 @@ import UserService from './user.service.js'
 import validateOTP from '../utils/validateOTP.js'
 
 class TenantService {
-  static async createTenant ({ tenant, user }) {
+  static async createTenant({ tenant, user }) {
     const trx = await startSession()
     trx.startTransaction()
     try {
@@ -60,29 +60,29 @@ class TenantService {
     }
   }
 
-  static async getTenants (filters) {
+  static async getTenants(filters) {
     const foundTenants = await TenantDAO.findAll(filters)
     const count = Intl.NumberFormat('en-US').format(foundTenants.length)
 
     return [count, foundTenants]
   }
 
-  static async getTenant (tenantId) {
+  static async getTenant(tenantId) {
     const foundTenant = await TenantDAO.findById(tenantId)
     return foundTenant
   }
 
-  static async updateTenant (tenantId, dto) {
+  static async updateTenant(tenantId, dto) {
     const updateTenant = await TenantDAO.update(tenantId, dto)
     return updateTenant
   }
 
-  static async deleteTenant (tenantId) {
+  static async deleteTenant(tenantId) {
     const deletedTenant = await TenantDAO.remove(tenantId)
     return deletedTenant
   }
 
-  static async activateTenant (tenantId, dto) {
+  static async activateTenant(tenantId, dto) {
     const foundTenant = await TenantDAO.findById(tenantId)
     if (foundTenant.activated) {
       throw new ConflictError('Tenant has already been activated.')
@@ -98,7 +98,7 @@ class TenantService {
     return foundTenant
   }
 
-  static async deactivateTenant ({ _id, tenantId }, { otp }) {
+  static async deactivateTenant({ _id, tenantId }, { otp }) {
     const [foundTenant, user] = await Promise.all([
       TenantDAO.findById(tenantId),
       UserService.getUserById(_id)
@@ -122,7 +122,7 @@ class TenantService {
     return foundTenant
   }
 
-  static async reactivateTenant (tenantId) {
+  static async reactivateTenant(tenantId) {
     const [tenant] = await Promise.all([
       TenantDAO.update(tenantId, { active: true }),
       UserService.updateBulk({ tenantId }, { active: true })
@@ -131,7 +131,7 @@ class TenantService {
     return tenant
   }
 
-  static async generateFormId (tenantId) {
+  static async generateFormId(tenantId) {
     try {
       const formId = randomString(5)
       const updatedConfig = await tenantConfigService.updateConfig(tenantId, { formId })
@@ -142,7 +142,7 @@ class TenantService {
     }
   }
 
-  static async getFormData (formId) {
+  static async getFormData(formId) {
     const { form_theme, socials, tenantId } = await tenantConfigService.getConfig({
       formId
     })
@@ -156,7 +156,7 @@ class TenantService {
     }
   }
 
-  static async uploadDocs (tenantId, uploadFiles) {
+  static async uploadDocs(tenantId, uploadFiles) {
     const foundTenant = await TenantDAO.findById(tenantId)
     const folderName = `t-${tenantId.toString()}`
 

@@ -1,5 +1,5 @@
 class FileUploadError extends Error {
-  constructor (code, message) {
+  constructor(code, message) {
     super(message)
 
     this.code = code

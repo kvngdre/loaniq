@@ -5,7 +5,7 @@ import ErrorResponse from '../utils/ErrorResponse.js'
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js'
 
-export default async function verifyJWT (req, res, next) {
+export default async function verifyJWT(req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form
@@ -42,7 +42,6 @@ export default async function verifyJWT (req, res, next) {
     // TODO: Move this to redis
     const user = await User.findById(decoded.id)
       .populate({ path: 'role', populate: { path: 'permissions' } })
-      .exec()
       .catch((error) => {
         if (error instanceof BaseError) {
           return res.status(httpCodes.NOT_FOUND).json(
@@ -68,15 +67,15 @@ export default async function verifyJWT (req, res, next) {
 
     next()
   } catch (exception) {
-    if (exception instanceof BaseError) {
-      throw exception
+    if (exception instanceof jwt.JsonWebTokenError) {
+      res.status(httpCodes.FORBIDDEN).json(
+        new ErrorResponse({
+          name: 'Auth Error',
+          message: exception.message
+        })
+      )
     }
 
-    res.status(httpCodes.FORBIDDEN).json(
-      new ErrorResponse({
-        name: 'Auth Error',
-        message: exception.message
-      })
-    )
+    throw exception
   }
 }

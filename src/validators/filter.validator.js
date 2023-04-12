@@ -2,26 +2,26 @@ import Joi from 'joi'
 import Segment from '../models/segment.model'
 import State from '../models/stateModel'
 
-async function getSegments () {
+async function getSegments() {
   return await Segment.find({ active: true }).select('code')
 }
 
-async function getCountryStates () {
+async function getCountryStates() {
   return await State.find()
 }
 
-export default async function (filters) {
+export default async function(filters) {
   if (filters.segment) var segments = await getSegments()
   if (filters.state) var countryStates = await getCountryStates()
 
-  function validateSegment (value, helpers) {
+  function validateSegment(value, helpers) {
     const foundSegment = segments.find((segment) => segment.code === value)
     if (!foundSegment) return helpers.message('Segment is not supported')
 
     return foundSegment._id
   }
 
-  function validateCountryState (value, helpers) {
+  function validateCountryState(value, helpers) {
     const foundState = countryStates.find(
       (state) => state.name.toLowerCase() === value.toLowerCase()
     )

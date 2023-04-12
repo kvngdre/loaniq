@@ -9,7 +9,7 @@ class UserValidator extends BaseValidator {
   #displayNameSchema
   #segmentsSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#jobTitle = Joi.string().label('Job title').min(2).max(50).messages({
@@ -120,7 +120,7 @@ class UserValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateForgotPassword = async (dto) => {
+  validateForgotPassword = async(dto) => {
     let schema = Joi.object()
       .keys({
         email: this._emailSchema.required()

@@ -3,7 +3,7 @@ import { Router } from 'express'
 
 const router = Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async(req, res) => {
   const response = await handleRefreshToken(
     req.cookies,
     res

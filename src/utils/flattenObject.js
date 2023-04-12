@@ -5,7 +5,7 @@
  * @param {string=''} prefix
  * @returns {object}
  */
-export function flatten (obj, newObj = {}, prefix = '') {
+export function flatten(obj, newObj = {}, prefix = '') {
   for (const key in obj) {
     if (typeof obj[key] === 'object') {
       this.flatten(obj[key], newObj, prefix + key + '.')

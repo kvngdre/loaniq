@@ -104,7 +104,7 @@ const tenantConfigSchema = new Schema(
   schemaOptions
 )
 
-tenantConfigSchema.post(/^find/, function (docs) {
+tenantConfigSchema.post(/^find/, function(docs) {
   if (Array.isArray(docs) && docs.length === 0) {
     throw new NotFoundError('Tenants configurations not found.')
   }

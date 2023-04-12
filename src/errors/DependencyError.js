@@ -2,7 +2,7 @@ import { httpCodes } from '../utils/common.js'
 import BaseError from './BaseError.js'
 
 class DependencyError extends BaseError {
-  constructor (description) {
+  constructor(description) {
     const name = 'Dependency Error'
     const httpCode = httpCodes.DEPENDENCY
     const isOperational = true

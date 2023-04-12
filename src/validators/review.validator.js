@@ -7,7 +7,7 @@ class ReviewValidator extends BaseValidator {
   #commentSchema
   #statusSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#typeSchema = Joi.string().valid('Customer', 'Loan').label('Type')

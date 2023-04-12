@@ -1,7 +1,7 @@
 import { addColors, format, createLogger, transports } from 'winston'
 const { align, cli, colorize, combine, timestamp, printf } = format
 
-function isDevEnvironment () {
+function isDevEnvironment() {
   if (process.env.NODE_ENV === 'development') return true
 
   return false
@@ -42,7 +42,7 @@ const prodFormatter = combine(
 )
 
 class Logger {
-  constructor () {
+  constructor() {
     const devTransport = new transports.Console({
       format: devFormatter
     })
@@ -64,27 +64,27 @@ class Logger {
     addColors(custom.colors)
   }
 
-  fatal (message, meta) {
+  fatal(message, meta) {
     this.logger.log('fatal', { message, meta })
   }
 
-  error (message, meta) {
+  error(message, meta) {
     this.logger.error({ message, meta })
   }
 
-  warn (message, meta) {
+  warn(message, meta) {
     this.logger.warn({ message, meta })
   }
 
-  info (message, meta) {
+  info(message, meta) {
     this.logger.info({ message, meta })
   }
 
-  debug (message, meta) {
+  debug(message, meta) {
     this.logger.debug({ message, meta })
   }
 
-  silly (message, meta) {
+  silly(message, meta) {
     this.logger.silly({ message, meta })
   }
 }

@@ -273,30 +273,30 @@ const originSchema = new Schema(
   schemaOptions
 )
 
-originSchema.virtual('full_name').get(function () {
+originSchema.virtual('full_name').get(function() {
   return this.first_name.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
     ` ${this.last_name}`
   )
 })
 
-originSchema.virtual('age').get(function () {
+originSchema.virtual('age').get(function() {
   return computeAge(this.birth_date)
 })
 
-originSchema.virtual('tenure').get(function () {
+originSchema.virtual('tenure').get(function() {
   return computeTenure(this.hire_date)
 })
 
-originSchema.methods.getMonthNetPay = function (year, month) {
+originSchema.methods.getMonthNetPay = function(year, month) {
   return this.income[year][month]
 }
 
-originSchema.methods.validatePassword = function (password) {
+originSchema.methods.validatePassword = function(password) {
   return compareSync(password, this.password)
 }
 
-originSchema.pre('save', function (next) {
+originSchema.pre('save', function(next) {
   if (this.modifiedPaths()?.includes('password')) {
     this.password = hashSync(this.password, 10)
   }
@@ -304,7 +304,7 @@ originSchema.pre('save', function (next) {
   next()
 })
 
-originSchema.post(/^find/, function (doc) {
+originSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Accounts not found.')
   }

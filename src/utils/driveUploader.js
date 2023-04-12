@@ -9,7 +9,7 @@ class DriveUploader {
   #auth
   #driveService
 
-  constructor () {
+  constructor() {
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
     // * Service account key file from google cloud console.
     this.#KEY_FILE_PATH = path.resolve(__dirname, '../assets/credentials.json')
@@ -21,7 +21,7 @@ class DriveUploader {
     })
   }
 
-  createFolder = async (name, parent = null) => {
+  createFolder = async(name, parent = null) => {
     const driveService = google.drive({ version: 'v3', auth: this.#auth })
 
     const fileMetadata = {
@@ -38,7 +38,7 @@ class DriveUploader {
     return file.data.id
   }
 
-  createFile = async (name, path, folderId, mimeType) => {
+  createFile = async(name, path, folderId, mimeType) => {
     const driveService = google.drive({ version: 'v3', auth: this.#auth })
 
     const fileMetadata = {
@@ -60,7 +60,7 @@ class DriveUploader {
     return file
   }
 
-  findFolder = async (folderName) => {
+  findFolder = async(folderName) => {
     const driveService = google.drive({ version: 'v3', auth: this.#auth })
 
     const response = await driveService.files.list({
@@ -72,7 +72,7 @@ class DriveUploader {
     return response.data.files
   }
 
-  deleteFile = async (fileId) => {
+  deleteFile = async(fileId) => {
     const driveService = google.drive({ version: 'v3', auth: this.#auth })
 
     const response = await driveService.files.delete({ fileId })

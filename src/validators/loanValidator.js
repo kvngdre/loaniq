@@ -16,7 +16,7 @@ class LoanValidator {
   #netPaySchema
   #amountSchema
   #tenorSchema
-  constructor (
+  constructor(
     minNetPay,
     minLoanAmount,
     maxLoanAmount,
@@ -61,7 +61,7 @@ class LoanValidator {
       })
   }
 
-  create (loan) {
+  create(loan) {
     const schema = Joi.object({
       amount: this.#amountSchema.required(),
       amountInWords: Joi.string().min(18).max(50).required().messages({
@@ -96,7 +96,7 @@ class LoanValidator {
     return schema.validate(loan)
   }
 
-  update (loan) {
+  update(loan) {
     if (user.role === roles.credit) {
       const schema = Joi.object({
         amount: this.#amountSchema,

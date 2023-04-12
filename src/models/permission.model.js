@@ -6,6 +6,7 @@ const schemaOptions = { timestamps: true, versionKey: false }
 const permissionSchema = new Schema({
   name: {
     type: String,
+    lowercase: true,
     unique: true,
     required: true
   },
@@ -35,7 +36,7 @@ const permissionSchema = new Schema({
   // }
 }, schemaOptions)
 
-permissionSchema.post(/^find/, function (doc) {
+permissionSchema.post(/^find/, function(doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Permissions not found.')
   }

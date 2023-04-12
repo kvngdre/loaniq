@@ -4,7 +4,7 @@ import TenantConfig from '../models/tenantConfig.model.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class TenantConfigDAO extends BaseDAO {
-  static async insert (dto) {
+  static async insert(dto) {
     try {
       const newRecord = new TenantConfig(dto)
       await newRecord.save()
@@ -25,17 +25,17 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async findAll(filter = {}, projection = {}) {
     const foundRecords = await TenantConfig.find(filter).select(projection)
     return foundRecords
   }
 
-  static async findOne (filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     const foundRecord = await TenantConfig.findOne(filter).select(projection).populate('tenantId')
     return foundRecord
   }
 
-  static async update (filter, dto, projection = {}) {
+  static async update(filter, dto, projection = {}) {
     try {
       const foundRecord = await TenantConfig.findOneAndUpdate(
         filter,
@@ -59,7 +59,7 @@ class TenantConfigDAO extends BaseDAO {
     }
   }
 
-  static async remove (filter) {
+  static async remove(filter) {
     const deletedRecord = await TenantConfig.findOneAndDelete(filter)
 
     return deletedRecord

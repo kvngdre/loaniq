@@ -1,7 +1,7 @@
 class BaseDAO {
   static DUPLICATE_ERROR_CODE = 11000
 
-  static getDuplicateField (err) {
+  static getDuplicateField(err) {
     const field = Object.keys(err.keyPattern)[0]
     return field
       .charAt(0)
@@ -10,7 +10,7 @@ class BaseDAO {
       .replace('_', ' ')
   }
 
-  static getValidationErrorMsg (err) {
+  static getValidationErrorMsg(err) {
     const field = Object.keys(err.errors)[0]
     return err.errors[field].message.replace('Path', '')
   }
