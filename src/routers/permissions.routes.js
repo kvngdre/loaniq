@@ -9,10 +9,10 @@ router.post('/', [verifyJWT], PermissionController.create)
 
 router.get('/', [verifyJWT], PermissionController.getPermissions)
 
-// router.get('/:reviewId', [verifyJWT, validateId], PermissionController.getReview)
+router.get('/:reviewId', [verifyJWT, validateId], PermissionController.getPermission)
 
-// router.patch('/:reviewId', [verifyJWT, validateId], PermissionController.updateReview)
+router.patch('/:reviewId', [verifyJWT, validateId], PermissionController.updatePermission)
 
-// router.delete('/:reviewId', [verifyJWT, validateId], PermissionController.deleteReview)
+router.delete('/:reviewId', [verifyJWT, validateId], PermissionController.deletePermission)
 
 export default router
