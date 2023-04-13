@@ -10,7 +10,7 @@ class PermissionController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async create(req, res) {
+  static create = async(req, res) => {
     const { value, error } = permissionValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -25,7 +25,7 @@ class PermissionController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async getPermissions(req, res) {
+  static getPermissions = async(req, res) => {
     const { count, foundPermissions } = await PermissionService.getPermissions()
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, foundPermissions)
@@ -38,7 +38,7 @@ class PermissionController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async getPermission(req, res) {
+  static getPermission = async(req, res) => {
     const foundPermission = await PermissionService.getPermission(req.params.permissionId)
     const response = this.apiResponse('Fetched permission', foundPermission)
 
@@ -50,7 +50,7 @@ class PermissionController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async updatePermission(req, res) {
+  static updatePermission = async(req, res) => {
     const { value, error } = permissionValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -65,7 +65,7 @@ class PermissionController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async deletePermission(req, res) {
+  static deletePermission = async(req, res) => {
     await PermissionService.deletePermission(req.params.permissionId)
     const response = this.apiResponse('Permission deleted')
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import segConfigRoutes from './segConfig.routes.js'
 import SegmentController from '../controllers/segment.controller.js'
-import validateId from '../middleware/validateId.js'
+import validateObjectId from '../middleware/validateObjectId.js'
 import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
@@ -12,10 +12,10 @@ router.post('/', [verifyJWT], SegmentController.createSegment)
 
 router.get('/', [verifyJWT], SegmentController.getSegments)
 
-router.get('/:segmentId', [verifyJWT, validateId], SegmentController.getSegment)
+router.get('/:segmentId', [verifyJWT, validateObjectId], SegmentController.getSegment)
 
-router.patch('/:segmentId', [verifyJWT, validateId], SegmentController.updateSegment)
+router.patch('/:segmentId', [verifyJWT, validateObjectId], SegmentController.updateSegment)
 
-router.delete('/:segmentId', [verifyJWT, validateId], SegmentController.deleteSegment)
+router.delete('/:segmentId', [verifyJWT, validateObjectId], SegmentController.deleteSegment)
 
 export default router

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import verifyJWT from '../middleware/verifyJWT.js'
 import SegConfigController from '../controllers/segConfig.controller.js'
-import validateId from '../middleware/validateId.js'
+import validateObjectId from '../middleware/validateObjectId.js'
 
 const router = Router()
 
@@ -9,10 +9,10 @@ router.post('/', [verifyJWT], SegConfigController.createSegConfig)
 
 router.get('/', SegConfigController.getSegConfigs)
 
-router.get('/:segConfigId', [validateId], SegConfigController.getSegConfig)
+router.get('/:segConfigId', [validateObjectId], SegConfigController.getSegConfig)
 
-router.patch('/:segConfigId', [validateId], SegConfigController.updateConfig)
+router.patch('/:segConfigId', [validateObjectId], SegConfigController.updateConfig)
 
-router.delete('/:segConfigId', [validateId], SegConfigController.deleteSegConfig)
+router.delete('/:segConfigId', [validateObjectId], SegConfigController.deleteSegConfig)
 
 export default router

@@ -6,7 +6,7 @@ import isOwner from '../middleware/isOwner.js'
 import upload from '../middleware/fileUploader.js'
 import userConfigRouter from './userConfig.routes.js'
 import UserController from '../controllers/user.controller.js'
-import validateId from '../middleware/validateId.js'
+import validateObjectId from '../middleware/validateObjectId.js'
 import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
@@ -25,20 +25,20 @@ router.post('/verify-signUp', UserController.verifySignUp)
 
 router.post('/:userId/update-password', [verifyJWT], UserController.updatePassword)
 
-router.post('/:userId/deactivate', [verifyJWT, validateId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deactivateUser)
+router.post('/:userId/deactivate', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deactivateUser)
 
 router.get('/', [verifyJWT, grantAccess('all')], UserController.getUsers)
 
 router.get('/me', [finder, verifyJWT], UserController.getCurrentUser)
 
-router.get('/:userId', [verifyJWT, validateId, grantAccess('all')], UserController.getUser)
+router.get('/:userId', [verifyJWT, validateObjectId, grantAccess('all')], UserController.getUser)
 
-router.get('/:userId/reactivate', [verifyJWT, validateId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.reactivateUser)
+router.get('/:userId/reactivate', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.reactivateUser)
 
-router.get('/:userId/reset-password', [verifyJWT, validateId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.resetPassword)
+router.get('/:userId/reset-password', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.resetPassword)
 
-router.patch('/:userId', [verifyJWT, validateId, grantAccess('all'), isOwner(EDITOR)], UserController.updateUser)
+router.patch('/:userId', [verifyJWT, validateObjectId, grantAccess('all'), isOwner(EDITOR)], UserController.updateUser)
 
-router.delete('/:userId', [verifyJWT, validateId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deleteUser)
+router.delete('/:userId', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deleteUser)
 
 export default router

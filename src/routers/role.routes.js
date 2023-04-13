@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import verifyJWT from '../middleware/verifyJWT.js'
 import RoleController from '../controllers/role.controller.js'
-import validateId from '../middleware/validateId.js'
+import validateObjectId from '../middleware/validateObjectId.js'
 
 const router = Router()
 
@@ -9,10 +9,10 @@ router.post('/', [verifyJWT], RoleController.create)
 
 router.get('/', [verifyJWT], RoleController.getRoles)
 
-// router.get('/:reviewId', [verifyJWT, validateId], RoleController.getReview)
+// router.get('/:reviewId', [verifyJWT, validateObjectId], RoleController.getReview)
 
-// router.patch('/:reviewId', [verifyJWT, validateId], RoleController.updateReview)
+// router.patch('/:reviewId', [verifyJWT, validateObjectId], RoleController.updateReview)
 
-// router.delete('/:reviewId', [verifyJWT, validateId], RoleController.deleteReview)
+// router.delete('/:reviewId', [verifyJWT, validateObjectId], RoleController.deleteReview)
 
 export default router

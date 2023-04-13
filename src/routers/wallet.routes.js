@@ -2,7 +2,7 @@ import { roles } from '../config/index.js'
 import { Router } from 'express'
 import verifyJWT from '../middleware/verifyJWT.js'
 import grantAccess from '../middleware/grantAccess.js'
-import validateId from '../middleware/validateId.js'
+import validateObjectId from '../middleware/validateObjectId.js'
 import WalletController from '../controllers/wallet.controller.js'
 
 const router = Router()
@@ -17,12 +17,12 @@ router.post('/:tenantId/debit', [verifyJWT, grantAccess(SUPER_ADMIN)], WalletCon
 
 router.get('/', [verifyJWT, grantAccess(SUPER_ADMIN)], WalletController.getWallets)
 
-router.get('/:tenantId', [verifyJWT, validateId, grantAccess('all')], WalletController.getWallet)
+router.get('/:tenantId', [verifyJWT, validateObjectId, grantAccess('all')], WalletController.getWallet)
 
 router.get('/:tenantId/balance', [verifyJWT, grantAccess('all')], WalletController.getBalance)
 
-router.patch('/:tenantId', [verifyJWT, validateId, grantAccess(SUPER_ADMIN)], WalletController.updateWallet)
+router.patch('/:tenantId', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN)], WalletController.updateWallet)
 
-router.delete('/:tenantId', [verifyJWT, validateId, grantAccess(SUPER_ADMIN)], WalletController.deleteWallet)
+router.delete('/:tenantId', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN)], WalletController.deleteWallet)
 
 export default router
