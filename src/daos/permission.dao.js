@@ -1,16 +1,57 @@
+import { Error } from 'mongoose'
 import BaseDAO from './base.dao.js'
 import ConflictError from '../errors/ConflictError.js'
-import Loan from '../models/loan.model.js'
+import Permission from '../models/permission.model.js'
 import ValidationError from '../errors/ValidationError.js'
-import { Error } from 'mongoose'
 
-class LoanDAO extends BaseDAO {
-  static async insert(dto) {
+class PermissionDAO extends BaseDAO {
+  static async insert(newRecordDTO) {
     try {
-      const newRecord = new Loan(dto)
+      const newRecord = new Permission(newRecordDTO)
       await newRecord.save()
 
       return newRecord
+    } catch (exception) {
+      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+        const field = this.getDuplicateField(exception)
+        throw new ConflictError(`Duplicate: ${field} already in use.`)
+      }
+
+      if (exception instanceof Error.ValidationError) {
+        const errMsg = this.getValidationErrorMsg(exception)
+        throw new ValidationError(errMsg)
+      }
+
+      throw exception
+    }
+  }
+
+  static async findAll(filter = {}, projection = {}) {
+    const foundRecords = await Permission.find(filter).select(projection)
+
+    return foundRecords
+  }
+
+  static async findById(id, projection = {}) {
+    const foundRecord = await Permission.findById(id).select(projection)
+
+    return foundRecord
+  }
+
+  static async findOne(filter, projection = {}) {
+    const foundRecord = await Permission.findOne(filter).select(projection)
+
+    return foundRecord
+  }
+
+  static async update(id, updateRecordDTO, projection = {}) {
+    try {
+      const foundRecord = await Permission.findById(id).select(projection)
+
+      foundRecord.set(updateRecordDTO)
+      await foundRecord.save()
+
+      return foundRecord
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception)
@@ -26,52 +67,11 @@ class LoanDAO extends BaseDAO {
     }
   }
 
-  static async findAll(filter = {}, projection = {}) {
-    const foundRecords = await Loan.find(filter).select(projection)
-
-    return foundRecords
-  }
-
-  static async findById(id, projection = {}) {
-    const foundRecord = await Loan.findById(id).select(projection)
-
-    return foundRecord
-  }
-
-  static async findOne(filter, projection = {}) {
-    const foundRecord = await Loan.findOne(filter).select(projection)
-
-    return foundRecord
-  }
-
-  static async update(id, dto, projection = {}) {
-    try {
-      const foundRecord = await Loan.findById(id).select(projection)
-
-      foundRecord.set(dto)
-      await foundRecord.save()
-
-      return foundRecord
-    } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
-      }
-
-      if (exception.name === 'ValidationError') {
-        const errMsg = this.getValidationErrorMsg(exception)
-        throw new ValidationError(errMsg)
-      }
-
-      throw exception
-    }
-  }
-
   static async remove(id) {
-    const deletedRecord = await Loan.findByIdAndDelete(id)
+    const deletedRecord = await Permission.findByIdAndDelete(id)
 
     return deletedRecord
   }
 }
 
-export default LoanDAO
+export default PermissionDAO

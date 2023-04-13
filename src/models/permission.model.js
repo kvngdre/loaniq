@@ -20,20 +20,19 @@ const permissionSchema = new Schema({
 
   action: {
     type: String,
-    // unique: true,
     required: true
   },
 
   target: {
-    type: String
-    // required: true
-  }
+    type: String,
+    required: true
+  },
 
-  // possession: {
-  //   type: String,
-  //   enum: ['any', 'own'],
-  //   default: 'own'
-  // }
+  level: {
+    type: String,
+    enum: ['admin', 'user'],
+    default: 'user'
+  }
 }, schemaOptions)
 
 permissionSchema.post(/^find/, function(doc) {

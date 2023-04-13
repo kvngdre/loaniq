@@ -1,19 +1,36 @@
-import Permission from '../models/permission.model.js'
+import PermissionDAO from '../daos/permission.dao.js'
 
 class PermissionService {
-  create = async(newPermissionDTO) => {
-    const newPermission = new Permission(newPermissionDTO)
-    await newPermission.save()
+  static async create(newPermissionDTO) {
+    const newPermission = await PermissionDAO.insert(newPermissionDTO)
 
     return newPermission
   }
 
-  getPermissions = async() => {
-    const permissions = await Permission.find()
-    const count = Intl.NumberFormat('en-US').format(permissions.length)
+  static async getPermissions() {
+    const foundPermissions = await PermissionDAO.findAll()
+    const count = Intl.NumberFormat('en-US').format(foundPermissions.length)
 
-    return { count, foundPermissions: permissions }
+    return { count, foundPermissions }
+  }
+
+  static async getPermission(permissionId) {
+    const foundPermission = await PermissionDAO.findById(permissionId)
+
+    return foundPermission
+  }
+
+  static async updatePermission(permissionId, permissionUpdateDTO) {
+    const updatedPermission = await PermissionDAO.update(permissionId, permissionUpdateDTO)
+
+    return updatedPermission
+  }
+
+  static async deletePermission(permissionId) {
+    const deletedPermission = await PermissionDAO.remove(permissionId)
+
+    return deletedPermission
   }
 }
 
-export default new PermissionService()
+export default PermissionService

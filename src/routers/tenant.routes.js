@@ -16,7 +16,7 @@ router.use('/wallets', walletRoutes)
 
 router.post('/sign-up', TenantController.signUp)
 
-router.post('/:tenantId/activate', [verifyJWT, validateId], TenantController.activateTenant)
+router.post('/:tenantId/activate', [verifyJWT, validateId, checkPermission('activateOwn', 'tenant')], TenantController.activateTenant)
 
 router.post('/:tenantId/uploads', [verifyJWT, validateId, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'documents', maxCount: 5 }])], TenantController.uploadFiles)
 
