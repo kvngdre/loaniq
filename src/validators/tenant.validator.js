@@ -1,8 +1,8 @@
-import { roles } from '../config/index.js'
 import { companyCategory, socials, validIds } from '../utils/common.js'
+import { roles } from '../config/index.js'
+import { Types } from 'mongoose'
 import BaseValidator from './base.validator.js'
 import Joi from 'joi'
-import { Types } from 'mongoose'
 class TenantValidator extends BaseValidator {
   #companyNameSchema
   #cacNumberSchema
@@ -83,7 +83,7 @@ class TenantValidator extends BaseValidator {
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
-    }).min(1).label('S  upport')
+    }).min(1).label('Support')
 
     this.#allowUserPwdResetSchema = Joi.boolean()
       .label('Allow user password reset')
@@ -95,7 +95,8 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       tenant: Joi.object({
         _id: Joi.any().default(newTenantId),
-        company_name: this.#companyNameSchema.required()
+        company_name: this.#companyNameSchema.required(),
+        category: this.#categorySchema.required()
       }).required(),
       user: Joi.object({
         tenantId: Joi.any().default(newTenantId).forbidden(),
@@ -134,7 +135,7 @@ class TenantValidator extends BaseValidator {
 
   validateActivate = (dto) => {
     const schema = Joi.object({
-      category: this.#categorySchema.required(),
+      // category: this.#categorySchema.required(),
       cac_number: this.#cacNumberSchema.required(),
       email: this._emailSchema.required(),
       phone_number: this._phoneNumberSchema,

@@ -55,18 +55,18 @@ class BaseValidator {
 
   _nameSchema = Joi.object({
     first: Joi.string()
-      .label('First name')
-      .trim()
-      .min(2)
-      .max(255)
-      .trim()
+    .lowercase()
+    .min(2)
+    .max(255)
+    .trim()
+    .label('First name')
       .messages({
         'string.min': '{#label} is not valid',
         'string.max': '{#label} is too long'
       }),
     last: Joi.string()
       .label('Last name')
-      .trim()
+      .lowercase()
       .min(2)
       .max(255)
       .trim()
@@ -76,7 +76,7 @@ class BaseValidator {
       }),
     middle: Joi.string()
       .label('Middle name')
-      .trim()
+      .lowercase()
       .min(2)
       .max(255)
       .trim()
@@ -88,7 +88,7 @@ class BaseValidator {
 
   _genderSchema = Joi.string()
     .label('Gender')
-    .valid('Male', 'Female')
+    .valid('male', 'female')
     .messages({
       'any.only': 'Invalid gender'
     })
@@ -154,7 +154,7 @@ class BaseValidator {
     })
 
   _locationSchema = Joi.object({
-    address: Joi.string().trim().label('Address').invalid(''),
+    address: Joi.string().lowercase().max(100).trim().label('Address').invalid(''),
     state: this._objectIdSchema.label('State')
   })
 
@@ -180,7 +180,7 @@ class BaseValidator {
     .label('Fees')
     .items(
       Joi.object({
-        name: Joi.string().label('Fee name').trim().required(),
+        name: Joi.string().lowercase().max(50).label('Fee name').trim().required(),
         type: Joi.number()
           .label('Fee type')
           .valid(...Object.values(feeTypes))
@@ -204,7 +204,7 @@ class BaseValidator {
       'any.required': 'Account number is required'
     })
 
-  _descSchema = Joi.string().label('Description').trim().max(100)
+  _descSchema = Joi.string().label('Description').trim().lowercase().max(100)
 }
 
 export default BaseValidator
