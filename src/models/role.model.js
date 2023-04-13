@@ -1,5 +1,4 @@
 import { Schema, model } from 'mongoose'
-import autoPopulate from 'mongoose-autopopulate'
 import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
@@ -27,15 +26,12 @@ const roleSchema = new Schema(
     permissions: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Permission',
-        autopopulate: true
+        ref: 'Permission'
       }
     ]
   },
   schemaOptions
 )
-
-// roleSchema.plugin(autoPopulate)
 
 roleSchema.index({ name: 1, tenantId: 1 }, { unique: true })
 

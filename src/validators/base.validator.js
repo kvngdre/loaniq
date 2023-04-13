@@ -55,11 +55,11 @@ class BaseValidator {
 
   _nameSchema = Joi.object({
     first: Joi.string()
-    .lowercase()
-    .min(2)
-    .max(255)
-    .trim()
-    .label('First name')
+      .lowercase()
+      .min(2)
+      .max(255)
+      .trim()
+      .label('First name')
       .messages({
         'string.min': '{#label} is not valid',
         'string.max': '{#label} is too long'

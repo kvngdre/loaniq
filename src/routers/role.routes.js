@@ -5,14 +5,19 @@ import validateObjectId from '../middleware/validateObjectId.js'
 
 const router = Router()
 
-router.post('/', [verifyJWT], RoleController.create)
+router.post('/', verifyJWT, RoleController.create)
 
-router.get('/', [verifyJWT], RoleController.getRoles)
+router.get('/', verifyJWT, RoleController.getRoles)
 
-// router.get('/:reviewId', [verifyJWT, validateObjectId], RoleController.getReview)
+router.get('/:roleId', verifyJWT, validateObjectId, RoleController.getRole)
 
-// router.patch('/:reviewId', [verifyJWT, validateObjectId], RoleController.updateReview)
+router.patch('/:roleId', verifyJWT, validateObjectId, RoleController.updateRole)
 
-// router.delete('/:reviewId', [verifyJWT, validateObjectId], RoleController.deleteReview)
+router.delete(
+  '/:roleId',
+  verifyJWT,
+  validateObjectId,
+  RoleController.deleteRole
+)
 
 export default router

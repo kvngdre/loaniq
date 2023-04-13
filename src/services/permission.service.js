@@ -1,7 +1,7 @@
 import PermissionDAO from '../daos/permission.dao.js'
 
 class PermissionService {
-  static async create(newPermissionDTO) {
+  static async createPermission(newPermissionDTO) {
     const newPermission = await PermissionDAO.insert(newPermissionDTO)
 
     return newPermission
@@ -20,8 +20,8 @@ class PermissionService {
     return foundPermission
   }
 
-  static async updatePermission(permissionId, permissionUpdateDTO) {
-    const updatedPermission = await PermissionDAO.update(permissionId, permissionUpdateDTO)
+  static async updatePermission(permissionId, updatePermissionDTO) {
+    const updatedPermission = await PermissionDAO.update(permissionId, updatePermissionDTO)
 
     return updatedPermission
   }
