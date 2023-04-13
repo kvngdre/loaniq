@@ -6,6 +6,7 @@ import upload from '../middleware/fileUploader.js'
 import validateId from '../middleware/validateId.js'
 import tenantConfigRoutes from './tenantConfig.routes.js'
 import walletRoutes from './wallet.routes.js'
+import checkPermission from '../middleware/checkPermission.js'
 
 const router = Router()
 
@@ -21,11 +22,11 @@ router.post('/:tenantId/uploads', [verifyJWT, validateId, upload.fields([{ name:
 
 router.get('/forms/:formId', TenantController.getPublicFormData)
 
-router.get('/self', [verifyJWT], TenantController.getCurrentTenant)
+router.get('/self', [verifyJWT, checkPermission('viewOwn', 'tenant')], TenantController.getCurrentTenant)
 
-router.get('/', [verifyJWT], TenantController.getTenants)
+router.get('/', [verifyJWT, checkPermission('viewAny', 'tenant')], TenantController.getTenants)
 
-router.get('/:tenantId', [verifyJWT, validateId], TenantController.getTenant)
+router.get('/:tenantId', [verifyJWT, validateId, checkPermission('viewOwn', 'tenant')], TenantController.getTenant)
 
 router.get('/:tenantId/deactivate', [verifyJWT, validateId], TenantController.deactivateTenant)
 

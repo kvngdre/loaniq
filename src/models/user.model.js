@@ -8,7 +8,6 @@ const schemaOptions = {
   toJSON: { virtuals: true },
   id: false
 }
-const { hashSync, compareSync } = bcrypt
 
 const userSchema = new Schema(
   {
@@ -142,7 +141,7 @@ userSchema.virtual('full_name').get(function() {
 })
 
 userSchema.methods.comparePasswords = function(password) {
-  return compareSync(password, this.password)
+  return bcrypt.compareSync(password, this.password)
 }
 
 userSchema.methods.permitLogin = function() {
@@ -187,7 +186,7 @@ userSchema.methods.purgeSensitiveData = function() {
 // Hashing password before insert
 userSchema.pre('save', function(next) {
   if (this.modifiedPaths()?.includes('password')) {
-    this.password = hashSync(this.password, 10)
+    this.password = bcrypt.hashSync(this.password, 10)
   }
 
   next()

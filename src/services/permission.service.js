@@ -9,8 +9,8 @@ class PermissionService {
   }
 
   getPermissions = async() => {
-    const permissions = Permission.find()
-    const count = Intl.NumberFormat('en-US').format((await permissions).length)
+    const permissions = await Permission.find()
+    const count = Intl.NumberFormat('en-US').format(permissions.length)
 
     return { count, foundPermissions: permissions }
   }

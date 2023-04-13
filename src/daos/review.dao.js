@@ -28,16 +28,6 @@ class ReviewDAO extends BaseDAO {
   static async findAll(filter = {}, projection = {}) {
     const foundRecords = await Review.find(filter)
       .select(projection)
-      .populate([
-        {
-          path: 'created_by',
-          select: ['first_name', 'last_name', 'job_title', 'role']
-        },
-        {
-          path: 'modified_by',
-          select: ['first_name', 'last_name', 'job_title', 'role']
-        }
-      ])
 
     return foundRecords
   }
@@ -45,16 +35,6 @@ class ReviewDAO extends BaseDAO {
   static async findById(id, projection = {}) {
     const foundRecord = await Review.findById(id)
       .select(projection)
-      .populate([
-        {
-          path: 'created_by',
-          select: ['first_name', 'last_name', 'job_title', 'role']
-        },
-        {
-          path: 'modified_by',
-          select: ['first_name', 'last_name', 'job_title', 'role']
-        }
-      ])
 
     return foundRecord
   }

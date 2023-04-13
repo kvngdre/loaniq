@@ -32,13 +32,17 @@ class UserDAO extends BaseDAO {
   }
 
   static async findById(id, projection = {}) {
-    const foundRecord = await User.findById(id).select(projection)
+    const foundRecord = await User.findById(id)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' })
 
     return foundRecord
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await User.findOne(filter).select(projection)
+    const foundRecord = await User.findOne(filter)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' })
 
     return foundRecord
   }

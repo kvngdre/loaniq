@@ -12,6 +12,11 @@ const roleSchema = new Schema(
       required: true
     },
 
+    isDefault: {
+      type: Boolean,
+      default: false
+    },
+
     name: {
       type: String,
       required: true
@@ -23,14 +28,14 @@ const roleSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: 'Permission',
-        autopopulate: { select: ['name', 'description'] }
+        autopopulate: true
       }
     ]
   },
   schemaOptions
 )
 
-roleSchema.plugin(autoPopulate)
+// roleSchema.plugin(autoPopulate)
 
 roleSchema.index({ name: 1, tenantId: 1 }, { unique: true })
 

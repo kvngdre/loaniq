@@ -2,8 +2,10 @@ import Role from '../models/role.model.js'
 
 class RoleService {
   create = async(newRoleDTO) => {
-    const newRole = new Role(newRoleDTO)
-    await newRole.save()
+    const newRole = await Role.create(newRoleDTO).populate({
+      path: 'permissions',
+      select: 'name description'
+    })
 
     return newRole
   }

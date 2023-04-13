@@ -1,5 +1,6 @@
 import { reviewStatus } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
+import autoPopulate from 'mongoose-autopopulate'
 import NotFoundError from '../errors/NotFoundError.js'
 
 const schemaOptions = { timestamps: true, versionKey: false }
@@ -30,6 +31,12 @@ const reviewSchema = new Schema(
       required: true
     },
 
+    comment: {
+      type: String,
+      trim: true,
+      default: null
+    },
+
     document: {
       type: Schema.Types.ObjectId,
       ref: (self = this) => self.type,
@@ -41,25 +48,23 @@ const reviewSchema = new Schema(
       required: true
     },
 
-    comment: {
-      type: String,
-      trim: true,
-      default: null
-    },
-
     created_by: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      autopopulate: { select: 'display_name job_title' },
       required: true
     },
 
     modified_by: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      autopopulate: { select: 'display_name job_title' }
     }
   },
   schemaOptions
 )
+
+reviewSchema.plugin(autoPopulate)
 
 reviewSchema.post(/^find/, async function(docs) {
   if (Array.isArray(docs)) {
