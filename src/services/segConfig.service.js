@@ -3,7 +3,7 @@ import SegConfigDAO from '../daos/segConfig.dao.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class SegConfigService {
-  static createConfig = async(dto) => {
+  static createConfig = async (dto) => {
     const { tenantId, segmentId, min_net_pay, max_net_pay } = dto
 
     // ! Validating net pay range
@@ -22,20 +22,20 @@ class SegConfigService {
     return newSegConfig
   }
 
-  static async getConfigs(tenantId) {
+  static async getConfigs (tenantId) {
     const foundSegConfigs = await SegConfigDAO.findAll({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundSegConfigs.length)
 
     return { count, segConfigs: foundSegConfigs }
   }
 
-  static async getConfig(segConfigId) {
+  static async getConfig (segConfigId) {
     const foundSegConfig = await SegConfigDAO.findById(segConfigId)
 
     return foundSegConfig
   }
 
-  static async updateConfig(segConfigId, dto) {
+  static async updateConfig (segConfigId, dto) {
     const foundSegConfig = await SegConfigDAO.update(
       segConfigId,
       dto
@@ -67,13 +67,13 @@ class SegConfigService {
     return foundSegConfig
   }
 
-  static async deleteConfig(segmentConfigId) {
+  static async deleteConfig (segmentConfigId) {
     const deletedSegConfig = await SegConfigDAO.remove(segmentConfigId)
 
     return deletedSegConfig
   }
 
-  static async #validatePayRange(tenantId, segmentId, min, max) {
+  static async #validatePayRange (tenantId, segmentId, min, max) {
     const current = [min, max]
 
     const foundDocs = await SegConfigDAO.findDocsByField(
@@ -82,7 +82,7 @@ class SegConfigService {
       { min_net_pay: -1 }
     )
 
-    function getMinMaxArray(docs) {
+    function getMinMaxArray (docs) {
       const result = [current]
 
       for (const doc of docs) {
@@ -94,7 +94,7 @@ class SegConfigService {
     }
 
     // * Find gaps or overlapping range.
-    function findGaps(ranges) {
+    function findGaps (ranges) {
       const len = ranges.length
       let numOfBadRange = 0
       let end = ranges[0][1]

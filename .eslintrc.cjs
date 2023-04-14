@@ -10,6 +10,6 @@ module.exports = {
     sourceType: 'module'
   },
   rules: {
-    'space-before-function-paren': ['error', 'never']
+    'space-before-function-paren': ['error', 'always']
   }
 }

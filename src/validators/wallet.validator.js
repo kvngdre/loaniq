@@ -6,7 +6,7 @@ import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js'
 class WalletValidator extends BaseValidator {
   #referenceSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#referenceSchema = Joi.string().default(randomBytes(4).toString('hex'))

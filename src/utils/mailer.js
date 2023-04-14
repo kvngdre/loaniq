@@ -26,7 +26,7 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({ refresh_token: refreshToken })
 
 // Creating reusable transport object
-async function getTransporter() {
+async function getTransporter () {
   try {
     const accessToken = await oauth2Client.getAccessToken()
     const transporter = createTransport({
@@ -60,10 +60,10 @@ async function getTransporter() {
  * @param {string} params.payload.password Password if to be sent in mail.
  * @returns {Promise}
  */
-const sendMail = async function({ from, to, subject, template, name = undefined, payload }) {
+const sendMail = async function ({ from, to, subject, template, name = undefined, payload }) {
   // Defining the mailing options
   const mailOptions = {
-    from: `"Apex" <${from || senderEmail}>`,
+    from: `"Aidea" <${from || senderEmail}>`,
     to,
     subject,
     template,

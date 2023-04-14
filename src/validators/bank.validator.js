@@ -5,7 +5,7 @@ class BankValidator extends BaseValidator {
   #nameSchema
   #codeSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#nameSchema = Joi.string().label('Name').trim().min(8).max(20)

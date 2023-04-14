@@ -5,7 +5,7 @@ import Loan from '../models/loan.model.js'
 import User from '../models/user.model.js'
 import logger from '../utils/logger.js'
 
-export const getLoanData = async(user, status) => {
+export const getLoanData = async (user, status) => {
   try {
     const currentYear = new Date().getUTCFullYear().toString()
 

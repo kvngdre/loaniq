@@ -9,96 +9,113 @@ import logger from '../utils/logger.js'
 import mailer from '../utils/mailer.js'
 import path from 'path'
 import randomString from '../utils/randomString.js'
+import RoleService from './role.service.js'
+import TenantConfigDAO from '../daos/tenantConfig.dao.js'
 import tenantConfigService from './tenantConfig.service.js'
 import TenantDAO from '../daos/tenant.dao.js'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
+import UserConfigDAO from '../daos/userConfig.dao.js'
+import UserDAO from '../daos/user.dao.js'
 import UserService from './user.service.js'
 import validateOTP from '../utils/validateOTP.js'
+import WalletDAO from '../daos/wallet.dao.js'
+import transaction from 'mongoose-trx'
 
 class TenantService {
-  static async createTenant({ tenant, user }) {
-    const trx = await startSession()
-    trx.startTransaction()
-    try {
+  static async createTenant ({ tenant, user }) {
+    const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
-        TenantDAO.insert(tenant, trx),
-        UserService.createUser(user, trx)
+        TenantDAO.insert(tenant, session),
+        UserDAO.insert(user, session),
+        TenantConfigDAO.insert({ tenantId: tenant._id }, session),
+        UserConfigDAO.insert(
+          { userId: user._id, tenantId: tenant._id },
+          session
+        ),
+        mailer({
+          to: user.email,
+          subject: 'One more step',
+          name: user.first_name,
+          template: 'new-user',
+          payload: { password: user.password }
+        })
+        // RoleService.getRole({ name: 'admin', isDefault: true })
       ])
 
-      // * Emitting new tenant sign up event.
-      pubsub.publish(
-        events.tenant.signUp,
-        null,
-        { tenantId: newTenant._id, ...newTenant._doc },
-        trx
-      )
-
-      // Send welcome mail...
-      setTimeout(() => {
-        mailer({
-          to: newUser.email,
-          subject: 'Welcome to Apex!',
-          name: newUser.first_name,
-          template: 'new-tenant'
-        })
-      }, 120_000)
+      // Create admin role for new user.
+      // await RoleService.createRole({
+      //   ...defaultAdminRole._doc,
+      //   _id: newUser.role,
+      //   tenantId: newUser.tenantId,
+      //   isDefault: false
+      // })
 
       // Committing changes.
-      await trx.commitTransaction()
-      trx.endSession()
+      // await session.commitTransaction()
+      newUser.purgeSensitiveData()
 
       return {
         tenant: newTenant,
         user: newUser
       }
-    } catch (exception) {
-      // ! Exception thrown, roll back changes.
-      await trx.abortTransaction()
-      trx.endSession()
-
-      throw exception
-    }
+    })
+    return result
   }
 
-  static async getTenants(filters) {
+  static async getTenants (filters) {
     const foundTenants = await TenantDAO.findAll(filters)
     const count = Intl.NumberFormat('en-US').format(foundTenants.length)
 
     return [count, foundTenants]
   }
 
-  static async getTenant(tenantId) {
+  static async getTenant (tenantId) {
     const foundTenant = await TenantDAO.findById(tenantId)
     return foundTenant
   }
 
-  static async updateTenant(tenantId, dto) {
+  static async updateTenant (tenantId, dto) {
     const updateTenant = await TenantDAO.update(tenantId, dto)
     return updateTenant
   }
 
-  static async deleteTenant(tenantId) {
+  static async deleteTenant (tenantId) {
     const deletedTenant = await TenantDAO.remove(tenantId)
     return deletedTenant
   }
 
-  static async activateTenant(tenantId, dto) {
-    const foundTenant = await TenantDAO.findById(tenantId)
-    if (foundTenant.activated) {
-      throw new ConflictError('Tenant has already been activated.')
+  static async activateTenant (tenantId, activateTenantDTO) {
+    const transactionSession = await startSession()
+    try {
+      transactionSession.startTransaction()
+
+      const [foundTenant] = await Promise.all([
+        TenantDAO.findById(tenantId),
+        WalletDAO.insert({ tenantId }, transactionSession)
+      ])
+      if (foundTenant.activated) {
+        throw new ConflictError('Tenant has already been activated.')
+      }
+
+      foundTenant.set({
+        isEmailVerified: true,
+        activated: true,
+        ...activateTenantDTO
+      })
+      await foundTenant.save({ session: transactionSession })
+      await transactionSession.commitTransaction()
+
+      return foundTenant
+    } catch (exception) {
+      transactionSession.abortTransaction()
+
+      throw exception
+    } finally {
+      transactionSession.endSession()
     }
-
-    foundTenant.set({
-      isEmailVerified: true,
-      activated: true,
-      ...dto
-    })
-    await foundTenant.save()
-
-    return foundTenant
   }
 
-  static async deactivateTenant({ _id, tenantId }, { otp }) {
+  static async deactivateTenant ({ _id, tenantId }, { otp }) {
     const [foundTenant, user] = await Promise.all([
       TenantDAO.findById(tenantId),
       UserService.getUserById(_id)
@@ -122,7 +139,7 @@ class TenantService {
     return foundTenant
   }
 
-  static async reactivateTenant(tenantId) {
+  static async reactivateTenant (tenantId) {
     const [tenant] = await Promise.all([
       TenantDAO.update(tenantId, { active: true }),
       UserService.updateBulk({ tenantId }, { active: true })
@@ -131,10 +148,12 @@ class TenantService {
     return tenant
   }
 
-  static async generateFormId(tenantId) {
+  static async generateFormId (tenantId) {
     try {
       const formId = randomString(5)
-      const updatedConfig = await tenantConfigService.updateConfig(tenantId, { formId })
+      const updatedConfig = await tenantConfigService.updateConfig(tenantId, {
+        formId
+      })
 
       return updatedConfig
     } catch (error) {
@@ -142,10 +161,11 @@ class TenantService {
     }
   }
 
-  static async getFormData(formId) {
-    const { form_theme, socials, tenantId } = await tenantConfigService.getConfig({
-      formId
-    })
+  static async getFormData (formId) {
+    const { form_theme, socials, tenantId } =
+      await tenantConfigService.getConfig({
+        formId
+      })
 
     return {
       logo: tenantId.logo,
@@ -156,7 +176,7 @@ class TenantService {
     }
   }
 
-  static async uploadDocs(tenantId, uploadFiles) {
+  static async uploadDocs (tenantId, uploadFiles) {
     const foundTenant = await TenantDAO.findById(tenantId)
     const folderName = `t-${tenantId.toString()}`
 

@@ -6,7 +6,7 @@ import { httpCodes } from '../utils/common.js'
 import paystackService from '../services/paystack.service.js'
 
 class TransactionController extends BaseController {
-  static createTxn = async(req, res) => {
+  static createTxn = async (req, res) => {
     const { value, error } = txnValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -16,7 +16,7 @@ class TransactionController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getTxns = async(req, res) => {
+  static getTxns = async (req, res) => {
     const [count, transactions] = await txnService.getTxns(
       req.currentUser.tenantId
     )
@@ -26,14 +26,14 @@ class TransactionController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getTxn = async(req, res) => {
+  static getTxn = async (req, res) => {
     const transaction = await txnService.getTxn(req.params.txnId)
     const response = this.apiResponse('Fetched transaction', transaction)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateTxn = async(req, res) => {
+  static updateTxn = async (req, res) => {
     const { txnId } = req.params
     const { value, error } = txnValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
@@ -44,14 +44,14 @@ class TransactionController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteTxn = async(req, res) => {
+  static deleteTxn = async (req, res) => {
     await txnService.deleteTxn(req.params.txnId)
     const response = this.apiResponse('Transaction deleted.')
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static getPaymentLink = async(req, res) => {
+  static getPaymentLink = async (req, res) => {
     const { value, error } = txnValidator.validateInitTxn(req.query)
     if (error) throw new ValidationError(null, error)
     console.log(typeof value.amount)

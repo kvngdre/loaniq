@@ -3,6 +3,7 @@ import { roles } from '../config/index.js'
 import { Types } from 'mongoose'
 import BaseValidator from './base.validator.js'
 import Joi from 'joi'
+import randomString from '../utils/randomString.js'
 class TenantValidator extends BaseValidator {
   #companyNameSchema
   #cacNumberSchema
@@ -13,7 +14,7 @@ class TenantValidator extends BaseValidator {
   #idTypeSchema
   #idSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#companyNameSchema = Joi.string()
@@ -92,19 +93,23 @@ class TenantValidator extends BaseValidator {
 
   validateSignUp = (dto) => {
     const newTenantId = new Types.ObjectId()
+    const newUserId = new Types.ObjectId()
+    const adminRoleId = new Types.ObjectId()
     const schema = Joi.object({
       tenant: Joi.object({
-        _id: Joi.any().default(newTenantId),
+        _id: Joi.any().default(newTenantId).forbidden(),
         company_name: this.#companyNameSchema.required(),
         category: this.#categorySchema.required()
       }).required(),
       user: Joi.object({
+        _id: Joi.any().default(newUserId).forbidden(),
         tenantId: Joi.any().default(newTenantId).forbidden(),
         first_name: this._nameSchema.extract('first').required(),
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
-        role: this._roleSchema.default(roles.ADMIN).forbidden()
+        password: Joi.string().default(randomString()).forbidden(),
+        role: Joi.any().default(adminRoleId).forbidden()
       }).required()
     })
 
@@ -141,8 +146,8 @@ class TenantValidator extends BaseValidator {
       phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
       state: this._locationSchema.extract('state').required(),
-      id_type: this.#idTypeSchema.required(),
-      id_number: this.#idSchema.label('Id number').required(),
+      owner_id_type: this.#idTypeSchema.required(),
+      owner_id_number: this.#idSchema.label('Id number').required(),
       support: this.#supportSchema.required()
     })
 

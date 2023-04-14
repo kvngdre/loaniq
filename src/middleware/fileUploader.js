@@ -61,7 +61,7 @@ class FileUploader {
   // #storage
   // #multer
 
-  constructor() {
+  constructor () {
     this.#multiplier = 5
   }
 

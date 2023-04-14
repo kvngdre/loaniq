@@ -4,7 +4,7 @@ import Joi from 'joi'
 class LoanValidator extends BaseValidator {
   #amountInWordsSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#amountInWordsSchema = Joi.string().trim().max(255).label('Amount in words')

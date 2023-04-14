@@ -219,7 +219,7 @@
 //         return new ServerResponse(409, `${field} already in use.`)
 //       }
 //       // Validation error handling
-//       if (exception.name === 'ValidationError') {
+//       if (exception instanceof Error.ValidationError) {
 //         console.log(exception.code)
 //         const field = Object.keys(exception.errors)[0]
 //         return new ServerResponse(

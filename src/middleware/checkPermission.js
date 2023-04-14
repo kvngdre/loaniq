@@ -8,13 +8,13 @@ import ErrorResponse from '../utils/ErrorResponse.js'
  */
 const checkPermission = (action, target) => {
   return (req, res, next) => {
-    function hasPermission() {
+    function hasPermission () {
       return req.currentUser.role.permissions.some(
         (p) => p.action === action && p.target === target
       )
     }
 
-    function canActOnAny() {
+    function canActOnAny () {
       return req.currentUser.role.permissions.some(
         (p) =>
           p.action === action.slice(0, action.length - 3).concat('Any') &&
@@ -22,7 +22,7 @@ const checkPermission = (action, target) => {
       )
     }
 
-    function isTenant() {
+    function isTenant () {
       /**
        * The type of the left hand side (str) would coerce the right hand side
        * (ObjectId)to be of the same type (str == str) before comparison.

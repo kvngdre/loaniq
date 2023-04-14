@@ -8,7 +8,7 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static create = async(req, res) => {
+  static create = async (req, res) => {
     req.body.tenantId = req.currentUser.tenantId
     const newRole = await RoleService.createRole(req.body)
     const response = this.apiResponse('Role created', newRole)
@@ -21,7 +21,7 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getRoles = async(req, res) => {
+  static getRoles = async (req, res) => {
     const { count, foundRoles } = await RoleService.getRoles(req.currentUser.tenantId)
     const message = this.getMsgFromCount(count)
     const response = this.apiResponse(message, foundRoles)
@@ -34,7 +34,7 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getRole = async(req, res) => {
+  static getRole = async (req, res) => {
     const foundRole = await RoleService.getRole(req.params.roleId)
     const response = this.apiResponse('Fetched role', foundRole)
 
@@ -46,7 +46,7 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static updateRole = async(req, res) => {
+  static updateRole = async (req, res) => {
     const role = await RoleService.updateRole(req.params.roleId)
     const response = this.apiResponse('Role updated', role)
 
@@ -58,7 +58,7 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static deleteRole = async(req, res) => {
+  static deleteRole = async (req, res) => {
     await RoleService.deleteRole(req.params.roleId)
     const response = this.apiResponse('Deleted role')
 

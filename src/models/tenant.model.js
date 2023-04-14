@@ -69,12 +69,12 @@ const tenantSchema = new Schema(
       default: false
     },
 
-    id_type: {
+    owner_id_type: {
       type: String
       // enum: validIds
     },
 
-    id_number: {
+    owner_id_number: {
       type: String
     },
 
@@ -102,7 +102,7 @@ const tenantSchema = new Schema(
   schemaOptions
 )
 
-tenantSchema.post(/^find/, function(doc) {
+tenantSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Tenants not found.')
   }

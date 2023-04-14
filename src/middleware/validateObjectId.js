@@ -2,7 +2,7 @@ import { httpCodes } from '../utils/common.js'
 import { Types } from 'mongoose'
 import ErrorResponse from '../utils/ErrorResponse.js'
 
-export default function(req, res, next) {
+export default function (req, res, next) {
   for (const key in req.params) {
     if (
       /[a-z]+Id$|^id$/g.test(key) &&

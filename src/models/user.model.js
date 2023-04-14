@@ -48,7 +48,7 @@ const userSchema = new Schema(
       type: String,
       trim: true,
       maxLength: 50,
-      default: function() {
+      default: function () {
         return this.first_name.concat(` ${this.last_name}`)
       }
     },
@@ -133,18 +133,18 @@ const userSchema = new Schema(
   schemaOptions
 )
 
-userSchema.virtual('full_name').get(function() {
+userSchema.virtual('full_name').get(function () {
   return this.first_name?.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
     ` ${this.last_name}`
   )
 })
 
-userSchema.methods.comparePasswords = function(password) {
+userSchema.methods.comparePasswords = function (password) {
   return bcrypt.compareSync(password, this.password)
 }
 
-userSchema.methods.permitLogin = function() {
+userSchema.methods.permitLogin = function () {
   const data = { id: this._id, redirect: {} }
 
   if (!this.isEmailVerified && !this.active) {
@@ -177,14 +177,14 @@ userSchema.methods.permitLogin = function() {
   return { isGranted: true }
 }
 
-userSchema.methods.purgeSensitiveData = function() {
+userSchema.methods.purgeSensitiveData = function () {
   delete this._doc?.password
   delete this._doc?.otp
   delete this._doc?.resetPwd
 }
 
 // Hashing password before insert
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (this.modifiedPaths()?.includes('password')) {
     this.password = bcrypt.hashSync(this.password, 10)
   }
@@ -192,7 +192,7 @@ userSchema.pre('save', function(next) {
   next()
 })
 
-userSchema.post(/^find/, function(doc) {
+userSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Users not found.')
   }

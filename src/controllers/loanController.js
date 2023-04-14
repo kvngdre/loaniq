@@ -237,7 +237,7 @@
 //       return new ServerError(409, field + ' already in use')
 //     }
 
-//     if (exception.name === 'ValidationError') {
+//     if (exception instanceof Error.ValidationError) {
 //       const field = Object.keys(exception.errors)[0]
 //       return new ServerError(
 //         400,

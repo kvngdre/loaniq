@@ -2,13 +2,13 @@ import BaseError from '../errors/BaseError.js'
 import logger from './logger.js'
 
 class ErrorHandler {
-  static isTrustedError(error) {
+  static isTrustedError (error) {
     if (error instanceof BaseError) return true
 
     return false
   }
 
-  static handleError(error) {
+  static handleError (error) {
     if (this.isTrustedError(error)) {
       logger.error(error.message, error.stack)
     } else {

@@ -32,7 +32,7 @@
 //       meta: exception.stack
 //     })
 //     debug(exception)
-//     if (exception.name === 'ValidationError') {
+//     if (exception instanceof Error.ValidationError) {
 //       const field = Object.keys(exception.errors)[0]
 //       const errorMsg = exception.errors[field].message.replace(
 //         'Path',
@@ -512,7 +512,7 @@
 //       meta: exception.stack
 //     })
 //     debug(exception)
-//     if (exception.name === 'ValidationError') {
+//     if (exception instanceof Error.ValidationError) {
 //       const field = Object.keys(exception.errors)[0]
 //       const errorMsg = exception.errors[field].message.replace(
 //         'Path',

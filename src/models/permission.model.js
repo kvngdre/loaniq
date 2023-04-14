@@ -35,7 +35,7 @@ const permissionSchema = new Schema({
   }
 }, schemaOptions)
 
-permissionSchema.post(/^find/, function(doc) {
+permissionSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Permissions not found.')
   }

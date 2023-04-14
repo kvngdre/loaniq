@@ -8,7 +8,7 @@ class StateValidator extends BaseValidator {
   #lgaSchema
   #regionSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#codeSchema = Joi.string()

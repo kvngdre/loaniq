@@ -1,4 +1,4 @@
-function editDistance(s1, s2) {
+function editDistance (s1, s2) {
   s1 = s1.toLowerCase()
   s2 = s2.toLowerCase()
 
@@ -29,7 +29,7 @@ function editDistance(s1, s2) {
  * @param {string} s2  The string to compare.
  * @returns {number}  percentage similarity
  */
-export default function similarity(s1, s2) {
+export default function similarity (s1, s2) {
   let longer = s1
   let shorter = s2
   if (s1.length < s2.length) {

@@ -2,7 +2,7 @@ import { dbConfig } from '../config/index.js'
 import logger from '../utils/logger.js'
 import mongoose from 'mongoose'
 
-export default async() => {
+export default async () => {
   mongoose.set('strictQuery', true)
 
   await mongoose

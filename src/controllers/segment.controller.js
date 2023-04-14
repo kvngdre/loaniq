@@ -5,7 +5,7 @@ import segmentValidator from '../validators/segment.validator.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class SegmentController extends BaseController {
-  static createSegment = async(req, res) => {
+  static createSegment = async (req, res) => {
     const { value, error } = segmentValidator.validateCreate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -15,7 +15,7 @@ class SegmentController extends BaseController {
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static getSegments = async(req, res) => {
+  static getSegments = async (req, res) => {
     const { count, segments } = await SegmentService.getSegments()
 
     const message = this.getMsgFromCount(count)
@@ -24,14 +24,14 @@ class SegmentController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getSegment = async(req, res) => {
+  static getSegment = async (req, res) => {
     const segment = await SegmentService.getSegment(req.params.segmentId)
     const response = this.apiResponse('Fetched segment.', segment)
 
     res.status(httpCodes.OK).json(response)
   }
 
-  static updateSegment = async(req, res) => {
+  static updateSegment = async (req, res) => {
     const { value, error } = segmentValidator.validateUpdate(req.body)
     if (error) throw new ValidationError(null, error)
 
@@ -44,7 +44,7 @@ class SegmentController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static deleteSegment = async(req, res) => {
+  static deleteSegment = async (req, res) => {
     await SegmentService.deleteSegment(req.params.segmentId)
     const response = this.apiResponse('Segment deleted.')
 

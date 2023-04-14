@@ -22,7 +22,7 @@ class CustomerValidator extends BaseValidator {
   #addressSchema
   #relationshipSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#bvnSchema = Joi.string()
@@ -129,7 +129,7 @@ class CustomerValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateUpdate = async(dto) => {
+  validateUpdate = async (dto) => {
     const schema = Joi.object({
       passport: Joi.string(),
       id_card: Joi.string(),

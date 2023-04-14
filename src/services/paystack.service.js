@@ -10,7 +10,7 @@ class PaystackService {
   #payment_channels
   #verifyTxnUrl
 
-  constructor() {
+  constructor () {
     this.#headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${constants.paystack.key.private}`
@@ -20,7 +20,7 @@ class PaystackService {
     this.#verifyTxnUrl = 'https://api.paystack.co/transaction/verify/:reference'
   }
 
-  #calcFee(amount) {
+  #calcFee (amount) {
     let fee = 0.015 * amount
     if (amount < 2_500) return fee
 
@@ -30,7 +30,7 @@ class PaystackService {
     return fee
   }
 
-  async initTransaction(tenantId, amount) {
+  async initTransaction (tenantId, amount) {
     try {
       if (!tenantId || !amount) {
         throw new Error('Missing arguments.')
@@ -63,7 +63,7 @@ class PaystackService {
     }
   }
 
-  async verifyTransaction(ref) {
+  async verifyTransaction (ref) {
     try {
       const response = await axios.get(
         this.#verifyTxnUrl.replace(':reference', ref.toString()),

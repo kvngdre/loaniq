@@ -2,7 +2,7 @@ import { httpCodes } from '../utils/common.js'
 import BaseError from './BaseError.js'
 
 class ForbiddenError extends BaseError {
-  constructor(description, data) {
+  constructor (description, data) {
     const name = 'Auth Error'
     const httpCode = httpCodes.FORBIDDEN
     const isOperational = true

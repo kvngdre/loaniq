@@ -7,7 +7,7 @@ import ErrorResponse from '../utils/ErrorResponse.js'
 import requestIp from 'request-ip'
 import ValidationError from '../errors/ValidationError.js'
 class AuthController extends BaseController {
-  static login = async(req, res) => {
+  static login = async (req, res) => {
     const token = req.cookies?.jwt
     res.clearCookie('jwt', {
       httpOnly: true,
@@ -37,7 +37,7 @@ class AuthController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static getNewTokens = async(req, res) => {
+  static getNewTokens = async (req, res) => {
     const token = req.cookies?.jwt
     if (!token) {
       return res.status(httpCodes.BAD_REQUEST).json(
@@ -69,7 +69,7 @@ class AuthController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static sendOTP = async(req, res) => {
+  static sendOTP = async (req, res) => {
     const { value, error } = authValidator.validateSendOTP(req.query)
     if (error) throw new ValidationError(null, error)
 
@@ -79,7 +79,7 @@ class AuthController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static logout = async(req, res) => {
+  static logout = async (req, res) => {
     await AuthService.logout(req.cookies?.jwt)
 
     res.clearCookie('jwt', {
@@ -92,7 +92,7 @@ class AuthController extends BaseController {
     res.status(httpCodes.NO_CONTENT).json(response)
   }
 
-  static signOutAllSessions = async(req, res) => {
+  static signOutAllSessions = async (req, res) => {
     await AuthService.signOutAllSessions(req.currentUser._id, req.cookies?.jwt)
     const response = this.apiResponse('Signed out of all devices.')
 

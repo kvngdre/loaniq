@@ -11,7 +11,7 @@ import NotFoundError from '../errors/NotFoundError.js'
 
 const { api } = constants
 
-export default async function expressLoader(app, routes) {
+export default async function expressLoader (app, routes) {
   if (!app || !routes) {
     throw new Error('Application failed to initialize with errors in argument')
   }

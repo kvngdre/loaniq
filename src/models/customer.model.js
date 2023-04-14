@@ -221,22 +221,22 @@ customerSchema.index({ staff_id: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true })
 customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true })
 
-customerSchema.virtual('full_name').get(function() {
+customerSchema.virtual('full_name').get(function () {
   return this.first_name.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
     ` ${this.last_name}`
   )
 })
 
-customerSchema.virtual('age').get(function() {
+customerSchema.virtual('age').get(function () {
   return computeAge(this.birth_date)
 })
 
-customerSchema.virtual('tenure').get(function() {
+customerSchema.virtual('tenure').get(function () {
   return computeTenure(this.hire_date)
 })
 
-customerSchema.post(/^find/, function(doc) {
+customerSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Customers not found.')
   }

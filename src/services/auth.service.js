@@ -14,7 +14,7 @@ import userConfigService from './userConfig.service.js'
 import UserService from './user.service.js'
 
 class AuthService {
-  static async login({ email, password }, token, userAgent, clientIp) {
+  static async login ({ email, password }, token, userAgent, clientIp) {
     const user = await UserService.getUser({ email }, {}).catch(() => {
       throw new UnauthorizedError('Invalid credentials')
     })
@@ -56,7 +56,7 @@ class AuthService {
     return [{ user, accessToken, redirect: null }, refreshToken]
   }
 
-  static async getNewTokens(token) {
+  static async getNewTokens (token) {
     const { issuer, secret } = constants.jwt
 
     const userConfig = await userConfigService
@@ -106,7 +106,7 @@ class AuthService {
     return [accessToken, refreshToken]
   }
 
-  static async sendOTP({ email, len }) {
+  static async sendOTP ({ email, len }) {
     const generatedOTP = generateOTP(10, len)
 
     // TODO: pass the time to live of the otp to the mail.
@@ -123,7 +123,7 @@ class AuthService {
     return user
   }
 
-  static async logout(token) {
+  static async logout (token) {
     try {
       const userConfig = await userConfigService.getConfig({
         'sessions.token': token
@@ -138,7 +138,7 @@ class AuthService {
     }
   }
 
-  static async signOutAllSessions(userId, token) {
+  static async signOutAllSessions (userId, token) {
     const userConfig = await userConfigService.getConfig({ userId })
 
     // ! Prune refresh token array for expired refresh tokens.

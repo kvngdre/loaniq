@@ -10,7 +10,7 @@ import http from 'http'
 const app = express()
 export const server = http.createServer(app)
 
-async function startServer() {
+async function startServer () {
   try {
     const port = constants.port
 

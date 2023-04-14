@@ -7,7 +7,7 @@ class PermissionValidator extends BaseValidator {
   #targetSchema
   #levelSchema
 
-  constructor() {
+  constructor () {
     super()
     this.#nameSchema = Joi.string().lowercase().trim().label('Name').max(100)
     this.#actionSchema = Joi.string().trim().label('Action').max(100)

@@ -5,7 +5,7 @@ import ErrorResponse from '../utils/ErrorResponse.js'
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js'
 
-export default async function verifyJWT(req, res, next) {
+export default async function verifyJWT (req, res, next) {
   try {
     /**
      * We are assuming that the JWT will come in a header with the form

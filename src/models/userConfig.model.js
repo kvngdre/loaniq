@@ -43,7 +43,7 @@ const userConfigSchema = new Schema({
 
 }, schemaOptions)
 
-userConfigSchema.post(/^find/, function(docs) {
+userConfigSchema.post(/^find/, function (docs) {
   if (Array.isArray(docs) && docs.length === 0) {
     throw new NotFoundError('Users configurations not found.')
   }

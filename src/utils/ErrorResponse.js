@@ -1,5 +1,5 @@
 class ErrorResponse {
-  constructor(err) {
+  constructor (err) {
     this.success = false
     this.name = err.name
     this.errors = err?.errors ? { ...err.errors } : { message: err.message }

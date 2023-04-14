@@ -5,7 +5,7 @@ import Permission from '../models/permission.model.js'
 import ValidationError from '../errors/ValidationError.js'
 
 class PermissionDAO extends BaseDAO {
-  static async insert(newRecordDTO) {
+  static async insert (newRecordDTO) {
     try {
       const newRecord = new Permission(newRecordDTO)
       await newRecord.save()
@@ -26,25 +26,25 @@ class PermissionDAO extends BaseDAO {
     }
   }
 
-  static async findAll(filter = {}, projection = {}) {
+  static async findAll (filter = {}, projection = {}) {
     const foundRecords = await Permission.find(filter).select(projection)
 
     return foundRecords
   }
 
-  static async findById(id, projection = {}) {
+  static async findById (id, projection = {}) {
     const foundRecord = await Permission.findById(id).select(projection)
 
     return foundRecord
   }
 
-  static async findOne(filter, projection = {}) {
+  static async findOne (filter, projection = {}) {
     const foundRecord = await Permission.findOne(filter).select(projection)
 
     return foundRecord
   }
 
-  static async update(id, updateRecordDTO, projection = {}) {
+  static async update (id, updateRecordDTO, projection = {}) {
     try {
       const foundRecord = await Permission.findById(id).select(projection)
 
@@ -67,7 +67,7 @@ class PermissionDAO extends BaseDAO {
     }
   }
 
-  static async remove(id) {
+  static async remove (id) {
     const deletedRecord = await Permission.findByIdAndDelete(id)
 
     return deletedRecord

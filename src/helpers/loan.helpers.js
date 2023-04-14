@@ -5,7 +5,7 @@
  * @returns {number} Net value after all deductions.
  */
 export const applyFees = (amount, fees) => {
-  function reducer(acc, fee) {
+  function reducer (acc, fee) {
     const value = fee.type === 'percent' ? fee.value / 100 : fee.value
 
     return acc - value

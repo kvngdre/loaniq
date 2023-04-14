@@ -56,7 +56,7 @@ const segmentSchema = new Schema(
   schemaOptions
 )
 
-segmentSchema.post(/^find/, function(doc) {
+segmentSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
     throw new NotFoundError('Segments not found.')
   }
