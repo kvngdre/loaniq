@@ -17,7 +17,7 @@ const detectAgent = (agent) => {
 
 // In milliseconds
 const tokenExpirationTime = constants.jwt.exp_time.refresh * 1_000
-export default function generateSession (agent, ip, token) {
+export default function generateSession (token, agent, ip) {
   const { os, client } = detectAgent(agent)
 
   return {

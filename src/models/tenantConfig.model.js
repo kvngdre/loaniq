@@ -79,12 +79,14 @@ const tenantConfigSchema = new Schema(
       }
     ],
 
-    socials: [
-      {
-        platform: { type: String, trim: true },
-        url: { type: String, trim: true }
-      }
-    ],
+    socials: {
+      type: [
+        {
+          platform: { type: String, trim: true, requird: true },
+          url: { type: String, trim: true, required: true }
+        }
+      ]
+    },
 
     formId: {
       type: String,

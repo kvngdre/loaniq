@@ -7,18 +7,20 @@ class TenantConfigValidator extends BaseValidator {
   #supportSchema
   #allowUserPwdResetSchema
 
-  constructor () {
+  constructor() {
     super()
 
     this.#socialSchema = Joi.array().items(
       Joi.object({
         platform: Joi.string()
+          .lowercase()
           .label('Platform')
           .trim()
           .valid(...socials)
           // .messages({ 'any.only': '{#label} is not supported' })
           .required(),
         url: Joi.string()
+          .lowercase()
           .label('URL')
           .trim()
           .custom((value, helpers) => {
@@ -47,7 +49,9 @@ class TenantConfigValidator extends BaseValidator {
       phone_number: this._phoneNumberSchema.label('Support phone number')
     }).min(1)
 
-    this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false)
+    this.#allowUserPwdResetSchema = Joi.boolean()
+      .label('Allow user password reset')
+      .default(false)
   }
 
   validateCreate = (dto) => {
@@ -72,13 +76,16 @@ class TenantConfigValidator extends BaseValidator {
       allowUserPwdReset: this.#allowUserPwdResetSchema
     })
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      convert: false
+    })
     error = this._refineError(error)
 
     return { value, error }
   }
 
-  validateUpdate = (dto) => {
+  validateUpdate = (updateTenantConfigDTO) => {
     const schema = Joi.object({
       default_params: Joi.object({
         min_loan_amount: this._amountSchema.label('Minimum loan amount'),
@@ -90,12 +97,15 @@ class TenantConfigValidator extends BaseValidator {
       })
         .min(1)
         .label('Default parameters'),
-      fees: this._feesSchema,
+      fees: this._feesSchema.min(1),
       socials: this.#socialSchema.min(1),
       allowUserPwdReset: this.#allowUserPwdResetSchema
     }).min(1)
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
+    let { value, error } = schema.validate(updateTenantConfigDTO, {
+      abortEarly: false,
+      convert: false
+    })
     error = this._refineError(error)
 
     return { value, error }

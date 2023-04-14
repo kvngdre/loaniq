@@ -17,6 +17,7 @@ export default {
     version: '/v1',
     encryption_key: process.env.ENCRYPTION_KEY
   },
+  companyInfo: { name: 'AIdea' },
   charge: process.env.RATE,
   flw: {
     public_key: process.env.FLW_PUBLIC_KEY,

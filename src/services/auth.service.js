@@ -15,17 +15,15 @@ import UserService from './user.service.js'
 
 class AuthService {
   static async login ({ email, password }, token, userAgent, clientIp) {
-    const user = await UserService.getUser({ email }, {}).catch(() => {
-      throw new UnauthorizedError('Invalid credentials')
-    })
+    const foundUser = await UserService.getUser({ email }, {})
 
-    const isMatch = user.comparePasswords(password)
-    if (!isMatch) throw new UnauthorizedError('Invalid credentials')
+    const isValid = foundUser.validatePassword(password)
+    if (!isValid) throw new UnauthorizedError('Invalid credentials')
 
-    const { isGranted, message, data } = user.permitLogin()
+    const { isGranted, message, data } = foundUser.permitLogin()
     if (!isGranted) throw new ForbiddenError(message, data)
 
-    const userConfig = await userConfigService.getConfig({ userId: user._id })
+    const userConfig = await userConfigService.getConfig({ userId: foundUser._id })
 
     // ! Prune user sessions for expired refresh tokens.
     if (token) {
@@ -38,22 +36,22 @@ class AuthService {
       )
     }
 
-    if (userConfig.sessions.length === 3) {
+    if (userConfig.sessions.length >= 3) {
       throw new ConflictError('Maximum allowed devices reached.')
     }
 
-    const accessToken = generateAccessToken({ id: user._id })
-    const refreshToken = generateRefreshToken({ id: user._id })
-    const newSession = generateSession(userAgent, clientIp, refreshToken)
+    const accessToken = generateAccessToken({ id: foundUser._id })
+    const refreshToken = generateRefreshToken({ id: foundUser._id })
+    const newSession = generateSession(refreshToken, userAgent, clientIp)
 
     await Promise.all([
-      user.updateOne({ last_login_time: new Date() }),
+      foundUser.updateOne({ last_login_time: new Date() }),
       userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] })
     ])
 
-    user.purgeSensitiveData()
+    foundUser.purgeSensitiveData()
 
-    return [{ user, accessToken, redirect: null }, refreshToken]
+    return [{ user: foundUser, accessToken, redirect: null }, refreshToken]
   }
 
   static async getNewTokens (token) {

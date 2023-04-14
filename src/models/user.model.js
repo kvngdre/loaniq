@@ -140,7 +140,7 @@ userSchema.virtual('full_name').get(function () {
   )
 })
 
-userSchema.methods.comparePasswords = function (password) {
+userSchema.methods.validatePassword = function (password) {
   return bcrypt.compareSync(password, this.password)
 }
 
@@ -151,7 +151,7 @@ userSchema.methods.permitLogin = function () {
     data.redirect.verifyNewUser = true
     return {
       isGranted: false,
-      message: 'Your email has not been verified.',
+      message: 'Your account has not been verified.',
       data
     }
   }
@@ -194,10 +194,10 @@ userSchema.pre('save', function (next) {
 
 userSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Users not found.')
+    throw new NotFoundError('User accounts not found.')
   }
 
-  if (!doc) throw new NotFoundError('User not found.')
+  if (!doc) throw new NotFoundError('User account not found.')
 })
 
 const User = model('User', userSchema)

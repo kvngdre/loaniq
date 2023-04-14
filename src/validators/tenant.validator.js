@@ -37,6 +37,7 @@ class TenantValidator extends BaseValidator {
       })
 
     this.#categorySchema = Joi.string()
+      .lowercase()
       .label('Category')
       .valid(...companyCategory)
       .messages({ 'any.only': 'Not a valid category' })
@@ -44,6 +45,7 @@ class TenantValidator extends BaseValidator {
     this.#socialSchema = Joi.array().items(
       Joi.object({
         platform: Joi.string()
+          .lowercase()
           .label('Platform')
           .trim()
           .valid(...socials)
@@ -73,7 +75,7 @@ class TenantValidator extends BaseValidator {
       })
     )
 
-    this.#idTypeSchema = Joi.string()
+    this.#idTypeSchema = Joi.string().lowercase()
       .label('Id type')
       .valid(...validIds.filter((id) => id !== 'staff id card'))
 
@@ -84,7 +86,9 @@ class TenantValidator extends BaseValidator {
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
-    }).min(1).label('Support')
+    })
+      .min(1)
+      .label('Support')
 
     this.#allowUserPwdResetSchema = Joi.boolean()
       .label('Allow user password reset')
@@ -92,14 +96,14 @@ class TenantValidator extends BaseValidator {
   }
 
   validateSignUp = (dto) => {
-    const newTenantId = new Types.ObjectId()
     const newUserId = new Types.ObjectId()
+    const newTenantId = new Types.ObjectId()
     const adminRoleId = new Types.ObjectId()
+
     const schema = Joi.object({
       tenant: Joi.object({
         _id: Joi.any().default(newTenantId).forbidden(),
-        company_name: this.#companyNameSchema.required(),
-        category: this.#categorySchema.required()
+        company_name: this.#companyNameSchema.required()
       }).required(),
       user: Joi.object({
         _id: Joi.any().default(newUserId).forbidden(),
@@ -108,7 +112,7 @@ class TenantValidator extends BaseValidator {
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
-        password: Joi.string().default(randomString()).forbidden(),
+        password: Joi.string().default(randomString(8)).forbidden(),
         role: Joi.any().default(adminRoleId).forbidden()
       }).required()
     })
@@ -140,7 +144,7 @@ class TenantValidator extends BaseValidator {
 
   validateActivate = (dto) => {
     const schema = Joi.object({
-      // category: this.#categorySchema.required(),
+      category: this.#categorySchema.required(),
       cac_number: this.#cacNumberSchema.required(),
       email: this._emailSchema.required(),
       phone_number: this._phoneNumberSchema,

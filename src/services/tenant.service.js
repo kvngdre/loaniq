@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-import { events, pubsub } from '../pubsub/index.js'
 import { fileURLToPath } from 'url'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError.js'
@@ -9,49 +8,49 @@ import logger from '../utils/logger.js'
 import mailer from '../utils/mailer.js'
 import path from 'path'
 import randomString from '../utils/randomString.js'
-import RoleService from './role.service.js'
+import RoleDAO from '../daos/role.dao.js'
 import TenantConfigDAO from '../daos/tenantConfig.dao.js'
-import tenantConfigService from './tenantConfig.service.js'
 import TenantDAO from '../daos/tenant.dao.js'
+import transaction from 'mongoose-trx'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
 import UserConfigDAO from '../daos/userConfig.dao.js'
 import UserDAO from '../daos/user.dao.js'
-import UserService from './user.service.js'
 import validateOTP from '../utils/validateOTP.js'
 import WalletDAO from '../daos/wallet.dao.js'
-import transaction from 'mongoose-trx'
 
 class TenantService {
   static async createTenant ({ tenant, user }) {
+    /**
+     * TODO: Check if mongoose has fixed the issue with session.withTransaction
+     * TODO: method not returning the data.
+     */
     const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
         TenantDAO.insert(tenant, session),
         UserDAO.insert(user, session),
         TenantConfigDAO.insert({ tenantId: tenant._id }, session),
         UserConfigDAO.insert(
-          { userId: user._id, tenantId: tenant._id },
+          { tenantId: tenant._id, userId: user._id },
           session
         ),
-        mailer({
-          to: user.email,
-          subject: 'One more step',
-          name: user.first_name,
-          template: 'new-user',
-          payload: { password: user.password }
+        RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
+          doc._id = user.role
+          doc.tenantId = user.tenantId
+          doc.isDefault = false
+          doc.isNew = true
+
+          doc.save({ session })
         })
-        // RoleService.getRole({ name: 'admin', isDefault: true })
       ])
 
-      // Create admin role for new user.
-      // await RoleService.createRole({
-      //   ...defaultAdminRole._doc,
-      //   _id: newUser.role,
-      //   tenantId: newUser.tenantId,
-      //   isDefault: false
-      // })
+      await mailer({
+        to: user.email,
+        subject: 'One more step',
+        name: user.first_name,
+        template: 'new-user',
+        payload: { password: user.password }
+      })
 
-      // Committing changes.
-      // await session.commitTransaction()
       newUser.purgeSensitiveData()
 
       return {
@@ -118,7 +117,7 @@ class TenantService {
   static async deactivateTenant ({ _id, tenantId }, { otp }) {
     const [foundTenant, user] = await Promise.all([
       TenantDAO.findById(tenantId),
-      UserService.getUserById(_id)
+      UserDAO.findById(_id)
     ])
 
     const { isValid, message } = validateOTP(...user.otp, otp)
@@ -133,7 +132,7 @@ class TenantService {
 
     // ? send a deactivate email to Apex
     foundTenant.set({ active: false })
-    await UserService.updateBulk({ tenantId }, { active: false })
+    await UserDAO.updateMany({ tenantId }, { active: false })
     await foundTenant.save()
 
     return foundTenant
@@ -142,7 +141,7 @@ class TenantService {
   static async reactivateTenant (tenantId) {
     const [tenant] = await Promise.all([
       TenantDAO.update(tenantId, { active: true }),
-      UserService.updateBulk({ tenantId }, { active: true })
+      UserDAO.updateMany({ tenantId }, { active: true })
     ])
 
     return tenant
@@ -151,9 +150,7 @@ class TenantService {
   static async generateFormId (tenantId) {
     try {
       const formId = randomString(5)
-      const updatedConfig = await tenantConfigService.updateConfig(tenantId, {
-        formId
-      })
+      const updatedConfig = await TenantConfigDAO.update(tenantId, { formId })
 
       return updatedConfig
     } catch (error) {
@@ -162,10 +159,9 @@ class TenantService {
   }
 
   static async getFormData (formId) {
-    const { form_theme, socials, tenantId } =
-      await tenantConfigService.getConfig({
-        formId
-      })
+    const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
+      formId
+    })
 
     return {
       logo: tenantId.logo,

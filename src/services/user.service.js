@@ -1,14 +1,15 @@
 /* eslint-disable camelcase */
-import { constants } from '../config/index.js'
-import { events, pubsub } from '../pubsub/index.js'
-import { fileURLToPath } from 'url'
 import {
   generateAccessToken,
   generateRefreshToken
 } from '../utils/generateJWT.js'
+import { constants } from '../config/index.js'
+import { events, pubsub } from '../pubsub/index.js'
+import { fileURLToPath } from 'url'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError.js'
 import driverUploader from '../utils/driveUploader.js'
+import encryptPassword from '../utils/encryptPassword.js'
 import fs from 'fs'
 import generateSession from '../utils/generateSession.js'
 import logger from '../utils/logger.js'
@@ -67,13 +68,13 @@ class UserService {
 
     const foundUser = await UserDAO.findOne({ email })
     if (foundUser.isEmailVerified) {
-      throw new ConflictError('User already verified, please sign in.')
+      throw new ConflictError('Account already verified, please sign in.')
     }
 
-    const isMatch = foundUser.comparePasswords(current_password)
-    if (!isMatch) throw new UnauthorizedError('Password is incorrect.')
+    const isValid = foundUser.validatePassword(current_password)
+    if (!isValid) throw new UnauthorizedError('Password is incorrect.')
 
-    // * Measuring similarity of new password to the current password.
+    // * Measuring similarity of new password to the current temporary password.
     const similarityPercent = similarity(new_password, current_password) * 100
     if (similarityPercent >= constants.max_similarity) {
       throw new ValidationError('Password is too similar to old password.')
@@ -83,27 +84,25 @@ class UserService {
       userId: foundUser._id
     })
 
-    // Send welcome mail...
-    // mailer({
-    //   to: foundUser.email,
-    //   subject: 'Welcome to Apex!',
-    //   name: foundUser.first_name,
-    //   template: 'new-tenant'
-    // })
-
     const accessToken = generateAccessToken({ id: foundUser._id })
     const refreshToken = generateRefreshToken({ id: foundUser._id })
-    const newSession = generateSession(userAgent, clientIp, refreshToken)
+    const newSession = generateSession(refreshToken, userAgent, clientIp)
 
     await Promise.all([
       foundUser.updateOne({
         last_login_time: new Date(),
         isEmailVerified: true,
-        password: new_password,
+        password: encryptPassword(new_password),
         active: true,
         resetPwd: false
       }),
-      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] })
+      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] }),
+      mailer({
+        to: foundUser.email,
+        subject: 'Welcome to AIdea!',
+        name: foundUser.first_name,
+        template: 'new-tenant'
+      })
     ])
 
     foundUser.purgeSensitiveData()

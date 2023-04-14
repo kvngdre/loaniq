@@ -13,15 +13,13 @@ const tenantSchema = new Schema(
 
     company_name: {
       type: String,
-      lowercase: true,
       unique: true,
-      trim: true,
       required: true
     },
 
     address: {
       type: String,
-      trim: true
+      default: null
     },
 
     state: {
@@ -32,7 +30,8 @@ const tenantSchema = new Schema(
     cac_number: {
       type: String,
       unique: true,
-      sparse: true
+      sparse: true,
+      default: null
     },
 
     category: {
@@ -40,18 +39,11 @@ const tenantSchema = new Schema(
       enum: companyCategory
     },
 
-    phone_number: {
+    email: {
       type: String,
       unique: true,
       sparse: true,
-      trim: true
-    },
-
-    email: {
-      type: String,
-      trim: true,
-      unique: true,
-      sparse: true
+      default: null
     },
 
     isEmailVerified: {
@@ -70,20 +62,24 @@ const tenantSchema = new Schema(
     },
 
     owner_id_type: {
-      type: String
+      type: String,
+      default: null
       // enum: validIds
     },
 
     owner_id_number: {
-      type: String
+      type: String,
+      default: null
     },
 
     licenses: {
-      type: [{
-        name: String,
-        url: String,
-        expires: Date
-      }]
+      type: [
+        {
+          name: { type: String, required: true },
+          url: { type: String, required: true },
+          expires: { type: Date, default: null }
+        }
+      ]
     },
 
     support: {
