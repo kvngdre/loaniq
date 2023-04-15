@@ -26,7 +26,7 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async find (filter = {}, projection = {}) {
     const foundRecords = await User.find(filter).select(projection)
 
     return foundRecords

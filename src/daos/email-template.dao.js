@@ -1,13 +1,13 @@
 import { Error } from 'mongoose'
 import BaseDAO from './base.dao.js'
 import ConflictError from '../errors/ConflictError.js'
-import Origin from '../models/origin.model.js'
+import EmailTemplate from '../models/email-template.model.js'
 import ValidationError from '../errors/ValidationError.js'
 
-class OriginDAO extends BaseDAO {
+class EmailTemplateDAO extends BaseDAO {
   static async insert (dto, trx) {
     try {
-      const newRecord = new Origin(dto)
+      const newRecord = new EmailTemplate(dto)
       await newRecord.save({ session: trx })
 
       return newRecord
@@ -27,26 +27,26 @@ class OriginDAO extends BaseDAO {
   }
 
   static async find (filter = {}, projection = {}) {
-    const foundRecords = await Origin.find(filter).select(projection)
+    const foundRecords = await EmailTemplate.find(filter).select(projection)
 
     return foundRecords
   }
 
   static async findById (id, projection = {}) {
-    const foundRecord = await Origin.findById(id).select(projection)
+    const foundRecord = await EmailTemplate.findById(id).select(projection)
 
     return foundRecord
   }
 
   static async findOne (filter, projection = {}) {
-    const foundRecord = await Origin.findOne(filter).select(projection)
+    const foundRecord = await EmailTemplate.findOne(filter).select(projection)
 
     return foundRecord
   }
 
   static async update (id, dto, projection = {}) {
     try {
-      const foundRecord = await Origin.findById(id).select(projection)
+      const foundRecord = await EmailTemplate.findById(id).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()
@@ -68,9 +68,10 @@ class OriginDAO extends BaseDAO {
   }
 
   static async remove (id) {
-    const deletedRecord = await Origin.findByIdAndDelete(id)
+    const deletedRecord = await EmailTemplate.findByIdAndDelete(id)
+
     return deletedRecord
   }
 }
 
-export default OriginDAO
+export default EmailTemplateDAO

@@ -13,7 +13,7 @@ class RoleService {
   }
 
   static async getRoles () {
-    const foundRoles = await RoleDAO.findAll()
+    const foundRoles = await RoleDAO.find()
     const count = Intl.NumberFormat('en-US').format(foundRoles.length)
 
     return { count, foundRoles }

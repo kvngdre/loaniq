@@ -13,7 +13,7 @@ class TransactionService {
   }
 
   async getTxns (tenantId) {
-    const foundTransactions = await TransactionDAO.findAll({ tenantId })
+    const foundTransactions = await TransactionDAO.find({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundTransactions.length)
 
     return [count, foundTransactions]

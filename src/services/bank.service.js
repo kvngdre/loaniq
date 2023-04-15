@@ -8,7 +8,7 @@ class BankService {
   }
 
   static async getBanks (filter) {
-    const foundBanks = await BankDAO.findAll(filter)
+    const foundBanks = await BankDAO.find(filter)
     const count = Intl.NumberFormat('en-US').format(foundBanks.length)
 
     return [count, foundBanks]

@@ -8,7 +8,7 @@ class PermissionService {
   }
 
   static async getPermissions () {
-    const foundPermissions = await PermissionDAO.findAll()
+    const foundPermissions = await PermissionDAO.find()
     const count = Intl.NumberFormat('en-US').format(foundPermissions.length)
 
     return { count, foundPermissions }

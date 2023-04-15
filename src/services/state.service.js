@@ -8,7 +8,7 @@ class StateService {
   }
 
   static async getStates (filters) {
-    const foundStates = await StateDAO.findAll(filters)
+    const foundStates = await StateDAO.find(filters)
     const count = Intl.NumberFormat('en-US').format(foundStates.length)
 
     return [count, foundStates]

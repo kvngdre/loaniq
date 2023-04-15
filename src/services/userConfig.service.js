@@ -14,7 +14,7 @@ class UserConfigService {
   }
 
   async getConfigs (filter) {
-    const foundConfigs = await UserConfigDAO.findAll(filter)
+    const foundConfigs = await UserConfigDAO.find(filter)
     const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
     return [count, foundConfigs]

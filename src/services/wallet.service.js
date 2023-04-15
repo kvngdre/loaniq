@@ -16,7 +16,7 @@ class WalletService {
   }
 
   async getWallets (filter) {
-    const foundWallets = await WalletDAO.findAll(filter)
+    const foundWallets = await WalletDAO.find(filter)
     const count = Intl.NumberFormat('en-US').format(foundWallets.length)
 
     return [count, foundWallets]

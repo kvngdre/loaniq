@@ -12,7 +12,7 @@ class TenantConfigService {
   }
 
   async getConfigs (filter, projection) {
-    const foundConfigs = await TenantConfigDAO.findAll(filter, projection)
+    const foundConfigs = await TenantConfigDAO.find(filter, projection)
     const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
     return [count, foundConfigs]

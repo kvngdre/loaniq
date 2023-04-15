@@ -15,7 +15,6 @@ import transaction from 'mongoose-trx'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
 import UserConfigDAO from '../daos/userConfig.dao.js'
 import UserDAO from '../daos/user.dao.js'
-import validateOTP from '../utils/validateOTP.js'
 import WalletDAO from '../daos/wallet.dao.js'
 import { status } from '../utils/common.js'
 import generateOTP from '../utils/generateOTP.js'
@@ -71,7 +70,7 @@ class TenantService {
   }
 
   static async getTenants (filters) {
-    const foundTenants = await TenantDAO.findAll(filters)
+    const foundTenants = await TenantDAO.find(filters)
     const count = Intl.NumberFormat('en-US').format(foundTenants.length)
 
     return [count, foundTenants]

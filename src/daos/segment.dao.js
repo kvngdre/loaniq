@@ -26,7 +26,7 @@ class SegmentDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter, projection = {}) {
+  static async find (filter, projection = {}) {
     const foundRecords = await Segment.find(filter).select(projection)
 
     return foundRecords

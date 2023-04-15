@@ -26,7 +26,7 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}) {
+  static async find (filter = {}) {
     const foundRecords = await Wallet.find(filter)
 
     return foundRecords

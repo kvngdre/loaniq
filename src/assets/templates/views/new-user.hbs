@@ -16,11 +16,12 @@
       style='padding: 30px 0px; background-color: rgb(4, 8, 20); max-width: 70%; margin-left: auto; margin-right: auto; border-radius: 5px; color: rgb(170, 171, 182);'
     >
       <div>
-        <p>Hi {{name}} 👋🏾,</p>
+        <p>Hi {{it.name}} 👋🏾,</p>
       </div>
       <div>
-        {{!-- <p>Welcome to Apex 🎉.</p> --}}
-        <p>Please use the one-time-password to sign in and complete your registration.</p>
+        {{! <p>Welcome to Apex 🎉.</p> }}
+        <p>Please use the one-time-password to sign in and complete your
+          registration.</p>
       </div>
       <div style='margin: 10px;'>
         <p>Your one-time use password:</p>
@@ -28,7 +29,7 @@
       <div style='color: #958144; margin: 20px;'>
         <span
           style='letter-spacing: 6px; font-size: 1.6rem; font-weight: 400;'
-        >{{pwd}}</span>
+        >{{it.password}}</span>
       </div>
       <div>
         <p>Do not share this password with anyone.</p>
@@ -39,4 +40,11 @@
       </div>
     </div>
   </body>
+  <footer style='font-size: .75rem; text-align: center;'>
+    <a href='' style='margin: 20px 0 20px 0; color: #030d1b; text-decoration: none;'
+    >help.aidealabs.io</a>
+    <p><a href='' style='color: #030d1d;'>Terms of Service</a>
+      |
+      <a href='' style='color: #030e1f;'>Privacy Policy</a></p>
+  </footer>
 </html>

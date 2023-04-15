@@ -23,7 +23,7 @@ class SegConfigService {
   }
 
   static async getConfigs (tenantId) {
-    const foundSegConfigs = await SegConfigDAO.findAll({ tenantId })
+    const foundSegConfigs = await SegConfigDAO.find({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundSegConfigs.length)
 
     return { count, segConfigs: foundSegConfigs }

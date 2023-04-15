@@ -26,7 +26,7 @@ class LoanDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async find (filter = {}, projection = {}) {
     const foundRecords = await Loan.find(filter).select(projection)
 
     return foundRecords

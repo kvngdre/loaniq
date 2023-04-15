@@ -21,24 +21,34 @@ import UnauthorizedError from '../errors/UnauthorizedError.js'
 import userConfigService from './userConfig.service.js'
 import UserDAO from '../daos/user.dao.js'
 import ValidationError from '../errors/ValidationError.js'
+import EmailService from './email.service.js'
+import DependencyError from '../errors/DependencyError.js'
 class UserService {
   async createUser (newUserDTO) {
     // * Initializing transaction session.
     const trx = await startSession()
     try {
       trx.startTransaction()
-      newUserDTO.password = randomString()
 
-      const [newUser] = await Promise.all([
-        UserDAO.insert(newUserDTO, trx),
-        mailer({
-          to: newUserDTO.email,
-          subject: 'One more step',
-          name: newUserDTO.first_name,
-          template: 'new-user',
-          payload: { password: newUserDTO.password }
-        })
-      ])
+      newUserDTO.password = randomString()
+      const [newUser] = await UserDAO.insert(newUserDTO, trx)
+
+      const info = await EmailService.send({
+        to: newUserDTO.email,
+        templateName: 'new user',
+        context: { name: newUserDTO.first_name, password: newUserDTO.password }
+      })
+      if (info.error) {
+        throw new DependencyError('Failed to send password to user email.')
+      }
+
+      mailer({
+        to: newUserDTO.email,
+        subject: 'One more step',
+        name: newUserDTO.first_name,
+        template: 'new-user',
+        payload: { password: newUserDTO.password }
+      })
 
       // Emitting  new user event.
       await pubsub.publish(
@@ -133,7 +143,7 @@ class UserService {
       otp: 0
     }
   ) {
-    const foundUsers = await UserDAO.findAll({ tenantId }, projection)
+    const foundUsers = await UserDAO.find({ tenantId }, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, users: foundUsers }

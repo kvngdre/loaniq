@@ -26,7 +26,7 @@ class StateDAO extends BaseDAO {
     }
   }
 
-  static async findAll (filter = {}, projection = {}) {
+  static async find (filter = {}, projection = {}) {
     const foundRecords = await State.find(filter).select(projection)
 
     return foundRecords

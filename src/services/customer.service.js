@@ -8,7 +8,7 @@ class CustomerService {
   }
 
   static async getCustomers (tenantId) {
-    const foundCustomers = await CustomerDAO.findAll({ tenantId })
+    const foundCustomers = await CustomerDAO.find({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundCustomers.length)
 
     return [count, foundCustomers]

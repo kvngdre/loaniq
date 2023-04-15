@@ -8,7 +8,7 @@ class LoanService {
   }
 
   static async getLoans (tenantId) {
-    const foundLoans = await LoanDAO.findAll({ tenantId })
+    const foundLoans = await LoanDAO.find({ tenantId })
     const count = Intl.NumberFormat('en-US').format(foundLoans.length)
 
     return [count, foundLoans]

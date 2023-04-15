@@ -10,7 +10,7 @@ class ReviewService {
   static async getReviews (currentUser) {
     const filter = { tenantId: currentUser.tenantId }
 
-    const foundReviews = await ReviewDAO.findAll(filter)
+    const foundReviews = await ReviewDAO.find(filter)
     const count = Intl.NumberFormat('en-US').format(foundReviews.length)
 
     return [count, foundReviews]

@@ -8,7 +8,7 @@ class OriginService {
   }
 
   async getMany (filter, projection) {
-    const foundLoanees = await OriginDAO.findAll(filter, projection)
+    const foundLoanees = await OriginDAO.find(filter, projection)
     const count = Intl.NumberFormat('en-US').format(foundLoanees.length)
 
     return { count, foundLoanees }
