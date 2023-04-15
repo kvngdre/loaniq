@@ -1,8 +1,8 @@
-import EmailTemplateDAO from '../daos/email-template.dao'
-import getMailTransport from '../utils/getMailTransport'
+import { constants } from '../config/index.js'
+import EmailTemplateDAO from '../daos/email-template.dao.js'
+import getMailTransport from '../utils/getMailTransport.js'
+import logger from '../utils/logger.js'
 import Sqrl from 'squirrelly'
-import { constants } from '../config'
-import logger from '../utils/logger'
 
 class EmailService {
   static async sendTest () {}

@@ -3,6 +3,7 @@ import authRouter from './auth.routes.js'
 import bankRouter from './bank.routes.js'
 import customerRouter from './customer.routes.js'
 import dashboardRouter from './dashboard.routes.js'
+import emailTemplateRouter from './email-template.routes.js'
 import loanRouter from './loan.routes.js'
 import originRouter from './origin.routes.js'
 import permissionRouter from './permissions.routes.js'
@@ -24,6 +25,7 @@ export default () => {
   router.use('/banks', bankRouter)
   router.use('/customers', customerRouter)
   router.use('/dashboard', dashboardRouter)
+  router.use('/email-templates', emailTemplateRouter)
   router.use('/loans', loanRouter)
   router.use('/origins', originRouter)
   router.use('/permissions', permissionRouter)

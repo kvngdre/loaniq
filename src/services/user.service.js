@@ -8,8 +8,9 @@ import { events, pubsub } from '../pubsub/index.js'
 import { fileURLToPath } from 'url'
 import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError.js'
+import DependencyError from '../errors/DependencyError.js'
 import driverUploader from '../utils/driveUploader.js'
-import encryptPassword from '../utils/encryptPassword.js'
+import EmailService from './email.service.js'
 import fs from 'fs'
 import generateSession from '../utils/generateSession.js'
 import logger from '../utils/logger.js'
@@ -18,45 +19,34 @@ import path from 'path'
 import randomString from '../utils/randomString.js'
 import similarity from '../utils/stringSimilarity.js'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
-import userConfigService from './userConfig.service.js'
+import UserConfigService from './userConfig.service.js'
 import UserDAO from '../daos/user.dao.js'
 import ValidationError from '../errors/ValidationError.js'
-import EmailService from './email.service.js'
-import DependencyError from '../errors/DependencyError.js'
 class UserService {
   async createUser (newUserDTO) {
-    // * Initializing transaction session.
     const trx = await startSession()
     try {
+      // Starting transaction
       trx.startTransaction()
 
       newUserDTO.password = randomString()
-      const [newUser] = await UserDAO.insert(newUserDTO, trx)
+      const [newUser] = await Promise.all([
+        UserDAO.insert(newUserDTO, trx),
+        UserConfigService.createConfig({
+          userId: newUserDTO._id,
+          tenantId: newUserDTO.tenantId
+        })
+      ])
 
+      // Send temporary password to new user email.
       const info = await EmailService.send({
         to: newUserDTO.email,
-        templateName: 'new user',
+        templateName: 'new_user',
         context: { name: newUserDTO.first_name, password: newUserDTO.password }
       })
       if (info.error) {
         throw new DependencyError('Failed to send password to user email.')
       }
-
-      mailer({
-        to: newUserDTO.email,
-        subject: 'One more step',
-        name: newUserDTO.first_name,
-        template: 'new-user',
-        payload: { password: newUserDTO.password }
-      })
-
-      // Emitting  new user event.
-      await pubsub.publish(
-        events.user.new,
-        null,
-        { userId: newUser._id, ...newUser._doc },
-        trx
-      )
 
       // Email sent successfully, committing changes.
       await trx.commitTransaction()
@@ -110,7 +100,7 @@ class UserService {
       resetPwd: false
     })
 
-    const userConfig = await userConfigService.getConfig({
+    const userConfig = await UserConfigService.getConfig({
       userId: foundUser._id
     })
 
@@ -205,9 +195,10 @@ class UserService {
   }
 
   async deleteUser (userId) {
-    const deletedUser = await UserDAO.remove(userId)
-
-    await pubsub.publish(events.user.delete, deletedUser._id)
+    const [deletedUser] = await Promise.all([
+      UserDAO.remove(userId),
+      UserConfigService.deleteConfig(userId)
+    ])
 
     return deletedUser
   }
@@ -224,6 +215,26 @@ class UserService {
 
     if (percentageSimilarity >= constants.max_similarity) {
       throw new ValidationError('Password is too similar to old password.')
+    }
+
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      month: 'long',
+      year: 'numeric',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+
+    // Send temporary password to new user email.
+    const info = await EmailService.send({
+      to: foundUser.email,
+      templateName: 'user_password_change',
+      context: { name: foundUser.first_name, datetime: formatter.format(new Date()) }
+    })
+    if (info.error) {
+      throw new DependencyError('Failed to send password to user email.')
     }
 
     // ! Notify user of password change

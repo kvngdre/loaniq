@@ -3,6 +3,7 @@ import { roles } from '../config/index.js'
 import BaseValidator from './base.validator.js'
 import ForbiddenError from '../errors/ForbiddenError.js'
 import Joi from 'joi'
+import { Types } from 'mongoose'
 
 class UserValidator extends BaseValidator {
   #jobTitle
@@ -31,7 +32,10 @@ class UserValidator extends BaseValidator {
   }
 
   validateCreateUser = (dto, tenantId) => {
+    const newUserId = new Types.ObjectId()
+
     const schema = Joi.object({
+      _id: Joi.any().default(newUserId).forbidden(),
       tenantId: this._objectIdSchema.label('Tenant id').default(tenantId),
       first_name: this._nameSchema.extract('first').required(),
       last_name: this._nameSchema.extract('last').required(),

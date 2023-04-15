@@ -24,9 +24,10 @@ class PubSub {
 
     // Emit or publish the event to anyone who is subscribed.
     if (this.#events[eventName]) {
-      const handlerFns = this.#events[eventName]
+      const handlers = this.#events[eventName]
+      if (!!handlers === false) return
 
-      for (const fn of handlerFns) {
+      for (const fn of handlers) {
         if (id == null) await fn(data, trx)
         else await fn(id, data, trx)
       }
