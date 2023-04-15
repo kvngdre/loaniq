@@ -7,7 +7,7 @@ class TenantConfigValidator extends BaseValidator {
   #supportSchema
   #allowUserPwdResetSchema
 
-  constructor() {
+  constructor () {
     super()
 
     this.#socialSchema = Joi.array().items(

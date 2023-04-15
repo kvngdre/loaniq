@@ -144,13 +144,30 @@ userSchema.methods.validatePassword = function (password) {
   return bcrypt.compareSync(password, this.password)
 }
 
+/**
+ * Validates the OTP sent to user email.
+ * @param {string} otp
+ * @returns {{ isValid: boolean, reason: (string|undefined) }}
+ */
+userSchema.methods.validateOTP = function (otp) {
+  if (Date.now() > this.otp.expiresIn) {
+    return { isValid: false, reason: 'OTP expired' }
+  }
+
+  if (otp !== this.otp.pin) {
+    return { isValid: false, reason: 'Invalid OTP' }
+  }
+
+  return { isValid: true }
+}
+
 userSchema.methods.permitLogin = function () {
   const data = { id: this._id, redirect: {} }
 
   if (!this.isEmailVerified && !this.active) {
     data.redirect.verifyNewUser = true
     return {
-      isGranted: false,
+      isPermitted: false,
       message: 'Your account has not been verified.',
       data
     }
@@ -159,7 +176,7 @@ userSchema.methods.permitLogin = function () {
   if (this.resetPwd) {
     data.redirect.reset_password = true
     return {
-      isGranted: false,
+      isPermitted: false,
       message: 'Your password reset has been triggered.',
       data
     }
@@ -168,7 +185,7 @@ userSchema.methods.permitLogin = function () {
   if (!this.active) {
     data.redirect.inactive = true
     return {
-      isGranted: false,
+      isPermitted: false,
       message: 'Account deactivated. Contact your administrator.',
       data
     }

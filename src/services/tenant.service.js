@@ -17,13 +17,16 @@ import UserConfigDAO from '../daos/userConfig.dao.js'
 import UserDAO from '../daos/user.dao.js'
 import validateOTP from '../utils/validateOTP.js'
 import WalletDAO from '../daos/wallet.dao.js'
+import { status } from '../utils/common.js'
+import generateOTP from '../utils/generateOTP.js'
 
 class TenantService {
   static async createTenant ({ tenant, user }) {
     /**
      * TODO: Check if mongoose has fixed the issue with session.withTransaction
      * TODO: method not returning the data.
-     */
+    */
+    user.otp = generateOTP(8)
     const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
         TenantDAO.insert(tenant, session),
@@ -45,10 +48,10 @@ class TenantService {
 
       await mailer({
         to: user.email,
-        subject: 'One more step',
+        subject: 'Signup verification',
         name: user.first_name,
         template: 'new-user',
-        payload: { password: user.password }
+        payload: { otp: user.otp.pin }
       })
 
       newUser.purgeSensitiveData()
@@ -59,6 +62,12 @@ class TenantService {
       }
     })
     return result
+  }
+
+  static async onBoardTenant (tenantId, onBoardTenantDTO) {
+    const foundTenant = await TenantDAO.update(tenantId, onBoardTenantDTO)
+
+    return foundTenant
   }
 
   static async getTenants (filters) {
@@ -98,6 +107,7 @@ class TenantService {
 
       foundTenant.set({
         isEmailVerified: true,
+        status: status.active,
         activated: true,
         ...activateTenantDTO
       })
@@ -115,23 +125,23 @@ class TenantService {
   }
 
   static async deactivateTenant ({ _id, tenantId }, { otp }) {
-    const [foundTenant, user] = await Promise.all([
+    const [foundTenant, foundUser] = await Promise.all([
       TenantDAO.findById(tenantId),
       UserDAO.findById(_id)
     ])
 
-    const { isValid, message } = validateOTP(...user.otp, otp)
-    if (!isValid) throw new UnauthorizedError(message)
+    const { isValid, reason } = foundUser.validateOTP(otp)
+    if (!isValid) throw new UnauthorizedError(reason)
 
     await mailer({
-      to: user.email,
+      to: foundUser.email,
       subject: 'Tenant Deactivated',
       template: 'deactivate-tenant',
-      name: user.first_name
+      name: foundUser.first_name
     })
 
     // ? send a deactivate email to Apex
-    foundTenant.set({ active: false })
+    foundTenant.set({ status: status.deactivated })
     await UserDAO.updateMany({ tenantId }, { active: false })
     await foundTenant.save()
 

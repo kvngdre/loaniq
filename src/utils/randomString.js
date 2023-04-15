@@ -4,14 +4,13 @@
  * @returns {string}
  */
 export default function randomString (len = 6) {
-  let randomString = ''
-  const charSet =
-    'ABCDEFGHJKMNOPQRSTUVWXYZ0123456789abcdefghjkmnopqrstuvwxyz9876543210'
+  let str = ''
+  const charSet = 'ABCDEFGHJKM0123456789NOPQRSTUVWXYZ'
 
   for (let i = 1; i <= len; i++) {
-    const char = Math.floor(Math.random() * charSet.length)
-
-    randomString += charSet.charAt(char)
+    const randomNum = Math.floor(Math.random() * charSet.length)
+    str += charSet.charAt(randomNum)
   }
-  return randomString
+
+  return str
 }

@@ -87,6 +87,7 @@ class BaseValidator {
   })
 
   _genderSchema = Joi.string()
+    .lowercase()
     .label('Gender')
     .valid('male', 'female')
     .messages({
@@ -128,7 +129,7 @@ class BaseValidator {
     .minOfSpecialCharacters(1)
     .minOfNumeric(1)
     .noWhiteSpaces()
-    .min(6)
+    .min(8)
     .max(1024)
     .messages({
       'password.minOfUppercase':
@@ -154,7 +155,12 @@ class BaseValidator {
     })
 
   _locationSchema = Joi.object({
-    address: Joi.string().lowercase().max(100).trim().label('Address').invalid(''),
+    address: Joi.string()
+      .lowercase()
+      .max(100)
+      .trim()
+      .label('Address')
+      .invalid(''),
     state: this._objectIdSchema.label('State')
   })
 
@@ -180,7 +186,12 @@ class BaseValidator {
     .label('Fees')
     .items(
       Joi.object({
-        name: Joi.string().lowercase().max(50).label('Fee name').trim().required(),
+        name: Joi.string()
+          .lowercase()
+          .max(50)
+          .label('Fee name')
+          .trim()
+          .required(),
         type: Joi.number()
           .label('Fee type')
           .valid(...Object.values(feeTypes))

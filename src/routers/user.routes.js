@@ -1,8 +1,4 @@
-import { roles } from '../config/index.js'
 import { Router } from 'express'
-import finder from '../middleware/finder.js'
-import grantAccess from '../middleware/grantAccess.js'
-import isOwner from '../middleware/isOwner.js'
 import upload from '../middleware/fileUploader.js'
 import userConfigRouter from './userConfig.routes.js'
 import UserController from '../controllers/user.controller.js'
@@ -11,34 +7,32 @@ import verifyJWT from '../middleware/verifyJWT.js'
 
 const router = Router()
 
-const { SUPER_ADMIN, ADMIN, EDITOR } = roles
+router.use('/configurations', userConfigRouter)
 
-router.use('/configurations', [verifyJWT], userConfigRouter)
-
-router.post('/', [verifyJWT, grantAccess(SUPER_ADMIN, ADMIN)], UserController.createUser)
+router.post('/', verifyJWT, UserController.createUser)
 
 router.post('/forgot-password', UserController.forgotPassword)
 
-router.post('/uploads', [upload.single('avatar')], UserController.uploadFiles)
+router.post('/uploads', verifyJWT, upload.single('avatar'), UserController.uploadFiles)
 
-router.post('/verify-signUp', UserController.verifySignUp)
+router.post('/verify-signup', UserController.verifySignUp)
 
-router.post('/:userId/update-password', [verifyJWT], UserController.updatePassword)
+router.post('/:userId/change-password', verifyJWT, UserController.changePassword)
 
-router.post('/:userId/deactivate', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deactivateUser)
+router.post('/:userId/deactivate', verifyJWT, validateObjectId, UserController.deactivateUser)
 
-router.get('/', [verifyJWT, grantAccess('all')], UserController.getUsers)
+router.get('/', verifyJWT, UserController.getUsers)
 
-router.get('/me', [finder, verifyJWT], UserController.getCurrentUser)
+router.get('/me', verifyJWT, UserController.getCurrentUser)
 
-router.get('/:userId', [verifyJWT, validateObjectId, grantAccess('all')], UserController.getUser)
+router.get('/:userId', verifyJWT, validateObjectId, UserController.getUser)
 
-router.get('/:userId/reactivate', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.reactivateUser)
+router.get('/:userId/reactivate', verifyJWT, validateObjectId, UserController.reactivateUser)
 
-router.get('/:userId/reset-password', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.resetPassword)
+router.get('/:userId/reset-password', verifyJWT, validateObjectId, UserController.resetPassword)
 
-router.patch('/:userId', [verifyJWT, validateObjectId, grantAccess('all'), isOwner(EDITOR)], UserController.updateUser)
+router.patch('/:userId', verifyJWT, validateObjectId, UserController.updateUser)
 
-router.delete('/:userId', [verifyJWT, validateObjectId, grantAccess(SUPER_ADMIN, ADMIN)], UserController.deleteUser)
+router.delete('/:userId', verifyJWT, validateObjectId, UserController.deleteUser)
 
 export default router

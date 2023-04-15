@@ -1,5 +1,4 @@
-import { companyCategory, socials, validIds } from '../utils/common.js'
-import { roles } from '../config/index.js'
+import { companyCategory, socials, status, validIds } from '../utils/common.js'
 import { Types } from 'mongoose'
 import BaseValidator from './base.validator.js'
 import Joi from 'joi'
@@ -75,7 +74,8 @@ class TenantValidator extends BaseValidator {
       })
     )
 
-    this.#idTypeSchema = Joi.string().lowercase()
+    this.#idTypeSchema = Joi.string()
+      .lowercase()
       .label('Id type')
       .valid(...validIds.filter((id) => id !== 'staff id card'))
 
@@ -103,7 +103,8 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       tenant: Joi.object({
         _id: Joi.any().default(newTenantId).forbidden(),
-        company_name: this.#companyNameSchema.required()
+        // company_name: this.#companyNameSchema.required(),
+        status: Joi.string().default(status.onboarding).forbidden()
       }).required(),
       user: Joi.object({
         _id: Joi.any().default(newUserId).forbidden(),
@@ -112,8 +113,11 @@ class TenantValidator extends BaseValidator {
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
-        password: Joi.string().default(randomString(8)).forbidden(),
-        role: Joi.any().default(adminRoleId).forbidden()
+        new_password: this._passwordSchema.required(),
+        confirm_password: this._confirmPasswordSchema.required(),
+        // password: Joi.string().default(randomString(8)).forbidden(),
+        role: Joi.any().default(adminRoleId).forbidden(),
+        resetPwd: Joi.boolean().default(false).forbidden()
       }).required()
     })
 
@@ -142,11 +146,23 @@ class TenantValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateActivate = (dto) => {
+  validateOnBoarding = (onBoardTenantDTO) => {
     const schema = Joi.object({
       category: this.#categorySchema.required(),
       cac_number: this.#cacNumberSchema.required(),
-      email: this._emailSchema.required(),
+      email: this._emailSchema.required()
+    })
+
+    let { value, error } = schema.validate(onBoardTenantDTO, {
+      abortEarly: false
+    })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateActivate = (activateTenantDTO) => {
+    const schema = Joi.object({
       phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
       state: this._locationSchema.extract('state').required(),
@@ -155,7 +171,9 @@ class TenantValidator extends BaseValidator {
       support: this.#supportSchema.required()
     })
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
+    let { value, error } = schema.validate(activateTenantDTO, {
+      abortEarly: false
+    })
     error = this._refineError(error)
 
     return { value, error }

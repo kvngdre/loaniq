@@ -7,11 +7,11 @@
  */
 export default function validateOTP (pin, expiresIn, otp) {
   if (Date.now() > expiresIn) {
-    return { isValid: false, message: 'OTP has expired.' }
+    return { isValid: false, reason: 'OTP has expired.' }
   }
 
   if (otp !== pin) {
-    return { isValid: false, message: 'Invalid OTP' }
+    return { isValid: false, reason: 'Invalid OTP' }
   }
 
   return { isValid: true }

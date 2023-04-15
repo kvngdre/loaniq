@@ -16,7 +16,7 @@ class UserController extends BaseController {
 
     const newUser = await UserService.createUser(value)
     const response = this.apiResponse(
-      'User created. Password & OTP sent to user email.',
+      'User created. Temporary password sent to user email.',
       newUser
     )
 
@@ -86,11 +86,11 @@ class UserController extends BaseController {
     res.status(httpCodes.OK).json(response)
   }
 
-  static updatePassword = async (req, res) => {
+  static changePassword = async (req, res) => {
     const { value, error } = userValidator.validateUpdatePassword(req.body)
     if (error) throw new ValidationError(null, error)
 
-    await UserService.updatePassword(req.params.userId, value)
+    await UserService.changePassword(req.params.userId, value)
     const response = this.apiResponse('Password updated.')
 
     res.status(httpCodes.OK).json(response)

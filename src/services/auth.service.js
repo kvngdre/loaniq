@@ -105,7 +105,7 @@ class AuthService {
   }
 
   static async sendOTP ({ email, len }) {
-    const generatedOTP = generateOTP(10, len)
+    const generatedOTP = generateOTP(len)
 
     // TODO: pass the time to live of the otp to the mail.
     const [user] = await Promise.all([

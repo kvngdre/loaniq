@@ -37,14 +37,13 @@ class UserValidator extends BaseValidator {
       last_name: this._nameSchema.extract('last').required(),
       middle_name: this._nameSchema.extract('middle'),
       job_title: this.#jobTitle,
-      gender: this._genderSchema.required(),
       dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema.default((parent) => {
         return `${parent.first_name} ${parent.last_name}`
       }),
       phone_number: this._phoneNumberSchema.required(),
       email: this._emailSchema.required(),
-      role: this._roleSchema.invalid(roles.DIRECTOR).required(),
+      role: this._objectIdSchema.required(),
       segments: this.#segmentsSchema.when('role', {
         is: roles.AGENT,
         then: Joi.required(),
@@ -61,11 +60,16 @@ class UserValidator extends BaseValidator {
   validateVerifySignUp = (dto) => {
     const schema = Joi.object({
       email: this._emailSchema.required(),
-      // otp: this._otpSchema(6).required(),
-      current_password: Joi.string().trim().label('Current password').required(),
-      new_password: this._passwordSchema.required(),
-      confirm_password: this._confirmPasswordSchema.required()
+      otp: this._otpSchema(8),
+      current_password: Joi.string()
+        .trim()
+        .label('Current password'),
+      new_password: this._passwordSchema.label('New password'),
+      confirm_password: this._confirmPasswordSchema
     })
+      .xor('otp', 'current_password')
+      .with('current_password', ['new_password', 'confirm_password'])
+      .without('otp', ['current_password', 'new_password', 'confirm_password'])
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)
@@ -79,7 +83,6 @@ class UserValidator extends BaseValidator {
       last_name: this._nameSchema.extract('last'),
       middle_name: this._nameSchema.extract('middle'),
       job_title: this.#jobTitle,
-      gender: this._genderSchema,
       dob: this._dateSchema.label('Date of birth').less('now'),
       display_name: this.#displayNameSchema,
       role: this._roleSchema.invalid(roles.DIRECTOR),

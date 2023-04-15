@@ -4,14 +4,17 @@ class AuthValidator extends BaseValidator {
   #ippisSchema
 
   constructor () {
+    super()
+
     this.#ippisSchema = Joi.string().alphanum()
   }
+
   validateLogin = (dto) => {
     const schema = Joi.object({
-      email: this._emailSchema.required(),
-      ippis: this.#
+      email: this._emailSchema,
+      staff_id: this.#ippisSchema,
       password: Joi.string().max(256).label('Password').required()
-    })
+    }).xor('email', 'staff_id')
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
     error = this._refineError(error)

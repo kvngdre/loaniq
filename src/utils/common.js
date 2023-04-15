@@ -99,6 +99,14 @@ export const socials = [
   'tictok'
 ]
 
+export const status = {
+  active: 'active',
+  deactivated: 'deactivated',
+  inactive: 'inactive',
+  suspended: 'suspended',
+  onboarding: 'onboarding'
+}
+
 export const txnPurposes = {
   DEPOSIT: 'deposit',
   TRANSFER: 'transfer',

@@ -1,4 +1,4 @@
-import { companyCategory } from '../utils/common.js'
+import { companyCategory, status } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError.js'
 
@@ -14,11 +14,13 @@ const tenantSchema = new Schema(
     company_name: {
       type: String,
       unique: true,
-      required: true
+      sparse: true
+      // required: true
     },
 
     address: {
       type: String,
+      maxLength: 255,
       default: null
     },
 
@@ -51,9 +53,10 @@ const tenantSchema = new Schema(
       default: false
     },
 
-    active: {
-      type: Boolean,
-      default: true
+    status: {
+      type: String,
+      enum: Object.values(status),
+      default: status.onboarding
     },
 
     activated: {
@@ -79,7 +82,8 @@ const tenantSchema = new Schema(
           url: { type: String, required: true },
           expires: { type: Date, default: null }
         }
-      ]
+      ],
+      default: null
     },
 
     support: {

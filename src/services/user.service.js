@@ -64,21 +64,41 @@ class UserService {
   }
 
   async verifyNewUser (verifyNewUserDTO, userAgent, clientIp) {
-    const { email, current_password, new_password } = verifyNewUserDTO
+    const { email, otp, current_password, new_password } = verifyNewUserDTO
 
     const foundUser = await UserDAO.findOne({ email })
     if (foundUser.isEmailVerified) {
       throw new ConflictError('Account already verified, please sign in.')
     }
 
-    const isValid = foundUser.validatePassword(current_password)
-    if (!isValid) throw new UnauthorizedError('Password is incorrect.')
+    if (otp) {
+      const { isValid, reason } = foundUser.validateOTP(otp)
+      if (!isValid) throw new ValidationError(reason)
 
-    // * Measuring similarity of new password to the current temporary password.
-    const similarityPercent = similarity(new_password, current_password) * 100
-    if (similarityPercent >= constants.max_similarity) {
-      throw new ValidationError('Password is too similar to old password.')
+      foundUser.set({
+        'otp.pin': null,
+        'otp.expiresIn': null
+      })
+    } else {
+      const isValid = foundUser.validatePassword(current_password)
+      if (!isValid) throw new UnauthorizedError('Password is incorrect.')
+
+      // * Measuring similarity of new password to the current temporary password.
+      const similarityPercent = similarity(new_password, current_password) * 100
+      if (similarityPercent >= constants.max_similarity) {
+        throw new ValidationError('Password is too similar to old password.')
+      }
+
+      // Setting user password
+      foundUser.set({ password: new_password })
     }
+
+    foundUser.set({
+      last_login_time: new Date(),
+      isEmailVerified: true,
+      active: true,
+      resetPwd: false
+    })
 
     const userConfig = await userConfigService.getConfig({
       userId: foundUser._id
@@ -89,21 +109,16 @@ class UserService {
     const newSession = generateSession(refreshToken, userAgent, clientIp)
 
     await Promise.all([
-      foundUser.updateOne({
-        last_login_time: new Date(),
-        isEmailVerified: true,
-        password: encryptPassword(new_password),
-        active: true,
-        resetPwd: false
-      }),
-      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] }),
-      mailer({
-        to: foundUser.email,
-        subject: 'Welcome to AIdea!',
-        name: foundUser.first_name,
-        template: 'new-tenant'
-      })
+      foundUser.save(),
+      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] })
     ])
+
+    // mailer({
+    //   to: foundUser.email,
+    //   subject: 'Welcome to AIdea!',
+    //   name: foundUser.first_name,
+    //   template: 'new-tenant'
+    // })
 
     foundUser.purgeSensitiveData()
 
@@ -187,7 +202,7 @@ class UserService {
     return deletedUser
   }
 
-  async updatePassword (userId, dto) {
+  async changePassword (userId, dto) {
     const { current_password, new_password } = dto
     const foundUser = await UserDAO.findById(userId)
 
