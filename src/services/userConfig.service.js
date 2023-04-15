@@ -4,8 +4,6 @@ class UserConfigService {
   static async createConfig (newUserConfigDTO, trx) {
     const newConfig = await UserConfigDAO.insert(newUserConfigDTO, trx)
 
-    // throw new Error('Testststststs==========')
-
     return newConfig
   }
 
@@ -13,7 +11,7 @@ class UserConfigService {
     const foundConfigs = await UserConfigDAO.find(filter)
     const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
 
-    return [count, foundConfigs]
+    return { count, foundConfigs }
   }
 
   static async getConfig (filter) {

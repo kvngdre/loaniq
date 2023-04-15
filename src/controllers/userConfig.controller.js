@@ -29,9 +29,9 @@ class UserConfigController extends BaseController {
    * @param {import("express").Response} res
    */
   static getUserConfigs = async (req, res) => {
-    const [count, userConfigs] = await UserConfigService.getConfigs()
+    const { count, foundConfigs } = await UserConfigService.getConfigs()
     const message = this.getMsgFromCount(count)
-    const response = this.apiResponse(message, userConfigs)
+    const response = this.apiResponse(message, foundConfigs)
 
     res.status(httpCodes.OK).json(response)
   }

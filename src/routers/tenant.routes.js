@@ -25,6 +25,14 @@ router.post(
 )
 
 router.post(
+  '/:tenantId/onboard',
+  verifyJWT,
+  validateObjectId,
+  // checkPermission('onBoardOwn', 'tenant'),
+  TenantController.onBoardTenant
+)
+
+router.post(
   '/:tenantId/uploads',
 
   verifyJWT,

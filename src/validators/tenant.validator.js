@@ -2,7 +2,6 @@ import { companyCategory, socials, status, validIds } from '../utils/common.js'
 import { Types } from 'mongoose'
 import BaseValidator from './base.validator.js'
 import Joi from 'joi'
-import randomString from '../utils/randomString.js'
 class TenantValidator extends BaseValidator {
   #companyNameSchema
   #cacNumberSchema
@@ -115,7 +114,6 @@ class TenantValidator extends BaseValidator {
         phone_number: this._phoneNumberSchema.required(),
         new_password: this._passwordSchema.required(),
         confirm_password: this._confirmPasswordSchema.required(),
-        // password: Joi.string().default(randomString(8)).forbidden(),
         role: Joi.any().default(adminRoleId).forbidden(),
         resetPwd: Joi.boolean().default(false).forbidden()
       }).required()
