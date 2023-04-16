@@ -108,8 +108,8 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static submitDocsToActivateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateSubmitToActivate(req.body)
+  static requestTenantActivavtion = async (req, res) => {
+    const { value, error } = tenantValidator.validateActivationRequest(req.body)
     if (error) throw new ValidationError(null, error)
 
     const tenant = await TenantService.requestToActivateTenant(req.params.tenantId, value)
@@ -136,7 +136,7 @@ class TenantController extends BaseController {
    * @param {import('express').Response} res
    */
   static requestToDeactivateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateRequestDeactivation(req.body)
+    const { value, error } = tenantValidator.validateDeactivationRequest(req.body)
     if (error) throw new ValidationError(null, error)
 
     await TenantService.requestToDeactivateTenant(req.currentUser, value)

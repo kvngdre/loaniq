@@ -164,7 +164,7 @@ class TenantValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateSubmitToActivate = (activateTenantDTO) => {
+  validateActivationRequest = (activateTenantDTO) => {
     const schema = Joi.object({
       phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
@@ -181,7 +181,7 @@ class TenantValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateRequestDeactivation = (dto) => {
+  validateDeactivationRequest = (dto) => {
     const schema = Joi.object({
       otp: this._otpSchema(8)
     })

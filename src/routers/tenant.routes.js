@@ -21,7 +21,7 @@ router.post(
   verifyJWT,
   validateObjectId,
   checkPermission('submitToActivateOwn', 'tenant'),
-  TenantController.submitDocsToActivateTenant
+  TenantController.requestTenantActivavtion
 )
 
 router.post(
@@ -29,7 +29,7 @@ router.post(
   verifyJWT,
   validateObjectId,
   checkPermission('requestToDeactivateOwn', 'tenant'),
-  TenantController.submitDocsToActivateTenant
+  TenantController.requestTenantActivavtion
 )
 
 router.post(
