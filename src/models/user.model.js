@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 import NotFoundError from '../errors/NotFoundError.js'
+import autoPopulate from 'mongoose-autopopulate'
 
 const schemaOptions = {
   timestamps: true,
@@ -95,6 +96,7 @@ const userSchema = new Schema(
     role: {
       type: Schema.Types.ObjectId,
       ref: 'Role',
+      autopopulate: true,
       required: true
     },
 
@@ -133,6 +135,8 @@ const userSchema = new Schema(
   schemaOptions
 )
 
+userSchema.plugin(autoPopulate)
+
 userSchema.virtual('full_name').get(function () {
   return this.first_name?.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
@@ -161,6 +165,7 @@ userSchema.methods.validateOTP = function (otp) {
   return { isValid: true }
 }
 
+// Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
   const data = { id: this._id, redirect: {} }
 

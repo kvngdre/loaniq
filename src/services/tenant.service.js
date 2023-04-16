@@ -1,9 +1,12 @@
 /* eslint-disable camelcase */
 import { fileURLToPath } from 'url'
 import { startSession } from 'mongoose'
+import { status } from '../utils/common.js'
 import ConflictError from '../errors/ConflictError.js'
 import driverUploader from '../utils/driveUploader.js'
+import EmailService from './email.service.js'
 import fs from 'fs'
+import generateOTP from '../utils/generateOTP.js'
 import logger from '../utils/logger.js'
 import mailer from '../utils/mailer.js'
 import path from 'path'
@@ -16,15 +19,14 @@ import UnauthorizedError from '../errors/UnauthorizedError.js'
 import UserConfigDAO from '../daos/userConfig.dao.js'
 import UserDAO from '../daos/user.dao.js'
 import WalletDAO from '../daos/wallet.dao.js'
-import { status } from '../utils/common.js'
-import generateOTP from '../utils/generateOTP.js'
+import DependencyError from '../errors/DependencyError.js'
 
 class TenantService {
   static async createTenant ({ tenant, user }) {
     /**
      * TODO: Check if mongoose has fixed the issue with session.withTransaction
      * TODO: method not returning the data.
-    */
+     */
     user.otp = generateOTP(8)
     const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
@@ -35,6 +37,7 @@ class TenantService {
           { tenantId: tenant._id, userId: user._id },
           session
         ),
+        // Cloning default admin user role for new tenant.
         RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
           doc._id = user.role
           doc.tenantId = user.tenantId
@@ -45,12 +48,10 @@ class TenantService {
         })
       ])
 
-      await mailer({
+      await EmailService.send({
         to: user.email,
-        subject: 'Signup verification',
-        name: user.first_name,
-        template: 'new-user',
-        payload: { otp: user.otp.pin }
+        templateName: 'new_tenant_user',
+        context: { otp: user.otp.pin }
       })
 
       newUser.purgeSensitiveData()
@@ -91,7 +92,22 @@ class TenantService {
     return deletedTenant
   }
 
-  static async activateTenant (tenantId, activateTenantDTO) {
+  static async requestToActivateTenant (tenantId, activateTenantDTO) {
+    const foundTenant = await TenantDAO.findById(tenantId)
+    if (foundTenant.status === status.ACTIVE) {
+      throw new ConflictError('Tenant has already been activated.')
+    }
+
+    foundTenant.set({
+      status: status.AWAITING_ACTIVATION,
+      ...activateTenantDTO
+    })
+    await foundTenant.save()
+
+    return foundTenant
+  }
+
+  static async activateTenant (tenantId) {
     const transactionSession = await startSession()
     try {
       transactionSession.startTransaction()
@@ -100,15 +116,15 @@ class TenantService {
         TenantDAO.findById(tenantId),
         WalletDAO.insert({ tenantId }, transactionSession)
       ])
-      if (foundTenant.activated) {
+
+      if (foundTenant.status === status.ACTIVE) {
         throw new ConflictError('Tenant has already been activated.')
       }
 
       foundTenant.set({
         isEmailVerified: true,
-        status: status.active,
-        activated: true,
-        ...activateTenantDTO
+        status: status.ACTIVE,
+        activated: true
       })
       await foundTenant.save({ session: transactionSession })
       await transactionSession.commitTransaction()
@@ -123,7 +139,7 @@ class TenantService {
     }
   }
 
-  static async deactivateTenant ({ _id, tenantId }, { otp }) {
+  static async requestToDeactivateTenant ({ _id, tenantId }, { otp }) {
     const [foundTenant, foundUser] = await Promise.all([
       TenantDAO.findById(tenantId),
       UserDAO.findById(_id)
@@ -131,6 +147,18 @@ class TenantService {
 
     const { isValid, reason } = foundUser.validateOTP(otp)
     if (!isValid) throw new UnauthorizedError(reason)
+
+    EmailService.send({
+      from: foundUser.email,
+      to: 'kennedydre3@gmail.com',
+      templateName: 'request-tenant-deactivation',
+      context: { username: foundUser.first_name }
+    })
+    EmailService.send({
+      to: foundUser.email,
+      templateName: 'requested-tenant-deactivation',
+      context: { username: foundUser.first_name }
+    })
 
     await mailer({
       to: foundUser.email,
@@ -140,9 +168,34 @@ class TenantService {
     })
 
     // ? send a deactivate email to Apex
-    foundTenant.set({ status: status.deactivated })
+    foundTenant.set({ status: status.DEACTIVATED })
     await UserDAO.updateMany({ tenantId }, { active: false })
     await foundTenant.save()
+
+    return foundTenant
+  }
+
+  static async deactivateTenant (tenantId) {
+    const [foundTenant, foundAdminUsers] = await Promise.all([
+      await TenantDAO.update(tenantId, { status: status.DEACTIVATED }),
+      await UserDAO.find(
+        { tenantId, 'role.name': 'admin' },
+        { password: 0, resetPwd: 0, otp: 0 },
+        { createdAt: 1 }
+      ),
+      await UserDAO.updateMany({ tenantId }, { active: false })
+    ])
+
+    const info = await EmailService.send({
+      to: foundAdminUsers[0].email,
+      templateName: 'deactivate-tenant',
+      context: { name: foundAdminUsers[0].first_name }
+    })
+    if (info.error) {
+      throw new DependencyError(
+        'Operation failed: Error sending deactivated email to user.'
+      )
+    }
 
     return foundTenant
   }

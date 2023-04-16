@@ -10,7 +10,7 @@ const tenantConfigSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
       unique: true,
-      required: [true, 'Tenant Id is required.']
+      required: [true, 'Tenant Id is required']
     },
 
     resetPwdFrequency: {
@@ -88,6 +88,19 @@ const tenantConfigSchema = new Schema(
       ]
     },
 
+    support: {
+      email: {
+        type: String,
+        trim: true,
+        default: null
+      },
+
+      phone_number: {
+        type: String,
+        default: null
+      }
+    },
+
     formId: {
       type: String,
       unique: true,
@@ -96,7 +109,8 @@ const tenantConfigSchema = new Schema(
 
     form_theme: {
       background_color: String,
-      font: String
+      font: String,
+      fontColor: String
     },
 
     reset_period: {

@@ -108,12 +108,12 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static activateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateActivate(req.body)
+  static submitDocsToActivateTenant = async (req, res) => {
+    const { value, error } = tenantValidator.validateSubmitToActivate(req.body)
     if (error) throw new ValidationError(null, error)
 
-    await TenantService.activateTenant(req.params.tenantId, value)
-    const response = this.apiResponse('Tenant activated')
+    const tenant = await TenantService.requestToActivateTenant(req.params.tenantId, value)
+    const response = this.apiResponse('Submitted and awaiting review.', tenant)
 
     res.status(httpCodes.OK).json(response)
   }
@@ -123,12 +123,24 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static deactivateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateDeactivate(req.query)
+  static activateTenant = async (req, res) => {
+    const tenant = await TenantService.activateTenant()
+    const response = this.apiResponse('Tenant deactivated', tenant)
+
+    res.status(httpCodes.OK).json(response)
+  }
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static requestToDeactivateTenant = async (req, res) => {
+    const { value, error } = tenantValidator.validateRequestDeactivation(req.body)
     if (error) throw new ValidationError(null, error)
 
-    await TenantService.deactivateTenant(req.currentUser, value)
-    const response = this.apiResponse('Tenant deactivated')
+    await TenantService.requestToDeactivateTenant(req.currentUser, value)
+    const response = this.apiResponse('Deactivation request sent')
 
     res.status(httpCodes.OK).json(response)
   }

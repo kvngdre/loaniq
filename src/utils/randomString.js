@@ -5,7 +5,7 @@
  */
 export default function randomString (len = 6) {
   let str = ''
-  const charSet = 'ABCDEFGHJKM0123456789NOPQRSTUVWXYZ'
+  const charSet = '2468ABCDEFGHJKMNOPQRSTUVWXYZ0abcdefghjkmnopqrstuvwxyz13579'
 
   for (let i = 1; i <= len; i++) {
     const randomNum = Math.floor(Math.random() * charSet.length)

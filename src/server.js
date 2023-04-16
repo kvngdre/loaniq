@@ -7,6 +7,8 @@ import routes from './routers/index.js'
 import express from 'express'
 import http from 'http'
 
+import randomString from './utils/randomString.js'
+
 const app = express()
 export const server = http.createServer(app)
 
@@ -25,5 +27,6 @@ async function startServer () {
     logger.fatal(error.message, error.stack)
   }
 }
+console.log(randomString())
 
 startServer()

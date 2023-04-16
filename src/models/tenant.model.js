@@ -1,4 +1,4 @@
-import { companyCategory, status } from '../utils/common.js'
+import { companyCategory, status, validIds } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
 import NotFoundError from '../errors/NotFoundError.js'
 
@@ -11,7 +11,7 @@ const tenantSchema = new Schema(
       default: null
     },
 
-    company_name: {
+    business_name: {
       type: String,
       unique: true,
       sparse: true
@@ -56,7 +56,7 @@ const tenantSchema = new Schema(
     status: {
       type: String,
       enum: Object.values(status),
-      default: status.onboarding
+      default: status.ONBOARDING
     },
 
     activated: {
@@ -64,39 +64,16 @@ const tenantSchema = new Schema(
       default: false
     },
 
-    owner_id_type: {
-      type: String,
-      default: null
-      // enum: validIds
-    },
-
-    owner_id_number: {
-      type: String,
-      default: null
-    },
-
-    licenses: {
+    documentation: {
       type: [
         {
           name: { type: String, required: true },
+          type: { type: String, enum: validIds },
           url: { type: String, required: true },
           expires: { type: Date, default: null }
         }
       ],
       default: null
-    },
-
-    support: {
-      email: {
-        type: String,
-        trim: true,
-        default: null
-      },
-
-      phone_number: {
-        type: String,
-        default: null
-      }
     }
   },
   schemaOptions

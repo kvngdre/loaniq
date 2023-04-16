@@ -20,21 +20,28 @@ router.post(
   '/:tenantId/activate',
   verifyJWT,
   validateObjectId,
-  checkPermission('activateOwn', 'tenant'),
-  TenantController.activateTenant
+  checkPermission('submitToActivateOwn', 'tenant'),
+  TenantController.submitDocsToActivateTenant
+)
+
+router.post(
+  '/:tenantId/deactivate',
+  verifyJWT,
+  validateObjectId,
+  checkPermission('requestToDeactivateOwn', 'tenant'),
+  TenantController.submitDocsToActivateTenant
 )
 
 router.post(
   '/:tenantId/onboard',
   verifyJWT,
   validateObjectId,
-  // checkPermission('onBoardOwn', 'tenant'),
+  checkPermission('onBoardOwn', 'tenant'),
   TenantController.onBoardTenant
 )
 
 router.post(
   '/:tenantId/uploads',
-
   verifyJWT,
   validateObjectId,
   checkPermission('uploadDocs', 'tenant'),
@@ -73,8 +80,8 @@ router.get(
   '/:tenantId/deactivate',
   verifyJWT,
   validateObjectId,
-  checkPermission('deactivateOwn', 'tenant'),
-  TenantController.deactivateTenant
+  checkPermission('deactivateAny', 'tenant'),
+  TenantController.requestToDeactivateTenant
 )
 
 router.get(

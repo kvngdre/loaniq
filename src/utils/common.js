@@ -100,11 +100,12 @@ export const socials = [
 ]
 
 export const status = {
-  active: 'active',
-  deactivated: 'deactivated',
-  inactive: 'inactive',
-  suspended: 'suspended',
-  onboarding: 'onboarding'
+  ACTIVE: 'active',
+  AWAITING_ACTIVATION: 'awaiting activation',
+  DEACTIVATED: 'deactivated',
+  INACTIVE: 'inactive',
+  SUSPENDED: 'suspended',
+  ONBOARDING: 'onboarding'
 }
 
 export const txnPurposes = {
@@ -132,4 +133,12 @@ export const validIds = [
   'staff id card',
   'national id card',
   'drivers license'
+]
+
+export const tenantDocumentationTypes = [
+  'certificate of incorporation',
+  'tax documentation',
+  'money lender license',
+  'mfb license',
+  ...validIds
 ]

@@ -11,6 +11,7 @@ class TenantValidator extends BaseValidator {
   #allowUserPwdResetSchema
   #idTypeSchema
   #idSchema
+  #documentationSchema
 
   constructor () {
     super()
@@ -92,6 +93,12 @@ class TenantValidator extends BaseValidator {
     this.#allowUserPwdResetSchema = Joi.boolean()
       .label('Allow user password reset')
       .default(false)
+
+    this.#documentationSchema = Joi.array().items(Joi.object({
+      name: Joi.string().lowercase().label('Document name').required(),
+      url: Joi.string().label('Document url').required(),
+      expires: Joi.date().iso().optional()
+    })).label('Documentation')
   }
 
   validateSignUp = (dto) => {
@@ -102,8 +109,7 @@ class TenantValidator extends BaseValidator {
     const schema = Joi.object({
       tenant: Joi.object({
         _id: Joi.any().default(newTenantId).forbidden(),
-        // company_name: this.#companyNameSchema.required(),
-        status: Joi.string().default(status.onboarding).forbidden()
+        status: Joi.string().default(status.ONBOARDING).forbidden()
       }).required(),
       user: Joi.object({
         _id: Joi.any().default(newUserId).forbidden(),
@@ -127,15 +133,12 @@ class TenantValidator extends BaseValidator {
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
-      logo: Joi.string(),
-      company_name: this.#companyNameSchema,
+      logo: Joi.string().label('logo'),
+      business_name: this.#companyNameSchema,
       address: this._locationSchema.extract('address'),
       state: this._locationSchema.extract('state'),
-      cac_number: this.#cacNumberSchema,
-      category: this.#categorySchema,
       email: this._emailSchema,
-      phone_number: this._phoneNumberSchema,
-      support: this.#supportSchema
+      phone_number: this._phoneNumberSchema
     }).min(1)
 
     let { value, error } = schema.validate(dto, { abortEarly: false })
@@ -146,6 +149,8 @@ class TenantValidator extends BaseValidator {
 
   validateOnBoarding = (onBoardTenantDTO) => {
     const schema = Joi.object({
+      logo: Joi.string().label('logo'),
+      business_name: this.#companyNameSchema.required(),
       category: this.#categorySchema.required(),
       cac_number: this.#cacNumberSchema.required(),
       email: this._emailSchema.required()
@@ -159,14 +164,13 @@ class TenantValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateActivate = (activateTenantDTO) => {
+  validateSubmitToActivate = (activateTenantDTO) => {
     const schema = Joi.object({
       phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
       state: this._locationSchema.extract('state').required(),
-      owner_id_type: this.#idTypeSchema.required(),
-      owner_id_number: this.#idSchema.label('Id number').required(),
-      support: this.#supportSchema.required()
+      support: this.#supportSchema.required(),
+      documentation: this.#documentationSchema.required()
     })
 
     let { value, error } = schema.validate(activateTenantDTO, {
@@ -177,7 +181,7 @@ class TenantValidator extends BaseValidator {
     return { value, error }
   }
 
-  validateDeactivate = (dto) => {
+  validateRequestDeactivation = (dto) => {
     const schema = Joi.object({
       otp: this._otpSchema(8)
     })

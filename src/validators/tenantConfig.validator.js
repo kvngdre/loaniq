@@ -47,7 +47,7 @@ class TenantConfigValidator extends BaseValidator {
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number')
-    }).min(1)
+    }).min(1).label('Support')
 
     this.#allowUserPwdResetSchema = Joi.boolean()
       .label('Allow user password reset')
@@ -73,6 +73,7 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
+      support: this.#supportSchema,
       allowUserPwdReset: this.#allowUserPwdResetSchema
     })
 
@@ -99,6 +100,7 @@ class TenantConfigValidator extends BaseValidator {
         .label('Default parameters'),
       fees: this._feesSchema.min(1),
       socials: this.#socialSchema.min(1),
+      support: this.#supportSchema,
       allowUserPwdReset: this.#allowUserPwdResetSchema
     }).min(1)
 
