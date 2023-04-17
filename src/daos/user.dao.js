@@ -48,9 +48,9 @@ class UserDAO extends BaseDAO {
     return foundRecord
   }
 
-  static async update (id, dto, projection = {}) {
+  static async update (filter, dto, projection = {}) {
     try {
-      const foundRecord = await User.findById(id).select(projection)
+      const foundRecord = await User.findOne(filter).select(projection)
 
       foundRecord.set(dto)
       await foundRecord.save()

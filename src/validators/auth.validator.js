@@ -25,7 +25,7 @@ class AuthValidator extends BaseValidator {
   validateSendOTP = (dto) => {
     const schema = Joi.object({
       email: this._emailSchema.required(),
-      len: Joi.number().valid(6, 8).required()
+      len: Joi.number().greater(5).less(9)
     })
 
     let { value, error } = schema.validate(dto, { abortEarly: false })

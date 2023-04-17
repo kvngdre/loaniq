@@ -50,7 +50,7 @@ class TenantService {
 
       await EmailService.send({
         to: user.email,
-        templateName: 'new_tenant_user',
+        templateName: 'new-tenant-user',
         context: { otp: user.otp.pin }
       })
 

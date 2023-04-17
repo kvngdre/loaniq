@@ -5,47 +5,73 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Document</title>
     <style>
-      p { padding-left: 20px; padding-right: 20px; font-size: .8rem;
-      line-height: 20px; }
+      p { font-size: 0.8rem; line-height: 20px; }
     </style>
   </head>
   <body
-    style='padding: 10px 0; text-align: center; background-color: rgb(153, 153, 153); font-family: Cambria, Cochin, Georgia, Times, serif'
+    style='
+      padding: 20px 10px;
+      background-color: white;
+      font-family: Cambria, Cochin, Georgia, Times, serif, sans-serif;
+    '
   >
     <div
-      style='padding: 30px 0px; background-color: rgb(4, 8, 20); max-width: 70%; margin-left: auto; margin-right: auto; border-radius: 5px; color: rgb(170, 171, 182);'
+      style='
+        padding: 10px 20px;
+        background-color: rgb(231, 236, 238);
+        border-radius: 10px;
+        color: rgba(20, 19, 19, 0.808);
+      '
     >
       <div>
-        <p>Hi {{it.name}} 👋🏾,</p>
+        <p>Hi {{it.name}},</p>
+        <p>
+          Welcome to Apex, please use the single use pin below to verify your
+          account:
+        </p>
       </div>
-      <div>
-        <p>Please use the one-time-password to sign in and complete your
-          registration.</p>
-      </div>
-      <div style='margin: 10px;'>
-        <p>Your one-time use password:</p>
-      </div>
-      <div style='color: #958144; margin: 20px;'>
+      <div
+        style='
+          width: auto;
+          height: auto;
+          padding: 10px;
+          text-align: center;
+          border: 1px solid black;
+          border-radius: 1rem;
+          background-color: rgba(20, 19, 19, 0.808);
+        '
+      >
         <span
-          style='letter-spacing: 6px; font-size: 1.6rem; font-weight: 400;'
-        >{{it.password}}</span>
+          style='
+            color: rgb(255, 255, 255);
+            letter-spacing: 6px;
+            font-size: 1.6rem;
+            font-weight: 400;
+          '
+        >{{it.otp}}</span>
       </div>
-      <div>
-        <p>Do not share this password with anyone.</p>
-      </div>
+      <p style='text-align: center; margin: 0;'>expires in:
+        <span style='color: rgb(190, 190, 20)'>{{it.expiresIn}}
+          minutes</span></p>
+      <div></div>
       <div>
         <p style='margin-bottom: 0'>Kind Regards,</p>
-        <p style='margin-top: 1px;'>Your friends at AIdea</p>
+        <p style='margin-top: 1px'>Apex</p>
       </div>
     </div>
   </body>
-  <footer style='font-size: .75rem; text-align: center;'>
+  <footer style='text-align: center; font-size: 0.75rem'>
     <a
       href=''
-      style='margin: 20px 0 20px 0; color: #030d1b; text-decoration: none;'
-    >help.aidealabs.io</a>
-    <p><a href='' style='color: #030d1d;'>Terms of Service</a>
+      style='margin: 20px 0 20px 0; color: #83a2d0; text-decoration: none'
+    >help.apex.co</a>
+    <p style='margin-bottom: 5px'>
+      Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolorum, nobis.
+    </p>
+    <p>
+      <a href='' style='color: #83a2d0'>Terms of Service</a>
       |
-      <a href='' style='color: #030e1f;'>Privacy Policy</a></p>
+      <a href='' style='color: #83a2d0'>Privacy Policy</a>
+    </p>
   </footer>
 </html>

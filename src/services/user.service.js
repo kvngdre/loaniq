@@ -41,7 +41,7 @@ class UserService {
       // Send temporary password to new user email.
       const info = await EmailService.send({
         to: newUserDTO.email,
-        templateName: 'new_user',
+        templateName: 'new-user',
         context: { name: newUserDTO.first_name, password: newUserDTO.password }
       })
       if (info.error) {
@@ -174,16 +174,23 @@ class UserService {
     return foundUser
   }
 
+  /**
+   * Updates a user's record
+   * @param {string} userId The user id.
+   * @param {UserUpdate} updateUserDTO
+   * @param {object} [projection] The fields to include or exclude.
+   * @returns
+   */
   async updateUser (
     userId,
-    dto,
+    updateUserDTO,
     projection = {
       password: 0,
       resetPwd: 0,
       otp: 0
     }
   ) {
-    const updatedUser = await UserDAO.update(userId, dto, projection)
+    const updatedUser = await UserDAO.update({ userId }, updateUserDTO, projection)
 
     return updatedUser
   }

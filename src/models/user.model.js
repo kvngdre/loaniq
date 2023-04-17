@@ -39,7 +39,6 @@ const userSchema = new Schema(
 
     middle_name: {
       type: String,
-      minLength: 3,
       maxLength: 50,
       trim: true,
       default: null

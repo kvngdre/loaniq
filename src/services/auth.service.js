@@ -3,19 +3,20 @@
 import { constants } from '../config/index.js'
 import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js'
 import ConflictError from '../errors/ConflictError.js'
+import DependencyError from '../errors/DependencyError.js'
+import EmailService from './email.service.js'
 import ForbiddenError from '../errors/ForbiddenError.js'
 import generateOTP from '../utils/generateOTP.js'
 import generateSession from '../utils/generateSession.js'
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger.js'
-import mailer from '../utils/mailer.js'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
 import userConfigService from './userConfig.service.js'
-import UserService from './user.service.js'
+import UserDAO from '../daos/user.dao.js'
 
 class AuthService {
   static async login ({ email, password }, token, userAgent, clientIp) {
-    const foundUser = await UserService.getUser({ email }, {})
+    const foundUser = await UserDAO.findOne({ email })
 
     const isValid = foundUser.validatePassword(password)
     if (!isValid) throw new UnauthorizedError('Invalid credentials')
@@ -107,18 +108,19 @@ class AuthService {
   static async sendOTP ({ email, len }) {
     const generatedOTP = generateOTP(len)
 
-    // TODO: pass the time to live of the otp to the mail.
-    const [user] = await Promise.all([
-      UserService.updateUser({ email }, { otp: generatedOTP }),
-      mailer({
-        to: email,
-        subject: `Your one-time-pin: ${generatedOTP.pin}`,
-        template: 'otp-request',
-        payload: { otp: generatedOTP.pin }
-      })
-    ])
+    const foundUser = await UserDAO.update({ email }, { otp: generatedOTP })
 
-    return user
+    // Sending OTP to user email
+    const info = await EmailService.send({
+      to: email,
+      templateName: 'otp-request',
+      context: { otp: generatedOTP.pin, expiresIn: 10 }
+    })
+    if (info.error) {
+      throw new DependencyError('Error sending OTP to email.')
+    }
+
+    return foundUser
   }
 
   static async logout (token) {
