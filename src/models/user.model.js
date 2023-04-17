@@ -94,9 +94,9 @@ const userSchema = new Schema(
 
     role: {
       type: Schema.Types.ObjectId,
+      required: true,
       ref: 'Role',
-      autopopulate: true,
-      required: true
+      autopopulate: true
     },
 
     resetPwd: {

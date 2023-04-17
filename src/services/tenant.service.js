@@ -8,7 +8,6 @@ import EmailService from './email.service.js'
 import fs from 'fs'
 import generateOTP from '../utils/generateOTP.js'
 import logger from '../utils/logger.js'
-import mailer from '../utils/mailer.js'
 import path from 'path'
 import randomString from '../utils/randomString.js'
 import RoleDAO from '../daos/role.dao.js'
@@ -107,6 +106,7 @@ class TenantService {
     return foundTenant
   }
 
+  // TODO: Change to mongoose-trx
   static async activateTenant (tenantId) {
     const transactionSession = await startSession()
     try {
@@ -148,29 +148,20 @@ class TenantService {
     const { isValid, reason } = foundUser.validateOTP(otp)
     if (!isValid) throw new UnauthorizedError(reason)
 
-    EmailService.send({
+    // Email super admin about tenant deactivation
+    await EmailService.send({
       from: foundUser.email,
       to: 'kennedydre3@gmail.com',
       templateName: 'request-tenant-deactivation',
       context: { username: foundUser.first_name }
     })
-    EmailService.send({
+
+    // Email tenant admin about tenant deactivation
+    await EmailService.send({
       to: foundUser.email,
       templateName: 'requested-tenant-deactivation',
       context: { username: foundUser.first_name }
     })
-
-    await mailer({
-      to: foundUser.email,
-      subject: 'Tenant Deactivated',
-      template: 'deactivate-tenant',
-      name: foundUser.first_name
-    })
-
-    // ? send a deactivate email to Apex
-    foundTenant.set({ status: status.DEACTIVATED })
-    await UserDAO.updateMany({ tenantId }, { active: false })
-    await foundTenant.save()
 
     return foundTenant
   }

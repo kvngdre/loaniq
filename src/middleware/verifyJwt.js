@@ -17,7 +17,7 @@ export default async function verifyJWT (req, res, next) {
         return res.status(httpCodes.BAD_REQUEST).json(
           new ErrorResponse({
             name: 'Validation Error',
-            message: 'No token provided.'
+            message: 'No token provided'
           })
         )
       }
@@ -38,8 +38,8 @@ export default async function verifyJWT (req, res, next) {
       )
     }
 
-    // Checking if user is inactive.
     // TODO: Move this to redis
+    // Fetching user...
     const user = await User.findById(decoded.id)
       .populate({ path: 'role', populate: { path: 'permissions' } })
       .catch((error) => {
@@ -47,13 +47,15 @@ export default async function verifyJWT (req, res, next) {
           return res.status(httpCodes.NOT_FOUND).json(
             new ErrorResponse({
               name: 'Not Found Error',
-              message: 'User not found.'
+              message: 'User account not found'
             })
           )
         }
+
         throw error
       })
 
+    // Checking if user is inactive.
     if (!user.active) {
       return res.status(httpCodes.FORBIDDEN).json(
         new ErrorResponse({

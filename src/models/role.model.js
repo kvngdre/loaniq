@@ -7,8 +7,10 @@ const roleSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
+      // required: true
       ref: 'Tenant',
-      required: true
+      sparse: true,
+      default: null
     },
 
     isDefault: {
@@ -18,10 +20,11 @@ const roleSchema = new Schema(
 
     name: {
       type: String,
-      required: true
+      required: true,
+      lowercase: true
     },
 
-    description: String,
+    description: { type: String, lowercase: true },
 
     permissions: [
       {

@@ -10,34 +10,35 @@ const schemaOptions = {
   versionKey: false,
   toJSON: { virtuals: true }
 }
-const { hashSync, compareSync } = bcrypt
 
-const originSchema = new Schema(
+const clientSchema = new Schema(
   {
     passport: {
       type: String,
+      // required: true,
       default: null
     },
 
     id_card: {
       type: String,
+      // required: true,
       default: null
     },
 
     first_name: {
       type: String,
+      required: true,
       minLength: 3,
       maxLength: 50,
-      trim: true,
-      required: true
+      trim: true
     },
 
     last_name: {
       type: String,
+      required: true,
       minLength: 3,
       maxLength: 50,
-      trim: true,
-      required: true
+      trim: true
     },
 
     middle_name: {
@@ -49,7 +50,7 @@ const originSchema = new Schema(
 
     status: {
       type: String,
-      default: 'Retired'
+      default: 'retired'
     },
 
     active: {
@@ -57,37 +58,44 @@ const originSchema = new Schema(
       default: false
     },
 
+    role: {
+      type: Schema.Types.ObjectId,
+      ref: 'Role',
+      default: '643d935b91a080bc035b5bf8',
+      autopopulate: true
+    },
+
     gender: {
       type: String,
-      enum: ['Male', 'Female'],
-      required: true
+      // required: true,
+      enum: ['male', 'female']
     },
 
     birth_date: {
       type: Date,
-      required: true
+      // required: true,
+      default: null
     },
 
     address: {
       type: String,
+      // required: true,
       trim: true,
       maxLength: 255,
-      lowercase: true,
-      required: true
+      lowercase: true
     },
 
     state: {
       type: Schema.Types.ObjectId,
-      ref: 'State',
-      required: true
+      // required: true,
+      ref: 'State'
     },
 
     phone_number: {
       type: String,
+      required: true,
       trim: true,
-      unique: true,
-      sparse: true,
-      required: true
+      unique: true
     },
 
     isPhoneVerified: {
@@ -97,23 +105,21 @@ const originSchema = new Schema(
 
     email: {
       type: String,
-      lowercase: true,
-      trim: true,
       default: null
     },
 
     marital_status: {
       type: String,
-      enum: maritalStatus,
-      required: true
+      // required: true,
+      enum: maritalStatus
     },
 
     bvn: {
       type: String,
+      // required: true,
       trim: true,
       unique: true,
-      sparse: true,
-      required: true
+      sparse: true
     },
 
     isValidBVN: {
@@ -123,22 +129,22 @@ const originSchema = new Schema(
 
     staff_id: {
       type: String,
+      required: true,
       uppercase: true,
       trim: true,
-      unique: true,
-      required: true
+      unique: true
     },
 
     password: {
       type: String,
+      // required: true,
       trim: true,
-      maxLength: 1024,
-      required: true
+      maxLength: 1024
     },
 
     resetPwd: {
       type: Boolean,
-      default: true
+      default: false
     },
 
     otp: {
@@ -155,104 +161,107 @@ const originSchema = new Schema(
 
     id_type: {
       type: String,
-      enum: validIds,
-      required: true
+      // required: true,
+      enum: validIds
     },
 
     id_number: {
       type: String,
+      // required: true,
       minLength: 4,
       maxLength: 50,
-      trim: true,
-      required: true
+      trim: true
     },
 
     segment: {
       type: Schema.Types.ObjectId,
-      ref: 'Segment',
-      required: true
+      // required: true,
+      ref: 'Segment'
     },
 
     command: {
       type: String,
+      // required: true,
       trim: true,
       default: null
     },
 
     employer_address: {
       type: String,
+      // required: true,
       trim: true,
       maxLength: 255,
-      lowercase: true,
-      required: true
+      lowercase: true
     },
 
     employer_state: {
-      type: String,
-      required: true
+      type: Schema.Types.ObjectId,
+      // required: true,
+      ref: 'State'
     },
 
     hire_date: {
       type: Date,
-      required: true
+      // required: true,
+      default: null
     },
 
     income: {
       type: Map,
-      of: [Number]
+      of: Schema.Types.Mixed
     },
 
     nok_full_name: {
       type: String,
-      trim: true,
-      required: true
+      // required: true,
+      trim: true
     },
 
     nok_address: {
       type: String,
       trim: true,
       maxLength: 255,
-      lowercase: true,
-      required: true
+      // required: true,
+      lowercase: true
     },
 
     nok_state: {
       type: Schema.Types.ObjectId,
-      ref: 'State',
-      required: true
+      // required: true,
+      ref: 'State'
     },
 
     nok_phone_number: {
       type: String,
-      trim: true,
-      required: true
+      // required: true,
+      trim: true
     },
 
     nok_relationship: {
       type: String,
-      enum: relationships,
-      required: true
+      // required: true,
+      enum: relationships
     },
 
     account_name: {
       type: String,
       lowercase: true,
-      required: true,
+      // required: true,
       trim: true
     },
 
     account_number: {
       type: String,
+      // required: true,
       trim: true,
       unique: true,
-      sparse: true,
-      required: true
+      sparse: true
     },
 
     bank: {
       type: Schema.Types.ObjectId,
-      ref: 'Bank',
-      required: true
+      // required: true,
+      ref: 'Bank'
     },
 
     isValidAccInfo: {
@@ -273,45 +282,62 @@ const originSchema = new Schema(
   schemaOptions
 )
 
-originSchema.virtual('full_name').get(function () {
+clientSchema.virtual('full_name').get(function () {
   return this.first_name.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
     ` ${this.last_name}`
   )
 })
 
-originSchema.virtual('age').get(function () {
+clientSchema.virtual('age').get(function () {
   return computeAge(this.birth_date)
 })
 
-originSchema.virtual('tenure').get(function () {
+clientSchema.virtual('tenure').get(function () {
   return computeTenure(this.hire_date)
 })
 
-originSchema.methods.getMonthNetPay = function (year, month) {
+clientSchema.methods.getMonthNetPay = function (year, month) {
   return this.income[year][month]
 }
 
-originSchema.methods.validatePassword = function (password) {
-  return compareSync(password, this.password)
+/**
+ * Validates the OTP sent to user email.
+ * @param {string} otp
+ * @returns {{ isValid: boolean, reason: (string|undefined) }}
+ */
+clientSchema.methods.validateOTP = function (otp) {
+  if (Date.now() > this.otp.expiresIn) {
+    return { isValid: false, reason: 'OTP expired' }
+  }
+
+  if (otp !== this.otp.pin) {
+    return { isValid: false, reason: 'Invalid OTP' }
+  }
+
+  return { isValid: true }
 }
 
-originSchema.pre('save', function (next) {
+clientSchema.methods.validatePassword = function (password) {
+  return bcrypt.compareSync(password, this.password)
+}
+
+clientSchema.pre('save', function (next) {
   if (this.modifiedPaths()?.includes('password')) {
-    this.password = hashSync(this.password, 10)
+    this.password = bcrypt.hashSync(this.password, 10)
   }
 
   next()
 })
 
-originSchema.post(/^find/, function (doc) {
+clientSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Accounts not found.')
+    throw new NotFoundError('No client accounts found')
   }
 
-  if (!doc) throw new NotFoundError('Account not found.')
+  if (!doc) throw new NotFoundError('Client account not found')
 })
 
-const Origin = model('Origin', originSchema)
+const Origin = model('Client', clientSchema)
 
 export default Origin

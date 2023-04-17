@@ -12,7 +12,7 @@ router.get('/logout', AuthController.logout)
 
 router.get('/sessions/logout', [verifyJWT], AuthController.signOutAllSessions)
 
-router.get('/request_otp', AuthController.sendOTP)
+router.get('/request-otp', AuthController.sendOTP)
 
 router.get('/tokens', AuthController.getNewTokens)
 

@@ -1,25 +1,26 @@
 import { DateTime } from 'luxon'
-import { relationships, validIds } from '../utils/constants'
-import BaseValidator from './base.validator'
+// import { joiPassword } from 'joi-password'
+import { relationships, validIds } from '../utils/common.js'
+import BaseValidator from './base.validator.js'
 import Joi from 'joi'
 
 const isOver18 = (dob, helper) => {
-  const dateEighteenYearsBack = DateTime.now()
-    .minus({ years: 18 })
+  const dateEighteenYearsBack = DateTime.now().minus({ years: 18 })
 
   if (dateEighteenYearsBack >= dob) return dob
 
   return helper.error('any.invalid')
 }
 
-class OriginValidator extends BaseValidator {
-  #bvnSchema
+class ClientValidator extends BaseValidator {
+  #addressSchema
   #birthDateSchema
+  #bvnSchema
   #commandSchema
+  #hireDateSchema
   #idSchema
   #idTypeSchema
-  #hireDateSchema
-  #addressSchema
+  #passcodeSchema
   #relationshipSchema
 
   constructor () {
@@ -35,7 +36,8 @@ class OriginValidator extends BaseValidator {
     this.#birthDateSchema = Joi.date()
       .iso()
       .label('Birth date')
-      .custom(isOver18).less('now')
+      .custom(isOver18)
+      .less('now')
       .messages({ 'any.invalid': 'Must be 18 or older to apply' })
 
     this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
@@ -53,7 +55,8 @@ class OriginValidator extends BaseValidator {
             return doe
           }
         })
-      ).less('now')
+      )
+      .less('now')
       .messages({
         'date.min': '{#label} is not valid'
       })
@@ -76,11 +79,33 @@ class OriginValidator extends BaseValidator {
         'string.min': '{#label} is too short.',
         'string.max': '{#label} is too long.'
       })
+
+    this.#passcodeSchema = Joi.string().length(6).pattern(/^\d{6}$/).messages({
+      'string.pattern.base': '{#label} is not valid'
+    })
+    // .messages({})
   }
 
-  validateCreate = (tenantId, dto) => {
+  validateSignup = (clientSignupDTO) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.default(tenantId),
+      first_name: this._nameSchema.extract('first').required(),
+      last_name: this._nameSchema.extract('last').required(),
+      middle_name: this._nameSchema.extract('middle'),
+      phone_number: this._phoneNumberSchema.required(),
+      staff_id: this.#idSchema.label('staff id').required(),
+      passcode: this.#passcodeSchema.required()
+    })
+
+    let { value, error } = schema.validate(clientSignupDTO, {
+      abortEarly: false
+    })
+    error = this._refineError(error)
+
+    return { value, error }
+  }
+
+  validateCreate = (newClientDTO) => {
+    const schema = Joi.object({
       passport: Joi.string(),
       id_card: Joi.string(),
       first_name: this._nameSchema.extract('first').required(),
@@ -123,13 +148,13 @@ class OriginValidator extends BaseValidator {
       bank: this._objectIdSchema.label('Bank').required()
     })
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
+    let { value, error } = schema.validate(newClientDTO, { abortEarly: false })
     error = this._refineError(error)
 
     return { value, error }
   }
 
-  validateUpdate = async (dto) => {
+  validateUpdate = async (updateClientDTO) => {
     const schema = Joi.object({
       passport: Joi.string(),
       id_card: Joi.string(),
@@ -169,11 +194,11 @@ class OriginValidator extends BaseValidator {
       bank: this._objectIdSchema.label('Bank')
     }).min(1)
 
-    let { value, error } = schema.validate(dto)
+    let { value, error } = schema.validate(updateClientDTO)
     error = this._refineError(error)
 
     return { value, error }
   }
 }
 
-export default new OriginValidator()
+export default new ClientValidator()

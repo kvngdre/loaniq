@@ -6,7 +6,6 @@ import {
 import { constants } from '../config/index.js'
 import { events, pubsub } from '../pubsub/index.js'
 import { fileURLToPath } from 'url'
-import { startSession } from 'mongoose'
 import ConflictError from '../errors/ConflictError.js'
 import DependencyError from '../errors/DependencyError.js'
 import driverUploader from '../utils/driveUploader.js'
@@ -18,24 +17,25 @@ import mailer from '../utils/mailer.js'
 import path from 'path'
 import randomString from '../utils/randomString.js'
 import similarity from '../utils/stringSimilarity.js'
+import transaction from 'mongoose-trx'
 import UnauthorizedError from '../errors/UnauthorizedError.js'
 import UserConfigService from './userConfig.service.js'
 import UserDAO from '../daos/user.dao.js'
 import ValidationError from '../errors/ValidationError.js'
 class UserService {
-  async createUser (newUserDTO) {
-    const trx = await startSession()
-    try {
-      // Starting transaction
-      trx.startTransaction()
-
+  static createUser = async (newUserDTO) => {
+    const result = await transaction(async (session) => {
       newUserDTO.password = randomString()
+
       const [newUser] = await Promise.all([
-        UserDAO.insert(newUserDTO, trx),
-        UserConfigService.createConfig({
-          userId: newUserDTO._id,
-          tenantId: newUserDTO.tenantId
-        })
+        UserDAO.insert(newUserDTO, session),
+        UserConfigService.createConfig(
+          {
+            userId: newUserDTO._id,
+            tenantId: newUserDTO.tenantId
+          },
+          session
+        )
       ])
 
       // Send temporary password to new user email.
@@ -48,22 +48,15 @@ class UserService {
         throw new DependencyError('Failed to send password to user email.')
       }
 
-      // Email sent successfully, committing changes.
-      await trx.commitTransaction()
       newUser.purgeSensitiveData()
 
       return newUser
-    } catch (exception) {
-      // ! Exception thrown, roll back changes
-      await trx.abortTransaction()
+    })
 
-      throw exception
-    } finally {
-      trx.endSession()
-    }
+    return result
   }
 
-  async verifyNewUser (verifyNewUserDTO, userAgent, clientIp) {
+  static verifyNewUser = async (verifyNewUserDTO, userAgent, clientIp) => {
     const { email, otp, current_password, new_password } = verifyNewUserDTO
 
     const foundUser = await UserDAO.findOne({ email })
@@ -75,10 +68,7 @@ class UserService {
       const { isValid, reason } = foundUser.validateOTP(otp)
       if (!isValid) throw new ValidationError(reason)
 
-      foundUser.set({
-        'otp.pin': null,
-        'otp.expiresIn': null
-      })
+      foundUser.set({ 'otp.pin': null, 'otp.expiresIn': null })
     } else {
       const isValid = foundUser.validatePassword(current_password)
       if (!isValid) throw new UnauthorizedError('Password is incorrect.')
@@ -125,48 +115,35 @@ class UserService {
     return [accessToken, refreshToken, foundUser]
   }
 
-  async getUsers (
+  static getUsers = async (
     tenantId,
-    projection = {
-      password: 0,
-      resetPwd: 0,
-      otp: 0
-    }
-  ) {
+    projection = { password: 0, resetPwd: 0, otp: 0 }
+  ) => {
     const foundUsers = await UserDAO.find({ tenantId }, projection)
     const count = Intl.NumberFormat('en-US').format(foundUsers.length)
 
     return { count, users: foundUsers }
   }
 
-  async getUserById (
-    id,
-    projection = {
-      password: 0,
-      resetPwd: 0,
-      otp: 0
-    }
-  ) {
-    // console.log(id)
-    const foundUser = await UserDAO.findById(id, projection)
+  static getUserById = async (
+    userId,
+    projection = { password: 0, resetPwd: 0, otp: 0 }
+  ) => {
+    const foundUser = await UserDAO.findById(userId, projection)
 
     return foundUser
   }
 
-  async getUser (
+  static getUser = async (
     filter,
-    projection = {
-      password: 0,
-      resetPwd: 0,
-      otp: 0
-    }
-  ) {
+    projection = { password: 0, resetPwd: 0, otp: 0 }
+  ) => {
     const foundUser = await UserDAO.findOne(filter, projection)
 
     return foundUser
   }
 
-  async getCurrentUser (userId) {
+  static getCurrentUser = async (userId) => {
     const foundUser = await UserDAO.findById(userId)
 
     foundUser.purgeSensitiveData()
@@ -181,27 +158,27 @@ class UserService {
    * @param {object} [projection] The fields to include or exclude.
    * @returns
    */
-  async updateUser (
+  static updateUser = async (
     userId,
     updateUserDTO,
-    projection = {
-      password: 0,
-      resetPwd: 0,
-      otp: 0
-    }
-  ) {
-    const updatedUser = await UserDAO.update({ userId }, updateUserDTO, projection)
+    projection = { password: 0, resetPwd: 0, otp: 0 }
+  ) => {
+    const updatedUser = await UserDAO.update(
+      { userId },
+      updateUserDTO,
+      projection
+    )
 
     return updatedUser
   }
 
-  async updateBulk (filter, updateDTO) {
+  static updateBulk = async (filter, updateDTO) => {
     const result = await UserDAO.updateMany(filter, updateDTO)
 
     return result
   }
 
-  async deleteUser (userId) {
+  static deleteUser = async (userId) => {
     const [deletedUser] = await Promise.all([
       UserDAO.remove(userId),
       UserConfigService.deleteConfig(userId)
@@ -210,8 +187,9 @@ class UserService {
     return deletedUser
   }
 
-  async changePassword (userId, dto) {
-    const { current_password, new_password } = dto
+  static changePassword = async (userId, changePasswordDTO) => {
+    const { current_password, new_password } = changePasswordDTO
+
     const foundUser = await UserDAO.findById(userId)
 
     const isMatch = foundUser.comparePasswords(current_password)
@@ -238,7 +216,10 @@ class UserService {
     const info = await EmailService.send({
       to: foundUser.email,
       templateName: 'user_password_change',
-      context: { name: foundUser.first_name, datetime: formatter.format(new Date()) }
+      context: {
+        name: foundUser.first_name,
+        datetime: formatter.format(new Date())
+      }
     })
     if (info.error) {
       throw new DependencyError('Failed to send password to user email.')
@@ -261,7 +242,7 @@ class UserService {
     return foundUser
   }
 
-  async forgotPassword ({ email, new_password }) {
+  static forgotPassword = async ({ email, new_password }) => {
     logger.info('Sending password change email...')
     const [user] = await Promise.all([
       UserDAO.update({ email }, { password: new_password, resetPwd: false }),
@@ -277,7 +258,7 @@ class UserService {
     return user
   }
 
-  async resetPassword (userId) {
+  static resetPassword = async (userId) => {
     const randomPwd = randomString(6)
 
     const foundUser = await UserDAO.update(userId, {
@@ -299,7 +280,7 @@ class UserService {
     return foundUser
   }
 
-  async deactivateUser (userId, { password }) {
+  static deactivateUser = async (userId, { password }) => {
     const foundUser = await UserDAO.findById(userId)
 
     const isMatch = foundUser.comparePasswords(password)
@@ -316,7 +297,7 @@ class UserService {
     return foundUser
   }
 
-  async reactivateUser (userId) {
+  static reactivateUser = async (userId) => {
     const foundUser = await UserDAO.update(userId, { active: true })
 
     foundUser.purgeSensitiveData()
@@ -324,7 +305,7 @@ class UserService {
     return foundUser
   }
 
-  async uploadImage ({ userId, tenantId }, uploadFile) {
+  static uploadImage = async ({ userId, tenantId }, uploadFile) => {
     const foundUser = await UserDAO.findById(userId, {
       password: 0,
       resetPwd: 0,
@@ -366,4 +347,4 @@ class UserService {
   }
 }
 
-export default new UserService()
+export default UserService

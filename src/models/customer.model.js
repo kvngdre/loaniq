@@ -144,6 +144,7 @@ const customerSchema = new Schema(
 
     employer_state: {
       type: String,
+      ref: 'State',
       required: true
     },
 
