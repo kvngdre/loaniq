@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose'
+import autoPopulate from 'mongoose-autopopulate'
 import bcrypt from 'bcryptjs'
 import NotFoundError from '../errors/NotFoundError.js'
-import autoPopulate from 'mongoose-autopopulate'
 
 const schemaOptions = {
   timestamps: true,
@@ -14,8 +14,8 @@ const userSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
-      ref: 'Tenant',
-      required: true
+      required: true,
+      ref: 'Tenant'
     },
 
     avatar: {
@@ -26,6 +26,7 @@ const userSchema = new Schema(
     first_name: {
       type: String,
       trim: true,
+      minLength: 2,
       maxLength: 50,
       required: true
     },
@@ -33,12 +34,14 @@ const userSchema = new Schema(
     last_name: {
       type: String,
       trim: true,
+      minLength: 2,
       maxLength: 50,
       required: true
     },
 
     middle_name: {
       type: String,
+      minLength: 1,
       maxLength: 50,
       trim: true,
       default: null
@@ -143,27 +146,6 @@ userSchema.virtual('full_name').get(function () {
   )
 })
 
-userSchema.methods.validatePassword = function (password) {
-  return bcrypt.compareSync(password, this.password)
-}
-
-/**
- * Validates the OTP sent to user email.
- * @param {string} otp
- * @returns {{ isValid: boolean, reason: (string|undefined) }}
- */
-userSchema.methods.validateOTP = function (otp) {
-  if (Date.now() > this.otp.expiresIn) {
-    return { isValid: false, reason: 'OTP expired' }
-  }
-
-  if (otp !== this.otp.pin) {
-    return { isValid: false, reason: 'Invalid OTP' }
-  }
-
-  return { isValid: true }
-}
-
 // Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
   const data = { id: this._id, redirect: {} }
@@ -199,15 +181,32 @@ userSchema.methods.permitLogin = function () {
 }
 
 userSchema.methods.purgeSensitiveData = function () {
-  delete this._doc?.password
   delete this._doc?.otp
+  delete this._doc?.password
   delete this._doc?.resetPwd
+  delete this._doc?.salt
 }
 
-// Hashing password before insert
+userSchema.methods.validateOTP = function (otp) {
+  if (Date.now() > this.otp.expiresIn) {
+    return { isValid: false, reason: 'OTP expired' }
+  }
+
+  if (otp !== this.otp.pin) {
+    return { isValid: false, reason: 'Invalid OTP' }
+  }
+
+  return { isValid: true }
+}
+
+userSchema.methods.validatePassword = function (password) {
+  return bcrypt.compareSync(password, this.password)
+}
+
+// ! Hashing user password before insert
 userSchema.pre('save', function (next) {
   if (this.modifiedPaths()?.includes('password')) {
-    this.password = bcrypt.hashSync(this.password, 10)
+    this.password = bcrypt.hashSync(this.password, 12)
   }
 
   next()

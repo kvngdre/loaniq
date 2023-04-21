@@ -4,8 +4,9 @@
  * @returns {number}
  */
 export default function computeAge (dob) {
-  const epochYear = 1970
+  if (!dob) return null
 
+  const epochYear = 1970
   const diff = Date.now() - new Date(dob).getTime()
   const age = new Date(diff).getUTCFullYear() - epochYear
 

@@ -16,24 +16,24 @@ class UserController extends BaseController {
 
     const newUser = await UserService.createUser(value)
     const response = this.apiResponse(
-      'User created. Temporary password sent to user email.',
+      'User created. Temporary password sent to user email',
       newUser
     )
 
     res.status(httpCodes.CREATED).json(response)
   }
 
-  static verifySignUp = async (req, res) => {
+  static verifySignup = async (req, res) => {
     const { value, error } = userValidator.validateVerifySignUp(req.body)
     if (error) throw new ValidationError(null, error)
 
-    const [accessToken, refreshToken, user] = await UserService.verifyNewUser(
+    const { accessToken, refreshToken, user } = await UserService.verifyNewUser(
       value,
       req.headers['user-agent'],
       requestIp.getClientIp(req)
     )
 
-    //  ! Create secure cookie with refresh token.
+    // ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
       sameSite: 'none',
@@ -41,9 +41,9 @@ class UserController extends BaseController {
       maxAge: constants.jwt.exp_time.refresh * 1000
     })
 
-    const response = this.apiResponse('User verified.', { user, accessToken })
+    const response = this.apiResponse('User verified', { user, accessToken })
 
-    return res.status(httpCodes.OK).json(response)
+    res.status(httpCodes.OK).json(response)
   }
 
   static getUsers = async (req, res) => {
@@ -57,14 +57,14 @@ class UserController extends BaseController {
 
   static getUser = async (req, res) => {
     const user = await UserService.getUserById(req.params.userId)
-    const response = this.apiResponse('Fetched user.', user)
+    const response = this.apiResponse('Fetched user', user)
 
     res.status(httpCodes.OK).json(response)
   }
 
   static getCurrentUser = async (req, res) => {
     const user = await UserService.getCurrentUser(req.currentUser._id)
-    const response = this.apiResponse('Fetched current user.', user)
+    const response = this.apiResponse('Fetched current user', user)
 
     res.status(httpCodes.OK).json(response)
   }
@@ -74,14 +74,14 @@ class UserController extends BaseController {
     if (error) throw new ValidationError(null, error)
 
     const user = await UserService.updateUser(req.params.userId, value)
-    const response = this.apiResponse('User account update.', user)
+    const response = this.apiResponse('User account update', user)
 
     res.status(httpCodes.OK).json(response)
   }
 
   static deleteUser = async (req, res) => {
     await UserService.deleteUser(req.params.userId)
-    const response = this.apiResponse('User account deleted.')
+    const response = this.apiResponse('User account deleted')
 
     res.status(httpCodes.OK).json(response)
   }
@@ -91,7 +91,7 @@ class UserController extends BaseController {
     if (error) throw new ValidationError(null, error)
 
     await UserService.changePassword(req.params.userId, value)
-    const response = this.apiResponse('Password updated.')
+    const response = this.apiResponse('Password updated')
 
     res.status(httpCodes.OK).json(response)
   }
@@ -128,14 +128,14 @@ class UserController extends BaseController {
 
   static reactivateUser = async (req, res) => {
     await UserService.reactivateUser(req.params.userId)
-    const response = this.apiResponse('User has been reactivated.')
+    const response = this.apiResponse('User has been reactivated')
 
     res.status(httpCodes.OK).json(response)
   }
 
   static uploadFiles = async (req, res) => {
     const user = await UserService.uploadImage(req.params, req.file)
-    const response = this.apiResponse('File uploaded.', user)
+    const response = this.apiResponse('File uploaded', user)
 
     res.status(httpCodes.OK).json(response)
   }

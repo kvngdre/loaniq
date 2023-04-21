@@ -5,6 +5,8 @@ import Joi from 'joi'
 
 class BaseValidator {
   #formatErrorMessage = (error) => {
+    // Regex to locate the appropriate space for inserting
+    // commas in numbers in thousands or millions.
     const regex = /(?<!.*ISO \d)\B(?=(\d{3})+(?!\d))/g
     const errorMsg = error.message
 
@@ -60,9 +62,11 @@ class BaseValidator {
       .max(255)
       .trim()
       .label('First name')
+      .pattern(/^[a-zA-Z]+( [a-zA-Z]+)*$/)
       .messages({
         'string.min': '{#label} is not valid',
-        'string.max': '{#label} is too long'
+        'string.max': '{#label} is too long',
+        'string.pattern.base': '{#label} is invalid'
       }),
     last: Joi.string()
       .label('Last name')
@@ -70,24 +74,29 @@ class BaseValidator {
       .min(2)
       .max(255)
       .trim()
+      .pattern(/^[a-zA-Z]+( [a-zA-Z]+)*$/)
       .messages({
         'string.min': '{#label} is not valid',
-        'string.max': '{#label} is too long'
+        'string.max': '{#label} is too long',
+        'string.pattern.base': '{#label} is invalid'
       }),
     middle: Joi.string()
       .label('Middle name')
       .lowercase()
-      .min(2)
+      .min(1)
       .max(255)
       .trim()
+      .pattern(/^[a-zA-Z]+( [a-zA-Z]+)*$/)
       .messages({
         'string.min': '{#label} is not valid',
-        'string.max': '{#label} is too long'
+        'string.max': '{#label} is too long',
+        'string.pattern.base': '{#label} is invalid'
       })
   })
 
   _genderSchema = Joi.string()
     .lowercase()
+    .trim()
     .label('Gender')
     .valid('male', 'female')
     .messages({
@@ -97,10 +106,11 @@ class BaseValidator {
   _phoneNumberSchema = Joi.string()
     .label('Phone number')
     .trim()
-    .pattern(/^\+?[\d]{10,14}$/)
+    .length(13)
+    .pattern(/^234\d{10}$/)
     .messages({
       'string.pattern.base':
-        '{#label} is invalid, please include international dialling code.'
+        '{#label} is invalid, please include the international dialling code'
     })
 
   _otpSchema = (len) => {
@@ -122,23 +132,26 @@ class BaseValidator {
       'string.email': '{#label} is  not valid'
     })
 
-  _passwordSchema = joiPassword
-    .string()
-    .label('Password')
-    .minOfUppercase(1)
-    .minOfSpecialCharacters(1)
-    .minOfNumeric(1)
-    .noWhiteSpaces()
-    .min(8)
-    .max(1024)
-    .messages({
-      'password.minOfUppercase':
-        '{#label} should contain at least {#min} uppercase character',
-      'password.minOfSpecialCharacters':
-        '{#label} should contain at least {#min} special character',
-      'password.minOfNumeric': '{#label} should contain at least {#min} number',
-      'password.noWhiteSpaces': '{#label} should not contain white spaces'
-    })
+  _passwordSchema = (len) => {
+    return joiPassword
+      .string()
+      .label('Password')
+      .minOfUppercase(1)
+      .minOfSpecialCharacters(1)
+      .minOfNumeric(1)
+      .noWhiteSpaces()
+      .min(len)
+      .max(1024)
+      .messages({
+        'password.minOfUppercase':
+          '{#label} should contain at least {#min} uppercase character',
+        'password.minOfSpecialCharacters':
+          '{#label} should contain at least {#min} special character',
+        'password.minOfNumeric':
+          '{#label} should contain at least {#min} number',
+        'password.noWhiteSpaces': '{#label} should not contain white spaces'
+      })
+  }
 
   _confirmPasswordSchema = Joi.string()
     .label('Confirm password')
@@ -162,6 +175,10 @@ class BaseValidator {
       .label('Address')
       .invalid(''),
     state: this._objectIdSchema.label('State')
+  })
+
+  _idSchema = Joi.string().alphanum().trim().uppercase().messages({
+    'string.pattern.base': '{#label} is not valid'
   })
 
   _activeSchema = Joi.boolean().label('Active').messages({
@@ -216,6 +233,8 @@ class BaseValidator {
     })
 
   _descSchema = Joi.string().label('Description').trim().lowercase().max(100)
+
+  _phoneOrStaffIdSchema = Joi.alternatives().try(this._phoneNumberSchema, this._idSchema)
 }
 
 export default BaseValidator

@@ -8,7 +8,9 @@ router.post('/', verifyJWT, ClientController.createClient)
 
 router.post('/signup', ClientController.signup)
 
-router.get('/', ClientController.getClient)
+router.post('/verify-signup', ClientController.verifySignup)
+
+router.get('/', ClientController.getClients)
 
 router.get('/:clientId', ClientController.getClient)
 

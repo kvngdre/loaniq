@@ -1,4 +1,4 @@
-import { maritalStatus, relationships, validIds } from '../utils/common.js'
+import { maritalStatus, relationships, status, validIds } from '../utils/common.js'
 import { Schema, model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 import computeAge from '../utils/computeAge.js'
@@ -28,34 +28,28 @@ const clientSchema = new Schema(
     first_name: {
       type: String,
       required: true,
-      minLength: 3,
-      maxLength: 50,
-      trim: true
+      minLength: 2,
+      maxLength: 50
     },
 
     last_name: {
       type: String,
       required: true,
-      minLength: 3,
-      maxLength: 50,
-      trim: true
+      minLength: 2,
+      maxLength: 50
     },
 
     middle_name: {
       type: String,
-      minLength: 3,
+      minLength: 1,
       maxLength: 50,
-      trim: true
+      default: null
     },
 
     status: {
       type: String,
-      default: 'retired'
-    },
-
-    active: {
-      type: Boolean,
-      default: false
+      enum: Object.values(status),
+      default: status.ONBOARDING
     },
 
     role: {
@@ -80,14 +74,14 @@ const clientSchema = new Schema(
     address: {
       type: String,
       // required: true,
-      trim: true,
-      maxLength: 255,
-      lowercase: true
+      default: null,
+      maxLength: 255
     },
 
     state: {
       type: Schema.Types.ObjectId,
       // required: true,
+      default: null,
       ref: 'State'
     },
 
@@ -117,7 +111,7 @@ const clientSchema = new Schema(
     bvn: {
       type: String,
       // required: true,
-      trim: true,
+      default: null,
       unique: true,
       sparse: true
     },
@@ -130,19 +124,15 @@ const clientSchema = new Schema(
     staff_id: {
       type: String,
       required: true,
-      uppercase: true,
-      trim: true,
       unique: true
     },
 
-    password: {
+    passcode: {
       type: String,
-      // required: true,
-      trim: true,
-      maxLength: 1024
+      required: true
     },
 
-    resetPwd: {
+    resetPasscode: {
       type: Boolean,
       default: false
     },
@@ -168,13 +158,13 @@ const clientSchema = new Schema(
     id_number: {
       type: String,
       // required: true,
-      minLength: 4,
-      maxLength: 50,
-      trim: true
+      minLength: 3,
+      maxLength: 50
     },
 
     segment: {
       type: Schema.Types.ObjectId,
+      default: null,
       // required: true,
       ref: 'Segment'
     },
@@ -182,21 +172,20 @@ const clientSchema = new Schema(
     command: {
       type: String,
       // required: true,
-      trim: true,
       default: null
     },
 
     employer_address: {
       type: String,
       // required: true,
-      trim: true,
-      maxLength: 255,
-      lowercase: true
+      default: null,
+      maxLength: 255
     },
 
     employer_state: {
       type: Schema.Types.ObjectId,
       // required: true,
+      default: null,
       ref: 'State'
     },
 
@@ -208,25 +197,26 @@ const clientSchema = new Schema(
 
     income: {
       type: Map,
-      of: Schema.Types.Mixed
+      of: Schema.Types.Mixed,
+      default: null
     },
 
     nok_full_name: {
       type: String,
       // required: true,
-      trim: true
+      default: null
     },
 
     nok_address: {
       type: String,
-      trim: true,
-      maxLength: 255,
       // required: true,
-      lowercase: true
+      default: null,
+      maxLength: 255
     },
 
     nok_state: {
       type: Schema.Types.ObjectId,
+      default: null,
       // required: true,
       ref: 'State'
     },
@@ -234,7 +224,7 @@ const clientSchema = new Schema(
     nok_phone_number: {
       type: String,
       // required: true,
-      trim: true
+      default: null
     },
 
     nok_relationship: {
@@ -245,21 +235,21 @@ const clientSchema = new Schema(
 
     account_name: {
       type: String,
-      lowercase: true,
       // required: true,
-      trim: true
+      default: null
     },
 
     account_number: {
       type: String,
       // required: true,
-      trim: true,
+      default: null,
       unique: true,
       sparse: true
     },
 
     bank: {
       type: Schema.Types.ObjectId,
+      default: null,
       // required: true,
       ref: 'Bank'
     },
@@ -269,14 +259,22 @@ const clientSchema = new Schema(
       default: false
     },
 
+    last_login_time: {
+      type: Date,
+      default: null
+    },
+
     session: {
-      os: String,
-      location: String,
-      client: String,
-      ip: String,
-      login_time: Date,
-      token: String,
-      expiresIn: Number
+      type: {
+        os: String,
+        location: String,
+        client: String,
+        ip: String,
+        login_time: Date,
+        token: String,
+        expiresIn: Number
+      },
+      default: null
     }
   },
   schemaOptions
@@ -301,11 +299,47 @@ clientSchema.methods.getMonthNetPay = function (year, month) {
   return this.income[year][month]
 }
 
-/**
- * Validates the OTP sent to user email.
- * @param {string} otp
- * @returns {{ isValid: boolean, reason: (string|undefined) }}
- */
+// Checking if client can be permitted to login
+clientSchema.methods.permitLogin = function () {
+  const data = { id: this._id, redirect: {} }
+
+  if (!this.isPhoneVerified && !this.status !== status.ACTIVE) {
+    data.redirect.verifyNewUser = true
+    return {
+      isPermitted: false,
+      message: 'Your account has not been verified.',
+      data
+    }
+  }
+
+  if (this.resetPasscode) {
+    data.redirect.reset_password = true
+    return {
+      isPermitted: false,
+      message: 'Your passcode reset has been triggered.',
+      data
+    }
+  }
+
+  if (!this.status === status.SUSPENDED || !this.status === status.DEACTIVATED) {
+    data.redirect.inactive = true
+    return {
+      isPermitted: false,
+      message: 'Account deactivated. Contact support.',
+      data
+    }
+  }
+
+  return { isPermitted: true }
+}
+
+clientSchema.methods.purgeSensitiveData = function () {
+  delete this._doc?.otp
+  delete this._doc?.passcode
+  delete this._doc?.resetPwd
+  delete this._doc?.salt
+}
+
 clientSchema.methods.validateOTP = function (otp) {
   if (Date.now() > this.otp.expiresIn) {
     return { isValid: false, reason: 'OTP expired' }
@@ -318,13 +352,14 @@ clientSchema.methods.validateOTP = function (otp) {
   return { isValid: true }
 }
 
-clientSchema.methods.validatePassword = function (password) {
-  return bcrypt.compareSync(password, this.password)
+clientSchema.methods.validatePasscode = function (passcode) {
+  return bcrypt.compareSync(passcode, this.passcode)
 }
 
+// ! Hashing client passcode before insert
 clientSchema.pre('save', function (next) {
-  if (this.modifiedPaths()?.includes('password')) {
-    this.password = bcrypt.hashSync(this.password, 10)
+  if (this.modifiedPaths()?.includes('passcode')) {
+    this.passcode = bcrypt.hashSync(this.passcode, 12)
   }
 
   next()

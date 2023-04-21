@@ -112,7 +112,7 @@ class UserService {
 
     foundUser.purgeSensitiveData()
 
-    return [accessToken, refreshToken, foundUser]
+    return { accessToken, refreshToken, foundUser }
   }
 
   static getUsers = async (

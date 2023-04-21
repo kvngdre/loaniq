@@ -15,7 +15,7 @@ router.post('/forgot-password', UserController.forgotPassword)
 
 router.post('/uploads', verifyJWT, upload.single('avatar'), UserController.uploadFiles)
 
-router.post('/verify-signup', UserController.verifySignUp)
+router.post('/verify-signup', UserController.verifySignup)
 
 router.post('/:userId/change-password', verifyJWT, UserController.changePassword)
 

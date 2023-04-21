@@ -68,7 +68,7 @@ class UserValidator extends BaseValidator {
       current_password: Joi.string()
         .trim()
         .label('Current password'),
-      new_password: this._passwordSchema.label('New password'),
+      new_password: this._passwordSchema(8).label('New password'),
       confirm_password: this._confirmPasswordSchema
     })
       .xor('otp', 'current_password')
@@ -117,7 +117,7 @@ class UserValidator extends BaseValidator {
   validateUpdatePassword = (dto) => {
     const schema = Joi.object({
       current_password: Joi.string().label('Current password').required(),
-      new_password: this._passwordSchema.required(),
+      new_password: this._passwordSchema(8).required(),
       confirm_password: this._confirmPasswordSchema.required()
     })
 
@@ -148,7 +148,7 @@ class UserValidator extends BaseValidator {
     }
 
     schema = schema.keys({
-      new_password: this._passwordSchema.required(),
+      new_password: this._passwordSchema(8).required(),
       confirm_password: this._confirmPasswordSchema.required(),
       canReset: Joi.boolean().default(canReset)
     })

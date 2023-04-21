@@ -4,6 +4,8 @@
  * @returns {number}
  */
 export default function computeTenure (doe) {
+  if (!doe) return null
+
   const diff = Date.now() - new Date(doe).getTime()
   const tenure = new Date(diff).getUTCFullYear() - 1970
 

@@ -118,7 +118,7 @@ class TenantValidator extends BaseValidator {
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
-        new_password: this._passwordSchema.required(),
+        new_password: this._passwordSchema(8).required(),
         confirm_password: this._confirmPasswordSchema.required(),
         role: Joi.any().default(adminRoleId).forbidden(),
         resetPwd: Joi.boolean().default(false).forbidden()
@@ -166,6 +166,11 @@ class TenantValidator extends BaseValidator {
 
   validateActivationRequest = (activateTenantDTO) => {
     const schema = Joi.object({
+      logo: Joi.string().label('logo'),
+      business_name: this.#companyNameSchema.required(),
+      category: this.#categorySchema.required(),
+      cac_number: this.#cacNumberSchema.required(),
+      email: this._emailSchema.required(),
       phone_number: this._phoneNumberSchema,
       address: this._locationSchema.extract('address').required(),
       state: this._locationSchema.extract('state').required(),
