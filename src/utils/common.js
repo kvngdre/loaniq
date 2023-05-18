@@ -4,21 +4,6 @@ export const feeTypes = { percent: 'percent', decimal: 'decimal' };
 
 export const geoZones = ['north central', 'north east', 'north west', 'south east', 'south south', 'south west'];
 
-export const httpCodes = {
-  OK: 200,
-  CREATED: 201,
-  NO_CONTENT: 204,
-  FOUND_REDIRECT: 307,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  PAYMENT_REQUIRED: 402,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  CONFLICT: 409,
-  DEPENDENCY: 424,
-  INTERNAL_SERVER: 500,
-};
-
 export const loanRemarks = [
   'age above threshold',
   'bad loan with other institution',

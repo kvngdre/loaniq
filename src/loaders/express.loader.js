@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import corsOptions from '../config/corsOptions.js';
 import { constants } from '../config/index.js';
-import NotFoundError from '../errors/NotFoundError.js';
+import NotFoundError from '../errors/notFound.error.js';
 import credentials from '../middleware/credentials.js';
 import errorMiddleware from '../middleware/error.middleware.js';
 

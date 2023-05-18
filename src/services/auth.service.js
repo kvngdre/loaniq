@@ -1,19 +1,19 @@
 /* eslint-disable camelcase */
 /* eslint-disable eqeqeq */
+import jwt from 'jsonwebtoken';
 import { constants } from '../config/index.js';
+import ClientDAO from '../daos/client.dao.js';
+import UserDAO from '../daos/user.dao.js';
+import DependencyError from '../errors/dependency.error.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import ForbiddenError from '../errors/forbidden.error.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
-import ConflictError from '../errors/ConflictError.js';
-import DependencyError from '../errors/DependencyError.js';
-import EmailService from './email.service.js';
-import ForbiddenError from '../errors/ForbiddenError.js';
 import generateOTP from '../utils/generateOTP.js';
 import generateSession from '../utils/generateSession.js';
-import jwt from 'jsonwebtoken';
 import logger from '../utils/logger.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
+import EmailService from './email.service.js';
 import userConfigService from './userConfig.service.js';
-import UserDAO from '../daos/user.dao.js';
-import ClientDAO from '../daos/client.dao.js';
 
 class AuthService {
   static async login(loginDTO, token, userAgent, clientIp) {
@@ -40,7 +40,7 @@ class AuthService {
       }
 
       if (userConfig.sessions.length >= 3) {
-        throw new ConflictError('Maximum allowed devices reached.');
+        throw new DuplicateError('Maximum allowed devices reached.');
       }
 
       const accessToken = generateAccessToken({ id: foundUser._id });

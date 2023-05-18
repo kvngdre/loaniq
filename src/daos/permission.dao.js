@@ -1,8 +1,8 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
-import ConflictError from '../errors/ConflictError.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import ValidationError from '../errors/validation.error.js';
 import Permission from '../models/permission.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseDAO from './base.dao.js';
 
 class PermissionDAO extends BaseDAO {
   static async insert(newRecordDTO) {
@@ -14,7 +14,7 @@ class PermissionDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`Duplicate: ${field} already in use.`);
+        throw new DuplicateError(`Duplicate: ${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
@@ -55,7 +55,7 @@ class PermissionDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {

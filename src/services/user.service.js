@@ -1,24 +1,24 @@
 /* eslint-disable camelcase */
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
-import { constants } from '../config/index.js';
-import { events, pubsub } from '../pubsub/index.js';
-import { fileURLToPath } from 'url';
-import ConflictError from '../errors/ConflictError.js';
-import DependencyError from '../errors/DependencyError.js';
-import driverUploader from '../utils/driveUploader.js';
-import EmailService from './email.service.js';
 import fs from 'fs';
+import transaction from 'mongoose-trx';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { constants } from '../config/index.js';
+import UserDAO from '../daos/user.dao.js';
+import DependencyError from '../errors/dependency.error.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
+import ValidationError from '../errors/validation.error.js';
+import { events, pubsub } from '../pubsub/index.js';
+import driverUploader from '../utils/driveUploader.js';
+import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
 import generateSession from '../utils/generateSession.js';
 import logger from '../utils/logger.js';
 import mailer from '../utils/mailer.js';
-import path from 'path';
 import randomString from '../utils/randomString.js';
 import similarity from '../utils/stringSimilarity.js';
-import transaction from 'mongoose-trx';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
+import EmailService from './email.service.js';
 import UserConfigService from './userConfig.service.js';
-import UserDAO from '../daos/user.dao.js';
-import ValidationError from '../errors/ValidationError.js';
 class UserService {
   static createUser = async (newUserDTO) => {
     const result = await transaction(async (session) => {
@@ -58,7 +58,7 @@ class UserService {
 
     const foundUser = await UserDAO.findOne({ email });
     if (foundUser.isEmailVerified) {
-      throw new ConflictError('Account already verified, please sign in.');
+      throw new DuplicateError('Account already verified, please sign in.');
     }
 
     if (otp) {

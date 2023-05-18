@@ -1,8 +1,8 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
-import ConflictError from '../errors/ConflictError.js';
-import Tenant from '../models/tenant.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseDAO from '../daos/base.dao.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import ValidationError from '../errors/validation.error.js';
+import Tenant from './tenant.model.js';
 
 class TenantDAO extends BaseDAO {
   static async insert(dto, transactionSession) {
@@ -14,7 +14,7 @@ class TenantDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
@@ -55,7 +55,7 @@ class TenantDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
+import ValidationError from '../errors/validation.error.js';
 import UserConfigService from '../services/userConfig.service.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 import userConfigValidator from '../validators/userConfig.validator.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseController from './base.controller.js';
 
 class UserConfigController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class UserConfigController extends BaseController {
     const newUserConfig = await UserConfigService.createConfig(value);
     const response = this.apiResponse('User configurations created.', newUserConfig);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCodes.CREATED).json(response);
   };
 
   /**
@@ -30,7 +30,7 @@ class UserConfigController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundConfigs);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -42,7 +42,7 @@ class UserConfigController extends BaseController {
     const userConfig = await UserConfigService.getConfig(req.params.userId);
     const response = this.apiResponse('Fetched user configurations.', userConfig);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -57,7 +57,7 @@ class UserConfigController extends BaseController {
     const userConfig = await UserConfigService.updateConfig(req.params.userId, value);
     const response = this.apiResponse('Updated user configurations.', userConfig);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -69,7 +69,7 @@ class UserConfigController extends BaseController {
     await UserConfigService.deleteConfig(req.params.userId);
     const response = this.apiResponse('Deleted user configurations.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 }
 

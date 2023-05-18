@@ -1,6 +1,6 @@
-import { extname } from 'path';
 import multer, { diskStorage } from 'multer';
-import ValidationError from '../errors/ValidationError.js';
+import { extname } from 'path';
+import ValidationError from '../errors/validation.error.js';
 
 const ONE_MEGABYTE = 1024 * 1024;
 

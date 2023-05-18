@@ -1,7 +1,7 @@
-import { constants } from '../config/index.js';
 import axios from 'axios';
-import DependencyError from '../errors/DependencyError.js';
-import TenantService from './tenant.service.js';
+import { constants } from '../config/index.js';
+import DependencyError from '../errors/dependency.error.js';
+import TenantService from '../tenant/tenant.service.js';
 import logger from '../utils/logger.js';
 
 class PaystackService {
@@ -65,7 +65,9 @@ class PaystackService {
 
   async verifyTransaction(ref) {
     try {
-      const response = await axios.get(this.#verifyTxnUrl.replace(':reference', ref.toString()), { headers: this.#headers });
+      const response = await axios.get(this.#verifyTxnUrl.replace(':reference', ref.toString()), {
+        headers: this.#headers,
+      });
 
       return response.data;
     } catch (exception) {

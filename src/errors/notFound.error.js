@@ -1,10 +1,10 @@
-import { httpCodes } from '../utils/common.js';
-import BaseError from './BaseError.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
+import APIError from './api.error.js';
 
-class NotFoundError extends BaseError {
+class NotFoundError extends APIError {
   constructor(description) {
     const name = 'Not Found Error';
-    const httpCode = httpCodes.NOT_FOUND;
+    const httpCode = HttpCodes.NOT_FOUND;
     const isOperational = true;
 
     super(name, httpCode, isOperational, description);

@@ -1,9 +1,9 @@
 /**
  * @typedef ErrorResponseArgs
  * @type {Object}
- * @property {string} name name/type of error
- * @property {(object|string)} [errors] The error message(s).
- * @property {object} [data] Data if necessary to be appended to error object.
+ * @property {string} message error message
+ * @property {Object} [errors]
+ * @property {*} [data] error data
  */
 
 class ErrorResponse {
@@ -13,8 +13,8 @@ class ErrorResponse {
    */
   constructor(args) {
     this.success = false;
-    this.name = args.name;
-    this.errors = args?.errors ? { ...args.errors } : { message: args.message };
+    this.message = args.message || 'Something went wrong';
+    this.errors = args?.errors ? { ...args.errors } : undefined;
     this.data = args?.data;
   }
 }

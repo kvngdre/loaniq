@@ -4,7 +4,7 @@ import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { constants } from '../config/index.js';
-import DependencyError from '../errors/DependencyError.js';
+import DependencyError from '../errors/dependency.error.js';
 import logger from './logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

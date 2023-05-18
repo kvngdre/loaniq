@@ -1,9 +1,13 @@
-import { constants } from '../config/index.js';
-import { httpCodes } from '../utils/common.js';
-import BaseError from '../errors/BaseError.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
 import jwt from 'jsonwebtoken';
+import { constants } from '../config/index.js';
+import APIError from '../errors/api.error.js';
+import ForbiddenError from '../errors/forbidden.error.js';
+import NotFoundError from '../errors/notFound.error.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
+import ValidationError from '../errors/validation.error.js';
 import User from '../models/user.model.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 
 export default async function verifyJWT(req, res, next) {
   try {
@@ -14,12 +18,7 @@ export default async function verifyJWT(req, res, next) {
      */
     const getTokenFromHeader = (req) => {
       if (!req.headers?.authorization) {
-        return res.status(httpCodes.BAD_REQUEST).json(
-          new ErrorResponse({
-            name: 'Validation Error',
-            message: 'No token provided',
-          }),
-        );
+        throw new ValidationError('No token provided');
       }
 
       return req.headers.authorization.split(' ');
@@ -30,39 +29,19 @@ export default async function verifyJWT(req, res, next) {
 
     // Checking if token claims are valid.
     if (scheme !== 'Bearer' || decoded.iss !== constants.jwt.issuer) {
-      return res.status(httpCodes.UNAUTHORIZED).json(
-        new ErrorResponse({
-          name: 'Auth Error',
-          message: 'Invalid access token provided.',
-        }),
-      );
+      throw new UnauthorizedError('Invalid access token provided');
     }
 
     // TODO: Move this to redis
     // Fetching user...
-    const user = await User.findById(decoded.id)
-      .populate({ path: 'role', populate: { path: 'permissions' } })
-      .catch((error) => {
-        if (error instanceof BaseError) {
-          return res.status(httpCodes.NOT_FOUND).json(
-            new ErrorResponse({
-              name: 'Not Found Error',
-              message: 'User account not found',
-            }),
-          );
-        }
-
-        throw error;
-      });
+    const user = await User.findById(decoded.id).populate({ path: 'role', populate: { path: 'permissions' } });
+    if (!user) {
+      throw new NotFoundError('User account not found');
+    }
 
     // Checking if user is inactive.
     if (!user.active) {
-      return res.status(httpCodes.FORBIDDEN).json(
-        new ErrorResponse({
-          name: 'Auth Error',
-          message: 'Account deactivated. Contact administrator.',
-        }),
-      );
+      throw new ForbiddenError('Account deactivated. Contact administrator.');
     }
 
     req.currentUser = user._doc;
@@ -70,12 +49,7 @@ export default async function verifyJWT(req, res, next) {
     next();
   } catch (exception) {
     if (exception instanceof jwt.JsonWebTokenError) {
-      res.status(httpCodes.FORBIDDEN).json(
-        new ErrorResponse({
-          name: 'Auth Error',
-          message: exception.message,
-        }),
-      );
+      throw new ForbiddenError(exception.message);
     }
 
     throw exception;

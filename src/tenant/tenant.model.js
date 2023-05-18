@@ -1,8 +1,5 @@
-import { companyCategory, status, validIds } from '../utils/common.js';
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/NotFoundError.js';
-
-const schemaOptions = { timestamps: true, versionKey: false };
+import { companyCategory, status, validIds } from '../utils/common.js';
 
 const tenantSchema = new Schema(
   {
@@ -41,18 +38,6 @@ const tenantSchema = new Schema(
       enum: companyCategory,
     },
 
-    email: {
-      type: String,
-      unique: true,
-      sparse: true,
-      default: null,
-    },
-
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
-
     status: {
       type: String,
       enum: Object.values(status),
@@ -74,18 +59,11 @@ const tenantSchema = new Schema(
         },
       ],
       default: null,
+      select: false,
     },
   },
-  schemaOptions,
+  { timestamps: true, versionKey: false },
 );
-
-tenantSchema.post(/^find/, function (doc) {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Tenants not found.');
-  }
-
-  if (!doc) throw new NotFoundError('Tenant not found.');
-});
 
 const Tenant = model('Tenant', tenantSchema);
 

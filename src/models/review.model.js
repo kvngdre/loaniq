@@ -1,7 +1,7 @@
-import { reviewStatus } from '../utils/common.js';
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
-import NotFoundError from '../errors/NotFoundError.js';
+import NotFoundError from '../errors/notFound.error.js';
+import { reviewStatus } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

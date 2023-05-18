@@ -1,9 +1,9 @@
-import { maritalStatus, relationships, status, validIds } from '../utils/common.js';
-import { Schema, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/notFound.error.js';
+import { maritalStatus, relationships, status, validIds } from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
-import NotFoundError from '../errors/NotFoundError.js';
 
 const schemaOptions = {
   timestamps: true,

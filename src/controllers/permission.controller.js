@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
+import ValidationError from '../errors/validation.error.js';
 import PermissionService from '../services/permission.service.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 import permissionValidator from '../validators/permission.validator.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseController from './base.controller.js';
 
 class PermissionController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class PermissionController extends BaseController {
     const newPermission = await PermissionService.create(value);
     const response = this.apiResponse('Permission created', newPermission);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCodes.CREATED).json(response);
   };
 
   /**
@@ -30,7 +30,7 @@ class PermissionController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundPermissions);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -42,7 +42,7 @@ class PermissionController extends BaseController {
     const foundPermission = await PermissionService.getPermission(req.params.permissionId);
     const response = this.apiResponse('Fetched permission', foundPermission);
 
-    res.status(httpCodes).json(response);
+    res.status(HttpCodes).json(response);
   };
 
   /**
@@ -57,7 +57,7 @@ class PermissionController extends BaseController {
     const permission = await PermissionService.updatePermission(req.params.permissionId, value);
     const response = this.apiResponse('Permission updated', permission);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -69,7 +69,7 @@ class PermissionController extends BaseController {
     await PermissionService.deletePermission(req.params.permissionId);
     const response = this.apiResponse('Permission deleted');
 
-    res.status(httpCodes.NO_CONTENT).json(response);
+    res.status(HttpCodes.NO_CONTENT).json(response);
   };
 }
 

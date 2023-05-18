@@ -1,11 +1,11 @@
 // import { requiresAuth } from 'express-openid-connect'
 import { Router } from 'express';
 import checkPermission from '../middleware/checkPermission.js';
-import tenantConfigRoutes from './tenantConfig.routes.js';
-import TenantController from '../controllers/tenant.controller.js';
 import upload from '../middleware/fileUploader.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
+import TenantController from '../tenant/tenant.controller.js';
+import tenantConfigRoutes from './tenantConfig.routes.js';
 import walletRoutes from './wallet.routes.js';
 
 const router = Router();

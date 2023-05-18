@@ -1,24 +1,24 @@
 /* eslint-disable camelcase */
-import { fileURLToPath } from 'url';
-import { startSession } from 'mongoose';
-import { status } from '../utils/common.js';
-import ConflictError from '../errors/ConflictError.js';
-import driverUploader from '../utils/driveUploader.js';
-import EmailService from './email.service.js';
 import fs from 'fs';
-import generateOTP from '../utils/generateOTP.js';
-import logger from '../utils/logger.js';
+import { startSession } from 'mongoose';
+import transaction from 'mongoose-trx';
 import path from 'path';
-import randomString from '../utils/randomString.js';
+import { fileURLToPath } from 'url';
 import RoleDAO from '../daos/role.dao.js';
 import TenantConfigDAO from '../daos/tenantConfig.dao.js';
-import TenantDAO from '../daos/tenant.dao.js';
-import transaction from 'mongoose-trx';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
-import UserConfigDAO from '../daos/userConfig.dao.js';
 import UserDAO from '../daos/user.dao.js';
+import UserConfigDAO from '../daos/userConfig.dao.js';
 import WalletDAO from '../daos/wallet.dao.js';
-import DependencyError from '../errors/DependencyError.js';
+import DependencyError from '../errors/dependency.error.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
+import EmailService from '../services/email.service.js';
+import { status } from '../utils/common.js';
+import driverUploader from '../utils/driveUploader.js';
+import generateOTP from '../utils/generateOTP.js';
+import logger from '../utils/logger.js';
+import randomString from '../utils/randomString.js';
+import TenantDAO from './tenant.repository.js';
 
 class TenantService {
   static async createTenant({ tenant, user }) {
@@ -91,7 +91,7 @@ class TenantService {
   static async requestToActivateTenant(tenantId, activateTenantDTO) {
     const foundTenant = await TenantDAO.findById(tenantId);
     if (foundTenant.status === status.ACTIVE) {
-      throw new ConflictError('Tenant has already been activated.');
+      throw new DuplicateError('Tenant has already been activated.');
     }
 
     foundTenant.set({
@@ -109,10 +109,13 @@ class TenantService {
     try {
       transactionSession.startTransaction();
 
-      const [foundTenant] = await Promise.all([TenantDAO.findById(tenantId), WalletDAO.insert({ tenantId }, transactionSession)]);
+      const [foundTenant] = await Promise.all([
+        TenantDAO.findById(tenantId),
+        WalletDAO.insert({ tenantId }, transactionSession),
+      ]);
 
       if (foundTenant.status === status.ACTIVE) {
-        throw new ConflictError('Tenant has already been activated.');
+        throw new DuplicateError('Tenant has already been activated.');
       }
 
       foundTenant.set({
@@ -177,7 +180,10 @@ class TenantService {
   }
 
   static async reactivateTenant(tenantId) {
-    const [tenant] = await Promise.all([TenantDAO.update(tenantId, { active: true }), UserDAO.updateMany({ tenantId }, { active: true })]);
+    const [tenant] = await Promise.all([
+      TenantDAO.update(tenantId, { active: true }),
+      UserDAO.updateMany({ tenantId }, { active: true }),
+    ]);
 
     return tenant;
   }

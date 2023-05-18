@@ -1,6 +1,6 @@
-import { geoZones } from '../utils/common.js';
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/NotFoundError.js';
+import NotFoundError from '../errors/notFound.error.js';
+import { geoZones } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

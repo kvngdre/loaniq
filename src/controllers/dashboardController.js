@@ -1,8 +1,8 @@
-import { loanStatus } from '../utils/common.js';
 import Customer from '../models/customer.model.js';
-import Tenant from '../models/tenant.model.js';
 import Loan from '../models/loan.model.js';
 import User from '../models/user.model.js';
+import Tenant from '../tenant/tenant.model.js';
+import { loanStatus } from '../utils/common.js';
 import logger from '../utils/logger.js';
 
 export const getLoanData = async (user, status) => {

@@ -1,7 +1,7 @@
-import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js';
 import { randomBytes } from 'crypto';
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/NotFoundError.js';
+import NotFoundError from '../errors/notFound.error.js';
+import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -109,5 +109,10 @@ export function TransactionDTO(params) {
   this.description = params.desc;
   this.channel = params.channel;
   this.balance_before = params.balance;
-  this.balance_after = params.balance !== null ? (params.type === txnTypes.DEBIT ? params.balance - params.amount : params.balance + params.amount) : undefined;
+  this.balance_after =
+    params.balance !== null
+      ? params.type === txnTypes.DEBIT
+        ? params.balance - params.amount
+        : params.balance + params.amount
+      : undefined;
 }

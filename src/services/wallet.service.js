@@ -1,8 +1,8 @@
-import { events, pubsub } from '../pubsub/index.js';
 import { startSession } from 'mongoose';
-import { TransactionDTO } from '../models/transaction.model.js';
-import InsufficientError from '../errors/InsufficientError.js';
 import WalletDAO from '../daos/wallet.dao.js';
+import { InsufficientError } from '../errors/index.js';
+import { TransactionDTO } from '../models/transaction.model.js';
+import { events, pubsub } from '../pubsub/index.js';
 
 class WalletService {
   constructor() {

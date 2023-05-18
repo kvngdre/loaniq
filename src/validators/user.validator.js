@@ -1,9 +1,9 @@
-import { canUserResetPwd } from '../helpers/user.helpers.js';
-import { roles } from '../config/index.js';
-import BaseValidator from './base.validator.js';
-import ForbiddenError from '../errors/ForbiddenError.js';
 import Joi from 'joi';
 import { Types } from 'mongoose';
+import { roles } from '../config/index.js';
+import ForbiddenError from '../errors/forbidden.error.js';
+import { canUserResetPwd } from '../helpers/user.helpers.js';
+import BaseValidator from './base.validator.js';
 
 class UserValidator extends BaseValidator {
   #jobTitle;
@@ -20,7 +20,11 @@ class UserValidator extends BaseValidator {
 
     this.#displayNameSchema = Joi.string().label('Display name').min(1).max(255).invalid('', ' ', '  ');
 
-    this.#segmentsSchema = Joi.array().items(this._objectIdSchema).min(1).messages({ 'array.min': '{#label} array cannot be empty' }).label('Segments');
+    this.#segmentsSchema = Joi.array()
+      .items(this._objectIdSchema)
+      .min(1)
+      .messages({ 'array.min': '{#label} array cannot be empty' })
+      .label('Segments');
   }
 
   validateCreateUser = (dto, tenantId) => {
@@ -132,7 +136,9 @@ class UserValidator extends BaseValidator {
 
     const canReset = await canUserResetPwd(value.email);
     if (!canReset) {
-      throw new ForbiddenError("You can't reset your own password. If you can't sign in, you need to contact your administrator to reset your password for you.");
+      throw new ForbiddenError(
+        "You can't reset your own password. If you can't sign in, you need to contact your administrator to reset your password for you.",
+      );
     }
 
     schema = schema.keys({

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import TenantService from '../services/tenant.service.js';
+import BaseController from '../controllers/base.controller.js';
+import ValidationError from '../errors/validation.error.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 import tenantValidator from '../validators/tenant.validator.js';
-import ValidationError from '../errors/ValidationError.js';
+import TenantService from './tenant.service.js';
 
 class TenantController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class TenantController extends BaseController {
     const result = await TenantService.createTenant(value);
     const response = this.apiResponse('Tenant created. Check your email for OTP', result);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCodes.CREATED).json(response);
   };
 
   /**
@@ -32,7 +32,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.onBoardTenant(value);
     const response = this.apiResponse('Tenant information updated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -46,7 +46,7 @@ class TenantController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, tenants);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -58,7 +58,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.getTenant(req.params.tenantId);
     const response = this.apiResponse('Fetched tenant.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -70,7 +70,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.getTenant(req.currentUser.tenantId);
     const response = this.apiResponse('Fetched tenant.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -85,7 +85,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.updateTenant(req.params.tenantId, value);
     const response = this.apiResponse('Tenant updated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -97,7 +97,7 @@ class TenantController extends BaseController {
     await TenantService.deleteTenant(req.params.tenantId);
     const response = this.apiResponse('Tenant deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -112,7 +112,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.requestToActivateTenant(req.params.tenantId, value);
     const response = this.apiResponse('Submitted and awaiting review.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -124,7 +124,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.activateTenant();
     const response = this.apiResponse('Tenant deactivated', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -139,7 +139,7 @@ class TenantController extends BaseController {
     await TenantService.requestToDeactivateTenant(req.currentUser, value);
     const response = this.apiResponse('Deactivation request sent');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -151,7 +151,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.reactivateTenant(req.params.tenantId);
     const response = this.apiResponse('Tenant reactivated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -163,7 +163,7 @@ class TenantController extends BaseController {
     const publicUrl = await TenantService.generateFormId(req.params.tenantId);
     const response = this.apiResponse('Link generated.', publicUrl);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -175,7 +175,7 @@ class TenantController extends BaseController {
     const formData = await TenantService.getFormData(req.params.formId);
     const response = this.apiResponse('Fetched tenant public form data.', formData);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   /**
@@ -187,7 +187,7 @@ class TenantController extends BaseController {
     const tenant = await TenantService.uploadDocs(req.currentUser.tenantId, req.files);
     const response = this.apiResponse('Files uploaded.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 }
 

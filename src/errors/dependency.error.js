@@ -1,10 +1,10 @@
-import { httpCodes } from '../utils/common.js';
-import BaseError from './BaseError.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
+import APIError from './api.error.js';
 
-class DependencyError extends BaseError {
+class DependencyError extends APIError {
   constructor(description) {
     const name = 'Dependency Error';
-    const httpCode = httpCodes.DEPENDENCY;
+    const httpCode = HttpCodes.DEPENDENCY;
     const isOperational = true;
 
     super(name, httpCode, isOperational, description);

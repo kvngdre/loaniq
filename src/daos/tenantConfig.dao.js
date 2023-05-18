@@ -1,8 +1,8 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
-import ConflictError from '../errors/ConflictError.js';
+import DuplicateError from '../errors/duplicate.error.js';
+import ValidationError from '../errors/validation.error.js';
 import TenantConfig from '../models/tenantConfig.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseDAO from './base.dao.js';
 
 class TenantConfigDAO extends BaseDAO {
   static async insert(newTenantConfigDTO, trx) {
@@ -14,7 +14,7 @@ class TenantConfigDAO extends BaseDAO {
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} in use.`);
+        throw new DuplicateError(`${field} in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
@@ -38,13 +38,15 @@ class TenantConfigDAO extends BaseDAO {
 
   static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, { upsert: true, new: true }).select(projection);
+      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, { upsert: true, new: true }).select(
+        projection,
+      );
 
       return foundRecord;
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {

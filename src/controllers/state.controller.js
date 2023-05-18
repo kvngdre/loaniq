@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
+import ValidationError from '../errors/validation.error.js';
 import StateService from '../services/state.service.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 import stateValidator from '../validators/stateValidator.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseController from './base.controller.js';
 
 class StateController extends BaseController {
   static createState = async (req, res) => {
@@ -12,7 +12,7 @@ class StateController extends BaseController {
     const newState = await StateService.create(value);
     const response = this.apiResponse('State created.', newState);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCodes.CREATED).json(response);
   };
 
   static getStates = async (req, res) => {
@@ -20,14 +20,14 @@ class StateController extends BaseController {
     const message = this.getMsgFromCount(count);
 
     const response = this.apiResponse(message, states);
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static getState = async (req, res) => {
     const state = await StateService.getState(req.params.stateId);
     const response = this.apiResponse('Fetched state.', state);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static updateState = async (req, res) => {
@@ -37,14 +37,14 @@ class StateController extends BaseController {
     const state = await StateService.update(req.params.stateId, value);
     const response = this.apiResponse('State updated.', state);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static deleteState = async (req, res) => {
     await StateService.delete(req.params.stateId);
     const response = this.apiResponse('State deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 }
 

@@ -1,6 +1,6 @@
-import { constants } from '../config/index.js';
 import { createHmac } from 'crypto';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
+import { constants } from '../config/index.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
 
 export default function authWebhook(req, res, next) {
   function getSignatureFromHeader(req) {

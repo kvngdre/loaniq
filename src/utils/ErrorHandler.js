@@ -1,21 +1,21 @@
-import BaseError from '../errors/BaseError.js';
+import APIError from '../errors/api.error.js';
 import logger from './logger.js';
 
 class ErrorHandler {
-  static isTrustedError(error) {
-    if (error instanceof BaseError) return true;
-
+  isTrustedError(error) {
+    if (error instanceof APIError) return true;
     return false;
   }
 
-  static handleError(error) {
+  handleError(error) {
     if (this.isTrustedError(error)) {
+      if (error.isOperational) logger.debug(error.message, error.stack);
       logger.error(error.message, error.stack);
     } else {
-      // todo should send an email to super admin on fatal error.
+      // TODO: should send an email to super admin on fatal error?
       logger.fatal(error.message, error.stack);
     }
   }
 }
 
-export default ErrorHandler;
+export default new ErrorHandler();

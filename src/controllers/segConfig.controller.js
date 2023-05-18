@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
+import ValidationError from '../errors/validation.error.js';
 import SegConfigService from '../services/segConfig.service.js';
+import { HttpCodes } from '../utils/HttpCodes.js';
 import segConfigValidator from '../validators/segConfig.validator.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseController from './base.controller.js';
 
 class SegConfigController extends BaseController {
   static createSegConfig = async (req, res) => {
@@ -12,7 +12,7 @@ class SegConfigController extends BaseController {
     const newSegConfig = await SegConfigService.createConfig(value);
     const response = this.apiResponse('Segment configurations created.', newSegConfig);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCodes.CREATED).json(response);
   };
 
   static getSegConfigs = async (req, res) => {
@@ -21,14 +21,14 @@ class SegConfigController extends BaseController {
 
     const response = this.apiResponse(message, segConfigs);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static getSegConfig = async (req, res) => {
     const segConfig = await SegConfigService.getConfig(req.params.segConfigId);
     const response = this.apiResponse('Fetched segment configuration.', segConfig);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static updateConfig = async (req, res) => {
@@ -38,14 +38,14 @@ class SegConfigController extends BaseController {
     const segConfig = await SegConfigService.updateConfig(req.params.segConfigId, value);
     const response = this.apiResponse('Segment configurations updated.', segConfig);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 
   static deleteSegConfig = async (req, res) => {
     await SegConfigService.deleteConfig(req.params.segConfigId);
     const response = this.apiResponse('Segment configurations deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCodes.OK).json(response);
   };
 }
 
