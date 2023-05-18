@@ -16,7 +16,7 @@ const custom = {
     debug: 'cyan',
     silly: 'magenta'
   },
-  levels: { fatal: 0, error: 0, warn: 0, info: 0, debug: 0, silly: 0 }
+  levels: { fatal: 0, error: 1, warn: 2, info: 3, debug: 4, silly: 5 }
 }
 
 const devFormatter = combine(

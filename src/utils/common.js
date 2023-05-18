@@ -1,15 +1,8 @@
-export const companyCategory = ['mfb', 'finance house', 'money lender']
+export const companyCategory = ['mfb', 'finance house', 'money lender'];
 
-export const feeTypes = { percent: 'percent', decimal: 'decimal' }
+export const feeTypes = { percent: 'percent', decimal: 'decimal' };
 
-export const geoZones = [
-  'north central',
-  'north east',
-  'north west',
-  'south east',
-  'south south',
-  'south west'
-]
+export const geoZones = ['north central', 'north east', 'north west', 'south east', 'south south', 'south west'];
 
 export const httpCodes = {
   OK: 200,
@@ -23,8 +16,8 @@ export const httpCodes = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   DEPENDENCY: 424,
-  INTERNAL_SERVER: 500
-}
+  INTERNAL_SERVER: 500,
+};
 
 export const loanRemarks = [
   'age above threshold',
@@ -48,8 +41,8 @@ export const loanRemarks = [
   'net pay below threshold',
   'net pay not available',
   'not eligible for top up',
-  'ok for disbursement'
-]
+  'ok for disbursement',
+];
 
 export const loanStatus = {
   APPROVED: 'approved',
@@ -58,46 +51,20 @@ export const loanStatus = {
   LIQUIDATED: 'liquidated',
   MATURED: 'matured',
   NEW: 'new',
-  PENDING: 'pending'
-}
+  PENDING: 'pending',
+};
 
-export const maritalStatus = [
-  'single',
-  'married',
-  'divorced',
-  'separated',
-  'widow',
-  'widower'
-]
+export const maritalStatus = ['single', 'married', 'divorced', 'separated', 'widow', 'widower'];
 
-export const relationships = [
-  'daughter',
-  'brother',
-  'cousin',
-  'father',
-  'mother',
-  'nephew',
-  'sister',
-  'spouse',
-  'niece',
-  'son'
-]
+export const relationships = ['daughter', 'brother', 'cousin', 'father', 'mother', 'nephew', 'sister', 'spouse', 'niece', 'son'];
 
 export const reviewStatus = {
   APPROVED: 'approved',
   DENIED: 'denied',
-  PENDING: 'pending'
-}
+  PENDING: 'pending',
+};
 
-export const socials = [
-  'website',
-  'facebook',
-  'twitter',
-  'instagram',
-  'youtube',
-  'linkedin',
-  'tictok'
-]
+export const socials = ['website', 'facebook', 'twitter', 'instagram', 'youtube', 'linkedin', 'tictok'];
 
 export const status = {
   ACTIVE: 'active',
@@ -105,40 +72,28 @@ export const status = {
   DEACTIVATED: 'deactivated',
   INACTIVE: 'inactive',
   SUSPENDED: 'suspended',
-  ONBOARDING: 'onboarding'
-}
+  ONBOARDING: 'onboarding',
+};
 
 export const txnPurposes = {
   DEPOSIT: 'deposit',
   TRANSFER: 'transfer',
   WITHDRAW: 'withdrawal',
-  LOAN: 'loan application'
-}
+  LOAN: 'loan application',
+};
 
 export const txnStatus = {
   ABANDONED: 'abandoned',
   FAILED: 'failed',
   PENDING: 'pending',
-  SUCCESS: 'success'
-}
+  SUCCESS: 'success',
+};
 
 export const txnTypes = {
   CREDIT: 'credit',
-  DEBIT: 'debit'
-}
+  DEBIT: 'debit',
+};
 
-export const validIds = [
-  'voters card',
-  'international passport',
-  'staff id card',
-  'national id card',
-  'drivers license'
-]
+export const validIds = ['voters card', 'international passport', 'staff id card', 'national id card', 'drivers license'];
 
-export const tenantDocumentationTypes = [
-  'certificate of incorporation',
-  'tax documentation',
-  'money lender license',
-  'mfb license',
-  ...validIds
-]
+export const tenantDocumentationTypes = ['certificate of incorporation', 'tax documentation', 'money lender license', 'mfb license', ...validIds];

@@ -203,22 +203,24 @@ class AuthService {
     }
   }
 
-  static async sendOTP ({ email, len }) {
+  static async sendOTP ({ email, phone, len }) {
     const generatedOTP = generateOTP(len)
 
-    const foundUser = await UserDAO.update({ email }, { otp: generatedOTP })
+    if (email) {
+      const foundUser = await UserDAO.update({ email }, { otp: generatedOTP })
 
-    // Sending OTP to user email
-    const info = await EmailService.send({
-      to: email,
-      templateName: 'otp-request',
-      context: { otp: generatedOTP.pin, expiresIn: 10 }
-    })
-    if (info.error) {
-      throw new DependencyError('Error sending OTP to email.')
+      // Sending OTP to user email
+      const info = await EmailService.send({
+        to: email,
+        templateName: 'otp-request',
+        context: { otp: generatedOTP.pin, expiresIn: 10 }
+      })
+      if (info.error) {
+        throw new DependencyError('Error sending OTP to email.')
+      }
+
+      return foundUser
     }
-
-    return foundUser
   }
 
   static async logout (token) {
