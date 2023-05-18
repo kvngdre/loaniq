@@ -1,11 +1,11 @@
-import { constants } from '../config/index.js'
-import { httpCodes } from '../utils/common.js'
-import AuthService from '../services/auth.service.js'
-import authValidator from '../validators/auth.validator.js'
-import BaseController from './base.controller.js'
-import ErrorResponse from '../utils/ErrorResponse.js'
-import requestIp from 'request-ip'
-import ValidationError from '../errors/ValidationError.js'
+import { constants } from '../config/index.js';
+import { httpCodes } from '../utils/common.js';
+import AuthService from '../services/auth.service.js';
+import authValidator from '../validators/auth.validator.js';
+import BaseController from './base.controller.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
+import requestIp from 'request-ip';
+import ValidationError from '../errors/ValidationError.js';
 class AuthController extends BaseController {
   /**
    *
@@ -13,34 +13,29 @@ class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static login = async (req, res) => {
-    const token = req.cookies?.jwt
+    const token = req.cookies?.jwt;
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie
-    })
+      secure: constants.secure_cookie,
+    });
 
-    const { value, error } = authValidator.validateLogin(req.body)
-    if (error) throw new ValidationError(null, error)
+    const { value, error } = authValidator.validateLogin(req.body);
+    if (error) throw new ValidationError(null, error);
 
-    const [data, refreshToken] = await AuthService.login(
-      value,
-      token,
-      req.headers['user-agent'],
-      requestIp.getClientIp(req)
-    )
-    const response = this.apiResponse('Login successful', data)
+    const [data, refreshToken] = await AuthService.login(value, token, req.headers['user-agent'], requestIp.getClientIp(req));
+    const response = this.apiResponse('Login successful', data);
 
     //  ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
       sameSite: 'none',
       secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000
-    })
+      maxAge: constants.jwt.exp_time.refresh * 1000,
+    });
 
-    res.status(httpCodes.OK).json(response)
-  }
+    res.status(httpCodes.OK).json(response);
+  };
 
   /**
    *
@@ -48,36 +43,36 @@ class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static getNewTokens = async (req, res) => {
-    const token = req.cookies?.jwt
+    const token = req.cookies?.jwt;
     if (!token) {
       return res.status(httpCodes.BAD_REQUEST).json(
         new ErrorResponse({
           name: 'Validation Error',
-          message: 'No token provided'
-        })
-      )
+          message: 'No token provided',
+        }),
+      );
     }
 
     // Clear jwt cookie
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie
-    })
+      secure: constants.secure_cookie,
+    });
 
-    const [accessToken, refreshToken] = await AuthService.getNewTokens(token)
+    const [accessToken, refreshToken] = await AuthService.getNewTokens(token);
 
     //! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
       sameSite: 'none',
       secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000
-    })
+      maxAge: constants.jwt.exp_time.refresh * 1000,
+    });
 
-    const response = this.apiResponse('Success', { accessToken })
-    res.status(httpCodes.OK).json(response)
-  }
+    const response = this.apiResponse('Success', { accessToken });
+    res.status(httpCodes.OK).json(response);
+  };
 
   /**
    *
@@ -85,14 +80,14 @@ class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static sendOTP = async (req, res) => {
-    const { value, error } = authValidator.validateSendOTP(req.query)
-    if (error) throw new ValidationError(null, error)
+    const { value, error } = authValidator.validateSendOTP(req.query);
+    if (error) throw new ValidationError(null, error);
 
-    await AuthService.sendOTP(value)
-    const response = this.apiResponse('OTP sent to email.')
+    await AuthService.sendOTP(value);
+    const response = this.apiResponse('OTP sent to email.');
 
-    res.status(httpCodes.OK).json(response)
-  }
+    res.status(httpCodes.OK).json(response);
+  };
 
   /**
    *
@@ -100,17 +95,17 @@ class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static logout = async (req, res) => {
-    await AuthService.logout(req.cookies?.jwt)
+    await AuthService.logout(req.cookies?.jwt);
 
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie
-    })
+      secure: constants.secure_cookie,
+    });
 
-    const response = this.apiResponse('Logged out')
-    res.status(httpCodes.NO_CONTENT).json(response)
-  }
+    const response = this.apiResponse('Logged out');
+    res.status(httpCodes.NO_CONTENT).json(response);
+  };
 
   /**
    *
@@ -118,15 +113,15 @@ class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static signOutAllSessions = async (req, res) => {
-    await AuthService.signOutAllSessions(req.currentUser._id, req.cookies?.jwt)
-    const response = this.apiResponse('Signed out of all devices.')
+    await AuthService.signOutAllSessions(req.currentUser._id, req.cookies?.jwt);
+    const response = this.apiResponse('Signed out of all devices.');
 
-    res.status(httpCodes.OK).json(response)
-  }
+    res.status(httpCodes.OK).json(response);
+  };
 
   static callback = (req, res) => {
-    res.status(200).json(req.body)
-  }
+    res.status(200).json(req.body);
+  };
 }
 
-export default AuthController
+export default AuthController;

@@ -1,29 +1,29 @@
-import Joi from 'joi'
-import BaseValidator from './base.validator.js'
-import { txnStatus, txnTypes, txnPurposes } from '../utils/common.js'
+import Joi from 'joi';
+import BaseValidator from './base.validator.js';
+import { txnStatus, txnTypes, txnPurposes } from '../utils/common.js';
 
 class TransactionValidator extends BaseValidator {
-  #refSchema
-  #statusSchema
-  #txnTypeSchema
-  #txnPurposeSchema
+  #refSchema;
+  #statusSchema;
+  #txnTypeSchema;
+  #txnPurposeSchema;
 
-  constructor () {
-    super()
+  constructor() {
+    super();
 
-    this.#refSchema = Joi.string().alphanum().trim().label('Reference')
+    this.#refSchema = Joi.string().alphanum().trim().label('Reference');
     this.#statusSchema = Joi.string()
       .valid(...Object.values(txnStatus))
       .label('Status')
-      .trim()
+      .trim();
     this.#txnTypeSchema = Joi.string()
       .valid(...Object.values(txnTypes))
       .label('Type')
-      .trim()
+      .trim();
     this.#txnPurposeSchema = Joi.string()
       .valid(...Object.values(txnPurposes))
       .label('Purpose')
-      .trim()
+      .trim();
   }
 
   validateCreate = (dto) => {
@@ -37,17 +37,17 @@ class TransactionValidator extends BaseValidator {
       amount: this._amountSchema.label('Amount').required(),
       currency: Joi.string().trim(),
       fees: this._amountSchema.label('Fees'),
-      balance: this._amountSchema.label('Balance').required()
-    })
+      balance: this._amountSchema.label('Balance').required(),
+    });
 
     let { value, error } = schema.validate(dto, {
       abortEarly: false,
-      convert: false
-    })
-    error = this._refineError(error)
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
@@ -61,28 +61,28 @@ class TransactionValidator extends BaseValidator {
       currency: Joi.string().trim(),
       fees: this._amountSchema.label('Fees'),
       balance_before: this._amountSchema.label('Balance before'),
-      balance_after: this._amountSchema.label('Balance after')
-    })
+      balance_after: this._amountSchema.label('Balance after'),
+    });
 
     let { value, error } = schema.validate(dto, {
       abortEarly: false,
-      convert: false
-    })
-    error = this._refineError(error)
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateInitTxn = (dto) => {
     const schema = Joi.object({
-      amount: this._amountSchema.label('Amount').required()
-    })
+      amount: this._amountSchema.label('Amount').required(),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new TransactionValidator()
+export default new TransactionValidator();

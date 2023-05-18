@@ -1,40 +1,38 @@
-import CustomerDAO from '../daos/customer.dao.js'
+import CustomerDAO from '../daos/customer.dao.js';
 
 class CustomerService {
-  static async create (dto, trx) {
-    const newCustomer = await CustomerDAO.insert(dto, trx)
+  static async create(dto, trx) {
+    const newCustomer = await CustomerDAO.insert(dto, trx);
 
-    return newCustomer
+    return newCustomer;
   }
 
-  static async getCustomers (tenantId) {
-    const foundCustomers = await CustomerDAO.find({ tenantId })
-    const count = Intl.NumberFormat('en-US').format(foundCustomers.length)
+  static async getCustomers(tenantId) {
+    const foundCustomers = await CustomerDAO.find({ tenantId });
+    const count = Intl.NumberFormat('en-US').format(foundCustomers.length);
 
-    return [count, foundCustomers]
+    return [count, foundCustomers];
   }
 
-  static async getCustomer (customerId) {
-    const foundCustomer = await CustomerDAO.findById(customerId)
+  static async getCustomer(customerId) {
+    const foundCustomer = await CustomerDAO.findById(customerId);
 
-    return foundCustomer
+    return foundCustomer;
   }
 
-  static async updateCustomer (customerId, dto) {
-    const updatedCustomer = await CustomerDAO.update(customerId, dto)
+  static async updateCustomer(customerId, dto) {
+    const updatedCustomer = await CustomerDAO.update(customerId, dto);
 
-    return updatedCustomer
+    return updatedCustomer;
   }
 
-  static async deleteCustomer (customerId) {
-    const deletedCustomer = await CustomerDAO.remove(customerId)
+  static async deleteCustomer(customerId) {
+    const deletedCustomer = await CustomerDAO.remove(customerId);
 
-    return deletedCustomer
+    return deletedCustomer;
   }
 
-  static async uploadFiles () {
-
-  }
+  static async uploadFiles() {}
 }
 
-export default CustomerService
+export default CustomerService;

@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError.js'
+import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const walletSchema = new Schema(
   {
@@ -9,31 +9,31 @@ const walletSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
       unique: true,
-      required: [true, 'Tenant Id is required.']
+      required: [true, 'Tenant Id is required.'],
     },
 
     balance: {
       type: Number,
       default: 0,
-      set: (v) => Math.floor(v * 100) / 100
+      set: (v) => Math.floor(v * 100) / 100,
     },
 
     last_credit_date: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
 walletSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Wallets not found.')
+    throw new NotFoundError('Wallets not found.');
   }
 
-  if (!doc) throw new NotFoundError('Wallet not found.')
-})
+  if (!doc) throw new NotFoundError('Wallet not found.');
+});
 
-const Wallet = model('Wallet', walletSchema)
+const Wallet = model('Wallet', walletSchema);
 
-export default Wallet
+export default Wallet;

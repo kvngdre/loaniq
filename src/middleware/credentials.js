@@ -1,13 +1,13 @@
-import allowedOrigins from '../config/allowedOrigins.js'
+import allowedOrigins from '../config/allowedOrigins.js';
 
-function credentials (req, res, next) {
-  const origin = req.headers.origin
+function credentials(req, res, next) {
+  const origin = req.headers.origin;
 
   if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Credentials', true)
+    res.header('Access-Control-Allow-Credentials', true);
   }
 
-  next()
+  next();
 }
 
-export default credentials
+export default credentials;

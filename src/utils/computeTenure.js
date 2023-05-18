@@ -3,11 +3,11 @@
  * @param {string} doe Date of employment in ISO 8601 format.
  * @returns {number}
  */
-export default function computeTenure (doe) {
-  if (!doe) return null
+export default function computeTenure(doe) {
+  if (!doe) return null;
 
-  const diff = Date.now() - new Date(doe).getTime()
-  const tenure = new Date(diff).getUTCFullYear() - 1970
+  const diff = Date.now() - new Date(doe).getTime();
+  const tenure = new Date(diff).getUTCFullYear() - 1970;
 
-  return tenure
+  return tenure;
 }

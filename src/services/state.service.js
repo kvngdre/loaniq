@@ -1,36 +1,36 @@
-import StateDAO from '../daos/state.dao.js'
+import StateDAO from '../daos/state.dao.js';
 
 class StateService {
-  static async create (dto) {
-    const newState = await StateDAO.insert(dto)
+  static async create(dto) {
+    const newState = await StateDAO.insert(dto);
 
-    return newState
+    return newState;
   }
 
-  static async getStates (filters) {
-    const foundStates = await StateDAO.find(filters)
-    const count = Intl.NumberFormat('en-US').format(foundStates.length)
+  static async getStates(filters) {
+    const foundStates = await StateDAO.find(filters);
+    const count = Intl.NumberFormat('en-US').format(foundStates.length);
 
-    return [count, foundStates]
+    return [count, foundStates];
   }
 
-  static async getState (stateId) {
-    const foundState = await StateDAO.findById(stateId)
+  static async getState(stateId) {
+    const foundState = await StateDAO.findById(stateId);
 
-    return foundState
+    return foundState;
   }
 
-  static async update (stateId, dto) {
-    const updatedState = await StateDAO.update(stateId, dto)
+  static async update(stateId, dto) {
+    const updatedState = await StateDAO.update(stateId, dto);
 
-    return updatedState
+    return updatedState;
   }
 
-  static async delete (stateId) {
-    const deletedState = await StateDAO.remove(stateId)
+  static async delete(stateId) {
+    const deletedState = await StateDAO.remove(stateId);
 
-    return deletedState
+    return deletedState;
   }
 }
 
-export default StateService
+export default StateService;

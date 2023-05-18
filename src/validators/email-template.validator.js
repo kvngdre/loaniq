@@ -1,22 +1,19 @@
-import BaseValidator from './base.validator.js'
-import Joi from 'joi'
+import BaseValidator from './base.validator.js';
+import Joi from 'joi';
 
 class EmailTemplateValidator extends BaseValidator {
-  #nameSchema
-  #templateNameSchema
-  #subjectSchema
-  #htmlSchema
+  #nameSchema;
+  #templateNameSchema;
+  #subjectSchema;
+  #htmlSchema;
 
-  constructor () {
-    super()
+  constructor() {
+    super();
 
-    this.#nameSchema = Joi.string().lowercase().trim().label('Name')
-    this.#templateNameSchema = Joi.string()
-      .lowercase()
-      .trim()
-      .label('Template name')
-    this.#subjectSchema = Joi.string().label('Subject')
-    this.#htmlSchema = Joi.string().label('Html')
+    this.#nameSchema = Joi.string().lowercase().trim().label('Name');
+    this.#templateNameSchema = Joi.string().lowercase().trim().label('Template name');
+    this.#subjectSchema = Joi.string().label('Subject');
+    this.#htmlSchema = Joi.string().label('Html');
   }
 
   validateCreate = (newTemplateDTO) => {
@@ -24,28 +21,28 @@ class EmailTemplateValidator extends BaseValidator {
       name: this.#nameSchema.required(),
       templateName: this.#templateNameSchema.required(),
       subject: this.#subjectSchema.required(),
-      html: this.#htmlSchema.required()
-    })
+      html: this.#htmlSchema.required(),
+    });
 
-    let { value, error } = schema.validate(newTemplateDTO, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(newTemplateDTO, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (updateTemplateDTO) => {
     const schema = Joi.object({
       name: this.#nameSchema,
       templateName: this.#templateNameSchema,
       subject: this.#subjectSchema,
-      html: this.#htmlSchema
-    })
+      html: this.#htmlSchema,
+    });
 
-    let { value, error } = schema.validate(updateTemplateDTO, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(updateTemplateDTO, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new EmailTemplateValidator()
+export default new EmailTemplateValidator();

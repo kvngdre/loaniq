@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError.js'
+import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const roleSchema = new Schema(
   {
@@ -10,18 +10,18 @@ const roleSchema = new Schema(
       // required: true
       ref: 'Tenant',
       sparse: true,
-      default: null
+      default: null,
     },
 
     isDefault: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     name: {
       type: String,
       required: true,
-      lowercase: true
+      lowercase: true,
     },
 
     description: { type: String, lowercase: true },
@@ -29,23 +29,23 @@ const roleSchema = new Schema(
     permissions: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Permission'
-      }
-    ]
+        ref: 'Permission',
+      },
+    ],
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
-roleSchema.index({ name: 1, tenantId: 1 }, { unique: true })
+roleSchema.index({ name: 1, tenantId: 1 }, { unique: true });
 
 roleSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Roles not found.')
+    throw new NotFoundError('Roles not found.');
   }
 
-  if (!doc) throw new NotFoundError('Role not found.')
-})
+  if (!doc) throw new NotFoundError('Role not found.');
+});
 
-const Role = model('Role', roleSchema)
+const Role = model('Role', roleSchema);
 
-export default Role
+export default Role;

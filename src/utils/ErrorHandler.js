@@ -1,21 +1,21 @@
-import BaseError from '../errors/BaseError.js'
-import logger from './logger.js'
+import BaseError from '../errors/BaseError.js';
+import logger from './logger.js';
 
 class ErrorHandler {
-  static isTrustedError (error) {
-    if (error instanceof BaseError) return true
+  static isTrustedError(error) {
+    if (error instanceof BaseError) return true;
 
-    return false
+    return false;
   }
 
-  static handleError (error) {
+  static handleError(error) {
     if (this.isTrustedError(error)) {
-      logger.error(error.message, error.stack)
+      logger.error(error.message, error.stack);
     } else {
       // todo should send an email to super admin on fatal error.
-      logger.fatal(error.message, error.stack)
+      logger.fatal(error.message, error.stack);
     }
   }
 }
 
-export default ErrorHandler
+export default ErrorHandler;

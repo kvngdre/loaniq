@@ -1,6 +1,6 @@
-import { httpCodes } from '../utils/common.js'
-import ErrorHandler from '../utils/ErrorHandler.js'
-import ErrorResponse from '../utils/ErrorResponse.js'
+import { httpCodes } from '../utils/common.js';
+import ErrorHandler from '../utils/ErrorHandler.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
 
 export default (err, _req, res, _next) => {
   // Catch errors for bad req json.
@@ -8,21 +8,21 @@ export default (err, _req, res, _next) => {
     return res.status(httpCodes.BAD_REQUEST).json(
       new ErrorResponse({
         name: 'Bad Request Error',
-        message: 'Error in request JSON.'
-      })
-    )
+        message: 'Error in request JSON.',
+      }),
+    );
   }
 
-  ErrorHandler.handleError(err)
+  ErrorHandler.handleError(err);
 
   if (ErrorHandler.isTrustedError(err)) {
-    return res.status(err.code).json(new ErrorResponse(err))
+    return res.status(err.code).json(new ErrorResponse(err));
   }
 
   return res.status(httpCodes.INTERNAL_SERVER).json(
     new ErrorResponse({
       name: 'Server Error',
-      message: 'Something went wrong.'
-    })
-  )
-}
+      message: 'Something went wrong.',
+    }),
+  );
+};

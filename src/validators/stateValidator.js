@@ -1,31 +1,31 @@
-import { geoZones } from '../utils/common.js'
-import Joi from 'joi'
-import BaseValidator from './base.validator.js'
+import { geoZones } from '../utils/common.js';
+import Joi from 'joi';
+import BaseValidator from './base.validator.js';
 
 class StateValidator extends BaseValidator {
-  #codeSchema
-  #nameSchema
-  #lgaSchema
-  #regionSchema
+  #codeSchema;
+  #nameSchema;
+  #lgaSchema;
+  #regionSchema;
 
-  constructor () {
-    super()
+  constructor() {
+    super();
 
     this.#codeSchema = Joi.string()
       .trim()
       .label('Code')
       .pattern(/^[a-zA-Z]{2}$/)
       .messages({
-        'string.pattern.base': '{#label} is not valid'
-      })
+        'string.pattern.base': '{#label} is not valid',
+      });
 
-    this.#nameSchema = Joi.string().trim().label('Name')
+    this.#nameSchema = Joi.string().trim().label('Name');
 
-    this.#lgaSchema = Joi.array().items(Joi.string().trim()).label('LGAs')
+    this.#lgaSchema = Joi.array().items(Joi.string().trim()).label('LGAs');
 
     this.#regionSchema = Joi.string()
       .valid(...geoZones)
-      .label('Geo')
+      .label('Geo');
   }
 
   validateCreate = (dto) => {
@@ -33,28 +33,28 @@ class StateValidator extends BaseValidator {
       code: this.#codeSchema.required(),
       name: this.#nameSchema.required(),
       lgas: this.#lgaSchema.required(),
-      geo: this.#regionSchema.required()
-    })
+      geo: this.#regionSchema.required(),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
       code: this.#codeSchema,
       name: this.#nameSchema,
       lgas: this.#lgaSchema,
-      geo: this.#regionSchema
-    })
+      geo: this.#regionSchema,
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new StateValidator()
+export default new StateValidator();

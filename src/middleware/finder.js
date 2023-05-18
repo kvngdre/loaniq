@@ -1,5 +1,5 @@
-export default function finder (req, res, next) {
-  console.log('this route<========')
+export default function finder(req, res, next) {
+  console.log('this route<========');
 
-  next()
+  next();
 }

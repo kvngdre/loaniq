@@ -1,14 +1,14 @@
-import { socials } from '../utils/common.js'
-import BaseValidator from './base.validator.js'
-import Joi from 'joi'
+import { socials } from '../utils/common.js';
+import BaseValidator from './base.validator.js';
+import Joi from 'joi';
 
 class TenantConfigValidator extends BaseValidator {
-  #socialSchema
-  #supportSchema
-  #allowUserPwdResetSchema
+  #socialSchema;
+  #supportSchema;
+  #allowUserPwdResetSchema;
 
-  constructor () {
-    super()
+  constructor() {
+    super();
 
     this.#socialSchema = Joi.array().items(
       Joi.object({
@@ -25,33 +25,33 @@ class TenantConfigValidator extends BaseValidator {
           .trim()
           .custom((value, helpers) => {
             try {
-              const regex = /^www\./
-              if (regex.test(value)) value = 'https://' + value
+              const regex = /^www\./;
+              if (regex.test(value)) value = 'https://' + value;
 
-              const url = new URL(value)
-              if (url.protocol !== 'https:') return helpers.error('any.only')
+              const url = new URL(value);
+              if (url.protocol !== 'https:') return helpers.error('any.only');
 
-              return url.href
+              return url.href;
             } catch (error) {
-              return helpers.error('any.invalid')
+              return helpers.error('any.invalid');
             }
           })
           .messages({
             'any.only': 'Must be a secure {#label}',
-            'any.invalid': '{#label} is invalid'
+            'any.invalid': '{#label} is invalid',
           })
-          .required()
-      })
-    )
+          .required(),
+      }),
+    );
 
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
-      phone_number: this._phoneNumberSchema.label('Support phone number')
-    }).min(1).label('Support')
+      phone_number: this._phoneNumberSchema.label('Support phone number'),
+    })
+      .min(1)
+      .label('Support');
 
-    this.#allowUserPwdResetSchema = Joi.boolean()
-      .label('Allow user password reset')
-      .default(false)
+    this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false);
   }
 
   validateCreate = (dto) => {
@@ -59,32 +59,28 @@ class TenantConfigValidator extends BaseValidator {
       tenantId: this._objectIdSchema.label('Tenant id').required(),
       default_params: Joi.object()
         .keys({
-          min_loan_amount: this._amountSchema
-            .label('Minimum loan amount')
-            .required(),
-          max_loan_amount: this._amountSchema
-            .label('Maximum loan amount')
-            .required(),
+          min_loan_amount: this._amountSchema.label('Minimum loan amount').required(),
+          max_loan_amount: this._amountSchema.label('Maximum loan amount').required(),
           min_tenor: this._tenorSchema.label('Minimum loan tenor').required(),
           max_tenor: this._tenorSchema.label('Maximum loan tenor').required(),
           interest_rate: this._percentageSchema.required(),
-          max_dti: this._percentageSchema.label('Maximum D.T.I').required()
+          max_dti: this._percentageSchema.label('Maximum D.T.I').required(),
         })
         .label('Default parameters'),
       fees: this._feesSchema,
       socials: this.#socialSchema.min(1),
       support: this.#supportSchema,
-      allowUserPwdReset: this.#allowUserPwdResetSchema
-    })
+      allowUserPwdReset: this.#allowUserPwdResetSchema,
+    });
 
     let { value, error } = schema.validate(dto, {
       abortEarly: false,
-      convert: false
-    })
-    error = this._refineError(error)
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (updateTenantConfigDTO) => {
     const schema = Joi.object({
@@ -94,24 +90,24 @@ class TenantConfigValidator extends BaseValidator {
         min_tenor: this._tenorSchema.label('Minimum loan tenor'),
         max_tenor: this._tenorSchema.label('Maximum loan tenor'),
         interest_rate: this._percentageSchema,
-        max_dti: this._percentageSchema.label('Maximum D.T.I')
+        max_dti: this._percentageSchema.label('Maximum D.T.I'),
       })
         .min(1)
         .label('Default parameters'),
       fees: this._feesSchema.min(1),
       socials: this.#socialSchema.min(1),
       support: this.#supportSchema,
-      allowUserPwdReset: this.#allowUserPwdResetSchema
-    }).min(1)
+      allowUserPwdReset: this.#allowUserPwdResetSchema,
+    }).min(1);
 
     let { value, error } = schema.validate(updateTenantConfigDTO, {
       abortEarly: false,
-      convert: false
-    })
-    error = this._refineError(error)
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new TenantConfigValidator()
+export default new TenantConfigValidator();

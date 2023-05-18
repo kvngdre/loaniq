@@ -1,26 +1,26 @@
-import { Schema, model } from 'mongoose'
-import autoPopulate from 'mongoose-autopopulate'
-import bcrypt from 'bcryptjs'
-import NotFoundError from '../errors/NotFoundError.js'
+import { Schema, model } from 'mongoose';
+import autoPopulate from 'mongoose-autopopulate';
+import bcrypt from 'bcryptjs';
+import NotFoundError from '../errors/NotFoundError.js';
 
 const schemaOptions = {
   timestamps: true,
   versionKey: false,
   toJSON: { virtuals: true },
-  id: false
-}
+  id: false,
+};
 
 const userSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
       required: true,
-      ref: 'Tenant'
+      ref: 'Tenant',
     },
 
     avatar: {
       type: String,
-      default: null
+      default: null,
     },
 
     first_name: {
@@ -28,7 +28,7 @@ const userSchema = new Schema(
       trim: true,
       minLength: 2,
       maxLength: 50,
-      required: true
+      required: true,
     },
 
     last_name: {
@@ -36,7 +36,7 @@ const userSchema = new Schema(
       trim: true,
       minLength: 2,
       maxLength: 50,
-      required: true
+      required: true,
     },
 
     middle_name: {
@@ -44,7 +44,7 @@ const userSchema = new Schema(
       minLength: 1,
       maxLength: 50,
       trim: true,
-      default: null
+      default: null,
     },
 
     display_name: {
@@ -52,27 +52,27 @@ const userSchema = new Schema(
       trim: true,
       maxLength: 50,
       default: function () {
-        return this.first_name.concat(` ${this.last_name}`)
-      }
+        return this.first_name.concat(` ${this.last_name}`);
+      },
     },
 
     job_title: {
       type: String,
       minLength: 2,
       maxLength: 50,
-      default: null
+      default: null,
     },
 
     dob: {
       type: Date,
-      default: null
+      default: null,
     },
 
     phone_number: {
       type: String,
       unique: true,
       trim: true,
-      required: true
+      required: true,
     },
 
     email: {
@@ -80,146 +80,143 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
       unique: true,
-      required: true
+      required: true,
     },
 
     isEmailVerified: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     password: {
       type: String,
       trim: true,
       maxLength: 1024,
-      required: true
+      required: true,
     },
 
     role: {
       type: Schema.Types.ObjectId,
       required: true,
       ref: 'Role',
-      autopopulate: true
+      autopopulate: true,
     },
 
     resetPwd: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     active: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     segments: {
       type: [Schema.Types.ObjectId],
-      default: null
+      default: null,
     },
 
     otp: {
       pin: {
         type: String,
-        default: null
+        default: null,
       },
 
       expiresIn: {
         type: Number,
-        default: null
-      }
+        default: null,
+      },
     },
 
     last_login_time: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
-userSchema.plugin(autoPopulate)
+userSchema.plugin(autoPopulate);
 
 userSchema.virtual('full_name').get(function () {
-  return this.first_name?.concat(
-    this.middle_name ? ` ${this.middle_name}` : '',
-    ` ${this.last_name}`
-  )
-})
+  return this.first_name?.concat(this.middle_name ? ` ${this.middle_name}` : '', ` ${this.last_name}`);
+});
 
 // Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
-  const data = { id: this._id, redirect: {} }
+  const data = { id: this._id, redirect: {} };
 
   if (!this.isEmailVerified && !this.active) {
-    data.redirect.verifyNewUser = true
+    data.redirect.verifyNewUser = true;
     return {
       isPermitted: false,
       message: 'Your account has not been verified.',
-      data
-    }
+      data,
+    };
   }
 
   if (this.resetPwd) {
-    data.redirect.reset_password = true
+    data.redirect.reset_password = true;
     return {
       isPermitted: false,
       message: 'Your password reset has been triggered.',
-      data
-    }
+      data,
+    };
   }
 
   if (!this.active) {
-    data.redirect.inactive = true
+    data.redirect.inactive = true;
     return {
       isPermitted: false,
       message: 'Account deactivated. Contact your administrator.',
-      data
-    }
+      data,
+    };
   }
 
-  return { isGranted: true }
-}
+  return { isGranted: true };
+};
 
 userSchema.methods.purgeSensitiveData = function () {
-  delete this._doc?.otp
-  delete this._doc?.password
-  delete this._doc?.resetPwd
-  delete this._doc?.salt
-}
+  delete this._doc?.otp;
+  delete this._doc?.password;
+  delete this._doc?.resetPwd;
+  delete this._doc?.salt;
+};
 
 userSchema.methods.validateOTP = function (otp) {
   if (Date.now() > this.otp.expiresIn) {
-    return { isValid: false, reason: 'OTP expired' }
+    return { isValid: false, reason: 'OTP expired' };
   }
 
   if (otp !== this.otp.pin) {
-    return { isValid: false, reason: 'Invalid OTP' }
+    return { isValid: false, reason: 'Invalid OTP' };
   }
 
-  return { isValid: true }
-}
+  return { isValid: true };
+};
 
 userSchema.methods.validatePassword = function (password) {
-  return bcrypt.compareSync(password, this.password)
-}
+  return bcrypt.compareSync(password, this.password);
+};
 
 // ! Hashing user password before insert
 userSchema.pre('save', function (next) {
   if (this.modifiedPaths()?.includes('password')) {
-    this.password = bcrypt.hashSync(this.password, 12)
+    this.password = bcrypt.hashSync(this.password, 12);
   }
 
-  next()
-})
+  next();
+});
 
 userSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('User accounts not found.')
+    throw new NotFoundError('User accounts not found.');
   }
 
-  if (!doc) throw new NotFoundError('User account not found.')
-})
+  if (!doc) throw new NotFoundError('User account not found.');
+});
 
-const User = model('User', userSchema)
+const User = model('User', userSchema);
 
-export default User
+export default User;

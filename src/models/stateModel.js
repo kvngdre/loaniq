@@ -1,8 +1,8 @@
-import { geoZones } from '../utils/common.js'
-import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError.js'
+import { geoZones } from '../utils/common.js';
+import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const stateSchema = new Schema(
   {
@@ -11,38 +11,38 @@ const stateSchema = new Schema(
       uppercase: true,
       trim: true,
       unique: true,
-      required: true
+      required: true,
     },
 
     name: {
       type: String,
       trim: true,
       unique: true,
-      required: true
+      required: true,
     },
 
     lgas: {
       type: [String],
-      required: true
+      required: true,
     },
 
     geo: {
       type: String,
       enum: geoZones,
-      required: true
-    }
+      required: true,
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
 stateSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('States not found.')
+    throw new NotFoundError('States not found.');
   }
 
-  if (!doc) throw new NotFoundError('State not found.')
-})
+  if (!doc) throw new NotFoundError('State not found.');
+});
 
-const State = model('State', stateSchema)
+const State = model('State', stateSchema);
 
-export default State
+export default State;

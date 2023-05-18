@@ -1,70 +1,70 @@
-import { Schema, model } from 'mongoose'
+import { Schema, model } from 'mongoose';
 // import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
-import { loanStatus, loanRemarks } from '../utils/common.js'
-import logger from '../utils/logger.js'
-import NotFoundError from '../errors/NotFoundError.js'
+import { loanStatus, loanRemarks } from '../utils/common.js';
+import logger from '../utils/logger.js';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const loanSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
-      required: true
+      required: true,
     },
 
     customer: {
       type: Schema.Types.ObjectId,
       ref: 'Customer',
-      required: true
+      required: true,
     },
 
     active: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     amount: {
       type: Number,
-      required: true
+      required: true,
     },
 
     proposed_amount: {
       type: Number,
-      default: (self = this) => self.amount
+      default: (self = this) => self.amount,
     },
 
     amount_in_words: {
       type: String,
       trim: true,
       lowercase: true,
-      required: true
+      required: true,
     },
 
     tenor: {
       type: Number,
-      required: true
+      required: true,
     },
 
     proposed_tenor: {
       type: Number,
-      default: (self = this) => self.tenor
+      default: (self = this) => self.tenor,
     },
 
     isTopUp: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     status: {
       type: String,
       enum: Object.values(loanStatus),
-      default: loanStatus.PENDING
+      default: loanStatus.PENDING,
     },
 
     remark: {
       type: String,
-      enum: loanRemarks
+      enum: loanRemarks,
     },
 
     upfront_fee: Number,
@@ -80,44 +80,44 @@ const loanSchema = new Schema(
     analyst: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
 
     agent: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
 
     params: {
       interest_rate: {
         type: Number,
-        required: true
+        required: true,
       },
 
       fees: {
         type: [Schema.Types.Mixed],
-        default: null
+        default: null,
       },
 
       max_dti: {
         type: Number,
-        required: true
+        required: true,
       },
 
       min_income: {
         type: Number,
-        required: true
+        required: true,
       },
 
       income: {
         type: Number,
-        required: true
+        required: true,
       },
 
       age: Number,
 
-      tenure: Number
+      tenure: Number,
     },
 
     date_approved_or_denied: Date,
@@ -128,35 +128,34 @@ const loanSchema = new Schema(
 
     isBooked: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     isDisbursed: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     isLocked: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
 loanSchema.pre('save', function (next) {
   try {
-    const isPresent = (path) => ['amount', 'tenor'].includes(path)
+    const isPresent = (path) => ['amount', 'tenor'].includes(path);
     if (this.modifiedPaths().some(isPresent)) {
-      this.proposed_amount = this.amount
-      this.proposed_tenor = this.tenor
+      this.proposed_amount = this.amount;
+      this.proposed_tenor = this.tenor;
     }
 
     // setting loan metrics
-    const hasTrigger = (path) =>
-      ['recommendedAmount', 'recommendedTenor'].includes(path)
+    const hasTrigger = (path) => ['recommendedAmount', 'recommendedTenor'].includes(path);
     if (this.modifiedPaths().some(hasTrigger)) {
-      console.log('yes')
+      console.log('yes');
 
       // this.upfrontFee = calcUpfrontFee(
       //   this.recommendedAmount,
@@ -183,21 +182,21 @@ loanSchema.pre('save', function (next) {
       // this.dti = calcDti(this.repayment, this.params.netPay)
     }
 
-    next()
+    next();
   } catch (exception) {
-    logger.error(exception.message, exception.meta)
-    next(new Error(500, 'Something went wrong'))
+    logger.error(exception.message, exception.meta);
+    next(new Error(500, 'Something went wrong'));
   }
-})
+});
 
 loanSchema.post(/^find/, function (doc) {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Loans not found.')
+    throw new NotFoundError('Loans not found.');
   }
 
-  if (!doc) throw new NotFoundError('Loan not found.')
-})
+  if (!doc) throw new NotFoundError('Loan not found.');
+});
 
-const Loan = model('Loan', loanSchema)
+const Loan = model('Loan', loanSchema);
 
-export default Loan
+export default Loan;

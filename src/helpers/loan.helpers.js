@@ -5,15 +5,15 @@
  * @returns {number} Net value after all deductions.
  */
 export const applyFees = (amount, fees) => {
-  function reducer (acc, fee) {
-    const value = fee.type === 'percent' ? fee.value / 100 : fee.value
+  function reducer(acc, fee) {
+    const value = fee.type === 'percent' ? fee.value / 100 : fee.value;
 
-    return acc - value
+    return acc - value;
   }
-  const netValue = fees.reduce(reducer, amount)
+  const netValue = fees.reduce(reducer, amount);
 
-  return parseFloat(netValue.toFixed(2))
-}
+  return parseFloat(netValue.toFixed(2));
+};
 
 /**
  * Computes the repayment and total repayment.
@@ -23,11 +23,11 @@ export const applyFees = (amount, fees) => {
  * @returns {number[]}
  */
 export const computeRepaymentSet = (amount, interestRate, tenor) => {
-  const repayment = (amount * (interestRate / 100) + amount / tenor).toFixed(2)
-  const totalRepayment = (repayment * tenor).toFixed(2)
+  const repayment = (amount * (interestRate / 100) + amount / tenor).toFixed(2);
+  const totalRepayment = (repayment * tenor).toFixed(2);
 
-  return [parseFloat(repayment), parseFloat(totalRepayment)]
-}
+  return [parseFloat(repayment), parseFloat(totalRepayment)];
+};
 
 /**
  *  Calculates the Deb-to-Income ratio.
@@ -36,7 +36,7 @@ export const computeRepaymentSet = (amount, interestRate, tenor) => {
  * @returns {number}
  */
 export const computeDTI = (repayment, income) => {
-  const dti = (repayment / income) * 100
+  const dti = (repayment / income) * 100;
 
-  return parseFloat(dti.toFixed(2))
-}
+  return parseFloat(dti.toFixed(2));
+};

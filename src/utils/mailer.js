@@ -1,34 +1,28 @@
-import { constants } from '../config/index.js'
-import { createTransport } from 'nodemailer'
-import { fileURLToPath } from 'url'
-import { google } from 'googleapis'
-import path from 'path'
-import DependencyError from '../errors/DependencyError.js'
-import hbs from 'nodemailer-express-handlebars'
-import logger from './logger.js'
+import { google } from 'googleapis';
+import { createTransport } from 'nodemailer';
+import hbs from 'nodemailer-express-handlebars';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { constants } from '../config/index.js';
+import DependencyError from '../errors/DependencyError.js';
+import logger from './logger.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const partialsPath = path.resolve(__dirname, '../assets/templates/partials/')
-const viewsPath = path.resolve(__dirname, '../assets/templates/views/')
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const partialsPath = path.resolve(__dirname, '../assets/templates/partials/');
+const viewsPath = path.resolve(__dirname, '../assets/templates/views/');
 
 // todo Clean up sendMail with domain name for sending mails
-const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =
-  constants.mailer
+const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } = constants.mailer;
 
 // Setting up oauth2Client
-const oauth2Client = new google.auth.OAuth2(
-  clientId,
-  clientSecret,
-  refreshToken,
-  oauthPlayground
-)
+const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, refreshToken, oauthPlayground);
 
-oauth2Client.setCredentials({ refresh_token: refreshToken })
+oauth2Client.setCredentials({ refresh_token: refreshToken });
 
 // Creating reusable transport object
-async function getTransporter () {
+async function getTransporter() {
   try {
-    const accessToken = await oauth2Client.getAccessToken()
+    const accessToken = await oauth2Client.getAccessToken();
     const transporter = createTransport({
       service: 'gmail',
       auth: {
@@ -37,14 +31,14 @@ async function getTransporter () {
         clientId,
         clientSecret,
         refreshToken,
-        accessToken
-      }
-    })
+        accessToken,
+      },
+    });
 
-    return transporter
+    return transporter;
   } catch (exception) {
-    logger.error(exception.message, exception.stack)
-    throw new DependencyError('Error sending OTP, try again later.')
+    logger.error(exception.message, exception.stack);
+    throw new DependencyError('Error sending OTP, try again later.');
   }
 }
 
@@ -70,12 +64,12 @@ const sendMail = async function ({ from, to, subject, template, name = undefined
     context: {
       name,
       OTP: payload?.otp || '',
-      pwd: payload?.password || ''
+      pwd: payload?.password || '',
     },
-    attachments: []
-  }
+    attachments: [],
+  };
 
-  const transporter = await getTransporter()
+  const transporter = await getTransporter();
 
   // Setting transport template engine.
   transporter.use(
@@ -85,20 +79,20 @@ const sendMail = async function ({ from, to, subject, template, name = undefined
         extname: '.hbs',
         layoutsDir: viewsPath,
         partialsDir: partialsPath,
-        defaultLayout: false
+        defaultLayout: false,
       },
       viewPath: viewsPath,
-      extName: '.hbs'
-    })
-  )
+      extName: '.hbs',
+    }),
+  );
 
   try {
     // ! Sending email...
-    return await transporter.sendMail(mailOptions)
+    return await transporter.sendMail(mailOptions);
   } catch (exception) {
-    logger.fatal('Mailer: ' + exception.message, exception.stack)
-    throw new DependencyError('Error sending mail, try again later.')
+    logger.fatal('Mailer: ' + exception.message, exception.stack);
+    throw new DependencyError('Error sending mail, try again later.');
   }
-}
+};
 
-export default sendMail
+export default sendMail;

@@ -1,112 +1,110 @@
-import { events, pubsub } from '../pubsub/index.js'
-import { startSession } from 'mongoose'
-import { TransactionDTO } from '../models/transaction.model.js'
-import InsufficientError from '../errors/InsufficientError.js'
-import WalletDAO from '../daos/wallet.dao.js'
+import { events, pubsub } from '../pubsub/index.js';
+import { startSession } from 'mongoose';
+import { TransactionDTO } from '../models/transaction.model.js';
+import InsufficientError from '../errors/InsufficientError.js';
+import WalletDAO from '../daos/wallet.dao.js';
 
 class WalletService {
-  constructor () {
-    pubsub.subscribe(events.tenant.signUp, this.createWallet)
-    pubsub.subscribe(events.webhook.success, this.creditWallet)
+  constructor() {
+    pubsub.subscribe(events.tenant.signUp, this.createWallet);
+    pubsub.subscribe(events.webhook.success, this.creditWallet);
   }
 
-  async createWallet (dto, trx) {
-    const newWallet = await WalletDAO.insert(dto, trx)
-    return newWallet
+  async createWallet(dto, trx) {
+    const newWallet = await WalletDAO.insert(dto, trx);
+    return newWallet;
   }
 
-  async getWallets (filter) {
-    const foundWallets = await WalletDAO.find(filter)
-    const count = Intl.NumberFormat('en-US').format(foundWallets.length)
+  async getWallets(filter) {
+    const foundWallets = await WalletDAO.find(filter);
+    const count = Intl.NumberFormat('en-US').format(foundWallets.length);
 
-    return [count, foundWallets]
+    return [count, foundWallets];
   }
 
-  async getWallet (tenantId) {
-    const foundWallet = await WalletDAO.findOne({ tenantId })
-    return foundWallet
+  async getWallet(tenantId) {
+    const foundWallet = await WalletDAO.findOne({ tenantId });
+    return foundWallet;
   }
 
-  async updateWallet (tenantId, dto) {
-    const updatedWallet = await WalletDAO.update({ tenantId }, dto)
+  async updateWallet(tenantId, dto) {
+    const updatedWallet = await WalletDAO.update({ tenantId }, dto);
 
-    return updatedWallet
+    return updatedWallet;
   }
 
-  async deleteWallet (tenantId) {
-    const deletedWallet = await WalletDAO.remove({ tenantId })
-    return deletedWallet
+  async deleteWallet(tenantId) {
+    const deletedWallet = await WalletDAO.remove({ tenantId });
+    return deletedWallet;
   }
 
-  async getWalletBalance (tenantId) {
-    const { balance } = await WalletDAO.findOne({ tenantId })
+  async getWalletBalance(tenantId) {
+    const { balance } = await WalletDAO.findOne({ tenantId });
 
-    return { balance }
+    return { balance };
   }
 
-  async creditWallet (dto) {
-    const trx = await startSession()
+  async creditWallet(dto) {
+    const trx = await startSession();
     try {
       // ! Starting transaction.
-      trx.startTransaction()
+      trx.startTransaction();
 
-      const foundWallet = await WalletDAO.findOne({ tenantId: dto.tenantId })
-      dto.balance = foundWallet.balance
+      const foundWallet = await WalletDAO.findOne({ tenantId: dto.tenantId });
+      dto.balance = foundWallet.balance;
 
       foundWallet.set({
         balance: foundWallet.balance + dto.amount,
-        last_credit_date: new Date()
-      })
-      await foundWallet.save({ session: trx })
+        last_credit_date: new Date(),
+      });
+      await foundWallet.save({ session: trx });
 
-      await pubsub.publish(events.wallet.credit, null, new TransactionDTO(dto), trx)
+      await pubsub.publish(events.wallet.credit, null, new TransactionDTO(dto), trx);
 
       // * Committing changes.
-      await trx.commitTransaction()
-      trx.endSession()
+      await trx.commitTransaction();
+      trx.endSession();
 
-      return foundWallet
+      return foundWallet;
     } catch (exception) {
       // ! Exception thrown, roll back changes.
-      await trx.abortTransaction()
-      trx.endSession()
+      await trx.abortTransaction();
+      trx.endSession();
 
-      throw exception
+      throw exception;
     }
   }
 
-  async debitWallet (dto) {
-    const trx = await startSession()
+  async debitWallet(dto) {
+    const trx = await startSession();
     try {
       // ! Starting transaction.
-      trx.startTransaction()
+      trx.startTransaction();
 
-      const foundWallet = await WalletDAO.findOne({ tenantId: dto.tenantId })
-      dto.balance = foundWallet.balance
+      const foundWallet = await WalletDAO.findOne({ tenantId: dto.tenantId });
+      dto.balance = foundWallet.balance;
 
       if (foundWallet.balance < dto.amount) {
-        throw new InsufficientError(
-          'Insufficient funds to perform this transaction.'
-        )
+        throw new InsufficientError('Insufficient funds to perform this transaction.');
       }
 
-      foundWallet.set({ balance: foundWallet.balance - dto.amount })
-      await foundWallet.save({ session: trx })
+      foundWallet.set({ balance: foundWallet.balance - dto.amount });
+      await foundWallet.save({ session: trx });
 
-      pubsub.publish(events.wallet.debit, null, new TransactionDTO(dto), trx)
+      pubsub.publish(events.wallet.debit, null, new TransactionDTO(dto), trx);
 
       // * Committing changes.
-      await trx.commitTransaction()
-      trx.endSession()
+      await trx.commitTransaction();
+      trx.endSession();
 
-      return foundWallet
+      return foundWallet;
     } catch (exception) {
-      await trx.abortTransaction()
-      trx.endSession()
+      await trx.abortTransaction();
+      trx.endSession();
 
-      throw exception
+      throw exception;
     }
   }
 }
 
-export default new WalletService()
+export default new WalletService();

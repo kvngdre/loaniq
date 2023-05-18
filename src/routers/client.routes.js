@@ -1,17 +1,17 @@
-import ClientController from '../controllers/client.controller.js'
-import { Router } from 'express'
-import verifyJWT from '../middleware/verifyJWT.js'
+import ClientController from '../controllers/client.controller.js';
+import { Router } from 'express';
+import verifyJWT from '../middleware/verifyJWT.js';
 
-const router = Router()
+const router = Router();
 
-router.post('/', verifyJWT, ClientController.createClient)
+router.post('/', verifyJWT, ClientController.createClient);
 
-router.post('/signup', ClientController.signup)
+router.post('/signup', ClientController.signup);
 
-router.post('/verify-signup', ClientController.verifySignup)
+router.post('/verify-signup', ClientController.verifySignup);
 
-router.get('/', ClientController.getClients)
+router.get('/', ClientController.getClients);
 
-router.get('/:clientId', ClientController.getClient)
+router.get('/:clientId', ClientController.getClient);
 
-export default router
+export default router;

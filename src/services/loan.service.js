@@ -1,36 +1,36 @@
-import LoanDAO from '../daos/loan.dao.js'
+import LoanDAO from '../daos/loan.dao.js';
 
 class LoanService {
-  static async createLoan (dto, currentUser) {
-    const newLoan = await LoanDAO.insert(dto)
+  static async createLoan(dto, currentUser) {
+    const newLoan = await LoanDAO.insert(dto);
 
-    return newLoan
+    return newLoan;
   }
 
-  static async getLoans (tenantId) {
-    const foundLoans = await LoanDAO.find({ tenantId })
-    const count = Intl.NumberFormat('en-US').format(foundLoans.length)
+  static async getLoans(tenantId) {
+    const foundLoans = await LoanDAO.find({ tenantId });
+    const count = Intl.NumberFormat('en-US').format(foundLoans.length);
 
-    return [count, foundLoans]
+    return [count, foundLoans];
   }
 
-  static async getLoan (loanId) {
-    const foundLoan = await LoanDAO.findById(loanId)
+  static async getLoan(loanId) {
+    const foundLoan = await LoanDAO.findById(loanId);
 
-    return foundLoan
+    return foundLoan;
   }
 
-  static async updateLoan (loanId, dto) {
-    const updatedLoan = await LoanDAO.update(loanId, dto)
+  static async updateLoan(loanId, dto) {
+    const updatedLoan = await LoanDAO.update(loanId, dto);
 
-    return updatedLoan
+    return updatedLoan;
   }
 
-  static async deleteLoan (customerId) {
-    const deletedLoan = await LoanDAO.remove(customerId)
+  static async deleteLoan(customerId) {
+    const deletedLoan = await LoanDAO.remove(customerId);
 
-    return deletedLoan
+    return deletedLoan;
   }
 }
 
-export default LoanService
+export default LoanService;
