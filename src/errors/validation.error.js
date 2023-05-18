@@ -2,12 +2,8 @@ import { HttpCodes } from '../utils/HttpCodes.js';
 import APIError from './api.error.js';
 
 class ValidationError extends APIError {
-  constructor(description, errors = undefined) {
-    const name = 'Validation Error';
-    const httpCode = HttpCodes.BAD_REQUEST;
-    const isOperational = true;
-
-    super(name, httpCode, isOperational, description);
+  constructor(message, errors = undefined, data = undefined) {
+    super(HttpCodes.BAD_REQUEST, true, message, data);
     this.errors = errors;
   }
 }

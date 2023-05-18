@@ -30,8 +30,8 @@ export default async function expressLoader(app, routes) {
   app.use(api.prefix + api.version, routes());
 
   // Catch and handle 404
-  app.use((req, _res, next) => {
-    const err = new NotFoundError('Resource not found.');
+  app.use((req, res, next) => {
+    const err = new NotFoundError('Resource not found');
     next(err);
   });
 
