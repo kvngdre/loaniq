@@ -6,36 +6,50 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import RoleDAO from '../daos/role.dao.js';
 import TenantConfigDAO from '../daos/tenantConfig.dao.js';
-import UserDAO from '../daos/user.dao.js';
+import UserRepository from '../daos/user.dao.js';
 import UserConfigDAO from '../daos/userConfig.dao.js';
 import WalletDAO from '../daos/wallet.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
 import EmailService from '../services/email.service.js';
-import { status } from '../utils/common.js';
+import { TenantStatus } from '../utils/common.js';
 import driverUploader from '../utils/driveUploader.js';
 import generateOTP from '../utils/generateOTP.js';
 import logger from '../utils/logger.js';
 import randomString from '../utils/randomString.js';
-import TenantDAO from './tenant.repository.js';
+import TenantRepository from './tenant.repository.js';
+
+const tenantRepository = new TenantRepository();
 
 class TenantService {
-  static async createTenant({ tenant, user }) {
-    /**
-     * TODO: Check if mongoose has fixed the issue with session.withTransaction
-     * TODO: method not returning the data.
-     */
-    user.otp = generateOTP(8);
+  /**
+   * Creates a new tenant account and the admin user.
+   * @param {import('./dto/signup.dto.js').SignupDto} signupDto
+   * @returns
+   */
+  async createTenant(signupDto) {
+    const { tenant, user } = signupDto;
+    const otp = generateOTP(8);
+
     const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
-        TenantDAO.insert(tenant, session),
-        UserDAO.insert(user, session),
-        TenantConfigDAO.insert({ tenantId: tenant._id }, session),
-        UserConfigDAO.insert(
-          { tenantId: tenant._id, userId: user._id },
+        tenantRepository.insert(tenant, session),
+
+        UserRepository.insert(
+          {
+            ...user,
+            'configurations.resetPwd': false,
+            'configurations.otp': otp,
+          },
           session,
         ),
+
+        TenantConfigDAO.insert(
+          { _id: tenant.configurations, tenantId: tenant._id },
+          session,
+        ),
+
         // Cloning default admin user role for new tenant.
         RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
           doc._id = user.role;
@@ -47,58 +61,61 @@ class TenantService {
         }),
       ]);
 
-      await EmailService.send({
-        to: user.email,
-        templateName: 'new-tenant-user',
-        context: { otp: user.otp.pin },
-      });
+      // await EmailService.send({
+      //   to: user.email,
+      //   templateName: 'new-tenant-user',
+      //   context: { otp: user.otp.pin },
+      // });
 
-      newUser.purgeSensitiveData();
+      // newUser.purgeSensitiveData();
 
       return {
         tenant: newTenant,
-        user: newUser,
+        user: newUser.toObject(),
       };
     });
     return result;
   }
 
-  static async onBoardTenant(tenantId, onBoardTenantDTO) {
-    const foundTenant = await TenantDAO.update(tenantId, onBoardTenantDTO);
+  async onBoardTenant(tenantId, onBoardTenantDTO) {
+    const foundTenant = await TenantRepository.update(
+      tenantId,
+      onBoardTenantDTO,
+    );
 
     return foundTenant;
   }
 
-  static async getTenants(filters) {
-    const foundTenants = await TenantDAO.find(filters);
+  async getTenants(filters) {
+    const foundTenants = await TenantRepository.find(filters);
     const count = Intl.NumberFormat('en-US').format(foundTenants.length);
 
     return [count, foundTenants];
   }
 
-  static async getTenant(tenantId) {
-    const foundTenant = await TenantDAO.findById(tenantId);
+  async getTenant(tenantId) {
+    const foundTenant = await TenantRepository.findById(tenantId);
     return foundTenant;
   }
 
-  static async updateTenant(tenantId, dto) {
-    const updateTenant = await TenantDAO.update(tenantId, dto);
+  async updateTenant(tenantId, dto) {
+    const updateTenant = await TenantRepository.update(tenantId, dto);
     return updateTenant;
   }
 
-  static async deleteTenant(tenantId) {
-    const deletedTenant = await TenantDAO.remove(tenantId);
+  async deleteTenant(tenantId) {
+    const deletedTenant = await TenantRepository.remove(tenantId);
     return deletedTenant;
   }
 
-  static async requestToActivateTenant(tenantId, activateTenantDTO) {
-    const foundTenant = await TenantDAO.findById(tenantId);
-    if (foundTenant.status === status.ACTIVE) {
+  async requestToActivateTenant(tenantId, activateTenantDTO) {
+    const foundTenant = await TenantRepository.findById(tenantId);
+    if (foundTenant.status === TenantStatus.ACTIVE) {
       throw new DuplicateError('Tenant has already been activated.');
     }
 
     foundTenant.set({
-      status: status.AWAITING_ACTIVATION,
+      status: TenantStatus.AWAITING_ACTIVATION,
       ...activateTenantDTO,
     });
     await foundTenant.save();
@@ -107,23 +124,23 @@ class TenantService {
   }
 
   // TODO: Change to mongoose-trx
-  static async activateTenant(tenantId) {
+  async activateTenant(tenantId) {
     const transactionSession = await startSession();
     try {
       transactionSession.startTransaction();
 
       const [foundTenant] = await Promise.all([
-        TenantDAO.findById(tenantId),
+        TenantRepository.findById(tenantId),
         WalletDAO.insert({ tenantId }, transactionSession),
       ]);
 
-      if (foundTenant.status === status.ACTIVE) {
+      if (foundTenant.status === TenantStatus.ACTIVE) {
         throw new DuplicateError('Tenant has already been activated.');
       }
 
       foundTenant.set({
         isEmailVerified: true,
-        status: status.ACTIVE,
+        status: TenantStatus.ACTIVE,
         activated: true,
       });
       await foundTenant.save({ session: transactionSession });
@@ -139,10 +156,10 @@ class TenantService {
     }
   }
 
-  static async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
+  async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
     const [foundTenant, foundUser] = await Promise.all([
-      TenantDAO.findById(tenantId),
-      UserDAO.findById(_id),
+      TenantRepository.findById(tenantId),
+      UserRepository.findById(_id),
     ]);
 
     const { isValid, reason } = foundUser.validateOTP(otp);
@@ -166,15 +183,17 @@ class TenantService {
     return foundTenant;
   }
 
-  static async deactivateTenant(tenantId) {
+  async deactivateTenant(tenantId) {
     const [foundTenant, foundAdminUsers] = await Promise.all([
-      await TenantDAO.update(tenantId, { status: status.DEACTIVATED }),
-      await UserDAO.find(
+      await TenantRepository.update(tenantId, {
+        status: TenantStatus.DEACTIVATED,
+      }),
+      await UserRepository.find(
         { tenantId, 'role.name': 'admin' },
         { password: 0, resetPwd: 0, otp: 0 },
         { createdAt: 1 },
       ),
-      await UserDAO.updateMany({ tenantId }, { active: false }),
+      await UserRepository.updateMany({ tenantId }, { active: false }),
     ]);
 
     const info = await EmailService.send({
@@ -191,16 +210,16 @@ class TenantService {
     return foundTenant;
   }
 
-  static async reactivateTenant(tenantId) {
+  async reactivateTenant(tenantId) {
     const [tenant] = await Promise.all([
-      TenantDAO.update(tenantId, { active: true }),
-      UserDAO.updateMany({ tenantId }, { active: true }),
+      TenantRepository.update(tenantId, { active: true }),
+      UserRepository.updateMany({ tenantId }, { active: true }),
     ]);
 
     return tenant;
   }
 
-  static async generateFormId(tenantId) {
+  async generateFormId(tenantId) {
     try {
       const formId = randomString(5);
       const updatedConfig = await TenantConfigDAO.update(tenantId, { formId });
@@ -211,7 +230,7 @@ class TenantService {
     }
   }
 
-  static async getFormData(formId) {
+  async getFormData(formId) {
     const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
       formId,
     });
@@ -225,8 +244,8 @@ class TenantService {
     };
   }
 
-  static async uploadDocs(tenantId, uploadFiles) {
-    const foundTenant = await TenantDAO.findById(tenantId);
+  async uploadDocs(tenantId, uploadFiles) {
+    const foundTenant = await TenantRepository.findById(tenantId);
     const folderName = `t-${tenantId.toString()}`;
 
     const [foundFolder] = await driverUploader.findFolder(folderName);
@@ -297,4 +316,4 @@ class TenantService {
 //   }
 // }
 
-export default TenantService;
+export default new TenantService();

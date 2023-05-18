@@ -1,23 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
-import NotFoundError from '../errors/notFound.error.js';
-
-const schemaOptions = {
-  timestamps: true,
-  versionKey: false,
-  toJSON: { virtuals: true },
-  id: false,
-};
 
 const userSchema = new Schema(
   {
-    tenantId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: 'Tenant',
-    },
-
     avatar: {
       type: String,
       default: null,
@@ -83,28 +69,11 @@ const userSchema = new Schema(
       required: true,
     },
 
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
-
-    password: {
-      type: String,
-      trim: true,
-      maxLength: 1024,
-      required: true,
-    },
-
     role: {
       type: Schema.Types.ObjectId,
       required: true,
       ref: 'Role',
       autopopulate: true,
-    },
-
-    resetPwd: {
-      type: Boolean,
-      default: true,
     },
 
     active: {
@@ -117,34 +86,67 @@ const userSchema = new Schema(
       default: null,
     },
 
-    otp: {
-      pin: {
-        type: String,
-        default: null,
-      },
+    configurations: {
+      type: {
+        password: {
+          type: String,
+          trim: true,
+          maxLength: 1024,
+          required: true,
+        },
 
-      expiresIn: {
-        type: Number,
-        default: null,
-      },
-    },
+        isEmailVerified: {
+          type: Boolean,
+          default: false,
+        },
 
-    last_login_time: {
-      type: Date,
-      default: null,
+        otp: {
+          pin: {
+            type: String,
+            default: null,
+          },
+
+          expiresIn: {
+            type: Number,
+            default: null,
+          },
+        },
+
+        resetPwd: {
+          type: Boolean,
+          default: true,
+        },
+
+        nextPasswordReset: {
+          type: Number,
+          default: null,
+        },
+
+        sessions: {
+          type: [
+            {
+              os: String,
+              client: String,
+              ip: String,
+              login_time: Date,
+              token: String,
+              expiresIn: Number,
+            },
+          ],
+        },
+      },
     },
   },
-  schemaOptions,
+  { timestamps: true, versionKey: false },
 );
 
 userSchema.plugin(autoPopulate);
 
-userSchema.virtual('full_name').get(function () {
-  return this.first_name?.concat(
-    this.middle_name ? ` ${this.middle_name}` : '',
-    ` ${this.last_name}`,
-  );
-});
+if (!userSchema.options.toObject) userSchema.options.toObject = {};
+userSchema.options.toObject.transform = function (doc, ret, options) {
+  delete ret.configurations;
+  return ret;
+};
 
 // Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
@@ -210,14 +212,6 @@ userSchema.pre('save', function (next) {
   }
 
   next();
-});
-
-userSchema.post(/^find/, function (doc) {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('User accounts not found.');
-  }
-
-  if (!doc) throw new NotFoundError('User account not found.');
 });
 
 const User = model('User', userSchema);
