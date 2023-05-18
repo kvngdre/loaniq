@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
 
 export default function authWebhook(req, res, next) {
@@ -12,7 +12,9 @@ export default function authWebhook(req, res, next) {
   }
 
   const signature = getSignatureFromHeader(req);
-  const hash = createHmac('sha512', constants.paystack.key.private).update(JSON.stringify(req.body)).digest('hex');
+  const hash = createHmac('sha512', config.paystack.key.private)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
 
   console.log(hash);
 
