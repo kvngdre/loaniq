@@ -10,8 +10,16 @@ router.get('/', [], UserConfigController.getUserConfigs);
 
 router.get('/:userId', [validateObjectId], UserConfigController.getUserConfig);
 
-router.patch('/:userId', [validateObjectId], UserConfigController.updateUserConfig);
+router.patch(
+  '/:userId',
+  [validateObjectId],
+  UserConfigController.updateUserConfig,
+);
 
-router.delete('/:userId', [validateObjectId], UserConfigController.deleteUserConfig);
+router.delete(
+  '/:userId',
+  [validateObjectId],
+  UserConfigController.deleteUserConfig,
+);
 
 export default router;

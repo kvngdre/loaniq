@@ -4,11 +4,16 @@ import { HttpCodes } from '../utils/HttpCodes.js';
 
 export default function (req, res, next) {
   for (const key in req.params) {
-    if (/[a-z]+Id$|^id$/g.test(key) && !Types.ObjectId.isValid(req.params[key])) {
+    if (
+      /[a-z]+Id$|^id$/g.test(key) &&
+      !Types.ObjectId.isValid(req.params[key])
+    ) {
       return res.status(HttpCodes.BAD_REQUEST).json(
         new ErrorResponse({
           name: 'Validation Error',
-          message: `Invalid ${key.replace(/([a-z])([A-Z])/, '$1 $2').toLowerCase()}`,
+          message: `Invalid ${key
+            .replace(/([a-z])([A-Z])/, '$1 $2')
+            .toLowerCase()}`,
         }),
       );
     }

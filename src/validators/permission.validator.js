@@ -25,7 +25,9 @@ class PermissionValidator extends BaseValidator {
       level: this.#levelSchema,
     });
 
-    let { value, error } = schema.validate(newPermissionDTO, { abortEarly: false });
+    let { value, error } = schema.validate(newPermissionDTO, {
+      abortEarly: false,
+    });
     error = this._refineError(error);
 
     return { value, error };
@@ -41,7 +43,9 @@ class PermissionValidator extends BaseValidator {
       level: this.#levelSchema,
     });
 
-    let { value, error } = schema.validate(updatePermissionDTO, { abortEarly: false });
+    let { value, error } = schema.validate(updatePermissionDTO, {
+      abortEarly: false,
+    });
     error = this._refineError(error);
 
     return { value, error };

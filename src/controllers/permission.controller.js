@@ -26,7 +26,8 @@ class PermissionController extends BaseController {
    * @param {import('express').Response} res
    */
   static getPermissions = async (req, res) => {
-    const { count, foundPermissions } = await PermissionService.getPermissions();
+    const { count, foundPermissions } =
+      await PermissionService.getPermissions();
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundPermissions);
 
@@ -39,7 +40,9 @@ class PermissionController extends BaseController {
    * @param {import('express').Response} res
    */
   static getPermission = async (req, res) => {
-    const foundPermission = await PermissionService.getPermission(req.params.permissionId);
+    const foundPermission = await PermissionService.getPermission(
+      req.params.permissionId,
+    );
     const response = this.apiResponse('Fetched permission', foundPermission);
 
     res.status(HttpCodes).json(response);
@@ -54,7 +57,10 @@ class PermissionController extends BaseController {
     const { value, error } = permissionValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const permission = await PermissionService.updatePermission(req.params.permissionId, value);
+    const permission = await PermissionService.updatePermission(
+      req.params.permissionId,
+      value,
+    );
     const response = this.apiResponse('Permission updated', permission);
 
     res.status(HttpCodes.OK).json(response);

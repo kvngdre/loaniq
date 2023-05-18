@@ -25,7 +25,9 @@ const devFormatter = combine(
   timestamp({ format: 'HH:mm:ss' }),
   printf(({ level, timestamp, message, meta }) => {
     message = message.replace('undefined', '');
-    return `[${level}] ${timestamp} ${message}  ${meta ? JSON.stringify(meta, null, 2) : ''}`;
+    return `[${level}] ${timestamp} ${message}  ${
+      meta ? JSON.stringify(meta, null, 2) : ''
+    }`;
   }),
 );
 
@@ -33,7 +35,9 @@ const prodFormatter = combine(
   align(),
   timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   printf(({ level, timestamp, message, meta }) => {
-    return `[${level}]${timestamp} ${message}  ${meta ? JSON.stringify(meta, null, 2) : ''}`;
+    return `[${level}]${timestamp} ${message}  ${
+      meta ? JSON.stringify(meta, null, 2) : ''
+    }`;
   }),
 );
 

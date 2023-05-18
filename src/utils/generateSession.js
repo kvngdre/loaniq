@@ -1,5 +1,5 @@
 import DeviceDetector from 'node-device-detector';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 
 const detectAgent = (agent) => {
   const detector = new DeviceDetector({
@@ -16,7 +16,7 @@ const detectAgent = (agent) => {
 };
 
 // In milliseconds
-const tokenExpirationTime = constants.jwt.exp_time.refresh * 1_000;
+const tokenExpirationTime = config.jwt.exp_time.refresh * 1_000;
 export default function generateSession(token, agent, ip) {
   const { os, client } = detectAgent(agent);
 

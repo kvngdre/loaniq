@@ -9,11 +9,17 @@ import ErrorResponse from '../utils/ErrorResponse.js';
 const checkPermission = (action, target) => {
   return (req, res, next) => {
     function hasPermission() {
-      return req.currentUser.role.permissions.some((p) => p.action === action && p.target === target);
+      return req.currentUser.role.permissions.some(
+        (p) => p.action === action && p.target === target,
+      );
     }
 
     function canActOnAny() {
-      return req.currentUser.role.permissions.some((p) => p.action === action.slice(0, action.length - 3).concat('Any') && p.target === target);
+      return req.currentUser.role.permissions.some(
+        (p) =>
+          p.action === action.slice(0, action.length - 3).concat('Any') &&
+          p.target === target,
+      );
     }
 
     function isTenant() {
@@ -30,7 +36,8 @@ const checkPermission = (action, target) => {
         return res.status(403).json(
           new ErrorResponse({
             name: 'Auth Error',
-            message: 'You do not have sufficient permissions to perform this action.',
+            message:
+              'You do not have sufficient permissions to perform this action.',
           }),
         );
       }
@@ -38,7 +45,8 @@ const checkPermission = (action, target) => {
         return res.status(403).json(
           new ErrorResponse({
             name: 'Auth Error',
-            message: 'You do not have sufficient permissions to perform this action.',
+            message:
+              'You do not have sufficient permissions to perform this action.',
           }),
         );
       }

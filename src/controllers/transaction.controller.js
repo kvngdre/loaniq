@@ -17,7 +17,9 @@ class TransactionController extends BaseController {
   };
 
   static getTxns = async (req, res) => {
-    const [count, transactions] = await txnService.getTxns(req.currentUser.tenantId);
+    const [count, transactions] = await txnService.getTxns(
+      req.currentUser.tenantId,
+    );
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, transactions);
 
@@ -54,7 +56,10 @@ class TransactionController extends BaseController {
     if (error) throw new ValidationError(null, error);
     console.log(typeof value.amount);
 
-    const data = await paystackService.initTransaction(req.currentUser.tenantId, value.amount);
+    const data = await paystackService.initTransaction(
+      req.currentUser.tenantId,
+      value.amount,
+    );
     const response = this.apiResponse('Transaction initialized.', data);
 
     res.status(HttpCodes.OK).json(response);

@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
-import { roles } from '../config/index.js';
+import { roles } from '../config/roles.js';
 import ForbiddenError from '../errors/forbidden.error.js';
 import { canUserResetPwd } from '../helpers/user.helpers.js';
 import BaseValidator from './base.validator.js';
@@ -18,7 +18,11 @@ class UserValidator extends BaseValidator {
       'string.max': '{#label} is too long',
     });
 
-    this.#displayNameSchema = Joi.string().label('Display name').min(1).max(255).invalid('', ' ', '  ');
+    this.#displayNameSchema = Joi.string()
+      .label('Display name')
+      .min(1)
+      .max(255)
+      .invalid('', ' ', '  ');
 
     this.#segmentsSchema = Joi.array()
       .items(this._objectIdSchema)

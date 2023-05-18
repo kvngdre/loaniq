@@ -10,7 +10,10 @@ class TenantConfigController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newConfiguration = await tenantConfigService.createConfig(value);
-    const response = this.apiResponse('Tenant configurations created.', newConfiguration);
+    const response = this.apiResponse(
+      'Tenant configurations created.',
+      newConfiguration,
+    );
 
     res.status(HttpCodes.CREATED).json(response);
   };
@@ -25,8 +28,13 @@ class TenantConfigController extends BaseController {
   };
 
   static getConfig = async (req, res) => {
-    const tenantConfig = await tenantConfigService.getConfig({ tenantId: req.params.tenantId });
-    const response = this.apiResponse('Fetched tenant configurations.', tenantConfig);
+    const tenantConfig = await tenantConfigService.getConfig({
+      tenantId: req.params.tenantId,
+    });
+    const response = this.apiResponse(
+      'Fetched tenant configurations.',
+      tenantConfig,
+    );
 
     res.status(HttpCodes.OK).json(response);
   };
@@ -35,8 +43,14 @@ class TenantConfigController extends BaseController {
     const { value, error } = tenantConfigValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const tenantConfig = await tenantConfigService.updateConfig(req.params.tenantId, value);
-    const response = this.apiResponse('Tenant configurations updated.', tenantConfig);
+    const tenantConfig = await tenantConfigService.updateConfig(
+      req.params.tenantId,
+      value,
+    );
+    const response = this.apiResponse(
+      'Tenant configurations updated.',
+      tenantConfig,
+    );
 
     res.status(HttpCodes.OK).json(response);
   };

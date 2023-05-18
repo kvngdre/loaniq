@@ -11,8 +11,16 @@ router.get('/', BankController.getBanks);
 
 router.get('/:bankId', [verifyJWT, validateObjectId], BankController.getBank);
 
-router.patch('/:bankId', [verifyJWT, validateObjectId], BankController.updateBank);
+router.patch(
+  '/:bankId',
+  [verifyJWT, validateObjectId],
+  BankController.updateBank,
+);
 
-router.delete('/:bankId', [verifyJWT, validateObjectId], BankController.deleteBank);
+router.delete(
+  '/:bankId',
+  [verifyJWT, validateObjectId],
+  BankController.deleteBank,
+);
 
 export default router;

@@ -1,7 +1,12 @@
 import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import { maritalStatus, relationships, status, validIds } from '../utils/common.js';
+import {
+  maritalStatus,
+  relationships,
+  status,
+  validIds,
+} from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
 
@@ -281,7 +286,10 @@ const clientSchema = new Schema(
 );
 
 clientSchema.virtual('full_name').get(function () {
-  return this.first_name.concat(this.middle_name ? ` ${this.middle_name}` : '', ` ${this.last_name}`);
+  return this.first_name.concat(
+    this.middle_name ? ` ${this.middle_name}` : '',
+    ` ${this.last_name}`,
+  );
 });
 
 clientSchema.virtual('age').get(function () {
@@ -318,7 +326,10 @@ clientSchema.methods.permitLogin = function () {
     };
   }
 
-  if (!this.status === status.SUSPENDED || !this.status === status.DEACTIVATED) {
+  if (
+    !this.status === status.SUSPENDED ||
+    !this.status === status.DEACTIVATED
+  ) {
     data.redirect.inactive = true;
     return {
       isPermitted: false,

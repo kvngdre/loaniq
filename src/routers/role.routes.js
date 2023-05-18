@@ -11,8 +11,18 @@ router.get('/', verifyJWT, RoleController.getRoles);
 
 router.get('/:roleId', verifyJWT, validateObjectId, RoleController.getRole);
 
-router.patch('/:roleId', verifyJWT, validateObjectId, RoleController.updateRole);
+router.patch(
+  '/:roleId',
+  verifyJWT,
+  validateObjectId,
+  RoleController.updateRole,
+);
 
-router.delete('/:roleId', verifyJWT, validateObjectId, RoleController.deleteRole);
+router.delete(
+  '/:roleId',
+  verifyJWT,
+  validateObjectId,
+  RoleController.deleteRole,
+);
 
 export default router;

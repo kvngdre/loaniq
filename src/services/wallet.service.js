@@ -59,7 +59,12 @@ class WalletService {
       });
       await foundWallet.save({ session: trx });
 
-      await pubsub.publish(events.wallet.credit, null, new TransactionDTO(dto), trx);
+      await pubsub.publish(
+        events.wallet.credit,
+        null,
+        new TransactionDTO(dto),
+        trx,
+      );
 
       // * Committing changes.
       await trx.commitTransaction();
@@ -85,7 +90,9 @@ class WalletService {
       dto.balance = foundWallet.balance;
 
       if (foundWallet.balance < dto.amount) {
-        throw new InsufficientError('Insufficient funds to perform this transaction.');
+        throw new InsufficientError(
+          'Insufficient funds to perform this transaction.',
+        );
       }
 
       foundWallet.set({ balance: foundWallet.balance - dto.amount });

@@ -6,14 +6,42 @@ import checkPermission from '../middleware/checkPermission.js';
 
 const router = Router();
 
-router.post('/', verifyJWT, checkPermission('createAny', 'tenantConfig'), TenantConfigController.createConfig);
+router.post(
+  '/',
+  verifyJWT,
+  checkPermission('createAny', 'tenantConfig'),
+  TenantConfigController.createConfig,
+);
 
-router.get('/', verifyJWT, checkPermission('viewAny', 'tenantConfig'), TenantConfigController.getConfigs);
+router.get(
+  '/',
+  verifyJWT,
+  checkPermission('viewAny', 'tenantConfig'),
+  TenantConfigController.getConfigs,
+);
 
-router.get('/:tenantId', verifyJWT, validateObjectId, checkPermission('viewOwn', 'tenantConfig'), TenantConfigController.getConfig);
+router.get(
+  '/:tenantId',
+  verifyJWT,
+  validateObjectId,
+  checkPermission('viewOwn', 'tenantConfig'),
+  TenantConfigController.getConfig,
+);
 
-router.patch('/:tenantId', verifyJWT, validateObjectId, checkPermission('updateOwn', 'tenantConfig'), TenantConfigController.updateConfig);
+router.patch(
+  '/:tenantId',
+  verifyJWT,
+  validateObjectId,
+  checkPermission('updateOwn', 'tenantConfig'),
+  TenantConfigController.updateConfig,
+);
 
-router.delete('/:tenantId', verifyJWT, validateObjectId, checkPermission('deleteAny', 'tenantConfig'), TenantConfigController.deleteConfig);
+router.delete(
+  '/:tenantId',
+  verifyJWT,
+  validateObjectId,
+  checkPermission('deleteAny', 'tenantConfig'),
+  TenantConfigController.deleteConfig,
+);
 
 export default router;

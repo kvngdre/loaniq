@@ -16,10 +16,15 @@ class TenantValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#companyNameSchema = Joi.string().label('Company name').min(2).max(255).lowercase().messages({
-      'string.min': '{#label} is not valid',
-      'string.max': '{#label} is too long',
-    });
+    this.#companyNameSchema = Joi.string()
+      .label('Company name')
+      .min(2)
+      .max(255)
+      .lowercase()
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long',
+      });
 
     this.#cacNumberSchema = Joi.string()
       .label('CAC number')
@@ -85,7 +90,9 @@ class TenantValidator extends BaseValidator {
       .min(1)
       .label('Support');
 
-    this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false);
+    this.#allowUserPwdResetSchema = Joi.boolean()
+      .label('Allow user password reset')
+      .default(false);
 
     this.#documentationSchema = Joi.array()
       .items(

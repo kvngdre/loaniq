@@ -15,7 +15,10 @@ class TenantController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const result = await TenantService.createTenant(value);
-    const response = this.apiResponse('Tenant created. Check your email for OTP', result);
+    const response = this.apiResponse(
+      'Tenant created. Check your email for OTP',
+      result,
+    );
 
     res.status(HttpCodes.CREATED).json(response);
   };
@@ -106,10 +109,15 @@ class TenantController extends BaseController {
    * @param {import('express').Response} res
    */
   static requestTenantActivavtion = async (req, res) => {
-    const { value, error } = tenantValidator.validateActivationRequest(req.body);
+    const { value, error } = tenantValidator.validateActivationRequest(
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
-    const tenant = await TenantService.requestToActivateTenant(req.params.tenantId, value);
+    const tenant = await TenantService.requestToActivateTenant(
+      req.params.tenantId,
+      value,
+    );
     const response = this.apiResponse('Submitted and awaiting review.', tenant);
 
     res.status(HttpCodes.OK).json(response);
@@ -133,7 +141,9 @@ class TenantController extends BaseController {
    * @param {import('express').Response} res
    */
   static requestToDeactivateTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateDeactivationRequest(req.body);
+    const { value, error } = tenantValidator.validateDeactivationRequest(
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     await TenantService.requestToDeactivateTenant(req.currentUser, value);
@@ -173,7 +183,10 @@ class TenantController extends BaseController {
    */
   static getPublicFormData = async (req, res) => {
     const formData = await TenantService.getFormData(req.params.formId);
-    const response = this.apiResponse('Fetched tenant public form data.', formData);
+    const response = this.apiResponse(
+      'Fetched tenant public form data.',
+      formData,
+    );
 
     res.status(HttpCodes.OK).json(response);
   };
@@ -184,7 +197,10 @@ class TenantController extends BaseController {
    * @param {import('express').Response} res
    */
   static uploadFiles = async (req, res) => {
-    const tenant = await TenantService.uploadDocs(req.currentUser.tenantId, req.files);
+    const tenant = await TenantService.uploadDocs(
+      req.currentUser.tenantId,
+      req.files,
+    );
     const response = this.apiResponse('Files uploaded.', tenant);
 
     res.status(HttpCodes.OK).json(response);

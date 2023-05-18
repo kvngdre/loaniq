@@ -1,11 +1,17 @@
-import { constants } from '../config/index.js';
 import { google } from 'googleapis';
 import { createTransport } from 'nodemailer';
+import config from '../config/index.js';
 import logger from './logger.js';
 
-const { clientId, clientSecret, refreshToken, oauthPlayground, senderEmail } = constants.mailer;
+const { clientId, clientSecret, refreshToken, oauthPlayground, senderEmail } =
+  config.mailer;
 
-const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, refreshToken, oauthPlayground);
+const oauth2Client = new google.auth.OAuth2(
+  clientId,
+  clientSecret,
+  refreshToken,
+  oauthPlayground,
+);
 
 oauth2Client.setCredentials({ refresh_token: refreshToken });
 

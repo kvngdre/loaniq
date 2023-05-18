@@ -79,7 +79,9 @@ reviewSchema.post(/^find/, async function (docs) {
   } else {
     if (!docs) throw new NotFoundError('Review not found.');
 
-    await docs.populate([{ path: 'document', select: (() => Object.keys(docs.alteration))() }]);
+    await docs.populate([
+      { path: 'document', select: (() => Object.keys(docs.alteration))() },
+    ]);
   }
 });
 

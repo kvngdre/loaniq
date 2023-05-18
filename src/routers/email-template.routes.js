@@ -9,10 +9,25 @@ router.post('/', EmailTemplateController.createTemplate);
 
 router.get('/', EmailTemplateController.getTemplates);
 
-router.get('/:templateId', verifyJWT, validateObjectId, EmailTemplateController.getTemplate);
+router.get(
+  '/:templateId',
+  verifyJWT,
+  validateObjectId,
+  EmailTemplateController.getTemplate,
+);
 
-router.patch('/:templateId', verifyJWT, validateObjectId, EmailTemplateController.updateTemplate);
+router.patch(
+  '/:templateId',
+  verifyJWT,
+  validateObjectId,
+  EmailTemplateController.updateTemplate,
+);
 
-router.delete('/:templateId', verifyJWT, validateObjectId, EmailTemplateController.deleteTemplate);
+router.delete(
+  '/:templateId',
+  verifyJWT,
+  validateObjectId,
+  EmailTemplateController.deleteTemplate,
+);
 
 export default router;

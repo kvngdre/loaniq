@@ -26,8 +26,14 @@ class ClientDAO extends BaseDAO {
     }
   }
 
-  static async find(filter = {}, projection = {}, sortOrder = { first_name: 1 }) {
-    const foundRecords = await Client.find(filter).select(projection).sort(sortOrder);
+  static async find(
+    filter = {},
+    projection = {},
+    sortOrder = { first_name: 1 },
+  ) {
+    const foundRecords = await Client.find(filter)
+      .select(projection)
+      .sort(sortOrder);
 
     return foundRecords;
   }

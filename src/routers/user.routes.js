@@ -13,13 +13,27 @@ router.post('/', verifyJWT, UserController.createUser);
 
 router.post('/forgot-password', UserController.forgotPassword);
 
-router.post('/uploads', verifyJWT, upload.single('avatar'), UserController.uploadFiles);
+router.post(
+  '/uploads',
+  verifyJWT,
+  upload.single('avatar'),
+  UserController.uploadFiles,
+);
 
 router.post('/verify-signup', UserController.verifySignup);
 
-router.post('/:userId/change-password', verifyJWT, UserController.changePassword);
+router.post(
+  '/:userId/change-password',
+  verifyJWT,
+  UserController.changePassword,
+);
 
-router.post('/:userId/deactivate', verifyJWT, validateObjectId, UserController.deactivateUser);
+router.post(
+  '/:userId/deactivate',
+  verifyJWT,
+  validateObjectId,
+  UserController.deactivateUser,
+);
 
 router.get('/', verifyJWT, UserController.getUsers);
 
@@ -27,12 +41,32 @@ router.get('/me', verifyJWT, UserController.getCurrentUser);
 
 router.get('/:userId', verifyJWT, validateObjectId, UserController.getUser);
 
-router.get('/:userId/reactivate', verifyJWT, validateObjectId, UserController.reactivateUser);
+router.get(
+  '/:userId/reactivate',
+  verifyJWT,
+  validateObjectId,
+  UserController.reactivateUser,
+);
 
-router.get('/:userId/reset-password', verifyJWT, validateObjectId, UserController.resetPassword);
+router.get(
+  '/:userId/reset-password',
+  verifyJWT,
+  validateObjectId,
+  UserController.resetPassword,
+);
 
-router.patch('/:userId', verifyJWT, validateObjectId, UserController.updateUser);
+router.patch(
+  '/:userId',
+  verifyJWT,
+  validateObjectId,
+  UserController.updateUser,
+);
 
-router.delete('/:userId', verifyJWT, validateObjectId, UserController.deleteUser);
+router.delete(
+  '/:userId',
+  verifyJWT,
+  validateObjectId,
+  UserController.deleteUser,
+);
 
 export default router;

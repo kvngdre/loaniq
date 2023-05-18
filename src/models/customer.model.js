@@ -219,7 +219,10 @@ customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true });
 customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true });
 
 customerSchema.virtual('full_name').get(function () {
-  return this.first_name.concat(this.middle_name ? ` ${this.middle_name}` : '', ` ${this.last_name}`);
+  return this.first_name.concat(
+    this.middle_name ? ` ${this.middle_name}` : '',
+    ` ${this.last_name}`,
+  );
 });
 
 customerSchema.virtual('age').get(function () {

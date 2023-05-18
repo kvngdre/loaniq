@@ -1,7 +1,7 @@
-import { joiPassword } from 'joi-password';
-import { feeTypes, maritalStatus } from '../utils/common.js';
-import { roles } from '../config/index.js';
 import Joi from 'joi';
+import { joiPassword } from 'joi-password';
+import { roles } from '../config/roles.js';
+import { feeTypes, maritalStatus } from '../utils/common.js';
 
 class BaseValidator {
   #formatErrorMessage = (error) => {
@@ -29,7 +29,8 @@ class BaseValidator {
     if (error) {
       const _error = {};
       for (const detail of error.details) {
-        _error[detail.path.reduce(reducer, '')] = this.#formatErrorMessage(detail);
+        _error[detail.path.reduce(reducer, '')] =
+          this.#formatErrorMessage(detail);
       }
 
       return _error;
@@ -93,9 +94,14 @@ class BaseValidator {
       }),
   });
 
-  _genderSchema = Joi.string().lowercase().trim().label('Gender').valid('male', 'female').messages({
-    'any.only': 'Invalid gender',
-  });
+  _genderSchema = Joi.string()
+    .lowercase()
+    .trim()
+    .label('Gender')
+    .valid('male', 'female')
+    .messages({
+      'any.only': 'Invalid gender',
+    });
 
   _phoneNumberSchema = Joi.string()
     .label('Phone number')
@@ -103,7 +109,8 @@ class BaseValidator {
     .length(13)
     .pattern(/^234\d{10}$/)
     .messages({
-      'string.pattern.base': '{#label} is invalid, please include the international dialling code',
+      'string.pattern.base':
+        '{#label} is invalid, please include the international dialling code',
     });
 
   _otpSchema = (len) => {
@@ -116,20 +123,41 @@ class BaseValidator {
       });
   };
 
-  _emailSchema = Joi.string().email().trim().lowercase().label('Email').messages({
-    'string.email': '{#label} is  not valid',
-  });
+  _emailSchema = Joi.string()
+    .email()
+    .trim()
+    .lowercase()
+    .label('Email')
+    .messages({
+      'string.email': '{#label} is  not valid',
+    });
 
   _passwordSchema = (len) => {
-    return joiPassword.string().label('Password').minOfUppercase(1).minOfSpecialCharacters(1).minOfNumeric(1).noWhiteSpaces().min(len).max(1024).messages({
-      'password.minOfUppercase': '{#label} should contain at least {#min} uppercase character',
-      'password.minOfSpecialCharacters': '{#label} should contain at least {#min} special character',
-      'password.minOfNumeric': '{#label} should contain at least {#min} number',
-      'password.noWhiteSpaces': '{#label} should not contain white spaces',
-    });
+    return joiPassword
+      .string()
+      .label('Password')
+      .minOfUppercase(1)
+      .minOfSpecialCharacters(1)
+      .minOfNumeric(1)
+      .noWhiteSpaces()
+      .min(len)
+      .max(1024)
+      .messages({
+        'password.minOfUppercase':
+          '{#label} should contain at least {#min} uppercase character',
+        'password.minOfSpecialCharacters':
+          '{#label} should contain at least {#min} special character',
+        'password.minOfNumeric':
+          '{#label} should contain at least {#min} number',
+        'password.noWhiteSpaces': '{#label} should not contain white spaces',
+      });
   };
 
-  _confirmPasswordSchema = Joi.string().label('Confirm password').trim().equal(Joi.ref('new_password')).messages({ 'any.only': 'Passwords do not match' });
+  _confirmPasswordSchema = Joi.string()
+    .label('Confirm password')
+    .trim()
+    .equal(Joi.ref('new_password'))
+    .messages({ 'any.only': 'Passwords do not match' });
 
   _roleSchema = Joi.string()
     .label('Role')
@@ -140,7 +168,12 @@ class BaseValidator {
     });
 
   _locationSchema = Joi.object({
-    address: Joi.string().lowercase().max(100).trim().label('Address').invalid(''),
+    address: Joi.string()
+      .lowercase()
+      .max(100)
+      .trim()
+      .label('Address')
+      .invalid(''),
     state: this._objectIdSchema.label('State'),
   });
 
@@ -152,17 +185,30 @@ class BaseValidator {
     'any.invalid': 'Must be a boolean value',
   });
 
-  _amountSchema = Joi.number().label('Loan amount').min(0).max(9999999.99).precision(2);
+  _amountSchema = Joi.number()
+    .label('Loan amount')
+    .min(0)
+    .max(9999999.99)
+    .precision(2);
 
   _tenorSchema = Joi.number().label('Loan tenor').min(1).max(120);
 
-  _percentageSchema = Joi.number().label('Interest rate').min(0).max(100.0).precision(2);
+  _percentageSchema = Joi.number()
+    .label('Interest rate')
+    .min(0)
+    .max(100.0)
+    .precision(2);
 
   _feesSchema = Joi.array()
     .label('Fees')
     .items(
       Joi.object({
-        name: Joi.string().lowercase().max(50).label('Fee name').trim().required(),
+        name: Joi.string()
+          .lowercase()
+          .max(50)
+          .label('Fee name')
+          .trim()
+          .required(),
         type: Joi.number()
           .label('Fee type')
           .valid(...Object.values(feeTypes))
@@ -188,7 +234,10 @@ class BaseValidator {
 
   _descSchema = Joi.string().label('Description').trim().lowercase().max(100);
 
-  _phoneOrStaffIdSchema = Joi.alternatives().try(this._phoneNumberSchema, this._idSchema);
+  _phoneOrStaffIdSchema = Joi.alternatives().try(
+    this._phoneNumberSchema,
+    this._idSchema,
+  );
 }
 
 export default BaseValidator;

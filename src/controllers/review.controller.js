@@ -5,7 +5,11 @@ import reviewValidator from '../validators/review.validator.js';
 import BaseController from './base.controller.js';
 class ReviewController extends BaseController {
   static createReview = async (req, res) => {
-    const { value, error } = reviewValidator.validateCreate(req.currentUser._id, req.currentUser.tenantId, req.body);
+    const { value, error } = reviewValidator.validateCreate(
+      req.currentUser._id,
+      req.currentUser.tenantId,
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     const newReview = await ReviewService.createReview(value);

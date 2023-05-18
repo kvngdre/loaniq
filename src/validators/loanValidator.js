@@ -16,7 +16,17 @@ class LoanValidator {
   #netPaySchema;
   #amountSchema;
   #tenorSchema;
-  constructor(minNetPay, minLoanAmount, maxLoanAmount, minTenor, maxTenor, interestRate, upfrontFeePercent, transferFee, maxDti) {
+  constructor(
+    minNetPay,
+    minLoanAmount,
+    maxLoanAmount,
+    minTenor,
+    maxTenor,
+    interestRate,
+    upfrontFeePercent,
+    transferFee,
+    maxDti,
+  ) {
     this.#minNetPay = minNetPay;
     this.#minLoanAmount = minLoanAmount;
     this.#maxLoanAmount = maxLoanAmount;
@@ -29,7 +39,9 @@ class LoanValidator {
     this.#netPaySchema = Joi.number()
       .min(this.#minNetPay)
       .messages({
-        'number.min': `Net pay must be greater than or equal to ${this.#minNetPay}.`,
+        'number.min': `Net pay must be greater than or equal to ${
+          this.#minNetPay
+        }.`,
       });
     this.#amountSchema = Joi.number()
       .min(this.#minLoanAmount)
@@ -128,7 +140,14 @@ class LoanValidator {
         loanType: Joi.string().valid('New', 'Top Up').messages({
           'any.only': 'Invalid loan type',
         }),
-        status: Joi.string().valid('Discontinued', 'Liquidated', 'Approved', 'On Hold', 'Pending', 'Denied'),
+        status: Joi.string().valid(
+          'Discontinued',
+          'Liquidated',
+          'Approved',
+          'On Hold',
+          'Pending',
+          'Denied',
+        ),
         remark: Joi.string()
           .when('status', {
             is: Joi.exist(),

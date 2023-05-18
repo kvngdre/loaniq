@@ -32,15 +32,18 @@ class TenantConfigDAO extends BaseDAO {
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await TenantConfig.findOne(filter).select(projection).populate('tenantId');
+    const foundRecord = await TenantConfig.findOne(filter)
+      .select(projection)
+      .populate('tenantId');
     return foundRecord;
   }
 
   static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, { upsert: true, new: true }).select(
-        projection,
-      );
+      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, {
+        upsert: true,
+        new: true,
+      }).select(projection);
 
       return foundRecord;
     } catch (exception) {

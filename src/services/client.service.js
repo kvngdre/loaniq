@@ -1,7 +1,10 @@
 import ClientDAO from '../daos/client.dao.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
 import { status } from '../utils/common.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from '../utils/generateJWT.js';
 import generateSession from '../utils/generateSession.js';
 
 class ClientService {
@@ -19,7 +22,11 @@ class ClientService {
     return newClient;
   };
 
-  static verifyClient = async ({ phoneOrStaffId, otp }, userAgent, clientIp) => {
+  static verifyClient = async (
+    { phoneOrStaffId, otp },
+    userAgent,
+    clientIp,
+  ) => {
     const foundClient = await ClientDAO.findOne({
       $or: [{ phone_number: phoneOrStaffId }, { staff_id: phoneOrStaffId }],
     });

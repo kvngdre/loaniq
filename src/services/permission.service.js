@@ -21,7 +21,10 @@ class PermissionService {
   }
 
   static async updatePermission(permissionId, updatePermissionDTO) {
-    const updatedPermission = await PermissionDAO.update(permissionId, updatePermissionDTO);
+    const updatedPermission = await PermissionDAO.update(
+      permissionId,
+      updatePermissionDTO,
+    );
 
     return updatedPermission;
   }

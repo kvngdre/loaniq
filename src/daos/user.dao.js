@@ -26,20 +26,30 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  static async find(filter = {}, projection = {}, sortOrder = { first_name: 1 }) {
-    const foundRecords = await User.find(filter).select(projection).sort(sortOrder);
+  static async find(
+    filter = {},
+    projection = {},
+    sortOrder = { first_name: 1 },
+  ) {
+    const foundRecords = await User.find(filter)
+      .select(projection)
+      .sort(sortOrder);
 
     return foundRecords;
   }
 
   static async findById(id, projection = {}) {
-    const foundRecord = await User.findById(id).select(projection).populate({ path: 'role', select: '-tenantId' });
+    const foundRecord = await User.findById(id)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' });
 
     return foundRecord;
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await User.findOne(filter).select(projection).populate({ path: 'role', select: '-tenantId' });
+    const foundRecord = await User.findOne(filter)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' });
 
     return foundRecord;
   }

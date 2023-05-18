@@ -140,7 +140,10 @@ const userSchema = new Schema(
 userSchema.plugin(autoPopulate);
 
 userSchema.virtual('full_name').get(function () {
-  return this.first_name?.concat(this.middle_name ? ` ${this.middle_name}` : '', ` ${this.last_name}`);
+  return this.first_name?.concat(
+    this.middle_name ? ` ${this.middle_name}` : '',
+    ` ${this.last_name}`,
+  );
 });
 
 // Checking if user can be permitted to login

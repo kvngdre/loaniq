@@ -1,14 +1,17 @@
 /* eslint-disable camelcase */
 /* eslint-disable eqeqeq */
 import jwt from 'jsonwebtoken';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import ClientDAO from '../daos/client.dao.js';
 import UserDAO from '../daos/user.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import ForbiddenError from '../errors/forbidden.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from '../utils/generateJWT.js';
 import generateOTP from '../utils/generateOTP.js';
 import generateSession from '../utils/generateSession.js';
 import logger from '../utils/logger.js';
@@ -34,9 +37,13 @@ class AuthService {
 
       // ! Prune user sessions for expired refresh tokens.
       if (token) {
-        userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token && Date.now() < s.expiresIn);
+        userConfig.sessions = userConfig.sessions.filter(
+          (s) => s.token !== token && Date.now() < s.expiresIn,
+        );
       } else {
-        userConfig.sessions = userConfig.sessions.filter((s) => Date.now() < s.expiresIn);
+        userConfig.sessions = userConfig.sessions.filter(
+          (s) => Date.now() < s.expiresIn,
+        );
       }
 
       if (userConfig.sessions.length >= 3) {
@@ -97,7 +104,7 @@ class AuthService {
   }
 
   static async getNewTokens(token) {
-    const { issuer, secret } = constants.jwt;
+    const { issuer, secret } = config.jwt;
     try {
       const decoded = jwt.verify(token, secret.refresh, { issuer });
       if (decoded.client) {
@@ -106,9 +113,11 @@ class AuthService {
         }).catch(async () => {
           logger.warn('Attempted refresh token reuse detected.');
 
-          await ClientDAO.update(decoded.id, { sessions: null }).catch((err) => {
-            logger.error(err.message, err.stack);
-          });
+          await ClientDAO.update(decoded.id, { sessions: null }).catch(
+            (err) => {
+              logger.error(err.message, err.stack);
+            },
+          );
 
           throw new ForbiddenError('Forbidden');
         });
@@ -130,25 +139,30 @@ class AuthService {
 
         // Updating client session with new tokens
         foundClient.session.token = refreshToken;
-        foundClient.session.expiresIn = Date.now() + constants.jwt.exp_time.refresh * 1_000;
+        foundClient.session.expiresIn =
+          Date.now() + config.jwt.exp_time.refresh * 1_000;
         await foundClient.updateOne({
           'session.token': refreshToken,
-          'session.expiresIn': Date.now() + constants.jwt.exp_time.refresh * 1_000,
+          'session.expiresIn': Date.now() + config.jwt.exp_time.refresh * 1_000,
         });
 
         return [accessToken, refreshToken];
       }
 
       // ! Tenant user requesting for new tokens.
-      const foundUserConfig = await userConfigService.getConfig({ 'sessions.token': token }).catch(async () => {
-        logger.warn('Attempted refresh token reuse detected.');
+      const foundUserConfig = await userConfigService
+        .getConfig({ 'sessions.token': token })
+        .catch(async () => {
+          logger.warn('Attempted refresh token reuse detected.');
 
-        await userConfigService.updateConfig(decoded.id, { sessions: [] }).catch((err) => {
-          logger.error(err.message, err.stack);
+          await userConfigService
+            .updateConfig(decoded.id, { sessions: [] })
+            .catch((err) => {
+              logger.error(err.message, err.stack);
+            });
+
+          throw new ForbiddenError('Forbidden');
         });
-
-        throw new ForbiddenError('Forbidden');
-      });
 
       // Validating if token payload is valid
       if (decoded.id != foundUserConfig.userId) {
@@ -161,14 +175,17 @@ class AuthService {
       );
 
       // ! Prune user sessions for expired refresh tokens.
-      const filteredSessions = foundUserConfig.sessions.filter((s) => s.token !== token && Date.now() < s.expiresIn);
+      const filteredSessions = foundUserConfig.sessions.filter(
+        (s) => s.token !== token && Date.now() < s.expiresIn,
+      );
 
       // Generating tokens
       const accessToken = generateAccessToken({ id: foundUserConfig.userId });
       const refreshToken = generateRefreshToken({ id: foundUserConfig.userId });
 
       currentSession.token = refreshToken;
-      currentSession.expiresIn = Date.now() + constants.jwt.exp_time.refresh * 1_000;
+      currentSession.expiresIn =
+        Date.now() + config.jwt.exp_time.refresh * 1_000;
 
       foundUserConfig.set({
         sessions: [currentSession, ...filteredSessions],
@@ -211,7 +228,9 @@ class AuthService {
         'sessions.token': token,
       });
 
-      userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token && Date.now() < s.expiresIn);
+      userConfig.sessions = userConfig.sessions.filter(
+        (s) => s.token !== token && Date.now() < s.expiresIn,
+      );
       await userConfig.save();
     } catch (exception) {
       logger.warn(exception.message);

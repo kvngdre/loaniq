@@ -50,7 +50,12 @@ class ClientValidator extends BaseValidator {
         'string.pattern.base': '{#label} is not valid',
       });
 
-    this.#birthDateSchema = Joi.date().iso().label('Birth date').custom(isOver18).less('now').messages({ 'any.invalid': 'Must be 18 or older to apply' });
+    this.#birthDateSchema = Joi.date()
+      .iso()
+      .label('Birth date')
+      .custom(isOver18)
+      .less('now')
+      .messages({ 'any.invalid': 'Must be 18 or older to apply' });
 
     this.#commandSchema = Joi.string().label('Command').lowercase().trim();
 
@@ -78,10 +83,17 @@ class ClientValidator extends BaseValidator {
       .valid(...relationships)
       .label('Relationship');
 
-    this.#addressSchema = Joi.string().lowercase().trim().label('Address').min(5).max(100).required().messages({
-      'string.min': '{#label} is too short.',
-      'string.max': '{#label} is too long.',
-    });
+    this.#addressSchema = Joi.string()
+      .lowercase()
+      .trim()
+      .label('Address')
+      .min(5)
+      .max(100)
+      .required()
+      .messages({
+        'string.min': '{#label} is too short.',
+        'string.max': '{#label} is too long.',
+      });
 
     this.#passcodeSchema = (len) => {
       return Joi.string()
@@ -96,7 +108,11 @@ class ClientValidator extends BaseValidator {
         });
     };
 
-    this.#confirm_passcode = Joi.string().label('Confirm pin').trim().equal(Joi.ref('passcode')).messages({ 'any.only': 'Passcodes do not match' });
+    this.#confirm_passcode = Joi.string()
+      .label('Confirm pin')
+      .trim()
+      .equal(Joi.ref('passcode'))
+      .messages({ 'any.only': 'Passcodes do not match' });
   }
 
   validateSignup = (clientSignupDTO) => {
@@ -152,16 +168,26 @@ class ClientValidator extends BaseValidator {
       id_number: this._idSchema.label('Id number').required(),
       segment: this._objectIdSchema.label('Segment').required(),
       command: this.#commandSchema.required(),
-      employer_address: this.#addressSchema.label('Employer address').required(),
+      employer_address: this.#addressSchema
+        .label('Employer address')
+        .required(),
       employer_state: this._objectIdSchema.label('State').required(),
       hire_date: this.#hireDateSchema.required(),
       income: this._amountSchema.label('Income').required(),
-      nok_full_name: this._nameSchema.extract('first').label('Next of kin full name').required(),
+      nok_full_name: this._nameSchema
+        .extract('first')
+        .label('Next of kin full name')
+        .required(),
       nok_address: this.#addressSchema.label('Next of kin address').required(),
       nok_state: this._objectIdSchema.label('Next of kin state').required(),
-      nok_phone_number: this._phoneNumberSchema.label('Next of kin phone number').required(),
+      nok_phone_number: this._phoneNumberSchema
+        .label('Next of kin phone number')
+        .required(),
       nok_relationship: this.#relationshipSchema.required(),
-      account_name: this._nameSchema.extract('last').label('Salary account name').required(),
+      account_name: this._nameSchema
+        .extract('last')
+        .label('Salary account name')
+        .required(),
       account_number: this._accountNumberSchema.required(),
       bank: this._objectIdSchema.label('Bank').required(),
     });
@@ -196,12 +222,18 @@ class ClientValidator extends BaseValidator {
       employer_state: this._objectIdSchema.label('State'),
       hire_date: this.#hireDateSchema,
       income: this._amountSchema.label('Income'),
-      nok_full_name: this._nameSchema.extract('first').label('Next of kin full name'),
+      nok_full_name: this._nameSchema
+        .extract('first')
+        .label('Next of kin full name'),
       nok_address: this.#addressSchema.label('Next of kin address'),
       nok_state: this._objectIdSchema.label('Next of kin state'),
-      nok_phone_number: this._phoneNumberSchema.label('Next of kin phone number'),
+      nok_phone_number: this._phoneNumberSchema.label(
+        'Next of kin phone number',
+      ),
       nok_relationship: this.#relationshipSchema,
-      account_name: this._nameSchema.extract('last').label('Salary account name'),
+      account_name: this._nameSchema
+        .extract('last')
+        .label('Salary account name'),
       account_number: this._accountNumberSchema,
       bank: this._objectIdSchema.label('Bank'),
     }).min(1);

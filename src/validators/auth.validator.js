@@ -7,7 +7,9 @@ class AuthValidator extends BaseValidator {
       phoneOrStaffId: this._phoneOrStaffIdSchema,
     })
       .xor('email', 'phoneOrStaffId')
-      .messages({ 'object.xor': 'Value cannot contain both email and phoneOrStaffId' });
+      .messages({
+        'object.xor': 'Value cannot contain both email and phoneOrStaffId',
+      });
 
     if (loginDTO.email) {
       schema = schema.keys({

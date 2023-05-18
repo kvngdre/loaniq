@@ -1,5 +1,5 @@
 import requestIp from 'request-ip';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import ValidationError from '../errors/validation.error.js';
 import ClientService from '../services/client.service.js';
 import { HttpCodes } from '../utils/HttpCodes.js';
@@ -31,18 +31,19 @@ class OriginController extends BaseController {
     const { value, error } = clientValidator.validateVerifySignup(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const { accessToken, refreshToken, user } = await ClientService.verifyClient(
-      value,
-      req.headers['user-agent'],
-      requestIp.getClientIp(req),
-    );
+    const { accessToken, refreshToken, user } =
+      await ClientService.verifyClient(
+        value,
+        req.headers['user-agent'],
+        requestIp.getClientIp(req),
+      );
 
     // ! Create secure cookie with refresh token.
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     const response = this.apiResponse('Client verified', { user, accessToken });

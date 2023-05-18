@@ -54,7 +54,10 @@ class EmailTemplateController extends BaseController {
     const { value, error } = emailTemplateValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const template = await EmailService.updateTemplate(req.params.templateId, value);
+    const template = await EmailService.updateTemplate(
+      req.params.templateId,
+      value,
+    );
     const response = this.apiResponse('Template updated', template);
 
     res.status(HttpCodes.OK).json(response);

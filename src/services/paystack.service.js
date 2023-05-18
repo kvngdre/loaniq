@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import DependencyError from '../errors/dependency.error.js';
 import TenantService from '../tenant/tenant.service.js';
 import logger from '../utils/logger.js';
@@ -13,11 +13,12 @@ class PaystackService {
   constructor() {
     this.#headers = {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${constants.paystack.key.private}`,
+      Authorization: `Bearer ${config.paystack.key.private}`,
     };
     this.#initTxnUrl = 'https://api.paystack.co/transaction/initialize';
     this.#payment_channels = ['card', 'bank_transfer'];
-    this.#verifyTxnUrl = 'https://api.paystack.co/transaction/verify/:reference';
+    this.#verifyTxnUrl =
+      'https://api.paystack.co/transaction/verify/:reference';
   }
 
   #calcFee(amount) {
@@ -65,9 +66,12 @@ class PaystackService {
 
   async verifyTransaction(ref) {
     try {
-      const response = await axios.get(this.#verifyTxnUrl.replace(':reference', ref.toString()), {
-        headers: this.#headers,
-      });
+      const response = await axios.get(
+        this.#verifyTxnUrl.replace(':reference', ref.toString()),
+        {
+          headers: this.#headers,
+        },
+      );
 
       return response.data;
     } catch (exception) {

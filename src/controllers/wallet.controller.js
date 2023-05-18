@@ -6,7 +6,10 @@ import BaseController from './base.controller.js';
 
 class WalletController extends BaseController {
   static createWallet = async (req, res) => {
-    const { value, error } = walletValidator.validateCreate(req.body, req.params.tenantId);
+    const { value, error } = walletValidator.validateCreate(
+      req.body,
+      req.params.tenantId,
+    );
     if (error) throw new ValidationError(null, error);
 
     const newWallet = await walletService.createWallet(value);
@@ -56,7 +59,10 @@ class WalletController extends BaseController {
   };
 
   static creditWallet = async (req, res) => {
-    const { value, error } = walletValidator.validateCredit(req.params.tenantId, req.body);
+    const { value, error } = walletValidator.validateCredit(
+      req.params.tenantId,
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     const wallet = await walletService.creditWallet(value);
@@ -66,7 +72,10 @@ class WalletController extends BaseController {
   };
 
   static debitWallet = async (req, res) => {
-    const { value, error } = walletValidator.validateDebit(req.params.tenantId, req.body);
+    const { value, error } = walletValidator.validateDebit(
+      req.params.tenantId,
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     const wallet = await walletService.debitWallet(value);

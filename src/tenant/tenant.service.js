@@ -32,7 +32,10 @@ class TenantService {
         TenantDAO.insert(tenant, session),
         UserDAO.insert(user, session),
         TenantConfigDAO.insert({ tenantId: tenant._id }, session),
-        UserConfigDAO.insert({ tenantId: tenant._id, userId: user._id }, session),
+        UserConfigDAO.insert(
+          { tenantId: tenant._id, userId: user._id },
+          session,
+        ),
         // Cloning default admin user role for new tenant.
         RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
           doc._id = user.role;
@@ -137,7 +140,10 @@ class TenantService {
   }
 
   static async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
-    const [foundTenant, foundUser] = await Promise.all([TenantDAO.findById(tenantId), UserDAO.findById(_id)]);
+    const [foundTenant, foundUser] = await Promise.all([
+      TenantDAO.findById(tenantId),
+      UserDAO.findById(_id),
+    ]);
 
     const { isValid, reason } = foundUser.validateOTP(otp);
     if (!isValid) throw new UnauthorizedError(reason);
@@ -163,7 +169,11 @@ class TenantService {
   static async deactivateTenant(tenantId) {
     const [foundTenant, foundAdminUsers] = await Promise.all([
       await TenantDAO.update(tenantId, { status: status.DEACTIVATED }),
-      await UserDAO.find({ tenantId, 'role.name': 'admin' }, { password: 0, resetPwd: 0, otp: 0 }, { createdAt: 1 }),
+      await UserDAO.find(
+        { tenantId, 'role.name': 'admin' },
+        { password: 0, resetPwd: 0, otp: 0 },
+        { createdAt: 1 },
+      ),
       await UserDAO.updateMany({ tenantId }, { active: false }),
     ]);
 
@@ -173,7 +183,9 @@ class TenantService {
       context: { name: foundAdminUsers[0].first_name },
     });
     if (info.error) {
-      throw new DependencyError('Operation failed: Error sending deactivated email to user.');
+      throw new DependencyError(
+        'Operation failed: Error sending deactivated email to user.',
+      );
     }
 
     return foundTenant;
@@ -220,7 +232,9 @@ class TenantService {
     const [foundFolder] = await driverUploader.findFolder(folderName);
 
     // Selecting folder
-    const folderId = foundFolder?.id ? foundFolder.id : await driverUploader.createFolder(folderName);
+    const folderId = foundFolder?.id
+      ? foundFolder.id
+      : await driverUploader.createFolder(folderName);
 
     logger.debug(folderId);
 
@@ -232,7 +246,12 @@ class TenantService {
       const filePath = path.resolve(__dirname, `../../${file.path}`);
       const mimeType = file.mimetype;
 
-      const response = await driverUploader.createFile(name, filePath, folderId, mimeType);
+      const response = await driverUploader.createFile(
+        name,
+        filePath,
+        folderId,
+        mimeType,
+      );
       logger.debug(response.data.id);
 
       if (key === 'logo') {

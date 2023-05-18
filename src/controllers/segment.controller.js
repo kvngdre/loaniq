@@ -35,7 +35,10 @@ class SegmentController extends BaseController {
     const { value, error } = segmentValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const updatedSegment = await SegmentService.updateSegment(req.params.segmentId, value);
+    const updatedSegment = await SegmentService.updateSegment(
+      req.params.segmentId,
+      value,
+    );
     const response = this.apiResponse('Segment updated.', updatedSegment);
 
     res.status(HttpCodes.OK).json(response);

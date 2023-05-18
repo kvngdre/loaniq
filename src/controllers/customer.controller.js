@@ -6,7 +6,10 @@ import BaseController from './base.controller.js';
 
 class CustomerController extends BaseController {
   static createCustomer = async (req, res) => {
-    const { value, error } = customerValidator.validateCreate(req.currentUser.tenantId, req.body);
+    const { value, error } = customerValidator.validateCreate(
+      req.currentUser.tenantId,
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     const newCustomer = await CustomerService.create(value);
@@ -16,7 +19,9 @@ class CustomerController extends BaseController {
   };
 
   static getCustomers = async (req, res) => {
-    const [count, customers] = await CustomerService.getCustomers(req.currentUser.tenantId);
+    const [count, customers] = await CustomerService.getCustomers(
+      req.currentUser.tenantId,
+    );
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, customers);
 
@@ -34,7 +39,10 @@ class CustomerController extends BaseController {
     const { value, error } = customerValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const customer = await CustomerService.updateCustomer(req.params.customerId, value);
+    const customer = await CustomerService.updateCustomer(
+      req.params.customerId,
+      value,
+    );
     const response = this.apiResponse('Customer updated.', customer);
 
     res.status(HttpCodes.OK).json(response);
@@ -48,7 +56,10 @@ class CustomerController extends BaseController {
   };
 
   static uploadDocs = async (req, res) => {
-    const customer = await CustomerService.uploadFiles(req.params.customerId, req.files);
+    const customer = await CustomerService.uploadFiles(
+      req.params.customerId,
+      req.files,
+    );
     const response = this.apiResponse('Files uploaded', customer);
 
     res.status(HttpCodes.OK).json(response);

@@ -1,8 +1,8 @@
-import { constants } from '../config/index.js';
+import Sqrl from 'squirrelly';
+import config from '../config/index.js';
 import EmailTemplateDAO from '../daos/email-template.dao.js';
 import getMailTransport from '../utils/getMailTransport.js';
 import logger from '../utils/logger.js';
-import Sqrl from 'squirrelly';
 
 class EmailService {
   static async sendTest() {}
@@ -33,7 +33,10 @@ class EmailService {
   }
 
   static async updateTemplate(templateId, updateTemplateDTO) {
-    const updatedTemplate = await EmailTemplateDAO.update(templateId, updateTemplateDTO);
+    const updatedTemplate = await EmailTemplateDAO.update(
+      templateId,
+      updateTemplateDTO,
+    );
 
     return updatedTemplate;
   }
@@ -46,7 +49,7 @@ class EmailService {
 
   static async send({ from, to, templateName, context = {} }) {
     try {
-      const { senderEmail } = constants.mailer;
+      const { senderEmail } = config.mailer;
       const template = await EmailService.getTemplate({ templateName });
       const transporter = await getMailTransport();
 

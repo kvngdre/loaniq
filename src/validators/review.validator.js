@@ -11,7 +11,10 @@ class ReviewValidator extends BaseValidator {
     super();
 
     this.#typeSchema = Joi.string().valid('Customer', 'Loan').label('Type');
-    this.#commentSchema = Joi.string().label('Comment').max(255).invalid('', ' ');
+    this.#commentSchema = Joi.string()
+      .label('Comment')
+      .max(255)
+      .invalid('', ' ');
     this.#statusSchema = Joi.string()
       .label('Status')
       .valid(...Object.values(reviewStatus));

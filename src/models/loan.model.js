@@ -153,7 +153,8 @@ loanSchema.pre('save', function (next) {
     }
 
     // setting loan metrics
-    const hasTrigger = (path) => ['recommendedAmount', 'recommendedTenor'].includes(path);
+    const hasTrigger = (path) =>
+      ['recommendedAmount', 'recommendedTenor'].includes(path);
     if (this.modifiedPaths().some(hasTrigger)) {
       console.log('yes');
 

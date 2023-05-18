@@ -7,7 +7,6 @@ module.exports = {
   extends: ['plugin:prettier/recommended'],
   plugins: ['prettier'],
   overrides: [],
-  root: true,
   ignorePatterns: ['.eslintrc.cjs'],
   parserOptions: {
     ecmaVersion: 'latest',

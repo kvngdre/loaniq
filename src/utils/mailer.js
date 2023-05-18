@@ -3,7 +3,7 @@ import { createTransport } from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import DependencyError from '../errors/dependency.error.js';
 import logger from './logger.js';
 
@@ -12,10 +12,16 @@ const partialsPath = path.resolve(__dirname, '../assets/templates/partials/');
 const viewsPath = path.resolve(__dirname, '../assets/templates/views/');
 
 // todo Clean up sendMail with domain name for sending mails
-const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } = constants.mailer;
+const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =
+  config.mailer;
 
 // Setting up oauth2Client
-const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, refreshToken, oauthPlayground);
+const oauth2Client = new google.auth.OAuth2(
+  clientId,
+  clientSecret,
+  refreshToken,
+  oauthPlayground,
+);
 
 oauth2Client.setCredentials({ refresh_token: refreshToken });
 
@@ -54,7 +60,14 @@ async function getTransporter() {
  * @param {string} params.payload.password Password if to be sent in mail.
  * @returns {Promise}
  */
-const sendMail = async function ({ from, to, subject, template, name = undefined, payload }) {
+const sendMail = async function ({
+  from,
+  to,
+  subject,
+  template,
+  name = undefined,
+  payload,
+}) {
   // Defining the mailing options
   const mailOptions = {
     from: `"Aidea" <${from || senderEmail}>`,

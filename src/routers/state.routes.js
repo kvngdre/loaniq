@@ -9,10 +9,22 @@ router.post('/', [verifyJWT], StateController.createState);
 
 router.get('/', StateController.getStates);
 
-router.get('/:stateId', [verifyJWT, validateObjectId], StateController.getState);
+router.get(
+  '/:stateId',
+  [verifyJWT, validateObjectId],
+  StateController.getState,
+);
 
-router.patch('/:stateId', [verifyJWT, validateObjectId], StateController.updateState);
+router.patch(
+  '/:stateId',
+  [verifyJWT, validateObjectId],
+  StateController.updateState,
+);
 
-router.delete('/:stateId', [verifyJWT, validateObjectId], StateController.deleteState);
+router.delete(
+  '/:stateId',
+  [verifyJWT, validateObjectId],
+  StateController.deleteState,
+);
 
 export default router;

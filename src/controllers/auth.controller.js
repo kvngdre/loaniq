@@ -1,5 +1,5 @@
 import requestIp from 'request-ip';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import ValidationError from '../errors/validation.error.js';
 import AuthService from '../services/auth.service.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
@@ -17,7 +17,7 @@ class AuthController extends BaseController {
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     const { value, error } = authValidator.validateLogin(req.body);
@@ -35,8 +35,8 @@ class AuthController extends BaseController {
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     res.status(HttpCodes.OK).json(response);
@@ -62,7 +62,7 @@ class AuthController extends BaseController {
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     const [accessToken, refreshToken] = await AuthService.getNewTokens(token);
@@ -71,8 +71,8 @@ class AuthController extends BaseController {
     res.cookie('jwt', refreshToken, {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     const response = this.apiResponse('Success', { accessToken });
@@ -105,7 +105,7 @@ class AuthController extends BaseController {
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     const response = this.apiResponse('Logged out');

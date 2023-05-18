@@ -2,7 +2,14 @@ export const companyCategory = ['mfb', 'finance house', 'money lender'];
 
 export const feeTypes = { percent: 'percent', decimal: 'decimal' };
 
-export const geoZones = ['north central', 'north east', 'north west', 'south east', 'south south', 'south west'];
+export const geoZones = [
+  'north central',
+  'north east',
+  'north west',
+  'south east',
+  'south south',
+  'south west',
+];
 
 export const loanRemarks = [
   'age above threshold',
@@ -39,9 +46,27 @@ export const loanStatus = {
   PENDING: 'pending',
 };
 
-export const maritalStatus = ['single', 'married', 'divorced', 'separated', 'widow', 'widower'];
+export const maritalStatus = [
+  'single',
+  'married',
+  'divorced',
+  'separated',
+  'widow',
+  'widower',
+];
 
-export const relationships = ['daughter', 'brother', 'cousin', 'father', 'mother', 'nephew', 'sister', 'spouse', 'niece', 'son'];
+export const relationships = [
+  'daughter',
+  'brother',
+  'cousin',
+  'father',
+  'mother',
+  'nephew',
+  'sister',
+  'spouse',
+  'niece',
+  'son',
+];
 
 export const reviewStatus = {
   APPROVED: 'approved',
@@ -49,7 +74,15 @@ export const reviewStatus = {
   PENDING: 'pending',
 };
 
-export const socials = ['website', 'facebook', 'twitter', 'instagram', 'youtube', 'linkedin', 'tictok'];
+export const socials = [
+  'website',
+  'facebook',
+  'twitter',
+  'instagram',
+  'youtube',
+  'linkedin',
+  'tictok',
+];
 
 export const status = {
   ACTIVE: 'active',
@@ -79,6 +112,18 @@ export const txnTypes = {
   DEBIT: 'debit',
 };
 
-export const validIds = ['voters card', 'international passport', 'staff id card', 'national id card', 'drivers license'];
+export const validIds = [
+  'voters card',
+  'international passport',
+  'staff id card',
+  'national id card',
+  'drivers license',
+];
 
-export const tenantDocumentationTypes = ['certificate of incorporation', 'tax documentation', 'money lender license', 'mfb license', ...validIds];
+export const tenantDocumentationTypes = [
+  'certificate of incorporation',
+  'tax documentation',
+  'money lender license',
+  'mfb license',
+  ...validIds,
+];

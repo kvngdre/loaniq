@@ -7,7 +7,12 @@ class SegConfigService {
     const { tenantId, segmentId, min_net_pay, max_net_pay } = dto;
 
     // ! Validating net pay range
-    const isValid = await this.#validatePayRange(tenantId, segmentId, min_net_pay, max_net_pay);
+    const isValid = await this.#validatePayRange(
+      tenantId,
+      segmentId,
+      min_net_pay,
+      max_net_pay,
+    );
     if (!isValid) {
       throw new ValidationError('Overlap or gap found in net pay range.');
     }
@@ -36,12 +41,19 @@ class SegConfigService {
 
     const triggers = ['min_net_pay', 'max_net_pay'];
 
-    const containsTrigger = triggers.some((trigger) => Object.keys(dto).includes(trigger));
+    const containsTrigger = triggers.some((trigger) =>
+      Object.keys(dto).includes(trigger),
+    );
 
     if (containsTrigger) {
       const { tenantId, segmentId, min_net_pay, max_net_pay } = foundSegConfig;
 
-      const isValid = this.#validatePayRange(tenantId, segmentId, min_net_pay, max_net_pay);
+      const isValid = this.#validatePayRange(
+        tenantId,
+        segmentId,
+        min_net_pay,
+        max_net_pay,
+      );
       if (isValid) {
         throw new ValidationError('Overlap or gap found in net pay range.');
       }
@@ -61,7 +73,11 @@ class SegConfigService {
   static async #validatePayRange(tenantId, segmentId, min, max) {
     const current = [min, max];
 
-    const foundDocs = await SegConfigDAO.findDocsByField({ tenantId, segment: segmentId }, {}, { min_net_pay: -1 });
+    const foundDocs = await SegConfigDAO.findDocsByField(
+      { tenantId, segment: segmentId },
+      {},
+      { min_net_pay: -1 },
+    );
 
     function getMinMaxArray(docs) {
       const result = [current];

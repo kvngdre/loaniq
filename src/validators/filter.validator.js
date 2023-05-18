@@ -22,7 +22,9 @@ export default async function (filters) {
   }
 
   function validateCountryState(value, helpers) {
-    const foundState = countryStates.find((state) => state.name.toLowerCase() === value.toLowerCase());
+    const foundState = countryStates.find(
+      (state) => state.name.toLowerCase() === value.toLowerCase(),
+    );
     if (!foundState) return helpers.message('State is incorrect');
 
     return foundState.name;
@@ -30,8 +32,16 @@ export default async function (filters) {
 
   const schema = Joi.object({
     name: Joi.string().label('Name').optional().allow(''),
-    segment: Joi.string().label('Segment').optional().allow('').custom(validateSegment),
-    state: Joi.string().label('State').optional().allow('').custom(validateCountryState),
+    segment: Joi.string()
+      .label('Segment')
+      .optional()
+      .allow('')
+      .custom(validateSegment),
+    state: Joi.string()
+      .label('State')
+      .optional()
+      .allow('')
+      .custom(validateCountryState),
     minAge: Joi.number().label('Minimum age').min(0).optional().allow(''),
     maxAge: Joi.number().label('Maximum age').min(0).optional().allow(''),
     minBal: Joi.number().label('Minimum balance').min(0).optional().allow(''),

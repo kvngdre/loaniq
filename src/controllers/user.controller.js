@@ -1,5 +1,5 @@
 import requestIp from 'request-ip';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import ValidationError from '../errors/validation.error.js';
 import UserService from '../services/user.service.js';
 import { HttpCodes } from '../utils/HttpCodes.js';
@@ -8,11 +8,17 @@ import BaseController from './base.controller.js';
 
 class UserController extends BaseController {
   static createUser = async (req, res) => {
-    const { value, error } = userValidator.validateCreateUser(req.body, req.currentUser.tenantId);
+    const { value, error } = userValidator.validateCreateUser(
+      req.body,
+      req.currentUser.tenantId,
+    );
     if (error) throw new ValidationError(null, error);
 
     const newUser = await UserService.createUser(value);
-    const response = this.apiResponse('User created. Temporary password sent to user email', newUser);
+    const response = this.apiResponse(
+      'User created. Temporary password sent to user email',
+      newUser,
+    );
 
     res.status(HttpCodes.CREATED).json(response);
   };
@@ -31,8 +37,8 @@ class UserController extends BaseController {
     res.cookie('jwt', refreshToken.token, {
       httpOnly: true,
       sameSite: 'none',
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     const response = this.apiResponse('User verified', { user, accessToken });
@@ -41,7 +47,9 @@ class UserController extends BaseController {
   };
 
   static getUsers = async (req, res) => {
-    const { count, users } = await UserService.getUsers(req.currentUser.tenantId);
+    const { count, users } = await UserService.getUsers(
+      req.currentUser.tenantId,
+    );
 
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, users);
@@ -92,7 +100,9 @@ class UserController extends BaseController {
 
   // todo Discuss with Vic your ideas on forgot password flow.
   static forgotPassword = async (req, res) => {
-    const { value, error } = await userValidator.validateForgotPassword(req.body);
+    const { value, error } = await userValidator.validateForgotPassword(
+      req.body,
+    );
     if (error) throw new ValidationError(null, error);
 
     await UserService.forgotPassword(value);

@@ -3,7 +3,7 @@ import fs from 'fs';
 import transaction from 'mongoose-trx';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { constants } from '../config/index.js';
+import config from '../config/index.js';
 import UserDAO from '../daos/user.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
@@ -11,7 +11,10 @@ import UnauthorizedError from '../errors/unauthorized.error.js';
 import ValidationError from '../errors/validation.error.js';
 import { events, pubsub } from '../pubsub/index.js';
 import driverUploader from '../utils/driveUploader.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from '../utils/generateJWT.js';
 import generateSession from '../utils/generateSession.js';
 import logger from '../utils/logger.js';
 import mailer from '../utils/mailer.js';
@@ -71,8 +74,9 @@ class UserService {
       if (!isValid) throw new UnauthorizedError('Password is incorrect.');
 
       // * Measuring similarity of new password to the current temporary password.
-      const similarityPercent = similarity(new_password, current_password) * 100;
-      if (similarityPercent >= constants.max_similarity) {
+      const similarityPercent =
+        similarity(new_password, current_password) * 100;
+      if (similarityPercent >= config.max_similarity) {
         throw new ValidationError('Password is too similar to old password.');
       }
 
@@ -95,7 +99,10 @@ class UserService {
     const refreshToken = generateRefreshToken({ id: foundUser._id });
     const newSession = generateSession(refreshToken, userAgent, clientIp);
 
-    await Promise.all([foundUser.save(), userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] })]);
+    await Promise.all([
+      foundUser.save(),
+      userConfig.updateOne({ sessions: [newSession, ...userConfig.sessions] }),
+    ]);
 
     // mailer({
     //   to: foundUser.email,
@@ -109,20 +116,29 @@ class UserService {
     return { accessToken, refreshToken, foundUser };
   };
 
-  static getUsers = async (tenantId, projection = { password: 0, resetPwd: 0, otp: 0 }) => {
+  static getUsers = async (
+    tenantId,
+    projection = { password: 0, resetPwd: 0, otp: 0 },
+  ) => {
     const foundUsers = await UserDAO.find({ tenantId }, projection);
     const count = Intl.NumberFormat('en-US').format(foundUsers.length);
 
     return { count, users: foundUsers };
   };
 
-  static getUserById = async (userId, projection = { password: 0, resetPwd: 0, otp: 0 }) => {
+  static getUserById = async (
+    userId,
+    projection = { password: 0, resetPwd: 0, otp: 0 },
+  ) => {
     const foundUser = await UserDAO.findById(userId, projection);
 
     return foundUser;
   };
 
-  static getUser = async (filter, projection = { password: 0, resetPwd: 0, otp: 0 }) => {
+  static getUser = async (
+    filter,
+    projection = { password: 0, resetPwd: 0, otp: 0 },
+  ) => {
     const foundUser = await UserDAO.findOne(filter, projection);
 
     return foundUser;
@@ -143,8 +159,16 @@ class UserService {
    * @param {object} [projection] The fields to include or exclude.
    * @returns
    */
-  static updateUser = async (userId, updateUserDTO, projection = { password: 0, resetPwd: 0, otp: 0 }) => {
-    const updatedUser = await UserDAO.update({ userId }, updateUserDTO, projection);
+  static updateUser = async (
+    userId,
+    updateUserDTO,
+    projection = { password: 0, resetPwd: 0, otp: 0 },
+  ) => {
+    const updatedUser = await UserDAO.update(
+      { userId },
+      updateUserDTO,
+      projection,
+    );
 
     return updatedUser;
   };
@@ -156,7 +180,10 @@ class UserService {
   };
 
   static deleteUser = async (userId) => {
-    const [deletedUser] = await Promise.all([UserDAO.remove(userId), UserConfigService.deleteConfig(userId)]);
+    const [deletedUser] = await Promise.all([
+      UserDAO.remove(userId),
+      UserConfigService.deleteConfig(userId),
+    ]);
 
     return deletedUser;
   };
@@ -169,9 +196,10 @@ class UserService {
     const isMatch = foundUser.comparePasswords(current_password);
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.');
 
-    const percentageSimilarity = similarity(new_password, current_password) * 100;
+    const percentageSimilarity =
+      similarity(new_password, current_password) * 100;
 
-    if (percentageSimilarity >= constants.max_similarity) {
+    if (percentageSimilarity >= config.max_similarity) {
       throw new ValidationError('Password is too similar to old password.');
     }
 
@@ -289,7 +317,9 @@ class UserService {
     const [foundFolder] = await driverUploader.findFolder(folderName);
 
     // Selecting folder
-    const folderId = foundFolder?.id ? foundFolder.id : await driverUploader.createFolder(folderName);
+    const folderId = foundFolder?.id
+      ? foundFolder.id
+      : await driverUploader.createFolder(folderName);
 
     // const newFolderId = await driverUploader.createFolder('users', folderId)
 
@@ -298,7 +328,12 @@ class UserService {
     const filePath = path.resolve(__dirname, `../../${uploadFile.path}`);
     const mimeType = uploadFile.mimetype;
 
-    const response = await driverUploader.createFile(name, filePath, folderId, mimeType);
+    const response = await driverUploader.createFile(
+      name,
+      filePath,
+      folderId,
+      mimeType,
+    );
     logger.debug(response.data.id);
 
     foundUser.set({

@@ -103,7 +103,10 @@ const segConfigSchema = new Schema(
   schemaOptions,
 );
 
-segConfigSchema.index({ tenantId: 1, segment: 1, min_net_pay: 1 }, { unique: true });
+segConfigSchema.index(
+  { tenantId: 1, segment: 1, min_net_pay: 1 },
+  { unique: true },
+);
 // segConfigSchema.index({ min_net_pay: 1, tenantId: 1 }, { unique: true })
 
 segConfigSchema.post(/^find/, function (doc) {

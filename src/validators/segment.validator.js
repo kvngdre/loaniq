@@ -9,9 +9,13 @@ class SegmentValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#nameSchema = Joi.string().trim().label('Segment name').max(255).messages({
-      'string.max': 'Segment name is too long',
-    });
+    this.#nameSchema = Joi.string()
+      .trim()
+      .label('Segment name')
+      .max(255)
+      .messages({
+        'string.max': 'Segment name is too long',
+      });
 
     this.#codeSchema = Joi.string()
       .label('Segment code')
@@ -43,7 +47,10 @@ class SegmentValidator extends BaseValidator {
       }),
     });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false });
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      convert: false,
+    });
     error = this._refineError(error);
 
     return { value, error };
@@ -62,7 +69,10 @@ class SegmentValidator extends BaseValidator {
       }),
     });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false });
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      convert: false,
+    });
     error = this._refineError(error);
 
     return { value, error };

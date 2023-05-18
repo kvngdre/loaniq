@@ -9,10 +9,22 @@ router.post('/', [verifyJWT], ReviewController.createReview);
 
 router.get('/', [verifyJWT], ReviewController.getReviews);
 
-router.get('/:reviewId', [verifyJWT, validateObjectId], ReviewController.getReview);
+router.get(
+  '/:reviewId',
+  [verifyJWT, validateObjectId],
+  ReviewController.getReview,
+);
 
-router.patch('/:reviewId', [verifyJWT, validateObjectId], ReviewController.updateReview);
+router.patch(
+  '/:reviewId',
+  [verifyJWT, validateObjectId],
+  ReviewController.updateReview,
+);
 
-router.delete('/:reviewId', [verifyJWT, validateObjectId], ReviewController.deleteReview);
+router.delete(
+  '/:reviewId',
+  [verifyJWT, validateObjectId],
+  ReviewController.deleteReview,
+);
 
 export default router;

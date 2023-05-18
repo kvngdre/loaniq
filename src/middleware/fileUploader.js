@@ -10,19 +10,34 @@ const getStorageOpts = (req, file) => {
   // * Switching to get file path and name.
   switch (file.fieldname) {
     case 'passport':
-      return ['./src/uploads/customers/passports', `${Date.now()}.${body?.staff_id}${extname(file.originalname)}`];
+      return [
+        './src/uploads/customers/passports',
+        `${Date.now()}.${body?.staff_id}${extname(file.originalname)}`,
+      ];
 
     case 'id_card':
-      return ['./src/uploads/customers/id_cards', `${Date.now()}.${body?.staff_id}${extname(file.originalname)}`];
+      return [
+        './src/uploads/customers/id_cards',
+        `${Date.now()}.${body?.staff_id}${extname(file.originalname)}`,
+      ];
 
     case 'avatar':
-      return ['./src/uploads/users/avatars', `${Date.now()}.${currentUser._id}${extname(file.originalname)}`];
+      return [
+        './src/uploads/users/avatars',
+        `${Date.now()}.${currentUser._id}${extname(file.originalname)}`,
+      ];
 
     case 'documents':
-      return ['./src/uploads/tenants/documents', `${Date.now()}.${currentUser.tenantId}${extname(file.originalname)}`];
+      return [
+        './src/uploads/tenants/documents',
+        `${Date.now()}.${currentUser.tenantId}${extname(file.originalname)}`,
+      ];
 
     case 'logo':
-      return ['./src/uploads/tenants/logos', `${Date.now()}.${currentUser.tenantId}${extname(file.originalname)}`];
+      return [
+        './src/uploads/tenants/logos',
+        `${Date.now()}.${currentUser.tenantId}${extname(file.originalname)}`,
+      ];
     default:
       throw new ValidationError('Invalid field name.');
   }
@@ -36,7 +51,9 @@ const fileFilter = (_req, file, callback) => {
     return callback(null, true);
   }
 
-  return callback(new ValidationError('Only images with format jpeg or png are allowed'));
+  return callback(
+    new ValidationError('Only images with format jpeg or png are allowed'),
+  );
 };
 
 class FileUploader {

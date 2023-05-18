@@ -9,10 +9,22 @@ router.post('/', [verifyJWT], SegConfigController.createSegConfig);
 
 router.get('/', SegConfigController.getSegConfigs);
 
-router.get('/:segConfigId', [validateObjectId], SegConfigController.getSegConfig);
+router.get(
+  '/:segConfigId',
+  [validateObjectId],
+  SegConfigController.getSegConfig,
+);
 
-router.patch('/:segConfigId', [validateObjectId], SegConfigController.updateConfig);
+router.patch(
+  '/:segConfigId',
+  [validateObjectId],
+  SegConfigController.updateConfig,
+);
 
-router.delete('/:segConfigId', [validateObjectId], SegConfigController.deleteSegConfig);
+router.delete(
+  '/:segConfigId',
+  [validateObjectId],
+  SegConfigController.deleteSegConfig,
+);
 
 export default router;

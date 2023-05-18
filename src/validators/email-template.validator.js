@@ -11,7 +11,10 @@ class EmailTemplateValidator extends BaseValidator {
     super();
 
     this.#nameSchema = Joi.string().lowercase().trim().label('Name');
-    this.#templateNameSchema = Joi.string().lowercase().trim().label('Template name');
+    this.#templateNameSchema = Joi.string()
+      .lowercase()
+      .trim()
+      .label('Template name');
     this.#subjectSchema = Joi.string().label('Subject');
     this.#htmlSchema = Joi.string().label('Html');
   }
@@ -24,7 +27,9 @@ class EmailTemplateValidator extends BaseValidator {
       html: this.#htmlSchema.required(),
     });
 
-    let { value, error } = schema.validate(newTemplateDTO, { abortEarly: false });
+    let { value, error } = schema.validate(newTemplateDTO, {
+      abortEarly: false,
+    });
     error = this._refineError(error);
 
     return { value, error };
@@ -38,7 +43,9 @@ class EmailTemplateValidator extends BaseValidator {
       html: this.#htmlSchema,
     });
 
-    let { value, error } = schema.validate(updateTemplateDTO, { abortEarly: false });
+    let { value, error } = schema.validate(updateTemplateDTO, {
+      abortEarly: false,
+    });
     error = this._refineError(error);
 
     return { value, error };

@@ -9,10 +9,22 @@ router.post('/', [verifyJWT], PermissionController.create);
 
 router.get('/', [verifyJWT], PermissionController.getPermissions);
 
-router.get('/:permissionId', [verifyJWT, validateObjectId], PermissionController.getPermission);
+router.get(
+  '/:permissionId',
+  [verifyJWT, validateObjectId],
+  PermissionController.getPermission,
+);
 
-router.patch('/:permissionId', [verifyJWT, validateObjectId], PermissionController.updatePermission);
+router.patch(
+  '/:permissionId',
+  [verifyJWT, validateObjectId],
+  PermissionController.updatePermission,
+);
 
-router.delete('/:permissionId', [verifyJWT, validateObjectId], PermissionController.deletePermission);
+router.delete(
+  '/:permissionId',
+  [verifyJWT, validateObjectId],
+  PermissionController.deletePermission,
+);
 
 export default router;

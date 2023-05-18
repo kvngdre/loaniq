@@ -24,7 +24,11 @@ class TenantConfigService {
   }
 
   async updateConfig(tenantId, dto, projection) {
-    const updateConfig = await TenantConfigDAO.update({ tenantId }, dto, projection);
+    const updateConfig = await TenantConfigDAO.update(
+      { tenantId },
+      dto,
+      projection,
+    );
     return updateConfig;
   }
 

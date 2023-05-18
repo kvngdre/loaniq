@@ -15,7 +15,10 @@ class UserConfigController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newUserConfig = await UserConfigService.createConfig(value);
-    const response = this.apiResponse('User configurations created.', newUserConfig);
+    const response = this.apiResponse(
+      'User configurations created.',
+      newUserConfig,
+    );
 
     res.status(HttpCodes.CREATED).json(response);
   };
@@ -40,7 +43,10 @@ class UserConfigController extends BaseController {
    */
   static getUserConfig = async (req, res) => {
     const userConfig = await UserConfigService.getConfig(req.params.userId);
-    const response = this.apiResponse('Fetched user configurations.', userConfig);
+    const response = this.apiResponse(
+      'Fetched user configurations.',
+      userConfig,
+    );
 
     res.status(HttpCodes.OK).json(response);
   };
@@ -54,8 +60,14 @@ class UserConfigController extends BaseController {
     const { value, error } = userConfigValidator.validateCreate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const userConfig = await UserConfigService.updateConfig(req.params.userId, value);
-    const response = this.apiResponse('Updated user configurations.', userConfig);
+    const userConfig = await UserConfigService.updateConfig(
+      req.params.userId,
+      value,
+    );
+    const response = this.apiResponse(
+      'Updated user configurations.',
+      userConfig,
+    );
 
     res.status(HttpCodes.OK).json(response);
   };

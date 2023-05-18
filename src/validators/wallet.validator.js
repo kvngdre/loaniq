@@ -9,12 +9,17 @@ class WalletValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#referenceSchema = Joi.string().default(randomBytes(4).toString('hex'));
+    this.#referenceSchema = Joi.string().default(
+      randomBytes(4).toString('hex'),
+    );
   }
 
   validateCreate = (dto, tenantId) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id').default(tenantId).forbidden(),
+      tenantId: this._objectIdSchema
+        .label('Tenant id')
+        .default(tenantId)
+        .forbidden(),
       balance: this._amountSchema.label('Balance').default(0),
       last_credit_date: this._dateSchema.label('Last credit date'),
     });

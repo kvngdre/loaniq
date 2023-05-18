@@ -9,7 +9,7 @@ class ErrorHandler {
 
   handleError(error) {
     if (this.isTrustedError(error)) {
-      if (error.isOperational) logger.debug(error.message, error.stack);
+      if (error.isOperational) logger.debug(error.message);
       logger.error(error.message, error.stack);
     } else {
       // TODO: should send an email to super admin on fatal error?

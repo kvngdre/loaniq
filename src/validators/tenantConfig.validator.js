@@ -51,7 +51,9 @@ class TenantConfigValidator extends BaseValidator {
       .min(1)
       .label('Support');
 
-    this.#allowUserPwdResetSchema = Joi.boolean().label('Allow user password reset').default(false);
+    this.#allowUserPwdResetSchema = Joi.boolean()
+      .label('Allow user password reset')
+      .default(false);
   }
 
   validateCreate = (dto) => {
@@ -59,8 +61,12 @@ class TenantConfigValidator extends BaseValidator {
       tenantId: this._objectIdSchema.label('Tenant id').required(),
       default_params: Joi.object()
         .keys({
-          min_loan_amount: this._amountSchema.label('Minimum loan amount').required(),
-          max_loan_amount: this._amountSchema.label('Maximum loan amount').required(),
+          min_loan_amount: this._amountSchema
+            .label('Minimum loan amount')
+            .required(),
+          max_loan_amount: this._amountSchema
+            .label('Maximum loan amount')
+            .required(),
           min_tenor: this._tenorSchema.label('Minimum loan tenor').required(),
           max_tenor: this._tenorSchema.label('Maximum loan tenor').required(),
           interest_rate: this._percentageSchema.required(),
