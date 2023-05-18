@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import UserConfigService from '../services/userConfig.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import userConfigValidator from '../validators/userConfig.validator.js';
 import BaseController from './base.controller.js';
 

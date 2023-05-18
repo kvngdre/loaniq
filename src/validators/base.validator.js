@@ -4,39 +4,34 @@ import { roles } from '../config/roles.js';
 import { feeTypes, maritalStatus } from '../utils/common.js';
 
 class BaseValidator {
-  #formatErrorMessage = (error) => {
-    // Regex to locate the appropriate space for inserting
-    // commas in numbers in thousands or millions.
+  #formatErrorMessage = (errorMessage) => {
+    //  * Regex to locate the appropriate space for inserting commas in numbers.
     const regex = /(?<!.*ISO \d)\B(?=(\d{3})+(?!\d))/g;
-    const errorMsg = error.message;
 
-    // Remove quotation marks.
-    let formattedMsg = `${errorMsg.replaceAll('"', '')}.`;
-
-    // Insert comma to number if a number is present in the error message.
-    formattedMsg = formattedMsg.replace(regex, ',');
-
-    return formattedMsg;
+    // * Remove quotation marks and insert comma to number found.
+    return `${errorMessage.replaceAll('"', '').replace(regex, ',')}.`;
   };
 
   _refineError = (error) => {
-    // console.log(error.details[0])
-    const reducer = (acc, value) => {
-      if (acc === '') return acc + value;
-      return acc + '.' + value;
+    /**
+     * This function joins the elements of the error path array.
+     * Example: ['name', 'first'] becomes 'name.first'.
+     * @param {string} accumulator
+     * @param {string} nextValue
+     * @returns {string}
+     */
+    const reducer = (accumulator, nextValue) => {
+      if (accumulator === '') return accumulator + nextValue;
+      return accumulator + '.' + nextValue;
     };
 
-    if (error) {
-      const _error = {};
-      for (const detail of error.details) {
-        _error[detail.path.reduce(reducer, '')] =
-          this.#formatErrorMessage(detail);
-      }
-
-      return _error;
+    const refinedError = {};
+    for (const errorDetail of error.details) {
+      refinedError[errorDetail.path.reduce(reducer, '')] =
+        this.#formatErrorMessage(errorDetail.message);
     }
 
-    return error;
+    return refinedError;
   };
 
   _objectIdSchema = Joi.alternatives(
@@ -106,11 +101,11 @@ class BaseValidator {
   _phoneNumberSchema = Joi.string()
     .label('Phone number')
     .trim()
-    .length(13)
-    .pattern(/^234\d{10}$/)
+    .min(11)
+    .max(13)
+    .pattern(/^234[7-9]\d{9}$|0[7-9][0-1]\d{8}/)
     .messages({
-      'string.pattern.base':
-        '{#label} is invalid, please include the international dialling code',
+      'string.pattern.base': '{#label} is not valid',
     });
 
   _otpSchema = (len) => {
@@ -141,7 +136,7 @@ class BaseValidator {
       .minOfNumeric(1)
       .noWhiteSpaces()
       .min(len)
-      .max(1024)
+      .max(255)
       .messages({
         'password.minOfUppercase':
           '{#label} should contain at least {#min} uppercase character',

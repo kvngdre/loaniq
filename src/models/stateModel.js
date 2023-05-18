@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import { geoZones } from '../utils/common.js';
+import { GEO_ZONES } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -28,7 +28,7 @@ const stateSchema = new Schema(
 
     geo: {
       type: String,
-      enum: geoZones,
+      enum: GEO_ZONES,
       required: true,
     },
   },

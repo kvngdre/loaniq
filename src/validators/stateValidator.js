@@ -1,5 +1,5 @@
-import { geoZones } from '../utils/common.js';
 import Joi from 'joi';
+import { GEO_ZONES } from '../utils/common.js';
 import BaseValidator from './base.validator.js';
 
 class StateValidator extends BaseValidator {
@@ -24,7 +24,7 @@ class StateValidator extends BaseValidator {
     this.#lgaSchema = Joi.array().items(Joi.string().trim()).label('LGAs');
 
     this.#regionSchema = Joi.string()
-      .valid(...geoZones)
+      .valid(...GEO_ZONES)
       .label('Geo');
   }
 

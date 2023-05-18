@@ -3,7 +3,7 @@ import config from '../config/index.js';
 import ValidationError from '../errors/validation.error.js';
 import AuthService from '../services/auth.service.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import authValidator from '../validators/auth.validator.js';
 import BaseController from './base.controller.js';
 class AuthController extends BaseController {

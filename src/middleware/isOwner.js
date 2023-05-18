@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
 import { roles } from '../config/index.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 
 const isOwner = (...rolesToCheck) => {
   let disallowedRoles = [roles.AGENT, roles.ANALYST, roles.SUPPORT];

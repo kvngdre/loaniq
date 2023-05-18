@@ -1,7 +1,7 @@
 import { TransactionDTO } from '../models/transaction.model.js';
 import { events, pubsub } from '../pubsub/index.js';
 import { txnPurposes, txnTypes } from '../utils/common.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 
 class WebhookService {
   static eventHandler = async (payload) => {

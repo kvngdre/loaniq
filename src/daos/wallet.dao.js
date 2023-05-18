@@ -2,9 +2,9 @@ import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
 import Wallet from '../models/wallet.model.js';
-import BaseDAO from './base.dao.js';
+import BaseRepository from './base.repository.js';
 
-class WalletDAO extends BaseDAO {
+class WalletDAO extends BaseRepository {
   static async insert(dto, trx) {
     try {
       const newRecord = new Wallet(dto);

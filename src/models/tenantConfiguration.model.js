@@ -1,20 +1,17 @@
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/notFound.error.js';
 import { feeTypes } from '../utils/common.js';
 
-const schemaOptions = { timestamps: true, versionKey: false };
-
-const tenantConfigSchema = new Schema(
+const tenantConfigurationSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
       unique: true,
-      required: [true, 'Tenant Id is required'],
+      required: true,
     },
 
     resetPwdFrequency: {
-      // In  number of days
+      // In days
       type: Number,
       default: null,
     },
@@ -117,17 +114,12 @@ const tenantConfigSchema = new Schema(
       type: Number,
     },
   },
-  schemaOptions,
+  { timestamps: true, versionKey: false },
 );
 
-tenantConfigSchema.post(/^find/, function (docs) {
-  if (Array.isArray(docs) && docs.length === 0) {
-    throw new NotFoundError('Tenants configurations not found.');
-  }
+const TenantConfiguration = model(
+  'Tenant-Configuration',
+  tenantConfigurationSchema,
+);
 
-  if (!docs) throw new NotFoundError('Tenant configurations not found.');
-});
-
-const TenantConfig = model('TenantConfig', tenantConfigSchema);
-
-export default TenantConfig;
+export default TenantConfiguration;

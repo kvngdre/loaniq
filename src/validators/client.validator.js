@@ -1,8 +1,8 @@
 import { DateTime } from 'luxon';
 // import { joiPassword } from 'joi-password'
-import { relationships, validIds } from '../utils/common.js';
-import BaseValidator from './base.validator.js';
 import Joi from 'joi';
+import { relationships, VALID_ID } from '../utils/common.js';
+import BaseValidator from './base.validator.js';
 
 const isOver18 = (dob, helper) => {
   const dateEighteenYearsBack = DateTime.now().minus({ years: 18 });
@@ -77,7 +77,7 @@ class ClientValidator extends BaseValidator {
 
     this.#idTypeSchema = Joi.string()
       .label('Id type')
-      .valid(...validIds);
+      .valid(...VALID_ID);
 
     this.#relationshipSchema = Joi.string()
       .valid(...relationships)

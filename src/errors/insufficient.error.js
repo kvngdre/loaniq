@@ -1,9 +1,9 @@
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import APIError from './api.error.js';
 
 class InsufficientError extends APIError {
   constructor(message, data = undefined) {
-    super(HttpCodes.PAYMENT_REQUIRED, true, message, data);
+    super(HttpCode.PAYMENT_REQUIRED, true, message, data);
   }
 }
 

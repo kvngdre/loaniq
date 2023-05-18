@@ -23,8 +23,7 @@ class WalletService {
   }
 
   async getWallet(tenantId) {
-    const foundWallet = await WalletDAO.findOne({ tenantId });
-    return foundWallet;
+    return await WalletDAO.findOne({ tenantId });
   }
 
   async updateWallet(tenantId, dto) {

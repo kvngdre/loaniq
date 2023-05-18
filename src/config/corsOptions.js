@@ -1,6 +1,6 @@
 import allowedOrigins from './allowedOrigins.js';
 
-const options = {
+export default {
   origin: (origin, callback) => {
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
@@ -8,6 +8,5 @@ const options = {
       callback(new Error('Not allowed by CORS'), false);
     }
   },
+  methods: ['POST', 'PATCH', 'PUT', 'DELETE'],
 };
-
-export default options;

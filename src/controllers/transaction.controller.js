@@ -1,7 +1,7 @@
 import ValidationError from '../errors/validation.error.js';
 import paystackService from '../services/paystack.service.js';
 import txnService from '../services/transaction.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import txnValidator from '../validators/transactionValidator.js';
 import BaseController from './base.controller.js';
 

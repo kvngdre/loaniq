@@ -1,8 +1,8 @@
 /**
  * Generates a random number string of specified length and expiration time.
  * @param {number} len The number of digits the otp should contain.
- * @param {number} expires OTP time-to-live in minutes.
- * @returns {{pin: string, expires: number}}
+ * @param {number} expiresIn OTP time-to-live in minutes.
+ * @returns {{pin: string, expiresIn: number}}
  */
 export default function generateOTP(len, expires = 10) {
   if (!len) throw new Error('Length is required.');

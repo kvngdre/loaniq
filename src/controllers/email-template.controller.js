@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import EmailService from '../services/email.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import emailTemplateValidator from '../validators/email-template.validator.js';
 import BaseController from './base.controller.js';
 

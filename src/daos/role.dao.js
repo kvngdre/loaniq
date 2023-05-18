@@ -2,9 +2,9 @@ import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
 import Role from '../models/role.model.js';
-import BaseDAO from './base.dao.js';
+import BaseRepository from './base.repository.js';
 
-class RoleDAO extends BaseDAO {
+class RoleDAO extends BaseRepository {
   static async insert(dto) {
     try {
       const newReview = new Role(dto);

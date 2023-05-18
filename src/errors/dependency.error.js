@@ -1,9 +1,9 @@
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import APIError from './api.error.js';
 
 class DependencyError extends APIError {
   constructor(message, data = undefined) {
-    super(HttpCodes.DEPENDENCY, true, message, data);
+    super(HttpCode.DEPENDENCY, true, message, data);
   }
 }
 

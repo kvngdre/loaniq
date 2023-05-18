@@ -1,10 +1,10 @@
 import { Error } from 'mongoose';
+import BaseRepository from '../daos/base.repository.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
 import SegConfig from '../models/segConfig.model.js';
-import BaseDAO from './base.dao.js';
 
-class SegConfigDAO extends BaseDAO {
+class SegConfigDAO extends BaseRepository {
   static async insert(dto, trx) {
     try {
       const newRecord = new SegConfig(dto);

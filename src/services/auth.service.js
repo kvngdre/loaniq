@@ -3,7 +3,7 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 import ClientDAO from '../daos/client.dao.js';
-import UserDAO from '../daos/user.dao.js';
+import UserRepository from '../daos/user.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import ForbiddenError from '../errors/forbidden.error.js';
@@ -23,7 +23,7 @@ class AuthService {
     if (loginDTO.email) {
       // ! Tenant login
       const { email, password } = loginDTO;
-      const foundUser = await UserDAO.findOne({ email });
+      const foundUser = await UserRepository.findOne({ email });
 
       const isValid = foundUser.validatePassword(password);
       if (!isValid) throw new UnauthorizedError('Invalid credentials');
@@ -206,7 +206,10 @@ class AuthService {
     const generatedOTP = generateOTP(len);
 
     if (email) {
-      const foundUser = await UserDAO.update({ email }, { otp: generatedOTP });
+      const foundUser = await UserRepository.update(
+        { email },
+        { otp: generatedOTP },
+      );
 
       // Sending OTP to user email
       const info = await EmailService.send({

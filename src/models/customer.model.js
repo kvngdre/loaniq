@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import { maritalStatus, relationships, validIds } from '../utils/common.js';
+import { VALID_ID, maritalStatus, relationships } from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
 
@@ -106,7 +106,7 @@ const customerSchema = new Schema(
 
     id_type: {
       type: String,
-      enum: validIds,
+      enum: VALID_ID,
       required: true,
     },
 

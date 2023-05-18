@@ -1,9 +1,9 @@
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import APIError from './api.error.js';
 
 class UnauthorizedError extends APIError {
   constructor(message, data = undefined) {
-    super(HttpCodes.UNAUTHORIZED, true, message, data);
+    super(HttpCode.UNAUTHORIZED, true, message, data);
   }
 }
 

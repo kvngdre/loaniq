@@ -1,65 +1,71 @@
-import { Error } from 'mongoose';
-import BaseDAO from '../daos/base.dao.js';
+import mongoose, { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
+import NotFoundError from '../errors/notFound.error.js';
 import ValidationError from '../errors/validation.error.js';
+import getDuplicateField from '../utils/getDuplicateErrorField.js';
+import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
 import Tenant from './tenant.model.js';
 
-class TenantDAO extends BaseDAO {
-  static async insert(dto, transactionSession) {
+class TenantRepository {
+  /**
+   * Inserts a new tenant document into the database.
+   * @param {import('./dto/new-tenant.dto.js').NewTenantDto} newTenantDto
+   * @param {mongoose.ClientSession} session Mongo transaction session
+   * @returns
+   */
+  async insert(newTenantDto, session) {
     try {
-      const newRecord = new Tenant(dto);
-      await newRecord.save({ session: transactionSession });
+      const newRecord = new Tenant(newTenantDto);
+      await newRecord.save({ session });
 
       return newRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception);
+      // * Handling duplicate field error
+      if (exception.message.includes('E11000')) {
+        const field = getDuplicateField(exception);
         throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
-        throw new ValidationError(errMsg);
+        const errorMessage = getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;
     }
   }
 
-  static async find(filter = {}, projection = {}) {
-    const foundRecords = await Tenant.find(filter).select(projection);
-
-    return foundRecords;
+  async find(filter = {}, projection = {}) {
+    return await Tenant.find(filter).select(projection);
   }
 
-  static async findById(id, projection = {}) {
-    const foundRecord = await Tenant.findById(id).select(projection);
-
-    return foundRecord;
+  async findById(id, projection = {}) {
+    return await Tenant.findById(id).select(projection);
   }
 
-  static async findOne(filter, projection = {}) {
-    const foundRecord = await Tenant.findOne(filter).select(projection);
-
-    return foundRecord;
+  async findOne(filter, projection = {}) {
+    return await Tenant.findOne(filter).select(projection);
   }
 
-  static async update(id, dto, projection = {}) {
+  async update(id, updateTenantDto, projection = {}) {
     try {
       const foundRecord = await Tenant.findById(id).select(projection);
+      if (!foundRecord) {
+        throw new NotFoundError('Update failed, tenant not found.');
+      }
 
-      foundRecord.set(dto);
+      foundRecord.set(updateTenantDto);
       await foundRecord.save();
 
       return foundRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+      if (exception.message.includes('E11000')) {
         const field = this.getDuplicateField(exception);
         throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
+        const errMsg = this.getValidationErrorMessage(exception);
         throw new ValidationError(errMsg);
       }
 
@@ -67,11 +73,9 @@ class TenantDAO extends BaseDAO {
     }
   }
 
-  static async remove(id) {
-    const foundRecord = await Tenant.findByIdAndDelete(id);
-
-    return foundRecord;
+  async remove(id) {
+    return await Tenant.findByIdAndDelete(id);
   }
 }
 
-export default TenantDAO;
+export default TenantRepository;

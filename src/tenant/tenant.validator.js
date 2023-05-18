@@ -1,7 +1,12 @@
-import { companyCategory, socials, status, validIds } from '../utils/common.js';
-import { Types } from 'mongoose';
-import BaseValidator from './base.validator.js';
 import Joi from 'joi';
+import { Types } from 'mongoose';
+import {
+  companyCategory,
+  socials,
+  TenantStatus,
+  VALID_ID,
+} from '../utils/common.js';
+import BaseValidator from '../validators/base.validator.js';
 class TenantValidator extends BaseValidator {
   #companyNameSchema;
   #cacNumberSchema;
@@ -17,7 +22,7 @@ class TenantValidator extends BaseValidator {
     super();
 
     this.#companyNameSchema = Joi.string()
-      .label('Company name')
+      .label('Business name')
       .min(2)
       .max(255)
       .lowercase()
@@ -77,7 +82,7 @@ class TenantValidator extends BaseValidator {
     this.#idTypeSchema = Joi.string()
       .lowercase()
       .label('Id type')
-      .valid(...validIds.filter((id) => id !== 'staff id card'));
+      .valid(...VALID_ID.filter((id) => id !== 'staff id card'));
 
     this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
       'string.pattern.base': 'Invalid staff id number',
@@ -106,31 +111,46 @@ class TenantValidator extends BaseValidator {
   }
 
   validateSignUp = (dto) => {
-    const newUserId = new Types.ObjectId();
-    const newTenantId = new Types.ObjectId();
+    const tenantId = new Types.ObjectId();
+    const tenantConfigurationId = new Types.ObjectId();
+    const userId = new Types.ObjectId();
     const adminRoleId = new Types.ObjectId();
 
     const schema = Joi.object({
-      tenant: Joi.object({
-        _id: Joi.any().default(newTenantId).forbidden(),
-        status: Joi.string().default(status.ONBOARDING).forbidden(),
+      newTenantDto: Joi.object({
+        _id: Joi.any().default(tenantId).forbidden(),
+        business_name: this.#companyNameSchema.required(),
+        status: Joi.string().default(TenantStatus.ONBOARDING).forbidden(),
+        configurations: Joi.any().default(tenantConfigurationId).forbidden(),
       }).required(),
-      user: Joi.object({
-        _id: Joi.any().default(newUserId).forbidden(),
-        tenantId: Joi.any().default(newTenantId).forbidden(),
+      newUserDto: Joi.object({
+        _id: Joi.any().default(userId).forbidden(),
         first_name: this._nameSchema.extract('first').required(),
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
         new_password: this._passwordSchema(8).required(),
-        confirm_password: this._confirmPasswordSchema.required(),
+        confirm_password: this._confirmPasswordSchema.strip().required(),
         role: Joi.any().default(adminRoleId).forbidden(),
-        resetPwd: Joi.boolean().default(false).forbidden(),
+        configurations: Joi.object()
+          .keys({
+            ja: 'kk',
+            password: Joi.string().default(Joi.ref('new_password')),
+            resetPwd: Joi.boolean().default(false),
+            otp: Joi.object({
+              pin: Joi.string().default(''),
+              expiresIn: Joi.number().default(0),
+            }),
+          })
+          .forbidden(),
       }).required(),
     });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this._refineError(error);
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      presence: 'optional',
+    });
+    if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
   };
@@ -146,12 +166,12 @@ class TenantValidator extends BaseValidator {
     }).min(1);
 
     let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this._refineError(error);
+    if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
   };
 
-  validateOnBoarding = (onBoardTenantDTO) => {
+  validateOnBoarding = (dto) => {
     const schema = Joi.object({
       logo: Joi.string().label('logo'),
       business_name: this.#companyNameSchema.required(),
@@ -160,15 +180,13 @@ class TenantValidator extends BaseValidator {
       email: this._emailSchema.required(),
     });
 
-    let { value, error } = schema.validate(onBoardTenantDTO, {
-      abortEarly: false,
-    });
-    error = this._refineError(error);
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
   };
 
-  validateActivationRequest = (activateTenantDTO) => {
+  validateActivationRequest = (dto) => {
     const schema = Joi.object({
       logo: Joi.string().label('logo'),
       business_name: this.#companyNameSchema.required(),
@@ -182,10 +200,8 @@ class TenantValidator extends BaseValidator {
       documentation: this.#documentationSchema.required(),
     });
 
-    let { value, error } = schema.validate(activateTenantDTO, {
-      abortEarly: false,
-    });
-    error = this._refineError(error);
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
   };
@@ -196,7 +212,7 @@ class TenantValidator extends BaseValidator {
     });
 
     let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this._refineError(error);
+    if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
   };

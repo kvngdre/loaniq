@@ -2,7 +2,7 @@ export const companyCategory = ['mfb', 'finance house', 'money lender'];
 
 export const feeTypes = { percent: 'percent', decimal: 'decimal' };
 
-export const geoZones = [
+export const GEO_ZONES = [
   'north central',
   'north east',
   'north west',
@@ -84,14 +84,14 @@ export const socials = [
   'tictok',
 ];
 
-export const status = {
-  ACTIVE: 'active',
-  AWAITING_ACTIVATION: 'awaiting activation',
-  DEACTIVATED: 'deactivated',
-  INACTIVE: 'inactive',
-  SUSPENDED: 'suspended',
-  ONBOARDING: 'onboarding',
-};
+export class TenantStatus {
+  static ACTIVE = 'active';
+  static AWAITING_ACTIVATION = 'awaiting activation';
+  static DEACTIVATED = 'deactivated';
+  static INACTIVE = 'inactive';
+  static SUSPENDED = 'suspended';
+  static ONBOARDING = 'onboarding';
+}
 
 export const txnPurposes = {
   DEPOSIT: 'deposit',
@@ -112,7 +112,7 @@ export const txnTypes = {
   DEBIT: 'debit',
 };
 
-export const validIds = [
+export const VALID_ID = [
   'voters card',
   'international passport',
   'staff id card',
@@ -125,5 +125,5 @@ export const tenantDocumentationTypes = [
   'tax documentation',
   'money lender license',
   'mfb license',
-  ...validIds,
+  ...VALID_ID,
 ];

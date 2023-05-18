@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 export default {
   auth0: {
@@ -17,10 +17,9 @@ export default {
   companyInfo: { name: 'AIdea' },
   charge: process.env.RATE,
   db: {
-    env: process.env.NODE_ENV,
     uri: {
       dev_local: process.env.DEV_DB_URI_LOCAL,
-      development: process.env.DEV_DB_URI_REMOTE,
+      dev_remote: process.env.DEV_DB_URI_REMOTE,
       test: process.env.TEST_DB_URI,
       production: process.env.PROD_DB_URI,
     },
@@ -69,6 +68,6 @@ export default {
   salt: process.env.SALT,
   secure_cookie: false,
   support: {
-    email: 'support@apex.com',
+    email: 'support@app.com',
   },
 };

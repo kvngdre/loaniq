@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import BankService from '../services/bank.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import bankValidator from '../validators/bank.validator.js';
 import BaseController from './base.controller.js';
 class BankController extends BaseController {

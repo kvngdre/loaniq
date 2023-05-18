@@ -1,6 +1,6 @@
 import express from 'express';
 import pkg from '../../package.json' assert { type: 'json' };
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 
 const app = express();
 app.set('pkg', pkg);

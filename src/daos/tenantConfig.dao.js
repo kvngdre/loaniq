@@ -1,13 +1,13 @@
 import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
-import TenantConfig from '../models/tenantConfig.model.js';
-import BaseDAO from './base.dao.js';
+import TenantConfiguration from '../models/tenantConfiguration.model.js';
+import BaseRepository from './base.repository.js';
 
-class TenantConfigDAO extends BaseDAO {
+class TenantConfigDAO extends BaseRepository {
   static async insert(newTenantConfigDTO, trx) {
     try {
-      const newRecord = new TenantConfig(newTenantConfigDTO);
+      const newRecord = new TenantConfiguration(newTenantConfigDTO);
       await newRecord.save({ session: trx });
 
       return newRecord;
@@ -27,12 +27,14 @@ class TenantConfigDAO extends BaseDAO {
   }
 
   static async find(filter = {}, projection = {}) {
-    const foundRecords = await TenantConfig.find(filter).select(projection);
+    const foundRecords = await TenantConfiguration.find(filter).select(
+      projection,
+    );
     return foundRecords;
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await TenantConfig.findOne(filter)
+    const foundRecord = await TenantConfiguration.findOne(filter)
       .select(projection)
       .populate('tenantId');
     return foundRecord;
@@ -40,10 +42,14 @@ class TenantConfigDAO extends BaseDAO {
 
   static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, {
-        upsert: true,
-        new: true,
-      }).select(projection);
+      const foundRecord = await TenantConfiguration.findOneAndUpdate(
+        filter,
+        dto,
+        {
+          upsert: true,
+          new: true,
+        },
+      ).select(projection);
 
       return foundRecord;
     } catch (exception) {
@@ -62,7 +68,7 @@ class TenantConfigDAO extends BaseDAO {
   }
 
   static async remove(filter) {
-    const deletedRecord = await TenantConfig.findOneAndDelete(filter);
+    const deletedRecord = await TenantConfiguration.findOneAndDelete(filter);
 
     return deletedRecord;
   }

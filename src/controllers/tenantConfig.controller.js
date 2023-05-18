@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import tenantConfigService from '../services/tenantConfig.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import tenantConfigValidator from '../validators/tenantConfig.validator.js';
 import BaseController from './base.controller.js';
 
@@ -15,7 +15,7 @@ class TenantConfigController extends BaseController {
       newConfiguration,
     );
 
-    res.status(HttpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   static getConfigs = async (req, res) => {
@@ -24,7 +24,7 @@ class TenantConfigController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, tenantConfigs);
 
-    res.status(HttpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static getConfig = async (req, res) => {
@@ -36,7 +36,7 @@ class TenantConfigController extends BaseController {
       tenantConfig,
     );
 
-    res.status(HttpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static updateConfig = async (req, res) => {
@@ -52,14 +52,14 @@ class TenantConfigController extends BaseController {
       tenantConfig,
     );
 
-    res.status(HttpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static deleteConfig = async (req, res) => {
     await tenantConfigService.deleteConfig(req.params.tenantId);
     const response = this.apiResponse('Tenant configurations deleted.');
 
-    res.status(HttpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

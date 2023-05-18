@@ -2,10 +2,10 @@ import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
 import {
+  TenantStatus,
+  VALID_ID,
   maritalStatus,
   relationships,
-  status,
-  validIds,
 } from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
@@ -53,8 +53,8 @@ const clientSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(status),
-      default: status.ONBOARDING,
+      enum: Object.values(TenantStatus),
+      default: TenantStatus.ONBOARDING,
     },
 
     role: {
@@ -157,7 +157,7 @@ const clientSchema = new Schema(
     id_type: {
       type: String,
       // required: true,
-      enum: validIds,
+      enum: VALID_ID,
     },
 
     id_number: {
@@ -308,7 +308,7 @@ clientSchema.methods.getMonthNetPay = function (year, month) {
 clientSchema.methods.permitLogin = function () {
   const data = { id: this._id, redirect: {} };
 
-  if (!this.isPhoneVerified && !this.status !== status.ACTIVE) {
+  if (!this.isPhoneVerified && !this.status !== TenantStatus.ACTIVE) {
     data.redirect.verifyNewUser = true;
     return {
       isPermitted: false,
@@ -327,8 +327,8 @@ clientSchema.methods.permitLogin = function () {
   }
 
   if (
-    !this.status === status.SUSPENDED ||
-    !this.status === status.DEACTIVATED
+    !this.status === TenantStatus.SUSPENDED ||
+    !this.status === TenantStatus.DEACTIVATED
   ) {
     data.redirect.inactive = true;
     return {

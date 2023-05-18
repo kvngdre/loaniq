@@ -29,24 +29,16 @@ class TenantService {
    * @returns
    */
   async createTenant(signupDto) {
-    const { tenant, user } = signupDto;
-    const otp = generateOTP(8);
+    const { newTenantDto, newUserDto } = signupDto;
+    newUserDto.configurations.otp = generateOTP(8);
 
     const result = await transaction(async (session) => {
       const [newTenant, newUser] = await Promise.all([
-        tenantRepository.insert(tenant, session),
-
-        UserRepository.insert(
-          {
-            ...user,
-            'configurations.resetPwd': false,
-            'configurations.otp': otp,
-          },
-          session,
-        ),
+        tenantRepository.insert(newTenantDto, session),
+        UserRepository.insert(newUserDto, session),
 
         TenantConfigDAO.insert(
-          { _id: tenant.configurations, tenantId: tenant._id },
+          { _id: newTenantDto.configurations, tenantId: newTenantDto._id },
           session,
         ),
 
@@ -70,7 +62,7 @@ class TenantService {
       // newUser.purgeSensitiveData();
 
       return {
-        tenant: newTenant,
+        tenant: newTenant.toObject(),
         user: newUser.toObject(),
       };
     });

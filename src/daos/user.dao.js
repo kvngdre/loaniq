@@ -2,24 +2,31 @@ import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
 import User from '../models/user.model.js';
-import BaseDAO from './base.dao.js';
-
-class UserDAO extends BaseDAO {
-  static async insert(dto, transactionSession) {
+import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
+import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
+class UserRepository {
+  /**
+   * Inserts a new user document into the database.
+   * @param {*} newUserDto
+   * @param {mongoose.ClientSession} session Mongo transaction session
+   * @returns
+   */
+  async insert(newUserDto, session) {
     try {
-      const newRecord = new User(dto);
-      await newRecord.save({ session: transactionSession });
+      const newRecord = new User(newUserDto);
+      await newRecord.save({ session });
 
       return newRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception);
+      // * Handling duplicate field error
+      if (exception.message.includes('E11000')) {
+        const field = getDuplicateErrorField(exception);
         throw new DuplicateError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
-        throw new ValidationError(errMsg);
+        const errorMessage = getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;
@@ -90,4 +97,4 @@ class UserDAO extends BaseDAO {
   }
 }
 
-export default UserDAO;
+export default UserRepository;

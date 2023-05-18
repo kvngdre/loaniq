@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import SegmentService from '../services/segment.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import segmentValidator from '../validators/segment.validator.js';
 import BaseController from './base.controller.js';
 

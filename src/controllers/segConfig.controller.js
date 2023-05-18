@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import SegConfigService from '../services/segConfig.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import segConfigValidator from '../validators/segConfig.validator.js';
 import BaseController from './base.controller.js';
 

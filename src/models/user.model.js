@@ -69,6 +69,11 @@ const userSchema = new Schema(
       required: true,
     },
 
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
     role: {
       type: Schema.Types.ObjectId,
       required: true,
@@ -76,7 +81,7 @@ const userSchema = new Schema(
       autopopulate: true,
     },
 
-    active: {
+    isActive: {
       type: Boolean,
       default: false,
     },
@@ -93,11 +98,6 @@ const userSchema = new Schema(
           trim: true,
           maxLength: 1024,
           required: true,
-        },
-
-        isEmailVerified: {
-          type: Boolean,
-          default: false,
         },
 
         otp: {

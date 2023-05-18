@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import CustomerService from '../services/customer.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import customerValidator from '../validators/customer.validator.js';
 import BaseController from './base.controller.js';
 

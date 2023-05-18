@@ -1,6 +1,6 @@
 import ValidationError from '../errors/validation.error.js';
 import LoanService from '../services/loan.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import loanValidator from '../validators/loan.validator.js';
 import BaseController from './base.controller.js';
 

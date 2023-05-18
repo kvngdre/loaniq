@@ -1,5 +1,5 @@
 import RoleService from '../services/role.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import BaseController from './base.controller.js';
 
 class RoleController extends BaseController {

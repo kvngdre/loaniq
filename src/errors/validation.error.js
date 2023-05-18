@@ -1,9 +1,15 @@
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import APIError from './api.error.js';
 
 class ValidationError extends APIError {
+  /**
+   *
+   * @param {string} message Error message
+   * @param {Object} errors Validation errors object
+   * @param {*} data
+   */
   constructor(message, errors = undefined, data = undefined) {
-    super(HttpCodes.BAD_REQUEST, true, message, data);
+    super(HttpCode.BAD_REQUEST, true, message, data);
     this.errors = errors;
   }
 }

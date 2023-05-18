@@ -1,6 +1,6 @@
 import ClientDAO from '../daos/client.dao.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
-import { status } from '../utils/common.js';
+import { TenantStatus } from '../utils/common.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -40,7 +40,7 @@ class ClientService {
 
     foundClient.set({
       isPhoneVerified: true,
-      status: status.ACTIVE,
+      status: TenantStatus.ACTIVE,
       'otp.pin': null,
       'otp.expiresIn': null,
       last_login_time: new Date(),

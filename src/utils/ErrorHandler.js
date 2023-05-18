@@ -9,12 +9,21 @@ class ErrorHandler {
 
   handleError(error) {
     if (this.isTrustedError(error)) {
-      if (error.isOperational) logger.debug(error.message);
-      logger.error(error.message, error.stack);
+      this.#handleTrustedError(error);
     } else {
-      // TODO: should send an email to super admin on fatal error?
-      logger.fatal(error.message, error.stack);
+      // TODO: should send an email to super admin on untrusted error?
+      this.#handleUntrustedError(error);
     }
+  }
+
+  #handleTrustedError(error) {
+    if (error.isOperational) return logger.debug(error.message);
+
+    return logger.error(error.message, error.stack);
+  }
+
+  #handleUntrustedError(error) {
+    return logger.fatal(error.message, error.stack);
   }
 }
 

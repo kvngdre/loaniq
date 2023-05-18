@@ -1,13 +1,13 @@
 import { Error, Types } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
-import UserConfig from '../models/userConfig.model.js';
-import BaseDAO from './base.dao.js';
+import UserConfiguration from '../models/user-config.model.js';
+import BaseRepository from './base.repository.js';
 
-class UserConfigDAO extends BaseDAO {
+class UserConfigDAO extends BaseRepository {
   static async insert(dto, trx) {
     try {
-      const newRecord = new UserConfig(dto);
+      const newRecord = new UserConfiguration(dto);
       await newRecord.save({ session: trx });
 
       return newRecord;
@@ -27,24 +27,32 @@ class UserConfigDAO extends BaseDAO {
   }
 
   static async find(filter = {}, projection = {}) {
-    const foundRecords = await UserConfig.find(filter).select(projection);
+    const foundRecords = await UserConfiguration.find(filter).select(
+      projection,
+    );
 
     return foundRecords;
   }
 
   // todo see if RBAC can narrow down so that we can do an upsert if not found
   static async findOne(filter, projection = {}) {
-    const foundRecord = await UserConfig.findOne(filter).select(projection);
+    const foundRecord = await UserConfiguration.findOne(filter).select(
+      projection,
+    );
 
     return foundRecord;
   }
 
   static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await UserConfig.findOneAndUpdate(filter, dto, {
-        upsert: true,
-        new: true,
-      }).select(projection);
+      const foundRecord = await UserConfiguration.findOneAndUpdate(
+        filter,
+        dto,
+        {
+          upsert: true,
+          new: true,
+        },
+      ).select(projection);
 
       return foundRecord;
     } catch (exception) {
@@ -64,7 +72,7 @@ class UserConfigDAO extends BaseDAO {
 
   static async remove(filter) {
     filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter };
-    const deletedRecord = await UserConfig.findOneAndDelete(filter);
+    const deletedRecord = await UserConfiguration.findOneAndDelete(filter);
 
     return deletedRecord;
   }

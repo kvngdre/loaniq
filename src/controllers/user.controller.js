@@ -2,7 +2,7 @@ import requestIp from 'request-ip';
 import config from '../config/index.js';
 import ValidationError from '../errors/validation.error.js';
 import UserService from '../services/user.service.js';
-import { HttpCodes } from '../utils/HttpCodes.js';
+import { HttpCode } from '../utils/HttpCode.js';
 import userValidator from '../validators/user.validator.js';
 import BaseController from './base.controller.js';
 

@@ -2,9 +2,9 @@ import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
 import Client from '../models/client.model.js';
-import BaseDAO from './base.dao.js';
+import BaseRepository from './base.repository.js';
 
-class ClientDAO extends BaseDAO {
+class ClientDAO extends BaseRepository {
   static async insert(dto, trx) {
     try {
       const newRecord = new Client(dto);

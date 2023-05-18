@@ -16,10 +16,10 @@ export default async function expressLoader(app, routes) {
     throw new Error('Application failed to initialize with errors in argument');
   }
 
-  app.use(helmet());
-  app.use(morgan('dev'));
   app.use(credentials);
   app.use(cors(corsOptions));
+  app.use(helmet());
+  app.use(morgan('dev'));
 
   // Parse JSON bodies (as sent by API clients)
   app.use(json());
