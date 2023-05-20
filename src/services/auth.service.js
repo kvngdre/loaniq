@@ -3,11 +3,11 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 import ClientDAO from '../daos/client.dao.js';
-import UserRepository from '../daos/user.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import ForbiddenError from '../errors/forbidden.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
+import UserRepository from '../user/user.repository.js';
 import {
   generateAccessToken,
   generateRefreshToken,

@@ -17,7 +17,7 @@ class ErrorHandler {
   }
 
   #handleTrustedError(error) {
-    if (error.isOperational) return logger.debug(error.message);
+    if (error.isOperational) return logger.debug(error.message, error.stack);
 
     return logger.error(error.message, error.stack);
   }

@@ -1,13 +1,26 @@
 import { Schema, model } from 'mongoose';
-import { feeTypes } from '../utils/common.js';
+import { VALID_ID, feeTypes } from '../utils/common.js';
 
 const tenantConfigurationSchema = new Schema(
   {
-    tenantId: {
+    tenant: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
       unique: true,
       required: true,
+    },
+
+    documentation: {
+      type: [
+        {
+          name: { type: String, required: true },
+          type: { type: String, enum: VALID_ID, required: true },
+          url: { type: String, required: true },
+          expires: { type: Date, default: null },
+        },
+      ],
+      default: null,
+      select: false,
     },
 
     resetPwdFrequency: {

@@ -1,15 +1,16 @@
 /* eslint-disable camelcase */
 import fs from 'fs';
-import transaction from 'mongoose-trx';
+import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import config from '../config/index.js';
-import UserDAO from '../daos/user.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
 import ValidationError from '../errors/validation.error.js';
 import { events, pubsub } from '../pubsub/index.js';
+import EmailService from '../services/email.service.js';
+import UserConfigService from '../services/userConfig.service.js';
 import driverUploader from '../utils/driveUploader.js';
 import {
   generateAccessToken,
@@ -20,40 +21,47 @@ import logger from '../utils/logger.js';
 import mailer from '../utils/mailer.js';
 import randomString from '../utils/randomString.js';
 import similarity from '../utils/stringSimilarity.js';
-import EmailService from './email.service.js';
-import UserConfigService from './userConfig.service.js';
+import UserDAO from './user.repository.js';
+
 class UserService {
   static createUser = async (newUserDTO) => {
-    const result = await transaction(async (session) => {
-      newUserDTO.password = randomString();
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        newUserDTO.password = randomString();
 
-      const [newUser] = await Promise.all([
-        UserDAO.insert(newUserDTO, session),
-        UserConfigService.createConfig(
-          {
-            userId: newUserDTO._id,
-            tenantId: newUserDTO.tenantId,
+        const [newUser] = await Promise.all([
+          UserDAO.insert(newUserDTO, session),
+          UserConfigService.createConfig(
+            {
+              userId: newUserDTO._id,
+              tenantId: newUserDTO.tenantId,
+            },
+            session,
+          ),
+        ]);
+
+        // Send temporary password to new user email.
+        const info = await EmailService.send({
+          to: newUserDTO.email,
+          templateName: 'new-user',
+          context: {
+            name: newUserDTO.first_name,
+            password: newUserDTO.password,
           },
-          session,
-        ),
-      ]);
+        });
+        if (info.error) {
+          throw new DependencyError('Failed to send password to user email.');
+        }
 
-      // Send temporary password to new user email.
-      const info = await EmailService.send({
-        to: newUserDTO.email,
-        templateName: 'new-user',
-        context: { name: newUserDTO.first_name, password: newUserDTO.password },
+        newUser.purgeSensitiveData();
+
+        return newUser;
       });
-      if (info.error) {
-        throw new DependencyError('Failed to send password to user email.');
-      }
 
-      newUser.purgeSensitiveData();
-
-      return newUser;
-    });
-
-    return result;
+      return result;
+    } finally {
+    }
   };
 
   static verifyNewUser = async (verifyNewUserDTO, userAgent, clientIp) => {

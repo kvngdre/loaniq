@@ -13,9 +13,8 @@ class TenantController extends BaseController {
   signUp = async (req, res) => {
     const { value, error } = tenantValidator.validateSignUp(req.body);
     if (error) throw new ValidationError('Validation Error', error);
-    console.log(value);
 
-    const result = await tenantService.createTenant(value);
+    const result = await tenantService.signUp(value);
 
     res.status(HttpCode.CREATED).json({
       success: true,
@@ -86,7 +85,10 @@ class TenantController extends BaseController {
     const { value, error } = tenantValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const tenant = await tenantService.updateTenant(req.params.tenantId, value);
+    const tenant = await tenantService.updateProfile(
+      req.params.tenantId,
+      value,
+    );
     const response = this.apiResponse('Tenant updated.', tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -113,9 +115,9 @@ class TenantController extends BaseController {
     const { value, error } = tenantValidator.validateActivationRequest(
       req.body,
     );
-    if (error) throw new ValidationError(null, error);
+    if (error) throw new ValidationError('Validation Error', error);
 
-    const tenant = await tenantService.requestToActivateTenant(
+    const tenant = await tenantService.requestTenantActivation(
       req.params.tenantId,
       value,
     );

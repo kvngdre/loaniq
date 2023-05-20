@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { DateTime } from 'luxon';
-import { relationships, VALID_ID } from '../utils/common.js';
+import { Relationship, ValidId } from '../utils/constants.utils.js';
 import BaseValidator from './base.validator.js';
 
 const isOver18 = (dob, helper) => {
@@ -61,10 +61,10 @@ class CustomerValidator extends BaseValidator {
 
     this.#idTypeSchema = Joi.string()
       .label('Id type')
-      .valid(...VALID_ID);
+      .valid(...Object.values(ValidId));
 
     this.#relationshipSchema = Joi.string()
-      .valid(...relationships)
+      .valid(...Object.values(Relationship))
       .label('Relationship');
 
     this.#addressSchema = Joi.string()

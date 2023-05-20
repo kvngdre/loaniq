@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import verifyJWT from '../middleware/verifyJWT.js';
-import TenantConfigController from '../controllers/tenantConfig.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
 import checkPermission from '../middleware/checkPermission.js';
+import validateObjectId from '../middleware/validateObjectId.js';
+import verifyJWT from '../middleware/verifyJWT.js';
+import TenantConfigController from '../tenant-configurations/tenantConfig.controller.js';
 
 const router = Router();
 

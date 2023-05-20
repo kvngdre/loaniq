@@ -1,46 +1,60 @@
 import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
-import TenantConfiguration from '../models/tenantConfiguration.model.js';
-import BaseRepository from './base.repository.js';
+import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
+import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
+import TenantConfiguration from './tenantConfig.model.js';
 
-class TenantConfigDAO extends BaseRepository {
-  static async insert(newTenantConfigDTO, trx) {
+class TenantConfigurationRepository {
+  async insert(newTenantConfigDTO, session) {
     try {
       const newRecord = new TenantConfiguration(newTenantConfigDTO);
-      await newRecord.save({ session: trx });
+      await newRecord.save({ session });
 
       return newRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception);
-        throw new DuplicateError(`${field} in use.`);
+      if (exception.message.includes('E11000')) {
+        throw new DuplicateError(
+          `Operation failed, tenant configurations already exists.`,
+        );
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
-        throw new ValidationError(errMsg);
+        const errorMessage = getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;
     }
   }
 
-  static async find(filter = {}, projection = {}) {
+  async find(filter = {}, projection = {}) {
     const foundRecords = await TenantConfiguration.find(filter).select(
       projection,
     );
     return foundRecords;
   }
 
-  static async findOne(filter, projection = {}) {
+  /**
+   * Find document by the tenant object id
+   * @param {string} tenantId
+   * @param {*} projection
+   * @returns
+   */
+  async findByTenantId(tenantId, projection = {}) {
+    return await TenantConfiguration.findOne({ tenant: tenantId })
+      .select(projection)
+      .populate('tenantId');
+  }
+
+  async findOne(filter, projection = {}) {
     const foundRecord = await TenantConfiguration.findOne(filter)
       .select(projection)
       .populate('tenantId');
     return foundRecord;
   }
 
-  static async update(filter, dto, projection = {}) {
+  async update(filter, dto, projection = {}) {
     try {
       const foundRecord = await TenantConfiguration.findOneAndUpdate(
         filter,
@@ -67,11 +81,11 @@ class TenantConfigDAO extends BaseRepository {
     }
   }
 
-  static async remove(filter) {
+  async remove(filter) {
     const deletedRecord = await TenantConfiguration.findOneAndDelete(filter);
 
     return deletedRecord;
   }
 }
 
-export default TenantConfigDAO;
+export default TenantConfigurationRepository;

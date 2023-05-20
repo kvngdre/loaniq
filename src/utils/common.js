@@ -1,15 +1,10 @@
-export const companyCategory = ['mfb', 'finance house', 'money lender'];
+export const CompanyCategory = {
+  MFB: 'mfb',
+  FINANCE_HOUSE: 'finance house',
+  MONEY_LENDER: 'money lender',
+};
 
 export const feeTypes = { percent: 'percent', decimal: 'decimal' };
-
-export const GEO_ZONES = [
-  'north central',
-  'north east',
-  'north west',
-  'south east',
-  'south south',
-  'south west',
-];
 
 export const loanRemarks = [
   'age above threshold',
@@ -46,28 +41,6 @@ export const loanStatus = {
   PENDING: 'pending',
 };
 
-export const maritalStatus = [
-  'single',
-  'married',
-  'divorced',
-  'separated',
-  'widow',
-  'widower',
-];
-
-export const relationships = [
-  'daughter',
-  'brother',
-  'cousin',
-  'father',
-  'mother',
-  'nephew',
-  'sister',
-  'spouse',
-  'niece',
-  'son',
-];
-
 export const reviewStatus = {
   APPROVED: 'approved',
   DENIED: 'denied',
@@ -84,14 +57,14 @@ export const socials = [
   'tictok',
 ];
 
-export class TenantStatus {
-  static ACTIVE = 'active';
-  static AWAITING_ACTIVATION = 'awaiting activation';
-  static DEACTIVATED = 'deactivated';
-  static INACTIVE = 'inactive';
-  static SUSPENDED = 'suspended';
-  static ONBOARDING = 'onboarding';
-}
+export const TenantStatus = {
+  ACTIVE: 'active',
+  AWAITING_ACTIVATION: 'awaiting activation',
+  DEACTIVATED: 'deactivated',
+  INACTIVE: 'inactive',
+  SUSPENDED: 'suspended',
+  ONBOARDING: 'onboarding',
+};
 
 export const txnPurposes = {
   DEPOSIT: 'deposit',

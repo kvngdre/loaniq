@@ -1,10 +1,10 @@
 import requestIp from 'request-ip';
 import config from '../config/index.js';
+import BaseController from '../controllers/base.controller.js';
 import ValidationError from '../errors/validation.error.js';
-import UserService from '../services/user.service.js';
 import { HttpCode } from '../utils/HttpCode.js';
-import userValidator from '../validators/user.validator.js';
-import BaseController from './base.controller.js';
+import UserService from './user.service.js';
+import userValidator from './user.validator.js';
 
 class UserController extends BaseController {
   static createUser = async (req, res) => {

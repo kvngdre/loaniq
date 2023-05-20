@@ -112,7 +112,7 @@ const userSchema = new Schema(
           },
         },
 
-        resetPwd: {
+        isToResetPassword: {
           type: Boolean,
           default: true,
         },
@@ -202,17 +202,21 @@ userSchema.methods.validateOTP = function (otp) {
 };
 
 userSchema.methods.validatePassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
+  return bcrypt.compareSync(password, this.configurations.password);
 };
 
-// ! Hashing user password before insert
-userSchema.pre('save', function (next) {
-  if (this.modifiedPaths()?.includes('password')) {
-    this.password = bcrypt.hashSync(this.password, 12);
-  }
+// // ! Hashing user password before insert
+// userSchema.pre('save', function (next) {
+//   console.log(this.modifiedPaths());
+//   if (this.modifiedPaths()?.includes('configurations.password')) {
+//     this.configurations.password = bcrypt.hashSync(
+//       this.configurations.password,
+//       12,
+//     );
+//   }
 
-  next();
-});
+//   next();
+// });
 
 const User = model('User', userSchema);
 

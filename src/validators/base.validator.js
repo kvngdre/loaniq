@@ -1,7 +1,8 @@
 import Joi from 'joi';
 import { joiPassword } from 'joi-password';
 import { roles } from '../config/roles.js';
-import { feeTypes, maritalStatus } from '../utils/common.js';
+import { feeTypes } from '../utils/common.js';
+import { MaritalStatus } from '../utils/constants.utils.js';
 
 class BaseValidator {
   #formatErrorMessage = (errorMessage) => {
@@ -172,6 +173,13 @@ class BaseValidator {
     state: this._objectIdSchema.label('State'),
   });
 
+  _stateSchema = Joi.object({
+    code: Joi.string().uppercase().length(2).label('Code'),
+    name: Joi.string().label('Name'),
+    lga: Joi.string().label('LGA'),
+    geo: Joi.string().label('Geo'),
+  });
+
   _idSchema = Joi.string().alphanum().trim().uppercase().messages({
     'string.pattern.base': '{#label} is not valid',
   });
@@ -218,7 +226,7 @@ class BaseValidator {
 
   _maritalSchema = Joi.string()
     .label('Marital status')
-    .valid(...maritalStatus);
+    .valid(...Object.values(MaritalStatus));
 
   _accountNumberSchema = Joi.string()
     .pattern(/^[0-9]{10}$/)

@@ -1,8 +1,13 @@
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import { VALID_ID, maritalStatus, relationships } from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
+import {
+  Gender,
+  MaritalStatus,
+  Relationship,
+  ValidId,
+} from '../utils/constants.utils.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -49,8 +54,8 @@ const customerSchema = new Schema(
 
     gender: {
       type: String,
-      enum: ['male', 'female'],
       required: true,
+      enum: Object.values(Gender),
     },
 
     birth_date: {
@@ -87,7 +92,7 @@ const customerSchema = new Schema(
 
     marital_status: {
       type: String,
-      enum: maritalStatus,
+      enum: Object.values(MaritalStatus),
       required: true,
     },
 
@@ -106,7 +111,7 @@ const customerSchema = new Schema(
 
     id_type: {
       type: String,
-      enum: VALID_ID,
+      enum: Object.values(ValidId),
       required: true,
     },
 
@@ -182,7 +187,7 @@ const customerSchema = new Schema(
 
     nok_relationship: {
       type: String,
-      enum: relationships,
+      enum: Object.values(Relationship),
       required: true,
     },
 

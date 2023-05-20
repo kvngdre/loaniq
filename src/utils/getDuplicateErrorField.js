@@ -3,7 +3,7 @@
  * @param {*} error
  * @returns {string}
  */
-export default function getDuplicateField(error) {
+export default function getDuplicateErrorField(error) {
   const field = Object.keys(error.keyPattern)[0];
 
   // Capitalize the first letter and remove underscore if any.

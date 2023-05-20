@@ -1,14 +1,16 @@
 import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import {
-  TenantStatus,
-  VALID_ID,
-  maritalStatus,
-  relationships,
-} from '../utils/common.js';
+import { TenantStatus } from '../utils/common.js';
 import computeAge from '../utils/computeAge.js';
 import computeTenure from '../utils/computeTenure.js';
+import {
+  Gender,
+  GeoZone,
+  MaritalStatus,
+  Relationship,
+  ValidId,
+} from '../utils/constants.utils.js';
 
 const schemaOptions = {
   timestamps: true,
@@ -67,7 +69,7 @@ const clientSchema = new Schema(
     gender: {
       type: String,
       // required: true,
-      enum: ['male', 'female'],
+      enum: Object.values(Gender),
     },
 
     birth_date: {
@@ -110,7 +112,7 @@ const clientSchema = new Schema(
     marital_status: {
       type: String,
       // required: true,
-      enum: maritalStatus,
+      enum: Object.values(MaritalStatus),
     },
 
     bvn: {
@@ -157,7 +159,7 @@ const clientSchema = new Schema(
     id_type: {
       type: String,
       // required: true,
-      enum: VALID_ID,
+      enum: Object.values(ValidId),
     },
 
     id_number: {
@@ -235,7 +237,7 @@ const clientSchema = new Schema(
     nok_relationship: {
       type: String,
       // required: true,
-      enum: relationships,
+      enum: Object.values(Relationship),
     },
 
     account_name: {
@@ -272,7 +274,6 @@ const clientSchema = new Schema(
     session: {
       type: {
         os: String,
-        location: String,
         client: String,
         ip: String,
         login_time: Date,

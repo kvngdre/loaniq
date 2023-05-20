@@ -1,14 +1,17 @@
 import { Schema, model } from 'mongoose';
-import { TenantStatus, companyCategory } from '../utils/common.js';
+import { CompanyCategory, TenantStatus } from '../utils/common.js';
 
-const tenantSchema = new Schema(
+/**
+ * @constructor
+ */
+export const tenantSchema = new Schema(
   {
     logo: {
       type: String,
       default: null,
     },
 
-    company_name: {
+    business_name: {
       type: String,
       required: true,
     },
@@ -35,7 +38,7 @@ const tenantSchema = new Schema(
 
     category: {
       type: String,
-      enum: companyCategory,
+      enum: CompanyCategory,
     },
 
     status: {

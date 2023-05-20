@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import RoleController from '../controllers/role.controller.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
+import RoleController from '../role/role.controller.js';
 
 const router = Router();
 

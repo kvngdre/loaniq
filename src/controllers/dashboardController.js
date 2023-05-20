@@ -1,7 +1,7 @@
 import Customer from '../models/customer.model.js';
 import Loan from '../models/loan.model.js';
-import User from '../models/user.model.js';
 import Tenant from '../tenant/tenant.model.js';
+import User from '../user/user.model.js';
 import { loanStatus } from '../utils/common.js';
 import logger from '../utils/logger.js';
 

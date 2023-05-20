@@ -1,5 +1,5 @@
 import { events, pubsub } from '../pubsub/index.js';
-import TenantConfigDAO from '../daos/tenantConfig.dao.js';
+import TenantConfigDAO from './tenantConfig.repository.js';
 
 class TenantConfigService {
   constructor() {

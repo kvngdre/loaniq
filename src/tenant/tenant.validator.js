@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
 import {
-  companyCategory,
+  CompanyCategory,
   socials,
   TenantStatus,
   VALID_ID,
@@ -21,15 +21,9 @@ class TenantValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#companyNameSchema = Joi.string()
-      .label('Business name')
-      .min(2)
-      .max(255)
-      .lowercase()
-      .messages({
-        'string.min': '{#label} is not valid',
-        'string.max': '{#label} is too long',
-      });
+    this.#allowUserPwdResetSchema = Joi.boolean()
+      .label('Allow user password reset')
+      .default(false);
 
     this.#cacNumberSchema = Joi.string()
       .label('CAC number')
@@ -43,8 +37,37 @@ class TenantValidator extends BaseValidator {
     this.#categorySchema = Joi.string()
       .lowercase()
       .label('Category')
-      .valid(...companyCategory)
+      .valid(...Object.values(CompanyCategory))
       .messages({ 'any.only': 'Not a valid category' });
+
+    this.#companyNameSchema = Joi.string()
+      .label('Company name')
+      .min(2)
+      .max(255)
+      .lowercase()
+      .messages({
+        'string.min': '{#label} is not valid',
+        'string.max': '{#label} is too long',
+      });
+
+    this.#documentationSchema = Joi.array()
+      .items(
+        Joi.object({
+          name: Joi.string().lowercase().label('Document name').required(),
+          url: Joi.string().label('Document url').required(),
+          expires: Joi.date().iso().optional(),
+        }),
+      )
+      .label('Documentation');
+
+    this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
+      'string.pattern.base': 'Invalid staff id number',
+    });
+
+    this.#idTypeSchema = Joi.string()
+      .lowercase()
+      .label('Id type')
+      .valid(...VALID_ID.filter((id) => id !== 'staff id card'));
 
     this.#socialSchema = Joi.array().items(
       Joi.object({
@@ -79,40 +102,21 @@ class TenantValidator extends BaseValidator {
       }),
     );
 
-    this.#idTypeSchema = Joi.string()
-      .lowercase()
-      .label('Id type')
-      .valid(...VALID_ID.filter((id) => id !== 'staff id card'));
-
-    this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
-      'string.pattern.base': 'Invalid staff id number',
-    });
-
     this.#supportSchema = Joi.object({
       email: this._emailSchema.label('Support email'),
       phone_number: this._phoneNumberSchema.label('Support phone number'),
     })
       .min(1)
       .label('Support');
-
-    this.#allowUserPwdResetSchema = Joi.boolean()
-      .label('Allow user password reset')
-      .default(false);
-
-    this.#documentationSchema = Joi.array()
-      .items(
-        Joi.object({
-          name: Joi.string().lowercase().label('Document name').required(),
-          url: Joi.string().label('Document url').required(),
-          expires: Joi.date().iso().optional(),
-        }),
-      )
-      .label('Documentation');
   }
 
+  /**
+   * Validates the sign up request payload and appends default values.
+   * @param {*} dto
+   * @returns {{ value: import('./dto/signUp.dto.js').SignUpDto, error: (Object.<string, *>|undefined)}}
+   */
   validateSignUp = (dto) => {
     const tenantId = new Types.ObjectId();
-    const tenantConfigurationId = new Types.ObjectId();
     const userId = new Types.ObjectId();
     const adminRoleId = new Types.ObjectId();
 
@@ -121,7 +125,6 @@ class TenantValidator extends BaseValidator {
         _id: Joi.any().default(tenantId).forbidden(),
         business_name: this.#companyNameSchema.required(),
         status: Joi.string().default(TenantStatus.ONBOARDING).forbidden(),
-        configurations: Joi.any().default(tenantConfigurationId).forbidden(),
       }).required(),
       newUserDto: Joi.object({
         _id: Joi.any().default(userId).forbidden(),
@@ -129,27 +132,18 @@ class TenantValidator extends BaseValidator {
         last_name: this._nameSchema.extract('last').required(),
         email: this._emailSchema.required(),
         phone_number: this._phoneNumberSchema.required(),
-        new_password: this._passwordSchema(8).required(),
+        new_password: this._passwordSchema(8).strip().required(),
         confirm_password: this._confirmPasswordSchema.strip().required(),
         role: Joi.any().default(adminRoleId).forbidden(),
-        configurations: Joi.object()
-          .keys({
-            ja: 'kk',
-            password: Joi.string().default(Joi.ref('new_password')),
-            resetPwd: Joi.boolean().default(false),
-            otp: Joi.object({
-              pin: Joi.string().default(''),
-              expiresIn: Joi.number().default(0),
-            }),
-          })
-          .forbidden(),
+        configurations: Joi.object({
+          password: Joi.string().default(Joi.ref('...new_password')),
+          isToResetPassword: Joi.boolean().default(false),
+          otp: Joi.object().default({}),
+        }).default(),
       }).required(),
     });
 
-    let { value, error } = schema.validate(dto, {
-      abortEarly: false,
-      presence: 'optional',
-    });
+    let { value, error } = schema.validate(dto, { abortEarly: false });
     if (error !== undefined) error = this._refineError(error);
 
     return { value, error };
@@ -189,13 +183,11 @@ class TenantValidator extends BaseValidator {
   validateActivationRequest = (dto) => {
     const schema = Joi.object({
       logo: Joi.string().label('logo'),
-      business_name: this.#companyNameSchema.required(),
-      category: this.#categorySchema.required(),
-      cac_number: this.#cacNumberSchema.required(),
-      email: this._emailSchema.required(),
-      phone_number: this._phoneNumberSchema,
+      business_name: this.#companyNameSchema,
       address: this._locationSchema.extract('address').required(),
-      state: this._locationSchema.extract('state').required(),
+      state: this._stateSchema.required(),
+      cac_number: this.#cacNumberSchema.required(),
+      category: this.#categorySchema.required(),
       support: this.#supportSchema.required(),
       documentation: this.#documentationSchema.required(),
     });

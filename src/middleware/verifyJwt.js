@@ -6,7 +6,7 @@ import {
   UnauthorizedError,
   ValidationError,
 } from '../errors/index.js';
-import User from '../models/user.model.js';
+import User from '../user/user.model.js';
 
 export default async function verifyJWT(req, res, next) {
   try {

@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { roles } from '../config/roles.js';
 import ForbiddenError from '../errors/forbidden.error.js';
 import { canUserResetPwd } from '../helpers/user.helpers.js';
-import BaseValidator from './base.validator.js';
+import BaseValidator from '../validators/base.validator.js';
 
 class UserValidator extends BaseValidator {
   #jobTitle;

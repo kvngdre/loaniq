@@ -1,4 +1,4 @@
-import RoleDAO from '../daos/role.dao.js';
+import RoleRepository from './role.repository.js';
 
 class RoleService {
   /**
@@ -7,38 +7,38 @@ class RoleService {
    * @returns
    */
   static async createRole(newRoleDTO) {
-    const newRole = await RoleDAO.insert(newRoleDTO);
+    const newRole = await RoleRepository.insert(newRoleDTO);
 
     return newRole;
   }
 
   static async getRoles() {
-    const foundRoles = await RoleDAO.find();
+    const foundRoles = await RoleRepository.find();
     const count = Intl.NumberFormat('en-US').format(foundRoles.length);
 
     return { count, foundRoles };
   }
 
   static async getRoleById(roleId) {
-    const foundRole = await RoleDAO.findById(roleId);
+    const foundRole = await RoleRepository.findById(roleId);
 
     return foundRole;
   }
 
   static async getRole(filter) {
-    const foundRole = await RoleDAO.findOne(filter);
+    const foundRole = await RoleRepository.findOne(filter);
 
     return foundRole;
   }
 
   static async updateRole(roleId, updateRoleDTO) {
-    const updatedRole = await RoleDAO.update(roleId, updateRoleDTO);
+    const updatedRole = await RoleRepository.update(roleId, updateRoleDTO);
 
     return updatedRole;
   }
 
   static async deleteRole(roleId) {
-    const deletedRole = await RoleDAO.remove(roleId);
+    const deletedRole = await RoleRepository.remove(roleId);
 
     return deletedRole;
   }

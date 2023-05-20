@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import upload from '../middleware/fileUploader.js';
-import userConfigRouter from './userConfig.routes.js';
-import UserController from '../controllers/user.controller.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
+import UserController from '../user/user.controller.js';
+import userConfigRouter from './userConfig.routes.js';
 
 const router = Router();
 

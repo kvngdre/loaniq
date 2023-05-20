@@ -2,13 +2,13 @@ import mongoose from 'mongoose';
 import { TenantStatus } from '../../utils/common';
 
 /**
- * @typedef SignupDto
+ * The value after validating the sign up request payload.
+ * @typedef SignUpDto
  * @type {Object}
  * @property {Object} newTenantDto
  * @property {mongoose.ObjectId} newTenantDto._id The generated tenant object id
  * @property {string} newTenantDto.business_name The name of the business
  * @property {TenantStatus} newTenantDto.status
- * @property {mongoose.ObjectId} newTenantDto.configurations Tenant configurations object id
  * @property {Object} newUserDto Transaction type
  * @property {mongoose.ObjectId} newUserDto._id The generated user object id
  * @property {string} newUserDto.first_name User first name
@@ -18,6 +18,8 @@ import { TenantStatus } from '../../utils/common';
  * @property {mongoose.ObjectId} newUserDto.role User role object id
  * @property {Object} newUserDto.configurations User configurations
  * @property {string} newUserDto.configurations.password User password
- * @property {boolean} [newUserDto.configurations.resetPwd=false] Reset password flag
+ * @property {boolean} [newUserDto.configurations.isToResetPassword=false] Reset password flag
  * @property {Object} [newUserDto.configurations.otp={}]
+ * @property {string} newUserDto.configurations.otp.pin
+ * @property {number} newUserDto.configurations.otp.expiresIn
  */

@@ -1,8 +1,8 @@
+import BaseController from '../controllers/base.controller.js';
 import ValidationError from '../errors/validation.error.js';
-import tenantConfigService from '../services/tenantConfig.service.js';
 import { HttpCode } from '../utils/HttpCode.js';
 import tenantConfigValidator from '../validators/tenantConfig.validator.js';
-import BaseController from './base.controller.js';
+import tenantConfigService from './tenantConfig.service.js';
 
 class TenantConfigController extends BaseController {
   static createConfig = async (req, res) => {

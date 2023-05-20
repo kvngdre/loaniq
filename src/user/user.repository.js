@@ -1,9 +1,10 @@
 import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
-import User from '../models/user.model.js';
 import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
 import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
+import User from './user.model.js';
+
 class UserRepository {
   /**
    * Inserts a new user document into the database.

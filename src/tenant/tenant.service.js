@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
 import bcrypt from 'bcryptjs';
-import { startSession } from 'mongoose';
+import mongoose, { startSession } from 'mongoose';
 import WalletDAO from '../daos/wallet.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
+import NotFoundError from '../errors/notFound.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
 import RoleRepository from '../role/role.repository.js';
 import EmailService from '../services/email.service.js';
@@ -21,20 +22,21 @@ const roleRepository = new RoleRepository();
 
 class TenantService {
   /**
-   * Creates a new tenant account and the admin user.
+   * Creates a new tenant account, tenant configurations, and the admin user.
    * @param {import('./dto/signUp.dto.js').SignUpDto} signUpDto
    * @returns
    */
-  async createTenant(signUpDto) {
+  async signUp(signUpDto) {
     const { newTenantDto, newUserDto } = signUpDto;
     const session = await startSession();
 
     try {
+      newUserDto.configurations.otp = generateOTP(8);
+
       // ! Hashing user password
       newUserDto.configurations.password = bcrypt.hashSync(
         newUserDto.configurations.password,
       );
-      newUserDto.configurations.otp = generateOTP(8);
 
       await session.withTransaction(async () => {
         await Promise.all([
@@ -73,6 +75,29 @@ class TenantService {
     }
   }
 
+  /**
+   * Creates a new tenant account.
+   * @param {import('./dto/new-tenant.dto.js').NewTenantDto} newTenantDto
+   * @returns
+   */
+  async create(newTenantDto) {
+    const session = await startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        await Promise.all([
+          tenantRepository.insert(newTenantDto, session),
+          tenantConfigurationRepository.insert(
+            { _id: newTenantDto.configurations, tenant: newTenantDto._id },
+            session,
+          ),
+        ]);
+      });
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async onBoardTenant(tenantId, onBoardTenantDTO) {
     const foundTenant = await TenantRepository.update(
       tenantId,
@@ -82,39 +107,85 @@ class TenantService {
     return foundTenant;
   }
 
+  /**
+   * Retrieves a list of tenants
+   * @param {Partial<import('./jsdoc/Tenant.js').Tenant>} filters Tenant fields filter object
+   * @returns
+   */
   async getTenants(filters) {
     const foundTenants = await tenantRepository.find(filters);
-    const count = Intl.NumberFormat('en-US').format(foundTenants.length);
+    if (foundTenants.length === 0) {
+      throw new NotFoundError('No tenants found');
+    }
 
-    return [count, foundTenants];
+    return foundTenants;
   }
 
+  /**
+   * Retrieves a tenant
+   * @param {string} tenantId The tenant object id
+   * @returns
+   */
   async getTenant(tenantId) {
-    const foundTenant = await TenantRepository.findById(tenantId);
+    const foundTenant = await tenantRepository.findById(tenantId);
+    if (!foundTenant) {
+      throw new NotFoundError('Tenant not found');
+    }
+
     return foundTenant;
   }
 
-  async updateTenant(tenantId, dto) {
-    const updateTenant = await TenantRepository.update(tenantId, dto);
-    return updateTenant;
+  /**
+   * Updates a tenant profile
+   * @param {string} tenantId
+   * @param {UpdateTenantDto} updateTenantDto
+   * @returns
+   */
+  async updateProfile(tenantId, updateTenantDto) {
+    await tenantRepository.update(tenantId, updateTenantDto);
   }
 
+  /**
+   * Deletes a tenant
+   * @param {string} tenantId
+   * @returns
+   */
   async deleteTenant(tenantId) {
-    const deletedTenant = await TenantRepository.remove(tenantId);
-    return deletedTenant;
+    await TenantRepository.remove(tenantId);
   }
 
-  async requestToActivateTenant(tenantId, activateTenantDTO) {
-    const foundTenant = await TenantRepository.findById(tenantId);
+  /**
+   * Updates and sets the tenant in status: Awaiting Activation
+   * @param {string} tenantId Tenant object id
+   * @param {import('./dto/activate-tenant.dto.js').ActivateTenantDto} activateTenantDto
+   * @returns
+   */
+  async requestTenantActivation(tenantId, activateTenantDto) {
+    const [foundTenant, foundTenantConfig] = await Promise.all([
+      tenantRepository.findById(tenantId),
+      tenantConfigurationRepository.findByTenantId(tenantId),
+    ]);
+    if (!foundTenant) throw new NotFoundError('Tenant not found');
+    if (!foundTenantConfig)
+      throw new NotFoundError('Tenant configurations not found');
+
     if (foundTenant.status === TenantStatus.ACTIVE) {
       throw new DuplicateError('Tenant has already been activated.');
     }
 
+    // * Setting data
     foundTenant.set({
       status: TenantStatus.AWAITING_ACTIVATION,
-      ...activateTenantDTO,
+      ...activateTenantDto,
     });
-    await foundTenant.save();
+    foundTenantConfig.set({
+      ...activateTenantDto,
+    });
+
+    await Promise.all([
+      await foundTenant.save(),
+      await foundTenantConfig.save(),
+    ]);
 
     return foundTenant;
   }
