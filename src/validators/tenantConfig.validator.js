@@ -1,6 +1,6 @@
-import { socials } from '../utils/common.js';
-import BaseValidator from './base.validator.js';
 import Joi from 'joi';
+import { SocialPlatform } from '../utils/common.js';
+import BaseValidator from './base.validator.js';
 
 class TenantConfigValidator extends BaseValidator {
   #socialSchema;
@@ -16,7 +16,7 @@ class TenantConfigValidator extends BaseValidator {
           .lowercase()
           .label('Platform')
           .trim()
-          .valid(...socials)
+          .valid(...Object.values(SocialPlatform))
           // .messages({ 'any.only': '{#label} is not supported' })
           .required(),
         url: Joi.string()

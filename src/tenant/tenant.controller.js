@@ -10,18 +10,14 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  signUp = async (req, res) => {
+  async signUp(req, res) {
     const { value, error } = tenantValidator.validateSignUp(req.body);
     if (error) throw new ValidationError('Validation Error', error);
 
-    const result = await tenantService.signUp(value);
+    const response = await tenantService.signUp(value);
 
-    res.status(HttpCode.CREATED).json({
-      success: true,
-      message: 'Tenant created. Check your email for OTP.',
-      data: result,
-    });
-  };
+    res.status(HttpCode.CREATED).json(response);
+  }
 
   /**
    *
@@ -85,10 +81,7 @@ class TenantController extends BaseController {
     const { value, error } = tenantValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
-    const tenant = await tenantService.updateProfile(
-      req.params.tenantId,
-      value,
-    );
+    const tenant = await tenantService.updateTenant(req.params.tenantId, value);
     const response = this.apiResponse('Tenant updated.', tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -112,14 +105,14 @@ class TenantController extends BaseController {
    * @param {import('express').Response} res
    */
   requestTenantActivation = async (req, res) => {
-    const { value, error } = tenantValidator.validateActivationRequest(
-      req.body,
+    const { value, error } = tenantValidator.validateRequestActivation(
+      req.query,
     );
     if (error) throw new ValidationError('Validation Error', error);
 
     const tenant = await tenantService.requestTenantActivation(
       req.params.tenantId,
-      value,
+      value.otp,
     );
     const response = this.apiResponse('Submitted and awaiting review.', tenant);
 
@@ -210,4 +203,4 @@ class TenantController extends BaseController {
   };
 }
 
-export default new TenantController();
+export default TenantController;

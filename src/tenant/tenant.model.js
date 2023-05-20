@@ -46,11 +46,6 @@ export const tenantSchema = new Schema(
       enum: Object.values(TenantStatus),
       default: TenantStatus.ONBOARDING,
     },
-
-    isActivated: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true, versionKey: false },
 );

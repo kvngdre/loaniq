@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { reviewStatus } from '../utils/common.js';
+import { ReviewStatus } from '../utils/common.js';
 import BaseValidator from './base.validator.js';
 
 class ReviewValidator extends BaseValidator {
@@ -17,7 +17,7 @@ class ReviewValidator extends BaseValidator {
       .invalid('', ' ');
     this.#statusSchema = Joi.string()
       .label('Status')
-      .valid(...Object.values(reviewStatus));
+      .valid(...Object.values(ReviewStatus));
   }
 
   validateCreate = (userId, tenantId, dto) => {

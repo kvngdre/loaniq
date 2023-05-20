@@ -1,5 +1,6 @@
 import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
+import NotFoundError from '../errors/notFound.error.js';
 import ValidationError from '../errors/validation.error.js';
 import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
 import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
@@ -54,16 +55,20 @@ class TenantConfigurationRepository {
     return foundRecord;
   }
 
-  async update(filter, dto, projection = {}) {
+  async update(id, dto, projection = {}) {
     try {
-      const foundRecord = await TenantConfiguration.findOneAndUpdate(
-        filter,
-        dto,
-        {
-          upsert: true,
-          new: true,
-        },
-      ).select(projection);
+      const foundRecord = await TenantConfiguration.findById(id).select(
+        projection,
+      );
+
+      if (!foundRecord) {
+        throw new NotFoundError(
+          'Operation failed. Tenant configuration not found',
+        );
+      }
+
+      foundRecord.set(dto);
+      await foundRecord.save();
 
       return foundRecord;
     } catch (exception) {
@@ -75,6 +80,37 @@ class TenantConfigurationRepository {
       if (exception instanceof Error.ValidationError) {
         const errMsg = this.getValidationErrorMsg(exception);
         throw new ValidationError(errMsg);
+      }
+
+      throw exception;
+    }
+  }
+
+  async findByTenantIdAndUpdate(tenantId, dto, projection = {}) {
+    try {
+      const foundRecord = await TenantConfiguration.findOne({
+        tenant: tenantId,
+      }).select(projection);
+
+      if (!foundRecord) {
+        throw new NotFoundError(
+          'Operation failed. Tenant configuration not found',
+        );
+      }
+
+      foundRecord.set(dto);
+      await foundRecord.save();
+
+      return foundRecord;
+    } catch (exception) {
+      if (exception.message.includes('E11000')) {
+        const field = getDuplicateErrorField(exception);
+        throw new DuplicateError(`${field} already in use.`);
+      }
+
+      if (exception instanceof Error.ValidationError) {
+        const errorMessage = getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;

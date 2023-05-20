@@ -4,31 +4,24 @@ import checkPermission from '../middleware/checkPermission.js';
 import upload from '../middleware/fileUploader.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
-import tenantController from '../tenant/tenant.controller.js';
+import TenantController from '../tenant/tenant.controller.js';
 import tenantConfigRoutes from './tenantConfig.routes.js';
 import walletRoutes from './wallet.routes.js';
 
 const router = Router();
+const tenantController = new TenantController();
 
 router.use('/configurations', tenantConfigRoutes);
 
-router.use('/wallets', walletRoutes);
+router.use('/wallet', walletRoutes);
 
 router.post('/sign-up', tenantController.signUp);
 
 router.post(
-  '/:tenantId/activate',
+  '/:tenantId/request-activation',
   verifyJWT,
   validateObjectId,
-  checkPermission('submitToActivateOwn', 'tenant'),
-  tenantController.requestTenantActivation,
-);
-
-router.post(
-  '/:tenantId/deactivate',
-  verifyJWT,
-  validateObjectId,
-  checkPermission('requestToDeactivateOwn', 'tenant'),
+  checkPermission('requestToActivate', 'tenant'),
   tenantController.requestTenantActivation,
 );
 
@@ -57,14 +50,14 @@ router.get('/forms/:formId', tenantController.getPublicFormData);
 router.get(
   '/self',
   verifyJWT,
-  checkPermission('viewOwn', 'tenant'),
+  checkPermission('view', 'tenant'),
   tenantController.getCurrentTenant,
 );
 
 router.get(
   '/',
   verifyJWT,
-  checkPermission('viewAny', 'tenant'),
+  checkPermission('viewAll', 'tenant'),
   tenantController.getTenants,
 );
 
@@ -72,7 +65,7 @@ router.get(
   '/:tenantId',
   verifyJWT,
   validateObjectId,
-  checkPermission('viewOwn', 'tenant'),
+  checkPermission('view', 'tenant'),
   tenantController.getTenant,
 );
 
@@ -80,7 +73,7 @@ router.get(
   '/:tenantId/deactivate',
   verifyJWT,
   validateObjectId,
-  checkPermission('deactivateAny', 'tenant'),
+  checkPermission('deactivate', 'tenant'),
   tenantController.requestToDeactivateTenant,
 );
 
@@ -88,7 +81,7 @@ router.get(
   '/:tenantId/public-url',
   verifyJWT,
   validateObjectId,
-  checkPermission('generateOwnUrl', 'tenant'),
+  checkPermission('generateUrl', 'tenant'),
   tenantController.generatePublicUrl,
 );
 
@@ -96,15 +89,23 @@ router.get(
   '/:tenantId/reactivate',
   verifyJWT,
   validateObjectId,
-  checkPermission('reactivateOwn', 'tenant'),
+  checkPermission('reactivate', 'tenant'),
   tenantController.reactivateTenant,
+);
+
+router.get(
+  '/:tenantId/request-deactivation',
+  verifyJWT,
+  validateObjectId,
+  checkPermission('requestToDeactivate', 'tenant'),
+  tenantController.requestTenantActivation,
 );
 
 router.patch(
   '/:tenantId',
   verifyJWT,
   validateObjectId,
-  checkPermission('updateOwn', 'tenant'),
+  checkPermission('update', 'tenant'),
   tenantController.updateTenant,
 );
 

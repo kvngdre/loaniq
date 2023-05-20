@@ -1,7 +1,7 @@
 import { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import ValidationError from '../errors/validation.error.js';
-import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
+import getDuplicateFieldFromErrorMessage from '../utils/getDuplicateErrorField.js';
 import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
 import User from './user.model.js';
 
@@ -21,7 +21,7 @@ class UserRepository {
     } catch (exception) {
       // * Handling duplicate field error
       if (exception.message.includes('E11000')) {
-        const field = getDuplicateErrorField(exception);
+        const field = getDuplicateFieldFromErrorMessage(exception);
         throw new DuplicateError(`${field} already in use.`);
       }
 

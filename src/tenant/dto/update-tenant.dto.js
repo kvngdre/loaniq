@@ -1,3 +1,5 @@
+import { CompanyCategory } from '../../utils/common';
+
 /**
  * The result of validating the signup request payload.
  * @typedef UpdateTenantDto
@@ -10,6 +12,6 @@
  * @property {string} state.name State name
  * @property {string} state.lga Local Government Area
  * @property {string} state.geo Geopolitical zone
- * @property {string} [category] The tenant category.
+ * @property {CompanyCategory} [category] The tenant category.
  *
  */

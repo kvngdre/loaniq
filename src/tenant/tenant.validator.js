@@ -2,10 +2,10 @@ import Joi from 'joi';
 import { Types } from 'mongoose';
 import {
   CompanyCategory,
-  socials,
+  SocialPlatform,
   TenantStatus,
-  VALID_ID,
 } from '../utils/common.js';
+import { ValidId } from '../utils/constants.utils.js';
 import BaseValidator from '../validators/base.validator.js';
 class TenantValidator extends BaseValidator {
   #companyNameSchema;
@@ -67,7 +67,9 @@ class TenantValidator extends BaseValidator {
     this.#idTypeSchema = Joi.string()
       .lowercase()
       .label('Id type')
-      .valid(...VALID_ID.filter((id) => id !== 'staff id card'));
+      .valid(
+        ...Object.values(ValidId).filter((value) => value !== ValidId.STAFF_ID),
+      );
 
     this.#socialSchema = Joi.array().items(
       Joi.object({
@@ -75,11 +77,11 @@ class TenantValidator extends BaseValidator {
           .lowercase()
           .label('Platform')
           .trim()
-          .valid(...socials)
+          .valid(...Object.values(SocialPlatform))
           // .messages({ 'any.only': '{#label} is not supported' })
           .required(),
-        url: Joi.string()
-          .label('URL')
+        link: Joi.string()
+          .label('link')
           .trim()
           .custom((value, helpers) => {
             try {
@@ -180,7 +182,7 @@ class TenantValidator extends BaseValidator {
     return { value, error };
   };
 
-  validateActivationRequest = (dto) => {
+  validateRequestActivation = (dto) => {
     const schema = Joi.object({
       logo: Joi.string().label('logo'),
       business_name: this.#companyNameSchema,

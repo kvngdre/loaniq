@@ -2,7 +2,7 @@ import mongoose, { Error } from 'mongoose';
 import DuplicateError from '../errors/duplicate.error.js';
 import NotFoundError from '../errors/notFound.error.js';
 import ValidationError from '../errors/validation.error.js';
-import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
+import getDuplicateFieldFromErrorMessage from '../utils/getDuplicateErrorField.js';
 import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
 import Tenant from './tenant.model.js';
 
@@ -11,7 +11,7 @@ class TenantRepository {
    * Inserts a new tenant document into the database.
    * @param {import('./dto/new-tenant.dto.js').NewTenantDto} newTenantDto
    * @param {mongoose.ClientSession} session Mongo transaction session
-   * @returns {Promise<import('./jsdoc/Tenant.js').Tenant>}
+   * @returns {Promise<import('./jsdoc/Tenant.js').TenantDocument>}
    */
   async insert(newTenantDto, session) {
     try {
@@ -22,7 +22,7 @@ class TenantRepository {
     } catch (exception) {
       // * Handling duplicate field error
       if (exception.message.includes('E11000')) {
-        const field = getDuplicateErrorField(exception);
+        const field = getDuplicateFieldFromErrorMessage(exception);
         throw new DuplicateError(`${field} already in use.`);
       }
 
@@ -104,7 +104,7 @@ class TenantRepository {
    * @param {string} id Tenant object id
    * @returns {Promise<import('./jsdoc/Tenant.js').TenantDocument>}
    */
-  async remove(id) {
+  async delete(id) {
     return await Tenant.findByIdAndDelete(id);
   }
 }

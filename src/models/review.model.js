@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
 import NotFoundError from '../errors/notFound.error.js';
-import { reviewStatus } from '../utils/common.js';
+import { ReviewStatus } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -15,8 +15,8 @@ const reviewSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(reviewStatus),
-      default: reviewStatus.PENDING,
+      enum: Object.values(ReviewStatus),
+      default: ReviewStatus.PENDING,
     },
 
     remark: {

@@ -1,10 +1,21 @@
+import _ from 'lodash';
+import { ValidId } from './constants.utils.js';
+
+/**
+ * The possible values of the tenant category.
+ * @enum {string}
+ */
 export const CompanyCategory = {
   MFB: 'mfb',
   FINANCE_HOUSE: 'finance house',
   MONEY_LENDER: 'money lender',
 };
 
-export const feeTypes = { percent: 'percent', decimal: 'decimal' };
+/**
+ * The possible values of the type of fee.
+ * @enum {string}
+ */
+export const FeeType = { PERCENT: 'percent', DECIMAL: 'decimal' };
 
 export const loanRemarks = [
   'age above threshold',
@@ -41,22 +52,30 @@ export const loanStatus = {
   PENDING: 'pending',
 };
 
-export const reviewStatus = {
+export const ReviewStatus = {
   APPROVED: 'approved',
   DENIED: 'denied',
   PENDING: 'pending',
 };
 
-export const socials = [
-  'website',
-  'facebook',
-  'twitter',
-  'instagram',
-  'youtube',
-  'linkedin',
-  'tictok',
-];
+/**
+ * The possible values of the social platforms.
+ * @enum {string}
+ */
+export const SocialPlatform = {
+  WEBSITE: 'website',
+  FACEBOOK: 'facebook',
+  TWITTER: 'twitter',
+  INSTAGRAM: 'instagram',
+  YOUTUBE: 'youtube',
+  LINKEDIN: 'linkedin',
+  TICTOK: 'tictok',
+};
 
+/**
+ * The possible values of the tenant status.
+ * @enum {string}
+ */
 export const TenantStatus = {
   ACTIVE: 'active',
   AWAITING_ACTIVATION: 'awaiting activation',
@@ -85,18 +104,13 @@ export const txnTypes = {
   DEBIT: 'debit',
 };
 
-export const VALID_ID = [
-  'voters card',
-  'international passport',
-  'staff id card',
-  'national id card',
-  'drivers license',
-];
-
-export const tenantDocumentationTypes = [
-  'certificate of incorporation',
-  'tax documentation',
-  'money lender license',
-  'mfb license',
-  ...VALID_ID,
-];
+/**
+ * @enum {string}
+ */
+export const TenantDocumentationTypes = {
+  CAC_DOC: 'certificate of incorporation',
+  TAX_REG: 'tax registration',
+  MONEY_LENDER_LICENSE: 'money lender license',
+  MFB_LICENSE: 'mfb license',
+  ..._.omit(ValidId, ValidId.STAFF_ID),
+};

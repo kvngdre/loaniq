@@ -5,6 +5,12 @@ import getDuplicateErrorField from '../utils/getDuplicateErrorField.js';
 import getValidationErrorMessage from '../utils/getValidationErrorMessage.js';
 import Role from './role.model.js';
 
+function getDuplicateRole(error) {
+  const role = Object.value(error.keyPattern)[0];
+
+  // Capitalize the first letter and remove underscore if any.
+  return role.charAt(0).toUpperCase().concat(field.slice(1)).replace('_', ' ');
+}
 class RoleRepository {
   async insert(dto) {
     try {
@@ -14,7 +20,8 @@ class RoleRepository {
       return newReview;
     } catch (exception) {
       if (exception.message.includes('E11000')) {
-        throw new DuplicateError(`User role already exists`);
+        const role = getDuplicateRole(exception);
+        throw new DuplicateError(`User role '${role}' already exists`);
       }
 
       if (exception instanceof Error.ValidationError) {

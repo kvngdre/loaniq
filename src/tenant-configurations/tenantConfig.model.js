@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
-import { VALID_ID, feeTypes } from '../utils/common.js';
+import { FeeType, TenantDocumentationTypes } from '../utils/common.js';
+import { ValidId } from '../utils/constants.utils.js';
 
 const tenantConfigurationSchema = new Schema(
   {
@@ -14,7 +15,11 @@ const tenantConfigurationSchema = new Schema(
       type: [
         {
           name: { type: String, required: true },
-          type: { type: String, enum: VALID_ID, required: true },
+          type: {
+            type: String,
+            enum: Object.values(TenantDocumentationTypes),
+            required: true,
+          },
           url: { type: String, required: true },
           expires: { type: Date, default: null },
         },
@@ -23,7 +28,7 @@ const tenantConfigurationSchema = new Schema(
       select: false,
     },
 
-    resetPwdFrequency: {
+    passwordResetFrequency: {
       // In days
       type: Number,
       default: null,
@@ -77,7 +82,7 @@ const tenantConfigurationSchema = new Schema(
 
         type: {
           type: String,
-          enum: Object.values(feeTypes),
+          enum: Object.values(FeeType),
           required: true,
         },
 
@@ -93,7 +98,7 @@ const tenantConfigurationSchema = new Schema(
       type: [
         {
           platform: { type: String, trim: true, requird: true },
-          url: { type: String, trim: true, required: true },
+          link: { type: String, trim: true, required: true },
         },
       ],
     },

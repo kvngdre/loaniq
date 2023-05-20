@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import NotFoundError from '../errors/notFound.error.js';
-import { feeTypes } from '../utils/common.js';
+import { FeeType } from '../utils/common.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -70,7 +70,7 @@ const segConfigSchema = new Schema(
 
         type: {
           type: String,
-          enum: Object.values(feeTypes),
+          enum: Object.values(FeeType),
           required: true,
         },
 
