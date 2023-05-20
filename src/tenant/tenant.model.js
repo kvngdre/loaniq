@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { TenantStatus, VALID_ID, companyCategory } from '../utils/common.js';
+import { TenantStatus, companyCategory } from '../utils/common.js';
 
 const tenantSchema = new Schema(
   {
@@ -8,11 +8,9 @@ const tenantSchema = new Schema(
       default: null,
     },
 
-    business_name: {
+    company_name: {
       type: String,
-      unique: true,
-      sparse: true,
-      // required: true
+      required: true,
     },
 
     address: {
@@ -23,17 +21,16 @@ const tenantSchema = new Schema(
 
     state: {
       type: {
-        code: String,
-        name: String,
-        lga: String,
-        geo: String,
+        code: { type: String, default: null },
+        name: { type: String, default: null },
+        lga: { type: String, default: null },
+        geo: { type: String, default: null },
       },
     },
 
     cac_number: {
       type: String,
-      unique: true,
-      sparse: true,
+      default: null,
     },
 
     category: {
@@ -47,27 +44,9 @@ const tenantSchema = new Schema(
       default: TenantStatus.ONBOARDING,
     },
 
-    activated: {
+    isActivated: {
       type: Boolean,
       default: false,
-    },
-
-    configurations: {
-      type: Schema.Types.ObjectId,
-      ref: 'Tenant-Configuration',
-    },
-
-    documentation: {
-      type: [
-        {
-          name: { type: String, required: true },
-          type: { type: String, enum: VALID_ID },
-          url: { type: String, required: true },
-          expires: { type: Date, default: null },
-        },
-      ],
-      default: null,
-      select: false,
     },
   },
   { timestamps: true, versionKey: false },

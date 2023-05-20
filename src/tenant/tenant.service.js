@@ -1,72 +1,76 @@
 /* eslint-disable camelcase */
-import fs from 'fs';
+import bcrypt from 'bcryptjs';
 import { startSession } from 'mongoose';
-import transaction from 'mongoose-trx';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import RoleDAO from '../daos/role.dao.js';
-import TenantConfigDAO from '../daos/tenantConfig.dao.js';
-import UserRepository from '../daos/user.dao.js';
-import UserConfigDAO from '../daos/userConfig.dao.js';
 import WalletDAO from '../daos/wallet.dao.js';
 import DependencyError from '../errors/dependency.error.js';
 import DuplicateError from '../errors/duplicate.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
+import RoleRepository from '../role/role.repository.js';
 import EmailService from '../services/email.service.js';
+import TenantConfigurationRepository from '../tenant-configurations/tenantConfig.repository.js';
+import UserRepository from '../user/user.repository.js';
 import { TenantStatus } from '../utils/common.js';
-import driverUploader from '../utils/driveUploader.js';
 import generateOTP from '../utils/generateOTP.js';
-import logger from '../utils/logger.js';
 import randomString from '../utils/randomString.js';
 import TenantRepository from './tenant.repository.js';
 
 const tenantRepository = new TenantRepository();
+const tenantConfigurationRepository = new TenantConfigurationRepository();
+const userRepository = new UserRepository();
+const roleRepository = new RoleRepository();
 
 class TenantService {
   /**
    * Creates a new tenant account and the admin user.
-   * @param {import('./dto/signup.dto.js').SignupDto} signupDto
+   * @param {import('./dto/signUp.dto.js').SignUpDto} signUpDto
    * @returns
    */
-  async createTenant(signupDto) {
-    const { newTenantDto, newUserDto } = signupDto;
-    newUserDto.configurations.otp = generateOTP(8);
+  async createTenant(signUpDto) {
+    const { newTenantDto, newUserDto } = signUpDto;
+    const session = await startSession();
 
-    const result = await transaction(async (session) => {
-      const [newTenant, newUser] = await Promise.all([
-        tenantRepository.insert(newTenantDto, session),
-        UserRepository.insert(newUserDto, session),
+    try {
+      // ! Hashing user password
+      newUserDto.configurations.password = bcrypt.hashSync(
+        newUserDto.configurations.password,
+      );
+      newUserDto.configurations.otp = generateOTP(8);
 
-        TenantConfigDAO.insert(
-          { _id: newTenantDto.configurations, tenantId: newTenantDto._id },
-          session,
-        ),
+      await session.withTransaction(async () => {
+        await Promise.all([
+          tenantRepository.insert(newTenantDto, session),
+          tenantConfigurationRepository.insert(
+            { _id: newTenantDto.configurations, tenant: newTenantDto._id },
+            session,
+          ),
+          userRepository.insert(newUserDto, session),
 
-        // Cloning default admin user role for new tenant.
-        RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
-          doc._id = user.role;
-          doc.tenantId = user.tenantId;
-          doc.isDefault = false;
-          doc.isNew = true;
+          // * Cloning the default admin role and permissions.
+          roleRepository
+            .findOne({ name: 'default-admin', isDefault: true })
+            .then((doc) => {
+              if (!doc) throw new Error('Default admin user role not found');
 
-          doc.save({ session });
-        }),
-      ]);
+              doc._id = newUserDto.role;
+              doc.isDefault = false;
+              doc.name = 'admin';
+              doc.createdAt = new Date();
+              doc.updatedAt = new Date();
+              doc.isNew = true;
+              doc.save({ session });
+            }),
+        ]);
 
-      // await EmailService.send({
-      //   to: user.email,
-      //   templateName: 'new-tenant-user',
-      //   context: { otp: user.otp.pin },
-      // });
-
-      // newUser.purgeSensitiveData();
-
-      return {
-        tenant: newTenant.toObject(),
-        user: newUser.toObject(),
-      };
-    });
-    return result;
+        // const { error } = await EmailService.send({
+        //   to: newUserDto.email,
+        //   templateName: 'new-tenant-user',
+        //   context: { otp: newUserDto.configurations.otp.pin, expiresIn: 10 },
+        // });
+        // if (error) throw new DependencyError('Error Sending OTP to Email');
+      });
+    } finally {
+      await session.endSession();
+    }
   }
 
   async onBoardTenant(tenantId, onBoardTenantDTO) {
@@ -79,7 +83,7 @@ class TenantService {
   }
 
   async getTenants(filters) {
-    const foundTenants = await TenantRepository.find(filters);
+    const foundTenants = await tenantRepository.find(filters);
     const count = Intl.NumberFormat('en-US').format(foundTenants.length);
 
     return [count, foundTenants];
@@ -214,7 +218,10 @@ class TenantService {
   async generateFormId(tenantId) {
     try {
       const formId = randomString(5);
-      const updatedConfig = await TenantConfigDAO.update(tenantId, { formId });
+      const updatedConfig = await TenantConfigurationRepository.update(
+        tenantId,
+        { formId },
+      );
 
       return updatedConfig;
     } catch (error) {
@@ -223,9 +230,10 @@ class TenantService {
   }
 
   async getFormData(formId) {
-    const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
-      formId,
-    });
+    const { form_theme, socials, tenantId } =
+      await TenantConfigurationRepository.findOne({
+        formId,
+      });
 
     return {
       logo: tenantId.logo,
@@ -234,49 +242,6 @@ class TenantService {
       socials,
       theme: form_theme,
     };
-  }
-
-  async uploadDocs(tenantId, uploadFiles) {
-    const foundTenant = await TenantRepository.findById(tenantId);
-    const folderName = `t-${tenantId.toString()}`;
-
-    const [foundFolder] = await driverUploader.findFolder(folderName);
-
-    // Selecting folder
-    const folderId = foundFolder?.id
-      ? foundFolder.id
-      : await driverUploader.createFolder(folderName);
-
-    logger.debug(folderId);
-
-    for (const key of Object.keys(uploadFiles)) {
-      const file = uploadFiles[key][0];
-
-      const name = file.originalname;
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const filePath = path.resolve(__dirname, `../../${file.path}`);
-      const mimeType = file.mimetype;
-
-      const response = await driverUploader.createFile(
-        name,
-        filePath,
-        folderId,
-        mimeType,
-      );
-      logger.debug(response.data.id);
-
-      if (key === 'logo') {
-        foundTenant.set({
-          logo: response.data.id,
-        });
-      }
-
-      // ! Delete uploaded file from file system
-      fs.unlinkSync(filePath);
-    }
-
-    await foundTenant.save();
-    return foundTenant;
   }
 }
 
