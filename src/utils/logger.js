@@ -1,11 +1,7 @@
-import { addColors, format, createLogger, transports } from 'winston';
-const { align, cli, colorize, combine, timestamp, printf } = format;
+import { addColors, createLogger, format, transports } from 'winston';
+import isDevEnvironment from './isDevEnvironment.js';
 
-function isDevEnvironment() {
-  if (process.env.NODE_ENV === 'development') return true;
-
-  return false;
-}
+const { align, cli, colorize, combine, printf, timestamp } = format;
 
 const custom = {
   colors: {
@@ -13,8 +9,8 @@ const custom = {
     error: 'red',
     warn: 'yellow',
     info: 'green',
-    debug: 'cyan',
-    silly: 'magenta',
+    debug: 'magenta',
+    silly: 'cyan',
   },
   levels: { fatal: 0, error: 1, warn: 2, info: 3, debug: 4, silly: 5 },
 };

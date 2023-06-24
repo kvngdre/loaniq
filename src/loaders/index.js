@@ -1,10 +1,9 @@
-import dbLoader from './db.loader.js';
-import expressLoader from './express.loader.js';
+import { initializeApp } from './app.loader.js';
+import { connectDatabase } from './db.loader.js';
 
 export default {
   init: async ({ expressApp = null, expressRoutes = null }) => {
-    await dbLoader();
-
-    await expressLoader(expressApp, expressRoutes);
+    await connectDatabase();
+    await initializeApp(expressApp, expressRoutes);
   },
 };

@@ -37,8 +37,8 @@ class TenantRepository {
 
   /**
    * Returns all tenant documents or all documents that match filter if any.
-   * @param {Partial<import('./jsdoc/Tenant.js').Tenant>} filter Tenant fields filter object
-   * @param {Partial<import('./jsdoc/Tenant.js').Tenant>} projection Object containing field selection.
+   * @param {Partial<import('./jsdoc/Tenant.js').Tenant>} [filter] Tenant fields filter object
+   * @param {Partial<import('./jsdoc/Tenant.js').Tenant>} [projection] Object containing field selection.
    * @returns {Promise<Array.<import('./jsdoc/Tenant.js').TenantDocument>}
    */
   async find(filter = {}, projection = {}) {

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import authRouter from './auth.routes.js';
 import bankRouter from './bank.routes.js';
+import clientRouter from './client.routes.js';
 import customerRouter from './customer.routes.js';
 import dashboardRouter from './dashboard.routes.js';
 import emailTemplateRouter from './email-template.routes.js';
 import loanRouter from './loan.routes.js';
-import clientRouter from './client.routes.js';
 import permissionRouter from './permissions.routes.js';
 import reviewRouter from './review.routes.js';
 import roleRouter from './role.routes.js';
@@ -18,9 +18,13 @@ import userRoutes from './user.routes.js';
 import walletRoutes from './wallet.routes.js';
 import webhookRouter from './webhook.routes.js';
 
-const router = Router();
-
+/**
+ *
+ *@type {import('../loaders/jsdoc/getAppRoutes').getAppRoutes}
+ */
 export default () => {
+  const router = Router();
+
   router.use('/auth', authRouter);
   router.use('/banks', bankRouter);
   router.use('/clients', clientRouter);

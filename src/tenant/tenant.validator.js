@@ -115,7 +115,7 @@ class TenantValidator extends BaseValidator {
   /**
    * Validates the sign up request payload and appends default values.
    * @param {*} dto
-   * @returns {{ value: import('./dto/signUp.dto.js').SignUpDto, error: (Object.<string, *>|undefined)}}
+   * @returns {{ value: import('./dto/sign-up.dto.js').SignUpDto, error: (Object.<string, string>|undefined)}}
    */
   validateSignUp = (dto) => {
     const tenantId = new Types.ObjectId();

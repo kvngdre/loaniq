@@ -1,9 +1,9 @@
-import './loaders/process.js';
-import 'express-async-errors';
 import express from 'express';
+import 'express-async-errors';
 import http from 'http';
 import config from './config/index.js';
 import loaders from './loaders/index.js';
+import './loaders/process.js';
 import routes from './routers/index.js';
 import logger from './utils/logger.js';
 
@@ -21,7 +21,10 @@ async function startServer() {
       logger.info(`Server listening on port: ${port} 🚀`);
     });
   } catch (error) {
-    logger.fatal(error.message, error.stack);
+    /**@type {Error} */
+    const err = error;
+
+    logger.fatal(err.message, err.stack);
   }
 }
 console.log(randomString());

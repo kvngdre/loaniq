@@ -11,9 +11,20 @@ import errorMiddleware from '../middleware/error.middleware.js';
 
 const { api } = config;
 
-export default async function expressLoader(app, routes) {
-  if (!app || !routes) {
-    throw new Error('Application failed to initialize with errors in argument');
+/**
+ * @function initializeApp
+ * @description A function that loads the express app and applies the app routes.
+ * @summary Loads and configures an express app.
+ * @param {import('express').Application} app The express app to load.
+ * @param {import('./jsdoc/getAppRoutes.js').getAppRoutes} getAppRoutes A function that returns an express router with the app routes.
+ * @throws {Error} If app or getAppRoutes are not provided.
+ * @exports initializeApp
+ */
+export async function initializeApp(app, getAppRoutes) {
+  if (!app || !getAppRoutes) {
+    throw new Error(
+      'Application failed to initialize with errors in argument.',
+    );
   }
 
   app.use(credentials);
@@ -27,11 +38,11 @@ export default async function expressLoader(app, routes) {
   app.use(cookieParser());
 
   // Load API routes
-  app.use(api.prefix + api.version, routes());
+  app.use(`/${api.prefix}/${api.version}`, routes());
 
   // Catch and handle 404
   app.use((req, res, next) => {
-    const err = new NotFoundError('Resource not found');
+    const err = new NotFoundError('Resource Not Found');
     next(err);
   });
 
