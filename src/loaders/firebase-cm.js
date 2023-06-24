@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app'
-import { getMessaging } from 'firebase/messaging'
+import { initializeApp } from 'firebase/app';
+import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAknfWw5vRgyHpvNNTUEYrSwXn_2IeKAto',
@@ -8,12 +8,12 @@ const firebaseConfig = {
   storageBucket: 'apexxia-fac2f.appspot.com',
   messagingSenderId: '370754556955',
   appId: '1:370754556955:web:2372eed40c4edd752f94be',
-  measurementId: 'G-QLJ1K0SSEH'
-}
+  measurementId: 'G-QLJ1K0SSEH',
+};
 
 // Initialize Firebase
 export default {
   firebaseConfig,
   initializeApp,
-  getMessaging
-}
+  getMessaging,
+};

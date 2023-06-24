@@ -1,36 +1,36 @@
-import BankDAO from '../daos/bank.dao.js'
+import BankDAO from '../daos/bank.dao.js';
 
 class BankService {
-  static async create (dto) {
-    const newBank = await BankDAO.insert(dto)
+  static async create(dto) {
+    const newBank = await BankDAO.insert(dto);
 
-    return newBank
+    return newBank;
   }
 
-  static async getBanks (filter) {
-    const foundBanks = await BankDAO.find(filter)
-    const count = Intl.NumberFormat('en-US').format(foundBanks.length)
+  static async getBanks(filter) {
+    const foundBanks = await BankDAO.find(filter);
+    const count = Intl.NumberFormat('en-US').format(foundBanks.length);
 
-    return [count, foundBanks]
+    return [count, foundBanks];
   }
 
-  static async getBank (bankId) {
-    const foundBank = await BankDAO.findById(bankId)
+  static async getBank(bankId) {
+    const foundBank = await BankDAO.findById(bankId);
 
-    return foundBank
+    return foundBank;
   }
 
-  static async updateBank (bankId, dto) {
-    const updatedBank = await BankDAO.update(bankId, dto)
+  static async updateBank(bankId, dto) {
+    const updatedBank = await BankDAO.update(bankId, dto);
 
-    return updatedBank
+    return updatedBank;
   }
 
-  static async deleteBank (bankId) {
-    const deletedBank = await BankDAO.remove(bankId)
+  static async deleteBank(bankId) {
+    const deletedBank = await BankDAO.remove(bankId);
 
-    return deletedBank
+    return deletedBank;
   }
 }
 
-export default BankService
+export default BankService;

@@ -3,12 +3,12 @@
  * @param {string} dob Date of birth in ISO 8601 format.
  * @returns {number}
  */
-export default function computeAge (dob) {
-  if (!dob) return null
+export default function computeAge(dob) {
+  if (!dob) return null;
 
-  const epochYear = 1970
-  const diff = Date.now() - new Date(dob).getTime()
-  const age = new Date(diff).getUTCFullYear() - epochYear
+  const epochYear = 1970;
+  const diff = Date.now() - new Date(dob).getTime();
+  const age = new Date(diff).getUTCFullYear() - epochYear;
 
-  return age
+  return age;
 }

@@ -1,44 +1,44 @@
 // import { requiresAuth } from 'express-openid-connect'
-import { Router } from 'express'
-import checkPermission from '../middleware/checkPermission.js'
-import tenantConfigRoutes from './tenantConfig.routes.js'
-import TenantController from '../controllers/tenant.controller.js'
-import upload from '../middleware/fileUploader.js'
-import validateObjectId from '../middleware/validateObjectId.js'
-import verifyJWT from '../middleware/verifyJWT.js'
-import walletRoutes from './wallet.routes.js'
+import { Router } from 'express';
+import checkPermission from '../middleware/checkPermission.js';
+import tenantConfigRoutes from './tenantConfig.routes.js';
+import TenantController from '../controllers/tenant.controller.js';
+import upload from '../middleware/fileUploader.js';
+import validateObjectId from '../middleware/validateObjectId.js';
+import verifyJWT from '../middleware/verifyJWT.js';
+import walletRoutes from './wallet.routes.js';
 
-const router = Router()
+const router = Router();
 
-router.use('/configurations', tenantConfigRoutes)
+router.use('/configurations', tenantConfigRoutes);
 
-router.use('/wallets', walletRoutes)
+router.use('/wallets', walletRoutes);
 
-router.post('/sign-up', TenantController.signUp)
+router.post('/sign-up', TenantController.signUp);
 
 router.post(
   '/:tenantId/activate',
   verifyJWT,
   validateObjectId,
   checkPermission('submitToActivateOwn', 'tenant'),
-  TenantController.requestTenantActivavtion
-)
+  TenantController.requestTenantActivavtion,
+);
 
 router.post(
   '/:tenantId/deactivate',
   verifyJWT,
   validateObjectId,
   checkPermission('requestToDeactivateOwn', 'tenant'),
-  TenantController.requestTenantActivavtion
-)
+  TenantController.requestTenantActivavtion,
+);
 
 router.post(
   '/:tenantId/onboard',
   verifyJWT,
   validateObjectId,
   checkPermission('onBoardOwn', 'tenant'),
-  TenantController.onBoardTenant
-)
+  TenantController.onBoardTenant,
+);
 
 router.post(
   '/:tenantId/uploads',
@@ -47,73 +47,73 @@ router.post(
   checkPermission('uploadDocs', 'tenant'),
   upload.fields([
     { name: 'logo', maxCount: 1 },
-    { name: 'documents', maxCount: 5 }
+    { name: 'documents', maxCount: 5 },
   ]),
-  TenantController.uploadFiles
-)
+  TenantController.uploadFiles,
+);
 
-router.get('/forms/:formId', TenantController.getPublicFormData)
+router.get('/forms/:formId', TenantController.getPublicFormData);
 
 router.get(
   '/self',
   verifyJWT,
   checkPermission('viewOwn', 'tenant'),
-  TenantController.getCurrentTenant
-)
+  TenantController.getCurrentTenant,
+);
 
 router.get(
   '/',
   verifyJWT,
   checkPermission('viewAny', 'tenant'),
-  TenantController.getTenants
-)
+  TenantController.getTenants,
+);
 
 router.get(
   '/:tenantId',
   verifyJWT,
   validateObjectId,
   checkPermission('viewOwn', 'tenant'),
-  TenantController.getTenant
-)
+  TenantController.getTenant,
+);
 
 router.get(
   '/:tenantId/deactivate',
   verifyJWT,
   validateObjectId,
   checkPermission('deactivateAny', 'tenant'),
-  TenantController.requestToDeactivateTenant
-)
+  TenantController.requestToDeactivateTenant,
+);
 
 router.get(
   '/:tenantId/public-url',
   verifyJWT,
   validateObjectId,
   checkPermission('generateOwnUrl', 'tenant'),
-  TenantController.generatePublicUrl
-)
+  TenantController.generatePublicUrl,
+);
 
 router.get(
   '/:tenantId/reactivate',
   verifyJWT,
   validateObjectId,
   checkPermission('reactivateOwn', 'tenant'),
-  TenantController.reactivateTenant
-)
+  TenantController.reactivateTenant,
+);
 
 router.patch(
   '/:tenantId',
   verifyJWT,
   validateObjectId,
   checkPermission('updateOwn', 'tenant'),
-  TenantController.updateTenant
-)
+  TenantController.updateTenant,
+);
 
 router.delete(
   '/:tenantId',
   verifyJWT,
   validateObjectId,
   checkPermission('delete', 'tenant'),
-  TenantController.deleteTenant
-)
+  TenantController.deleteTenant,
+);
 
-export default router
+export default router;

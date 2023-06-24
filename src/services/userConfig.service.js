@@ -1,36 +1,36 @@
-import UserConfigDAO from '../daos/userConfig.dao.js'
+import UserConfigDAO from '../daos/userConfig.dao.js';
 
 class UserConfigService {
-  static async createConfig (newUserConfigDTO, trx) {
-    const newConfig = await UserConfigDAO.insert(newUserConfigDTO, trx)
+  static async createConfig(newUserConfigDTO, trx) {
+    const newConfig = await UserConfigDAO.insert(newUserConfigDTO, trx);
 
-    return newConfig
+    return newConfig;
   }
 
-  static async getConfigs (filter) {
-    const foundConfigs = await UserConfigDAO.find(filter)
-    const count = Intl.NumberFormat('en-US').format(foundConfigs.length)
+  static async getConfigs(filter) {
+    const foundConfigs = await UserConfigDAO.find(filter);
+    const count = Intl.NumberFormat('en-US').format(foundConfigs.length);
 
-    return { count, foundConfigs }
+    return { count, foundConfigs };
   }
 
-  static async getConfig (filter) {
-    const foundConfig = await UserConfigDAO.findOne(filter)
+  static async getConfig(filter) {
+    const foundConfig = await UserConfigDAO.findOne(filter);
 
-    return foundConfig
+    return foundConfig;
   }
 
-  static async updateConfig (userId, dto) {
-    const updatedConfig = await UserConfigDAO.update({ userId }, dto)
+  static async updateConfig(userId, dto) {
+    const updatedConfig = await UserConfigDAO.update({ userId }, dto);
 
-    return updatedConfig
+    return updatedConfig;
   }
 
-  static async deleteConfig (userId) {
-    const deletedConfig = await UserConfigDAO.remove({ userId })
+  static async deleteConfig(userId) {
+    const deletedConfig = await UserConfigDAO.remove({ userId });
 
-    return deletedConfig
+    return deletedConfig;
   }
 }
 
-export default UserConfigService
+export default UserConfigService;

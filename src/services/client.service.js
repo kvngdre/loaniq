@@ -1,35 +1,42 @@
-import { generateAccessToken, generateRefreshToken } from '../utils/generateJWT.js'
-import { status } from '../utils/common.js'
-import ClientDAO from '../daos/client.dao.js'
-import UnauthorizedError from '../errors/UnauthorizedError.js'
-import generateSession from '../utils/generateSession.js'
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from '../utils/generateJWT.js';
+import { status } from '../utils/common.js';
+import ClientDAO from '../daos/client.dao.js';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
+import generateSession from '../utils/generateSession.js';
 
 class ClientService {
   static create = async (newClientDTO) => {
-    const newClient = await ClientDAO.insert(newClientDTO)
+    const newClient = await ClientDAO.insert(newClientDTO);
 
-    return newClient
-  }
+    return newClient;
+  };
 
   static register = async (newClientSignupDTO) => {
-    const newClient = await ClientDAO.insert(newClientSignupDTO)
+    const newClient = await ClientDAO.insert(newClientSignupDTO);
 
-    newClient.purgeSensitiveData()
+    newClient.purgeSensitiveData();
 
-    return newClient
-  }
+    return newClient;
+  };
 
-  static verifyClient = async ({ phoneOrStaffId, otp }, userAgent, clientIp) => {
+  static verifyClient = async (
+    { phoneOrStaffId, otp },
+    userAgent,
+    clientIp,
+  ) => {
     const foundClient = await ClientDAO.findOne({
-      $or: [{ phone_number: phoneOrStaffId }, { staff_id: phoneOrStaffId }]
-    })
+      $or: [{ phone_number: phoneOrStaffId }, { staff_id: phoneOrStaffId }],
+    });
 
-    const { isValid, reason } = foundClient.validateOTP(otp)
-    if (!isValid) throw new UnauthorizedError(reason)
+    const { isValid, reason } = foundClient.validateOTP(otp);
+    if (!isValid) throw new UnauthorizedError(reason);
 
-    const accessToken = generateAccessToken({ id: foundClient._id })
-    const refreshToken = generateRefreshToken({ id: foundClient._id })
-    const newSession = generateSession(refreshToken, userAgent, clientIp)
+    const accessToken = generateAccessToken({ id: foundClient._id });
+    const refreshToken = generateRefreshToken({ id: foundClient._id });
+    const newSession = generateSession(refreshToken, userAgent, clientIp);
 
     foundClient.set({
       isPhoneVerified: true,
@@ -38,13 +45,13 @@ class ClientService {
       'otp.expiresIn': null,
       last_login_time: new Date(),
       resetPwd: false,
-      session: newSession
-    })
+      session: newSession,
+    });
 
-    foundClient.purgeSensitiveData()
+    foundClient.purgeSensitiveData();
 
-    return { accessToken, refreshToken, foundClient }
-  }
+    return { accessToken, refreshToken, foundClient };
+  };
 
   static getClients = async (
     filter,
@@ -52,20 +59,20 @@ class ClientService {
       password: 0,
       salt: 0,
       otp: 0,
-      resetPwd: 0
-    }
+      resetPwd: 0,
+    },
   ) => {
-    const foundClients = await ClientDAO.find(filter, projection)
-    const count = Intl.NumberFormat('en-US').format(foundClients.length)
+    const foundClients = await ClientDAO.find(filter, projection);
+    const count = Intl.NumberFormat('en-US').format(foundClients.length);
 
-    return { count, foundClients }
-  }
+    return { count, foundClients };
+  };
 
   static getClientById = async (clientId) => {
-    const foundClient = await ClientDAO.findById(clientId)
+    const foundClient = await ClientDAO.findById(clientId);
 
-    return foundClient
-  }
+    return foundClient;
+  };
 }
 
-export default ClientService
+export default ClientService;

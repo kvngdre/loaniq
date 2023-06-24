@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose'
-import NotFoundError from '../errors/NotFoundError.js'
+import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const bankSchema = new Schema(
   {
@@ -10,7 +10,7 @@ const bankSchema = new Schema(
       unique: true,
       trim: true,
       maxLength: 255,
-      required: true
+      required: true,
     },
 
     code: {
@@ -19,20 +19,20 @@ const bankSchema = new Schema(
       maxLength: 6,
       trim: true,
       unique: true,
-      required: true
-    }
+      required: true,
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
-bankSchema.post(/^find/, function (doc) {
+bankSchema.post(/^find/, (doc) => {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Banks not found.')
+    throw new NotFoundError('Banks not found.');
   }
 
-  if (!doc) throw new NotFoundError('Bank not found.')
-})
+  if (!doc) throw new NotFoundError('Bank not found.');
+});
 
-const Bank = model('Bank', bankSchema)
+const Bank = model('Bank', bankSchema);
 
-export default Bank
+export default Bank;

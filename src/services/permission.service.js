@@ -1,36 +1,39 @@
-import PermissionDAO from '../daos/permission.dao.js'
+import PermissionDAO from '../daos/permission.dao.js';
 
 class PermissionService {
-  static async createPermission (newPermissionDTO) {
-    const newPermission = await PermissionDAO.insert(newPermissionDTO)
+  static async createPermission(newPermissionDTO) {
+    const newPermission = await PermissionDAO.insert(newPermissionDTO);
 
-    return newPermission
+    return newPermission;
   }
 
-  static async getPermissions () {
-    const foundPermissions = await PermissionDAO.find()
-    const count = Intl.NumberFormat('en-US').format(foundPermissions.length)
+  static async getPermissions() {
+    const foundPermissions = await PermissionDAO.find();
+    const count = Intl.NumberFormat('en-US').format(foundPermissions.length);
 
-    return { count, foundPermissions }
+    return { count, foundPermissions };
   }
 
-  static async getPermission (permissionId) {
-    const foundPermission = await PermissionDAO.findById(permissionId)
+  static async getPermission(permissionId) {
+    const foundPermission = await PermissionDAO.findById(permissionId);
 
-    return foundPermission
+    return foundPermission;
   }
 
-  static async updatePermission (permissionId, updatePermissionDTO) {
-    const updatedPermission = await PermissionDAO.update(permissionId, updatePermissionDTO)
+  static async updatePermission(permissionId, updatePermissionDTO) {
+    const updatedPermission = await PermissionDAO.update(
+      permissionId,
+      updatePermissionDTO,
+    );
 
-    return updatedPermission
+    return updatedPermission;
   }
 
-  static async deletePermission (permissionId) {
-    const deletedPermission = await PermissionDAO.remove(permissionId)
+  static async deletePermission(permissionId) {
+    const deletedPermission = await PermissionDAO.remove(permissionId);
 
-    return deletedPermission
+    return deletedPermission;
   }
 }
 
-export default PermissionService
+export default PermissionService;

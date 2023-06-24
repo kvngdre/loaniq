@@ -1,12 +1,12 @@
 class FileUploadError extends Error {
-  constructor (code, message) {
-    super(message)
+  constructor(code, message) {
+    super(message);
 
-    this.code = code
-    this.name = this.constructor.name
+    this.code = code;
+    this.name = this.constructor.name;
 
-    Error?.captureStackTrace(this, this.constructor)
+    Error?.captureStackTrace(this, this.constructor);
   }
 }
 
-export default FileUploadError
+export default FileUploadError;

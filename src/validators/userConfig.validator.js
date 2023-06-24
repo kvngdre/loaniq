@@ -1,46 +1,46 @@
-import BaseValidator from './base.validator.js'
-import Joi from 'joi'
+import Joi from 'joi';
+import BaseValidator from './base.validator.js';
 
 class UserConfigValidator extends BaseValidator {
-  #timezoneSchema
+  #timezoneSchema;
 
-  constructor () {
-    super()
+  constructor() {
+    super();
 
-    const supportedTimeZones = Intl.supportedValuesOf('timeZone')
+    const supportedTimeZones = Intl.supportedValuesOf('timeZone');
     this.#timezoneSchema = Joi.string()
       .label('Timezone')
       .valid(...supportedTimeZones)
       .messages({
-        'any.only': '{#label} is not supported'
-      })
+        'any.only': '{#label} is not supported',
+      });
   }
 
   validateCreate = (dto) => {
     const schema = Joi.object({
       tenantId: this._objectIdSchema.label('Tenant id').required(),
       userId: this._objectIdSchema.label('User id').required(),
-      timezone: this.#timezoneSchema
-    })
+      timezone: this.#timezoneSchema,
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
       tenantId: this._objectIdSchema.label('Tenant id'),
       userId: this._objectIdSchema.label('User id'),
-      timezone: this.#timezoneSchema
-    })
+      timezone: this.#timezoneSchema,
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new UserConfigValidator()
+export default new UserConfigValidator();

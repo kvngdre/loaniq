@@ -1,6 +1,6 @@
-import { httpCodes } from '../utils/common.js'
-import { Types } from 'mongoose'
-import ErrorResponse from '../utils/ErrorResponse.js'
+import { Types } from 'mongoose';
+import { httpCodes } from '../utils/common.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
 
 export default function (req, res, next) {
   for (const key in req.params) {
@@ -13,11 +13,11 @@ export default function (req, res, next) {
           name: 'Validation Error',
           message: `Invalid ${key
             .replace(/([a-z])([A-Z])/, '$1 $2')
-            .toLowerCase()}`
-        })
-      )
+            .toLowerCase()}`,
+        }),
+      );
     }
   }
 
-  next()
+  next();
 }

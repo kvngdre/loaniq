@@ -1,70 +1,78 @@
-import { DateTime } from 'luxon'
-import { relationships, validIds } from '../utils/common.js'
-import BaseValidator from './base.validator.js'
-import Joi from 'joi'
+import { DateTime } from 'luxon';
+import Joi from 'joi';
+import { relationships, validIds } from '../utils/common.js';
+import BaseValidator from './base.validator.js';
 
 const isOver18 = (dob, helper) => {
-  const dateEighteenYearsBack = DateTime.now()
-    .minus({ years: 18 })
+  const dateEighteenYearsBack = DateTime.now().minus({ years: 18 });
 
-  if (dateEighteenYearsBack >= dob) return dob
+  if (dateEighteenYearsBack >= dob) return dob;
 
-  return helper.error('any.invalid')
-}
+  return helper.error('any.invalid');
+};
 
 class CustomerValidator extends BaseValidator {
-  #bvnSchema
-  #birthDateSchema
-  #commandSchema
-  #idSchema
-  #idTypeSchema
-  #hireDateSchema
-  #addressSchema
-  #relationshipSchema
+  #bvnSchema;
 
-  constructor () {
-    super()
+  #birthDateSchema;
+
+  #commandSchema;
+
+  #idSchema;
+
+  #idTypeSchema;
+
+  #hireDateSchema;
+
+  #addressSchema;
+
+  #relationshipSchema;
+
+  constructor() {
+    super();
 
     this.#bvnSchema = Joi.string()
       .label('BVN')
       .pattern(/^22[0-9]{9}$/)
       .messages({
-        'string.pattern.base': '{#label} is not valid'
-      })
+        'string.pattern.base': '{#label} is not valid',
+      });
 
     this.#birthDateSchema = Joi.date()
       .iso()
       .label('Birth date')
-      .custom(isOver18).less('now')
-      .messages({ 'any.invalid': 'Must be 18 or older to apply' })
+      .custom(isOver18)
+      .less('now')
+      .messages({ 'any.invalid': 'Must be 18 or older to apply' });
 
     this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
-      'string.pattern.base': 'Invalid staff id number'
-    })
+      'string.pattern.base': 'Invalid staff id number',
+    });
 
-    this.#commandSchema = Joi.string().label('Command')
+    this.#commandSchema = Joi.string().label('Command');
     this.#hireDateSchema = Joi.date()
       .iso()
       .label('Hire date')
       .min(
         Joi.ref('birth_date', {
           adjust: (doe) => {
-            doe.setFullYear(doe.getFullYear() + 18)
-            return doe
-          }
-        })
-      ).less('now')
+            doe.setFullYear(doe.getFullYear() + 18);
+            return doe;
+          },
+        }),
+      )
+      .less('now')
       .messages({
-        'date.min': '{#label} is not valid'
-      })
+        'date.min': '{#label} is not valid',
+      });
 
     this.#idTypeSchema = Joi.string()
       .label('Id type')
-      .valid(...validIds)
+      .valid(...validIds);
 
     this.#relationshipSchema = Joi.string()
       .valid(...relationships)
-      .label('Relationship')
+      .label('Relationship');
 
     this.#addressSchema = Joi.string()
       .trim()
@@ -74,8 +82,8 @@ class CustomerValidator extends BaseValidator {
       .required()
       .messages({
         'string.min': '{#label} is too short.',
-        'string.max': '{#label} is too long.'
-      })
+        'string.max': '{#label} is too long.',
+      });
   }
 
   validateCreate = (tenantId, dto) => {
@@ -120,14 +128,14 @@ class CustomerValidator extends BaseValidator {
         .label('Salary account name')
         .required(),
       account_number: this._accountNumberSchema.required(),
-      bank: this._objectIdSchema.label('Bank').required()
-    })
+      bank: this._objectIdSchema.label('Bank').required(),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = async (dto) => {
     const schema = Joi.object({
@@ -159,21 +167,21 @@ class CustomerValidator extends BaseValidator {
       nok_address: this.#addressSchema.label('Next of kin address'),
       nok_state: this._objectIdSchema.label('Next of kin state'),
       nok_phone_number: this._phoneNumberSchema.label(
-        'Next of kin phone number'
+        'Next of kin phone number',
       ),
       nok_relationship: this.#relationshipSchema,
       account_name: this._nameSchema
         .extract('last')
         .label('Salary account name'),
       account_number: this._accountNumberSchema,
-      bank: this._objectIdSchema.label('Bank')
-    }).min(1)
+      bank: this._objectIdSchema.label('Bank'),
+    }).min(1);
 
-    let { value, error } = schema.validate(dto)
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto);
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new CustomerValidator()
+export default new CustomerValidator();

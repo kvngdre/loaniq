@@ -1,31 +1,27 @@
-import {
-  maritalStatus,
-  relationships,
-  validIds
-} from '../utils/common.js'
-import { Schema, model } from 'mongoose'
-import computeAge from '../utils/computeAge.js'
-import computeTenure from '../utils/computeTenure.js'
-import NotFoundError from '../errors/NotFoundError.js'
+import { Schema, model } from 'mongoose';
+import { maritalStatus, relationships, validIds } from '../utils/common.js';
+import computeAge from '../utils/computeAge.js';
+import computeTenure from '../utils/computeTenure.js';
+import NotFoundError from '../errors/NotFoundError.js';
 
-const schemaOptions = { timestamps: true, versionKey: false }
+const schemaOptions = { timestamps: true, versionKey: false };
 
 const customerSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
       ref: 'Tenant',
-      required: true
+      required: true,
     },
 
     passport: {
       type: String,
-      default: null
+      default: null,
     },
 
     id_card: {
       type: String,
-      default: null
+      default: null,
     },
 
     first_name: {
@@ -33,7 +29,7 @@ const customerSchema = new Schema(
       minLength: 3,
       maxLength: 50,
       trim: true,
-      required: true
+      required: true,
     },
 
     last_name: {
@@ -41,25 +37,25 @@ const customerSchema = new Schema(
       minLength: 3,
       maxLength: 50,
       trim: true,
-      required: true
+      required: true,
     },
 
     middle_name: {
       type: String,
       minLength: 3,
       maxLength: 50,
-      trim: true
+      trim: true,
     },
 
     gender: {
       type: String,
       enum: ['male', 'female'],
-      required: true
+      required: true,
     },
 
     birth_date: {
       type: Date,
-      required: true
+      required: true,
     },
 
     address: {
@@ -67,51 +63,51 @@ const customerSchema = new Schema(
       trim: true,
       maxLength: 255,
       lowercase: true,
-      required: true
+      required: true,
     },
 
     state: {
       type: Schema.Types.ObjectId,
       ref: 'State',
-      required: true
+      required: true,
     },
 
     phone_number: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
 
     email: {
       type: String,
       lowercase: true,
       trim: true,
-      default: null
+      default: null,
     },
 
     marital_status: {
       type: String,
       enum: maritalStatus,
-      required: true
+      required: true,
     },
 
     bvn: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
 
     staff_id: {
       type: String,
       uppercase: true,
       trim: true,
-      required: true
+      required: true,
     },
 
     id_type: {
       type: String,
       enum: validIds,
-      required: true
+      required: true,
     },
 
     id_number: {
@@ -119,19 +115,19 @@ const customerSchema = new Schema(
       minLength: 4,
       maxLength: 50,
       trim: true,
-      required: true
+      required: true,
     },
 
     segment: {
       type: Schema.Types.ObjectId,
       ref: 'Segment',
-      required: true
+      required: true,
     },
 
     command: {
       type: String,
       trim: true,
-      default: null
+      default: null,
     },
 
     employer_address: {
@@ -139,29 +135,29 @@ const customerSchema = new Schema(
       trim: true,
       maxLength: 255,
       lowercase: true,
-      required: true
+      required: true,
     },
 
     employer_state: {
       type: String,
       ref: 'State',
-      required: true
+      required: true,
     },
 
     hire_date: {
       type: Date,
-      required: true
+      required: true,
     },
 
     income: {
       type: Number,
-      required: true
+      required: true,
     },
 
     nok_full_name: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
 
     nok_address: {
@@ -169,82 +165,82 @@ const customerSchema = new Schema(
       trim: true,
       maxLength: 255,
       lowercase: true,
-      required: true
+      required: true,
     },
 
     nok_state: {
       type: Schema.Types.ObjectId,
       ref: 'State',
-      required: true
+      required: true,
     },
 
     nok_phone_number: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
 
     nok_relationship: {
       type: String,
       enum: relationships,
-      required: true
+      required: true,
     },
 
     account_name: {
       type: String,
       lowercase: true,
       required: true,
-      trim: true
+      trim: true,
     },
 
     account_number: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
 
     bank: {
       type: Schema.Types.ObjectId,
       ref: 'Bank',
-      required: true
+      required: true,
     },
 
     agent: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
-    }
+      ref: 'User',
+    },
   },
-  schemaOptions
-)
+  schemaOptions,
+);
 
 // ! Creating compound indexes
-customerSchema.index({ staff_id: 1, tenantId: 1 }, { unique: true })
-customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true })
-customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true })
+customerSchema.index({ staff_id: 1, tenantId: 1 }, { unique: true });
+customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true });
+customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true });
 
 customerSchema.virtual('full_name').get(function () {
   return this.first_name.concat(
     this.middle_name ? ` ${this.middle_name}` : '',
-    ` ${this.last_name}`
-  )
-})
+    ` ${this.last_name}`,
+  );
+});
 
 customerSchema.virtual('age').get(function () {
-  return computeAge(this.birth_date)
-})
+  return computeAge(this.birth_date);
+});
 
 customerSchema.virtual('tenure').get(function () {
-  return computeTenure(this.hire_date)
-})
+  return computeTenure(this.hire_date);
+});
 
-customerSchema.post(/^find/, function (doc) {
+customerSchema.post(/^find/, (doc) => {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Customers not found.')
+    throw new NotFoundError('Customers not found.');
   }
 
-  if (!doc) throw new NotFoundError('Customer not found.')
-})
+  if (!doc) throw new NotFoundError('Customer not found.');
+});
 
-const Customer = model('Customer', customerSchema)
+const Customer = model('Customer', customerSchema);
 
-export default Customer
+export default Customer;

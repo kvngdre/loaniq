@@ -11,12 +11,12 @@ class ErrorResponse {
    *
    * @param {ErrorResponseArgs} args
    */
-  constructor (args) {
-    this.success = false
-    this.name = args.name
-    this.errors = args?.errors ? { ...args.errors } : { message: args.message }
-    this.data = args?.data
+  constructor(args) {
+    this.success = false;
+    this.name = args.name;
+    this.errors = args?.errors ? { ...args.errors } : { message: args.message };
+    this.data = args?.data;
   }
 }
 
-export default ErrorResponse
+export default ErrorResponse;

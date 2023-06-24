@@ -1,77 +1,77 @@
-import { Error } from 'mongoose'
-import BaseDAO from './base.dao.js'
-import ConflictError from '../errors/ConflictError.js'
-import Permission from '../models/permission.model.js'
-import ValidationError from '../errors/ValidationError.js'
+import { Error } from 'mongoose';
+import BaseDAO from './base.dao.js';
+import ConflictError from '../errors/ConflictError.js';
+import Permission from '../models/permission.model.js';
+import ValidationError from '../errors/ValidationError.js';
 
 class PermissionDAO extends BaseDAO {
-  static async insert (newRecordDTO) {
+  static async insert(newRecordDTO) {
     try {
-      const newRecord = new Permission(newRecordDTO)
-      await newRecord.save()
+      const newRecord = new Permission(newRecordDTO);
+      await newRecord.save();
 
-      return newRecord
+      return newRecord;
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception)
-        throw new ConflictError(`Duplicate: ${field} already in use.`)
+        const field = this.getDuplicateField(exception);
+        throw new ConflictError(`Duplicate: ${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception)
-        throw new ValidationError(errMsg)
+        const errMsg = this.getValidationErrorMsg(exception);
+        throw new ValidationError(errMsg);
       }
 
-      throw exception
+      throw exception;
     }
   }
 
-  static async find (filter = {}, projection = {}) {
-    const foundRecords = await Permission.find(filter).select(projection)
+  static async find(filter = {}, projection = {}) {
+    const foundRecords = await Permission.find(filter).select(projection);
 
-    return foundRecords
+    return foundRecords;
   }
 
-  static async findById (id, projection = {}) {
-    const foundRecord = await Permission.findById(id).select(projection)
+  static async findById(id, projection = {}) {
+    const foundRecord = await Permission.findById(id).select(projection);
 
-    return foundRecord
+    return foundRecord;
   }
 
-  static async findOne (filter, projection = {}) {
-    const foundRecord = await Permission.findOne(filter).select(projection)
+  static async findOne(filter, projection = {}) {
+    const foundRecord = await Permission.findOne(filter).select(projection);
 
-    return foundRecord
+    return foundRecord;
   }
 
-  static async update (id, updateRecordDTO, projection = {}) {
+  static async update(id, updateRecordDTO, projection = {}) {
     try {
-      const foundRecord = await Permission.findById(id).select(projection)
+      const foundRecord = await Permission.findById(id).select(projection);
 
-      foundRecord.set(updateRecordDTO)
-      await foundRecord.save()
+      foundRecord.set(updateRecordDTO);
+      await foundRecord.save();
 
-      return foundRecord
+      return foundRecord;
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception)
-        throw new ConflictError(`${field} already in use.`)
+        const field = this.getDuplicateField(exception);
+        throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception)
-        throw new ValidationError(errMsg)
+        const errMsg = this.getValidationErrorMsg(exception);
+        throw new ValidationError(errMsg);
       }
 
-      throw exception
+      throw exception;
     }
   }
 
-  static async remove (id) {
-    const deletedRecord = await Permission.findByIdAndDelete(id)
+  static async remove(id) {
+    const deletedRecord = await Permission.findByIdAndDelete(id);
 
-    return deletedRecord
+    return deletedRecord;
   }
 }
 
-export default PermissionDAO
+export default PermissionDAO;

@@ -3,5 +3,5 @@ export const roles = {
   ANALYST: 'analyst',
   EDITOR: 'editor',
   ADMIN: 'admin',
-  SUPER_ADMIN: 'Z8'
-}
+  SUPER_ADMIN: 'Z8',
+};

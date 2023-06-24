@@ -1,6 +1,6 @@
-import TenantService from '../services/tenant.service'
-import ErrorResponse from '../utils/ErrorResponse'
-import { httpCodes, status } from '../utils/common'
+import TenantService from '../services/tenant.service';
+import ErrorResponse from '../utils/ErrorResponse';
+import { httpCodes, status } from '../utils/common';
 
 /**
  *
@@ -9,20 +9,18 @@ import { httpCodes, status } from '../utils/common'
  * @param {import("express").NextFunction} next
  */
 const isTenantActivated = async (req, res, next) => {
-  const tenant = await TenantService.getTenant(
-    req.currentUser.tenantId
-  )
+  const tenant = await TenantService.getTenant(req.currentUser.tenantId);
 
   if (tenant.status !== status.ACTIVE) {
     return res.status(httpCodes.FORBIDDEN).json(
       new ErrorResponse({
         name: 'Auth Error',
-        errors: 'Tenant not activated.'
-      })
-    )
+        errors: 'Tenant not activated.',
+      }),
+    );
   }
 
-  next()
-}
+  next();
+};
 
-export default isTenantActivated
+export default isTenantActivated;

@@ -1,5 +1,5 @@
-import Joi from 'joi'
-import BaseValidator from './base.validator.js'
+import Joi from 'joi';
+import BaseValidator from './base.validator.js';
 
 class SegmentConfigValidator extends BaseValidator {
   validateCreate = (tenantId, dto) => {
@@ -22,14 +22,17 @@ class SegmentConfigValidator extends BaseValidator {
         .label('Maximum income')
         .min(Joi.ref('min_income'))
         .default(Joi.ref('min_income')),
-      max_dti: this._percentageSchema.label('Maximum D.T.I').required()
-    })
+      max_dti: this._percentageSchema.label('Maximum D.T.I').required(),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
@@ -48,14 +51,17 @@ class SegmentConfigValidator extends BaseValidator {
         .label('Maximum income')
         .min(Joi.ref('min_income'))
         .default(Joi.ref('min_income')),
-      max_dti: this._percentageSchema.label('Maximum D.T.I')
-    }).min(1)
+      max_dti: this._percentageSchema.label('Maximum D.T.I'),
+    }).min(1);
 
-    let { value, error } = schema.validate(dto, { abortEarly: false, convert: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, {
+      abortEarly: false,
+      convert: false,
+    });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new SegmentConfigValidator()
+export default new SegmentConfigValidator();

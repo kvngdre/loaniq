@@ -1,23 +1,25 @@
-import Joi from 'joi'
-import { reviewStatus } from '../utils/common.js'
-import BaseValidator from './base.validator.js'
+import Joi from 'joi';
+import { reviewStatus } from '../utils/common.js';
+import BaseValidator from './base.validator.js';
 
 class ReviewValidator extends BaseValidator {
-  #typeSchema
-  #commentSchema
-  #statusSchema
+  #typeSchema;
 
-  constructor () {
-    super()
+  #commentSchema;
 
-    this.#typeSchema = Joi.string().valid('Customer', 'Loan').label('Type')
+  #statusSchema;
+
+  constructor() {
+    super();
+
+    this.#typeSchema = Joi.string().valid('Customer', 'Loan').label('Type');
     this.#commentSchema = Joi.string()
       .label('Comment')
       .max(255)
-      .invalid('', ' ')
+      .invalid('', ' ');
     this.#statusSchema = Joi.string()
       .label('Status')
-      .valid(...Object.values(reviewStatus))
+      .valid(...Object.values(reviewStatus));
   }
 
   validateCreate = (userId, tenantId, dto) => {
@@ -27,14 +29,14 @@ class ReviewValidator extends BaseValidator {
       type: this.#typeSchema.required(),
       alteration: Joi.object().required(),
       comment: this.#commentSchema,
-      created_by: this._objectIdSchema.label('User id').default(userId)
-    })
+      created_by: this._objectIdSchema.label('User id').default(userId),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateUpdate = (userId, dto) => {
     const schema = Joi.object({
@@ -43,31 +45,31 @@ class ReviewValidator extends BaseValidator {
       remark: this.#commentSchema.label('Remark').when('status', {
         is: Joi.exist(),
         then: Joi.required(),
-        otherwise: Joi.optional()
+        otherwise: Joi.optional(),
       }),
       alteration: Joi.object(),
       comment: this.#commentSchema,
-      modified_By: this._objectIdSchema.label('User id').default(userId)
-    })
+      modified_By: this._objectIdSchema.label('User id').default(userId),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 
   validateStatusUpdate = (userId, dto) => {
     const schema = Joi.object({
       status: this.#statusSchema.required(),
       remark: this.#commentSchema.label('Remark').required(),
-      modified_By: this._objectIdSchema.label('User id').default(userId)
-    })
+      modified_By: this._objectIdSchema.label('User id').default(userId),
+    });
 
-    let { value, error } = schema.validate(dto, { abortEarly: false })
-    error = this._refineError(error)
+    let { value, error } = schema.validate(dto, { abortEarly: false });
+    error = this._refineError(error);
 
-    return { value, error }
-  }
+    return { value, error };
+  };
 }
 
-export default new ReviewValidator()
+export default new ReviewValidator();

@@ -1,23 +1,24 @@
-import { constants } from '../config/index.js'
-import { google } from 'googleapis'
-import { createTransport } from 'nodemailer'
-import logger from './logger.js'
+import { google } from 'googleapis';
+import { createTransport } from 'nodemailer';
+import { constants } from '../config/index.js';
+import logger from './logger.js';
 
-const { clientId, clientSecret, refreshToken, oauthPlayground, senderEmail } = constants.mailer
+const { clientId, clientSecret, refreshToken, oauthPlayground, senderEmail } =
+  constants.mailer;
 
 const oauth2Client = new google.auth.OAuth2(
   clientId,
   clientSecret,
   refreshToken,
-  oauthPlayground
-)
+  oauthPlayground,
+);
 
-oauth2Client.setCredentials({ refresh_token: refreshToken })
+oauth2Client.setCredentials({ refresh_token: refreshToken });
 
 // Creating reusable transport object
-export default async function getMailTransport () {
+export default async function getMailTransport() {
   try {
-    const accessToken = await oauth2Client.getAccessToken()
+    const accessToken = await oauth2Client.getAccessToken();
     const transporter = createTransport({
       service: 'gmail',
       auth: {
@@ -26,13 +27,13 @@ export default async function getMailTransport () {
         clientId,
         clientSecret,
         refreshToken,
-        accessToken
-      }
-    })
+        accessToken,
+      },
+    });
 
-    return transporter
+    return transporter;
   } catch (exception) {
-    logger.fatal(exception.message, exception.stack)
-    throw new Error('Error creating mail transport.')
+    logger.fatal(exception.message, exception.stack);
+    throw new Error('Error creating mail transport.');
   }
 }
