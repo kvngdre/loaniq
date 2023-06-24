@@ -1,8 +1,5 @@
 import { Schema, model } from 'mongoose';
 import { companyCategory, status, validIds } from '../utils/common.js';
-import NotFoundError from '../errors/NotFoundError.js';
-
-const schemaOptions = { timestamps: true, versionKey: false };
 
 const tenantSchema = new Schema(
   {
@@ -11,7 +8,7 @@ const tenantSchema = new Schema(
       default: null,
     },
 
-    business_name: {
+    businessName: {
       type: String,
       unique: true,
       sparse: true,
@@ -29,7 +26,7 @@ const tenantSchema = new Schema(
       ref: 'State',
     },
 
-    cac_number: {
+    cacNumber: {
       type: String,
       unique: true,
       sparse: true,
@@ -76,17 +73,7 @@ const tenantSchema = new Schema(
       default: null,
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
 
-tenantSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Tenants not found.');
-  }
-
-  if (!doc) throw new NotFoundError('Tenant not found.');
-});
-
-const Tenant = model('Tenant', tenantSchema);
-
-export default Tenant;
+export const Tenant = model('Tenant', tenantSchema);

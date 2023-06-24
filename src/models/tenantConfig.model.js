@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
+import NotFoundError from '../errors/not-found.error.js';
 import { feeTypes } from '../utils/common.js';
-import NotFoundError from '../errors/NotFoundError.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

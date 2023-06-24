@@ -1,11 +1,18 @@
 import { Error } from 'mongoose';
 
-import ConflictError from '../errors/ConflictError.js';
-import ValidationError from '../errors/validation.error.js';
-import Tenant from '../models/tenant.model.js';
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '../errors/index.js';
+import { Tenant } from '../models/tenant.model.js';
 import { BaseRepository } from './lib/base.repository.js';
 
-class TenantRepository extends BaseRepository {
+export class TenantRepository extends BaseRepository {
+  constructor() {
+    super();
+  }
+
   async save(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
@@ -19,8 +26,8 @@ class TenantRepository extends BaseRepository {
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
-        throw new ValidationError(errMsg);
+        const errorMessage = this.getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;
@@ -28,51 +35,44 @@ class TenantRepository extends BaseRepository {
   }
 
   async find(filter = {}, projection = {}) {
-    const foundRecords = await Tenant.find(filter).select(projection);
-
-    return foundRecords;
+    return Tenant.find(filter).select(projection);
   }
 
   async findById(id, projection = {}) {
-    const foundRecord = await Tenant.findById(id).select(projection);
-
-    return foundRecord;
+    return Tenant.findById(id).select(projection);
   }
 
   async findOne(filter, projection = {}) {
-    const foundRecord = await Tenant.findOne(filter).select(projection);
-
-    return foundRecord;
+    return Tenant.findOne(filter).select(projection);
   }
 
-  async update(id, dto, projection = {}) {
+  async updateOne(id, updateTenantDto, projection = {}) {
     try {
-      const foundRecord = await Tenant.findById(id).select(projection);
+      const foundTenant = await Tenant.findById(id).select(projection);
+      if (!foundTenant) {
+        throw new NotFoundError('Tenant does not exist');
+      }
 
-      foundRecord.set(dto);
-      await foundRecord.save();
+      foundTenant.set(updateTenantDto);
+      foundTenant.save();
 
-      return foundRecord;
+      return foundTenant;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+      if (exception.message.includes('E11000')) {
         const field = this.getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
-        throw new ValidationError(errMsg);
+        const errorMessage = this.getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
       }
 
       throw exception;
     }
   }
 
-  async remove(id) {
-    const foundRecord = await Tenant.findByIdAndDelete(id);
-
-    return foundRecord;
+  async destroy(id) {
+    return Tenant.deleteOne({ _id: id });
   }
 }
-
-export default TenantRepository;

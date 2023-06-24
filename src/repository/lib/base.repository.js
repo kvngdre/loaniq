@@ -1,17 +1,17 @@
 export class BaseRepository {
-  DUPLICATE_ERROR_CODE = 11000;
+  constructor() {
+    this.getDuplicateField = function (error) {
+      const field = Object.keys(error.keyPattern)[0];
+      return field
+        .charAt(0)
+        .toUpperCase()
+        .concat(field.slice(1))
+        .replace('_', ' ');
+    };
 
-  getDuplicateField(err) {
-    const field = Object.keys(err.keyPattern)[0];
-    return field
-      .charAt(0)
-      .toUpperCase()
-      .concat(field.slice(1))
-      .replace('_', ' ');
-  }
-
-  getValidationErrorMsg(err) {
-    const field = Object.keys(err.errors)[0];
-    return err.errors[field].message.replace('Path', '');
+    this.getValidationErrorMessage = function (error) {
+      const field = Object.keys(error.errors)[0];
+      return error.errors[field].message.replace('Path', '');
+    };
   }
 }

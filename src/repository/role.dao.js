@@ -1,5 +1,5 @@
 import { Error } from 'mongoose';
-import ConflictError from '../errors/ConflictError.js';
+import ConflictError from '../errors/conflict.error.js';
 import ValidationError from '../errors/validation.error.js';
 import Role from '../models/role.model.js';
 import BaseRepository from './lib/base.repository.js';

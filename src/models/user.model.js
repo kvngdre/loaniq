@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
-import NotFoundError from '../errors/NotFoundError.js';
+import NotFoundError from '../errors/not-found.error.js';
 
 const schemaOptions = {
   timestamps: true,
