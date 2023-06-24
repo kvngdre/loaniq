@@ -99,13 +99,12 @@ export const socials = [
   'tictok',
 ];
 
-export const status = {
+export const STATUS = {
   ACTIVE: 'active',
-  AWAITING_ACTIVATION: 'awaiting activation',
+  AWAITING_ACTIVATION: 'awaiting_activation',
   DEACTIVATED: 'deactivated',
   INACTIVE: 'inactive',
   SUSPENDED: 'suspended',
-  ONBOARDING: 'onboarding',
 };
 
 export const txnPurposes = {
@@ -127,18 +126,16 @@ export const txnTypes = {
   DEBIT: 'debit',
 };
 
-export const validIds = [
+export const VALID_ID = [
   'voters card',
   'international passport',
-  'staff id card',
   'national id card',
   'drivers license',
 ];
 
-export const tenantDocumentationTypes = [
+export const tenantDocTypes = [
   'certificate of incorporation',
-  'tax documentation',
+  'tax registration',
   'money lender license',
   'mfb license',
-  ...validIds,
 ];

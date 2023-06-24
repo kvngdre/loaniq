@@ -4,16 +4,16 @@ import { startSession } from 'mongoose';
 import transaction from 'mongoose-trx';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import DependencyError from '../errors/DependencyError.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
 import ConflictError from '../errors/conflict.error.js';
+import DependencyError from '../errors/dependency.error.js';
+import UnauthorizedError from '../errors/unauthorized.error.js';
 import RoleDAO from '../repository/role.dao.js';
-import TenantRepository from '../repository/tenant.repository.js';
+import { TenantRepository } from '../repository/tenant.repository.js';
 import TenantConfigDAO from '../repository/tenantConfig.dao.js';
 import UserDAO from '../repository/user.dao.js';
 import SessionRepository from '../repository/userConfig.dao.js';
 import WalletDAO from '../repository/wallet.dao.js';
-import { status } from '../utils/common.js';
+import { ENTITY_STATUS } from '../utils/common.js';
 import driverUploader from '../utils/driveUploader.js';
 import generateOTP from '../utils/generateOTP.js';
 import logger from '../utils/logger.js';
@@ -98,12 +98,12 @@ class TenantService {
 
   async requestToActivateTenant(tenantId, activateTenantDTO) {
     const foundTenant = await TenantRepository.findById(tenantId);
-    if (foundTenant.status === status.ACTIVE) {
+    if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
       throw new ConflictError('Tenant has already been activated.');
     }
 
     foundTenant.set({
-      status: status.AWAITING_ACTIVATION,
+      status: ENTITY_STATUS.AWAITING_ACTIVATION,
       ...activateTenantDTO,
     });
     await foundTenant.save();
@@ -122,13 +122,13 @@ class TenantService {
         WalletDAO.insert({ tenantId }, transactionSession),
       ]);
 
-      if (foundTenant.status === status.ACTIVE) {
+      if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
         throw new ConflictError('Tenant has already been activated.');
       }
 
       foundTenant.set({
         isEmailVerified: true,
-        status: status.ACTIVE,
+        status: ENTITY_STATUS.ACTIVE,
         activated: true,
       });
       await foundTenant.save({ session: transactionSession });
@@ -173,7 +173,9 @@ class TenantService {
 
   async deactivateTenant(tenantId) {
     const [foundTenant, foundAdminUsers] = await Promise.all([
-      await TenantRepository.update(tenantId, { status: status.DEACTIVATED }),
+      await TenantRepository.update(tenantId, {
+        status: ENTITY_STATUS.DEACTIVATED,
+      }),
       await UserDAO.find(
         { tenantId, 'role.name': 'admin' },
         { password: 0, resetPwd: 0, otp: 0 },

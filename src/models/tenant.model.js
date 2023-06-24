@@ -1,5 +1,10 @@
 import { Schema, model } from 'mongoose';
-import { companyCategory, status, validIds } from '../utils/common.js';
+import {
+  STATUS,
+  VALID_ID,
+  companyCategory,
+  tenantDocTypes,
+} from '../utils/common.js';
 
 const tenantSchema = new Schema(
   {
@@ -10,20 +15,18 @@ const tenantSchema = new Schema(
 
     businessName: {
       type: String,
-      unique: true,
-      sparse: true,
-      // required: true
+      required: true,
     },
 
-    address: {
-      type: String,
-      maxLength: 255,
-      default: null,
-    },
+    address: String,
 
     state: {
-      type: Schema.Types.ObjectId,
-      ref: 'State',
+      type: {
+        code: String,
+        name: String,
+        lga: String,
+        geo: String,
+      },
     },
 
     cacNumber: {
@@ -38,12 +41,7 @@ const tenantSchema = new Schema(
       enum: companyCategory,
     },
 
-    email: {
-      type: String,
-      unique: true,
-      sparse: true,
-      default: null,
-    },
+    email: String,
 
     isEmailVerified: {
       type: Boolean,
@@ -52,25 +50,64 @@ const tenantSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(status),
-      default: status.ONBOARDING,
+      enum: Object.values(STATUS),
+      default: STATUS.ONBOARDING,
     },
 
-    activated: {
-      type: Boolean,
-      default: false,
+    identification: {
+      type: [
+        {
+          name: { type: String, required: true },
+          type: { type: String, enum: VALID_ID },
+          url: { type: String, required: true },
+        },
+      ],
     },
 
     documentation: {
       type: [
         {
           name: { type: String, required: true },
-          type: { type: String, enum: validIds },
+          type: { type: String, enum: tenantDocTypes },
           url: { type: String, required: true },
           expires: { type: Date, default: null },
         },
       ],
-      default: null,
+    },
+
+    configurations: {
+      socials: {
+        type: [
+          {
+            platform: { type: String, trim: true, required: true },
+            url: { type: String, trim: true, required: true },
+          },
+        ],
+      },
+
+      support: {
+        email: {
+          type: String,
+          trim: true,
+          default: null,
+        },
+
+        phoneNo: {
+          type: String,
+          default: null,
+        },
+      },
+
+      formId: {
+        type: String,
+        default: null,
+      },
+
+      formTheme: {
+        backgroundColor: String,
+        font: String,
+        fontColor: String,
+      },
     },
   },
   { timestamps: true },

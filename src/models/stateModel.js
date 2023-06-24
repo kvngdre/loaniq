@@ -1,8 +1,5 @@
 import { Schema, model } from 'mongoose';
 import { geoZones } from '../utils/common.js';
-import NotFoundError from '../errors/NotFoundError.js';
-
-const schemaOptions = { timestamps: true, versionKey: false };
 
 const stateSchema = new Schema(
   {
@@ -32,16 +29,8 @@ const stateSchema = new Schema(
       required: true,
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
-
-stateSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('States not found.');
-  }
-
-  if (!doc) throw new NotFoundError('State not found.');
-});
 
 const State = model('State', stateSchema);
 
