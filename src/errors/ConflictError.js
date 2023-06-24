@@ -1,14 +1,11 @@
-import { httpCodes } from '../utils/common.js';
-import BaseError from './BaseError.js';
+import { HttpCode } from '../utils/common.js';
+import { BaseError } from './lib/base-error.js';
 
-class ConflictError extends BaseError {
+export class ConflictError extends BaseError {
   constructor(description) {
-    const name = 'Duplex Error';
-    const httpCode = httpCodes.CONFLICT;
+    const httpCode = HttpCode.CONFLICT;
     const isOperational = true;
 
-    super(name, httpCode, isOperational, description);
+    super(httpCode, isOperational, description);
   }
 }
-
-export default ConflictError;

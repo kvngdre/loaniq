@@ -1,7 +1,4 @@
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/NotFoundError.js';
-
-const schemaOptions = { timestamps: true, versionKey: false };
 
 const segmentSchema = new Schema(
   {
@@ -29,40 +26,9 @@ const segmentSchema = new Schema(
       type: Boolean,
       default: true,
     },
-
-    recommendation: {
-      max_age: {
-        type: Number,
-        default: 58,
-      },
-
-      max_tenure: {
-        type: Number,
-        default: 33,
-      },
-
-      min_income: {
-        type: Number,
-        set: (v) => Math.floor(v * 100) / 100,
-        default: 30_000,
-      },
-    },
-
-    /**
-     * todo have recommended values for this segments last 6 bvn and income data
-     * todo authorize account number to be billed to send to customer account
-     */
   },
-  schemaOptions,
+  { timestamps: true },
 );
-
-segmentSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Segments not found.');
-  }
-
-  if (!doc) throw new NotFoundError('Segment not found.');
-});
 
 const Segment = model('Segment', segmentSchema);
 

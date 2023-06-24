@@ -1,13 +1,13 @@
 import { Error, Types } from 'mongoose';
-import BaseDAO from './base.dao.js';
 import ConflictError from '../errors/ConflictError.js';
-import UserConfig from '../models/userConfig.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import ValidationError from '../errors/validation.error.js';
+import Session from '../models/session.model.js';
+import BaseRepository from './lib/base.repository.js';
 
-class UserConfigDAO extends BaseDAO {
+class SessionRepository extends BaseRepository {
   static async insert(dto, trx) {
     try {
-      const newRecord = new UserConfig(dto);
+      const newRecord = new Session(dto);
       await newRecord.save({ session: trx });
 
       return newRecord;
@@ -27,21 +27,21 @@ class UserConfigDAO extends BaseDAO {
   }
 
   static async find(filter = {}, projection = {}) {
-    const foundRecords = await UserConfig.find(filter).select(projection);
+    const foundRecords = await Session.find(filter).select(projection);
 
     return foundRecords;
   }
 
   // todo see if RBAC can narrow down so that we can do an upsert if not found
   static async findOne(filter, projection = {}) {
-    const foundRecord = await UserConfig.findOne(filter).select(projection);
+    const foundRecord = await Session.findOne(filter).select(projection);
 
     return foundRecord;
   }
 
   static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await UserConfig.findOneAndUpdate(filter, dto, {
+      const foundRecord = await Session.findOneAndUpdate(filter, dto, {
         upsert: true,
         new: true,
       }).select(projection);
@@ -64,10 +64,10 @@ class UserConfigDAO extends BaseDAO {
 
   static async remove(filter) {
     filter = !Types.ObjectId.isValid(filter) ? filter : { _id: filter };
-    const deletedRecord = await UserConfig.findOneAndDelete(filter);
+    const deletedRecord = await Session.findOneAndDelete(filter);
 
     return deletedRecord;
   }
 }
 
-export default UserConfigDAO;
+export default SessionRepository;

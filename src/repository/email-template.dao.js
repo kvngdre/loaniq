@@ -1,13 +1,13 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
 import ConflictError from '../errors/ConflictError.js';
-import ValidationError from '../errors/ValidationError.js';
-import Wallet from '../models/wallet.model.js';
+import ValidationError from '../errors/validation.error.js';
+import EmailTemplate from '../models/email-template.model.js';
+import BaseRepository from './lib/base.repository.js';
 
-class WalletDAO extends BaseDAO {
+class EmailTemplateDAO extends BaseRepository {
   static async insert(dto, trx) {
     try {
-      const newRecord = new Wallet(dto);
+      const newRecord = new EmailTemplate(dto);
       await newRecord.save({ session: trx });
 
       return newRecord;
@@ -26,27 +26,27 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async find(filter = {}) {
-    const foundRecords = await Wallet.find(filter);
+  static async find(filter = {}, projection = {}) {
+    const foundRecords = await EmailTemplate.find(filter).select(projection);
 
     return foundRecords;
   }
 
   static async findById(id, projection = {}) {
-    const foundRecord = await Wallet.findById(id).select(projection);
+    const foundRecord = await EmailTemplate.findById(id).select(projection);
 
     return foundRecord;
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await Wallet.findOne(filter).select(projection);
+    const foundRecord = await EmailTemplate.findOne(filter).select(projection);
 
     return foundRecord;
   }
 
-  static async update(filter, dto, projection = {}) {
+  static async update(id, dto, projection = {}) {
     try {
-      const foundRecord = await Wallet.findOne(filter).select(projection);
+      const foundRecord = await EmailTemplate.findById(id).select(projection);
 
       foundRecord.set(dto);
       await foundRecord.save();
@@ -67,10 +67,11 @@ class WalletDAO extends BaseDAO {
     }
   }
 
-  static async remove(filter) {
-    const foundRecord = await Wallet.findOneAndDelete(filter);
-    return foundRecord;
+  static async remove(id) {
+    const deletedRecord = await EmailTemplate.findByIdAndDelete(id);
+
+    return deletedRecord;
   }
 }
 
-export default WalletDAO;
+export default EmailTemplateDAO;

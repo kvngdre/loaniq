@@ -1,13 +1,13 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
 import ConflictError from '../errors/ConflictError.js';
-import Tenant from '../models/tenant.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import ValidationError from '../errors/validation.error.js';
+import User from '../models/user.model.js';
+import BaseRepository from './lib/base.repository.js';
 
-class TenantDAO extends BaseDAO {
+class UserDAO extends BaseRepository {
   static async insert(dto, transactionSession) {
     try {
-      const newRecord = new Tenant(dto);
+      const newRecord = new User(dto);
       await newRecord.save({ session: transactionSession });
 
       return newRecord;
@@ -26,27 +26,37 @@ class TenantDAO extends BaseDAO {
     }
   }
 
-  static async find(filter = {}, projection = {}) {
-    const foundRecords = await Tenant.find(filter).select(projection);
+  static async find(
+    filter = {},
+    projection = {},
+    sortOrder = { first_name: 1 },
+  ) {
+    const foundRecords = await User.find(filter)
+      .select(projection)
+      .sort(sortOrder);
 
     return foundRecords;
   }
 
   static async findById(id, projection = {}) {
-    const foundRecord = await Tenant.findById(id).select(projection);
+    const foundRecord = await User.findById(id)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' });
 
     return foundRecord;
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await Tenant.findOne(filter).select(projection);
+    const foundRecord = await User.findOne(filter)
+      .select(projection)
+      .populate({ path: 'role', select: '-tenantId' });
 
     return foundRecord;
   }
 
-  static async update(id, dto, projection = {}) {
+  static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await Tenant.findById(id).select(projection);
+      const foundRecord = await User.findOne(filter).select(projection);
 
       foundRecord.set(dto);
       await foundRecord.save();
@@ -67,11 +77,17 @@ class TenantDAO extends BaseDAO {
     }
   }
 
+  static async updateMany(filter, dto) {
+    const result = await User.updateMany(filter, dto);
+
+    return result;
+  }
+
   static async remove(id) {
-    const foundRecord = await Tenant.findByIdAndDelete(id);
+    const foundRecord = await User.findByIdAndDelete(id);
 
     return foundRecord;
   }
 }
 
-export default TenantDAO;
+export default UserDAO;

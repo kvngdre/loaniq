@@ -1,21 +1,12 @@
 import { Schema, model } from 'mongoose';
 import { feeTypes } from '../utils/common.js';
-import NotFoundError from '../errors/NotFoundError.js';
-
-const schemaOptions = { timestamps: true, versionKey: false };
 
 const segConfigSchema = new Schema(
   {
-    tenantId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Tenant',
-      required: [true, 'Tenant Id is required.'],
-    },
-
     segment: {
       type: Schema.Types.ObjectId,
       ref: 'Segment',
-      required: [true, 'Segment Id is required.'],
+      required: true,
     },
 
     active: {
@@ -100,22 +91,12 @@ const segConfigSchema = new Schema(
       required: [true, 'Maximum DTI ratio is required.'],
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
 
-segConfigSchema.index(
-  { tenantId: 1, segment: 1, min_net_pay: 1 },
-  { unique: true },
-);
+segConfigSchema.index({ segment: 1, min_income: 1 }, { unique: true });
+
 // segConfigSchema.index({ min_net_pay: 1, tenantId: 1 }, { unique: true })
-
-segConfigSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Segment configurations not found.');
-  }
-
-  if (!doc) throw new NotFoundError('Segment configuration not found.');
-});
 
 const SegmentConfig = model('Segment_Config', segConfigSchema);
 

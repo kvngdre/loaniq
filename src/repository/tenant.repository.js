@@ -1,18 +1,19 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
+
 import ConflictError from '../errors/ConflictError.js';
-import SegConfig from '../models/segConfig.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import ValidationError from '../errors/validation.error.js';
+import Tenant from '../models/tenant.model.js';
+import { BaseRepository } from './lib/base.repository.js';
 
-class SegConfigDAO extends BaseDAO {
-  static async insert(dto, trx) {
+class TenantRepository extends BaseRepository {
+  async save(createTenantDto, session) {
     try {
-      const newRecord = new SegConfig(dto);
-      await newRecord.save({ session: trx });
+      const tenant = new Tenant(createTenantDto);
+      tenant.save({ session });
 
-      return newRecord;
+      return tenant;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
+      if (exception.message.includes('E11000')) {
         const field = this.getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
@@ -26,27 +27,27 @@ class SegConfigDAO extends BaseDAO {
     }
   }
 
-  static async find(filter, projection = {}) {
-    const foundRecords = await SegConfig.find(filter).select(projection);
+  async find(filter = {}, projection = {}) {
+    const foundRecords = await Tenant.find(filter).select(projection);
 
     return foundRecords;
   }
 
-  static async findById(id, projection = {}) {
-    const foundRecord = await SegConfig.findById(id).select(projection);
+  async findById(id, projection = {}) {
+    const foundRecord = await Tenant.findById(id).select(projection);
 
     return foundRecord;
   }
 
-  static async findOne(filter, projection = {}) {
-    const foundRecord = await SegConfig.findOne(filter).select(projection);
+  async findOne(filter, projection = {}) {
+    const foundRecord = await Tenant.findOne(filter).select(projection);
 
     return foundRecord;
   }
 
-  static async update(id, dto, projection = {}) {
+  async update(id, dto, projection = {}) {
     try {
-      const foundRecord = await SegConfig.findById(id).select(projection);
+      const foundRecord = await Tenant.findById(id).select(projection);
 
       foundRecord.set(dto);
       await foundRecord.save();
@@ -67,11 +68,11 @@ class SegConfigDAO extends BaseDAO {
     }
   }
 
-  static async remove(id) {
-    const deletedRecord = await SegConfig.findOneAndDelete(id);
+  async remove(id) {
+    const foundRecord = await Tenant.findByIdAndDelete(id);
 
-    return deletedRecord;
+    return foundRecord;
   }
 }
 
-export default SegConfigDAO;
+export default TenantRepository;

@@ -1,20 +1,20 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
 import ConflictError from '../errors/ConflictError.js';
-import Role from '../models/role.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import ValidationError from '../errors/validation.error.js';
+import TenantConfig from '../models/tenantConfig.model.js';
+import BaseRepository from './lib/base.repository.js';
 
-class RoleDAO extends BaseDAO {
-  static async insert(dto) {
+class TenantConfigDAO extends BaseRepository {
+  static async insert(newTenantConfigDTO, trx) {
     try {
-      const newReview = new Role(dto);
-      await newReview.save();
+      const newRecord = new TenantConfig(newTenantConfigDTO);
+      await newRecord.save({ session: trx });
 
-      return newReview;
+      return newRecord;
     } catch (exception) {
       if (exception.code === this.DUPLICATE_ERROR_CODE) {
         const field = this.getDuplicateField(exception);
-        throw new ConflictError(`${field} already un use.`);
+        throw new ConflictError(`${field} in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
@@ -27,29 +27,23 @@ class RoleDAO extends BaseDAO {
   }
 
   static async find(filter = {}, projection = {}) {
-    const foundRecords = await Role.find(filter).select(projection);
-
+    const foundRecords = await TenantConfig.find(filter).select(projection);
     return foundRecords;
   }
 
-  static async findById(id, projection = {}) {
-    const foundRecord = await Role.findById(id).select(projection);
-
-    return foundRecord;
-  }
-
   static async findOne(filter, projection = {}) {
-    const foundRecord = await Role.findOne(filter).select(projection);
-
+    const foundRecord = await TenantConfig.findOne(filter)
+      .select(projection)
+      .populate('tenantId');
     return foundRecord;
   }
 
-  static async update(id, dto, projection = {}) {
+  static async update(filter, dto, projection = {}) {
     try {
-      const foundRecord = await Role.findById(id).select(projection);
-
-      foundRecord.set(dto);
-      await foundRecord.save();
+      const foundRecord = await TenantConfig.findOneAndUpdate(filter, dto, {
+        upsert: true,
+        new: true,
+      }).select(projection);
 
       return foundRecord;
     } catch (exception) {
@@ -67,10 +61,11 @@ class RoleDAO extends BaseDAO {
     }
   }
 
-  static async remove(id) {
-    const deletedRecord = await Role.findByIdAndDelete(id);
+  static async remove(filter) {
+    const deletedRecord = await TenantConfig.findOneAndDelete(filter);
+
     return deletedRecord;
   }
 }
 
-export default RoleDAO;
+export default TenantConfigDAO;

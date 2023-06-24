@@ -1,14 +1,14 @@
 import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
 import ConflictError from '../errors/ConflictError.js';
-import User from '../models/user.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import ValidationError from '../errors/validation.error.js';
+import SegConfig from '../models/segConfig.model.js';
+import BaseRepository from './lib/base.repository.js';
 
-class UserDAO extends BaseDAO {
-  static async insert(dto, transactionSession) {
+class SegConfigDAO extends BaseRepository {
+  static async insert(dto, trx) {
     try {
-      const newRecord = new User(dto);
-      await newRecord.save({ session: transactionSession });
+      const newRecord = new SegConfig(dto);
+      await newRecord.save({ session: trx });
 
       return newRecord;
     } catch (exception) {
@@ -26,37 +26,27 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  static async find(
-    filter = {},
-    projection = {},
-    sortOrder = { first_name: 1 },
-  ) {
-    const foundRecords = await User.find(filter)
-      .select(projection)
-      .sort(sortOrder);
+  static async find(filter, projection = {}) {
+    const foundRecords = await SegConfig.find(filter).select(projection);
 
     return foundRecords;
   }
 
   static async findById(id, projection = {}) {
-    const foundRecord = await User.findById(id)
-      .select(projection)
-      .populate({ path: 'role', select: '-tenantId' });
+    const foundRecord = await SegConfig.findById(id).select(projection);
 
     return foundRecord;
   }
 
   static async findOne(filter, projection = {}) {
-    const foundRecord = await User.findOne(filter)
-      .select(projection)
-      .populate({ path: 'role', select: '-tenantId' });
+    const foundRecord = await SegConfig.findOne(filter).select(projection);
 
     return foundRecord;
   }
 
-  static async update(filter, dto, projection = {}) {
+  static async update(id, dto, projection = {}) {
     try {
-      const foundRecord = await User.findOne(filter).select(projection);
+      const foundRecord = await SegConfig.findById(id).select(projection);
 
       foundRecord.set(dto);
       await foundRecord.save();
@@ -77,17 +67,11 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  static async updateMany(filter, dto) {
-    const result = await User.updateMany(filter, dto);
-
-    return result;
-  }
-
   static async remove(id) {
-    const foundRecord = await User.findByIdAndDelete(id);
+    const deletedRecord = await SegConfig.findOneAndDelete(id);
 
-    return foundRecord;
+    return deletedRecord;
   }
 }
 
-export default UserDAO;
+export default SegConfigDAO;

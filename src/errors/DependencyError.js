@@ -1,14 +1,11 @@
-import { httpCodes } from '../utils/common.js';
-import BaseError from './BaseError.js';
+import { HttpCode } from '../utils/common.js';
+import { BaseError } from './lib/base-error.js';
 
-class DependencyError extends BaseError {
+export class DependencyError extends BaseError {
   constructor(description) {
-    const name = 'Dependency Error';
-    const httpCode = httpCodes.DEPENDENCY;
+    const httpCode = HttpCode.DEPENDENCY;
     const isOperational = true;
 
-    super(name, httpCode, isOperational, description);
+    super(httpCode, isOperational, description);
   }
 }
-
-export default DependencyError;

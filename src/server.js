@@ -1,32 +1,28 @@
-import './loaders/process.js';
 import 'express-async-errors';
+import './loaders/process.js';
+
 import express from 'express';
 import http from 'http';
-import { constants } from './config/index.js';
-import loaders from './loaders/index.js';
-import logger from './utils/logger.js';
-import routes from './routers/index.js';
 
-import randomString from './utils/randomString.js';
+import loaders from './loaders/index.js';
+import routes from './routers/index.js';
+import logger from './utils/logger.js';
 
 const app = express();
 export const server = http.createServer(app);
 
+console.clear();
+
 async function startServer() {
   try {
-    const { port } = constants;
+    await loaders.init({ app: app, routes: routes });
 
-    await loaders.init({ expressApp: app, expressRoutes: routes });
-
-    server.listen(port, () => {
-      logger.info(`Server listening on port: ${port} 🚀`);
+    server.listen(process.env.PORT, () => {
+      logger.info(`Server running on port: ${process.env.PORT} 🚀`);
     });
-
-    return server;
   } catch (error) {
     logger.fatal(error.message, error.stack);
   }
 }
-console.log(randomString());
 
 startServer();

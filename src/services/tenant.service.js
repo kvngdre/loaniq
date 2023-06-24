@@ -1,38 +1,40 @@
 /* eslint-disable camelcase */
-import { fileURLToPath } from 'url';
-import { startSession } from 'mongoose';
 import fs from 'fs';
-import path from 'path';
+import { startSession } from 'mongoose';
 import transaction from 'mongoose-trx';
-import { status } from '../utils/common.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import ConflictError from '../errors/ConflictError.js';
+import DependencyError from '../errors/DependencyError.js';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
+import RoleDAO from '../repository/role.dao.js';
+import TenantRepository from '../repository/tenant.repository.js';
+import TenantConfigDAO from '../repository/tenantConfig.dao.js';
+import UserDAO from '../repository/user.dao.js';
+import SessionRepository from '../repository/userConfig.dao.js';
+import WalletDAO from '../repository/wallet.dao.js';
+import { status } from '../utils/common.js';
 import driverUploader from '../utils/driveUploader.js';
-import EmailService from './email.service.js';
 import generateOTP from '../utils/generateOTP.js';
 import logger from '../utils/logger.js';
 import randomString from '../utils/randomString.js';
-import RoleDAO from '../daos/role.dao.js';
-import TenantConfigDAO from '../daos/tenantConfig.dao.js';
-import TenantDAO from '../daos/tenant.dao.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
-import UserConfigDAO from '../daos/userConfig.dao.js';
-import UserDAO from '../daos/user.dao.js';
-import WalletDAO from '../daos/wallet.dao.js';
-import DependencyError from '../errors/DependencyError.js';
+import EmailService from './email.service.js';
 
 class TenantService {
-  static async createTenant({ tenant, user }) {
+  async createTenant({ tenant, user }) {
     /**
      * TODO: Check if mongoose has fixed the issue with session.withTransaction
      * TODO: method not returning the data.
      */
     user.otp = generateOTP(8);
-    const result = await transaction(async (session) => {
+    const session = await startSession();
+
+    const result = await session.withTransaction(async () => {
       const [newTenant, newUser] = await Promise.all([
-        TenantDAO.insert(tenant, session),
+        TenantRepository.insert(tenant, session),
         UserDAO.insert(user, session),
         TenantConfigDAO.insert({ tenantId: tenant._id }, session),
-        UserConfigDAO.insert(
+        SessionRepository.insert(
           { tenantId: tenant._id, userId: user._id },
           session,
         ),
@@ -63,36 +65,39 @@ class TenantService {
     return result;
   }
 
-  static async onBoardTenant(tenantId, onBoardTenantDTO) {
-    const foundTenant = await TenantDAO.update(tenantId, onBoardTenantDTO);
+  async onBoardTenant(tenantId, onBoardTenantDTO) {
+    const foundTenant = await TenantRepository.update(
+      tenantId,
+      onBoardTenantDTO,
+    );
 
     return foundTenant;
   }
 
-  static async getTenants(filters) {
-    const foundTenants = await TenantDAO.find(filters);
+  async getTenants(filters) {
+    const foundTenants = await TenantRepository.find(filters);
     const count = Intl.NumberFormat('en-US').format(foundTenants.length);
 
     return [count, foundTenants];
   }
 
-  static async getTenant(tenantId) {
-    const foundTenant = await TenantDAO.findById(tenantId);
+  async getTenant(tenantId) {
+    const foundTenant = await TenantRepository.findById(tenantId);
     return foundTenant;
   }
 
-  static async updateTenant(tenantId, dto) {
-    const updateTenant = await TenantDAO.update(tenantId, dto);
+  async updateTenant(tenantId, dto) {
+    const updateTenant = await TenantRepository.update(tenantId, dto);
     return updateTenant;
   }
 
-  static async deleteTenant(tenantId) {
-    const deletedTenant = await TenantDAO.remove(tenantId);
+  async deleteTenant(tenantId) {
+    const deletedTenant = await TenantRepository.remove(tenantId);
     return deletedTenant;
   }
 
-  static async requestToActivateTenant(tenantId, activateTenantDTO) {
-    const foundTenant = await TenantDAO.findById(tenantId);
+  async requestToActivateTenant(tenantId, activateTenantDTO) {
+    const foundTenant = await TenantRepository.findById(tenantId);
     if (foundTenant.status === status.ACTIVE) {
       throw new ConflictError('Tenant has already been activated.');
     }
@@ -107,13 +112,13 @@ class TenantService {
   }
 
   // TODO: Change to mongoose-trx
-  static async activateTenant(tenantId) {
+  async activateTenant(tenantId) {
     const transactionSession = await startSession();
     try {
       transactionSession.startTransaction();
 
       const [foundTenant] = await Promise.all([
-        TenantDAO.findById(tenantId),
+        TenantRepository.findById(tenantId),
         WalletDAO.insert({ tenantId }, transactionSession),
       ]);
 
@@ -139,9 +144,9 @@ class TenantService {
     }
   }
 
-  static async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
+  async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
     const [foundTenant, foundUser] = await Promise.all([
-      TenantDAO.findById(tenantId),
+      TenantRepository.findById(tenantId),
       UserDAO.findById(_id),
     ]);
 
@@ -166,9 +171,9 @@ class TenantService {
     return foundTenant;
   }
 
-  static async deactivateTenant(tenantId) {
+  async deactivateTenant(tenantId) {
     const [foundTenant, foundAdminUsers] = await Promise.all([
-      await TenantDAO.update(tenantId, { status: status.DEACTIVATED }),
+      await TenantRepository.update(tenantId, { status: status.DEACTIVATED }),
       await UserDAO.find(
         { tenantId, 'role.name': 'admin' },
         { password: 0, resetPwd: 0, otp: 0 },
@@ -191,16 +196,16 @@ class TenantService {
     return foundTenant;
   }
 
-  static async reactivateTenant(tenantId) {
+  async reactivateTenant(tenantId) {
     const [tenant] = await Promise.all([
-      TenantDAO.update(tenantId, { active: true }),
+      TenantRepository.update(tenantId, { active: true }),
       UserDAO.updateMany({ tenantId }, { active: true }),
     ]);
 
     return tenant;
   }
 
-  static async generateFormId(tenantId) {
+  async generateFormId(tenantId) {
     try {
       const formId = randomString(5);
       const updatedConfig = await TenantConfigDAO.update(tenantId, { formId });
@@ -211,7 +216,7 @@ class TenantService {
     }
   }
 
-  static async getFormData(formId) {
+  async getFormData(formId) {
     const { form_theme, socials, tenantId } = await TenantConfigDAO.findOne({
       formId,
     });
@@ -225,8 +230,8 @@ class TenantService {
     };
   }
 
-  static async uploadDocs(tenantId, uploadFiles) {
-    const foundTenant = await TenantDAO.findById(tenantId);
+  async uploadDocs(tenantId, uploadFiles) {
+    const foundTenant = await TenantRepository.findById(tenantId);
     const folderName = `t-${tenantId.toString()}`;
 
     const [foundFolder] = await driverUploader.findFolder(folderName);

@@ -1,14 +1,11 @@
-import { httpCodes } from '../utils/common.js';
-import BaseError from './BaseError.js';
+import { HttpCode } from '../utils/common.js';
+import { BaseError } from './lib/base-error.js';
 
-class NotFoundError extends BaseError {
+export class NotFoundError extends BaseError {
   constructor(description) {
-    const name = 'Not Found Error';
-    const httpCode = httpCodes.NOT_FOUND;
+    const httpCode = HttpCode.NOT_FOUND;
     const isOperational = true;
 
-    super(name, httpCode, isOperational, description);
+    super(httpCode, isOperational, description);
   }
 }
-
-export default NotFoundError;

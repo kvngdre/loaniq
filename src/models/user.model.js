@@ -1,23 +1,15 @@
+import bcrypt from 'bcryptjs';
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
-import bcrypt from 'bcryptjs';
 import NotFoundError from '../errors/NotFoundError.js';
 
 const schemaOptions = {
   timestamps: true,
-  versionKey: false,
-  toJSON: { virtuals: true },
   id: false,
 };
 
 const userSchema = new Schema(
   {
-    tenantId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: 'Tenant',
-    },
-
     avatar: {
       type: String,
       default: null,
@@ -26,23 +18,17 @@ const userSchema = new Schema(
     first_name: {
       type: String,
       trim: true,
-      minLength: 2,
-      maxLength: 50,
       required: true,
     },
 
     last_name: {
       type: String,
       trim: true,
-      minLength: 2,
-      maxLength: 50,
       required: true,
     },
 
     middle_name: {
       type: String,
-      minLength: 1,
-      maxLength: 50,
       trim: true,
       default: null,
     },
@@ -139,12 +125,18 @@ const userSchema = new Schema(
 
 userSchema.plugin(autoPopulate);
 
-userSchema.virtual('full_name').get(function () {
-  return this.first_name?.concat(
-    this.middle_name ? ` ${this.middle_name}` : '',
-    ` ${this.last_name}`,
-  );
-});
+userSchema.methods.fullName = function () {
+  const { firstName, middleName, lastName } = this;
+  const fullNameParts = [firstName];
+
+  if (middleName) {
+    fullNameParts.push(middleName);
+  }
+
+  fullNameParts.push(lastName);
+
+  return fullNameParts.join(' ');
+};
 
 // Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
@@ -210,14 +202,6 @@ userSchema.pre('save', function (next) {
   }
 
   next();
-});
-
-userSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('User accounts not found.');
-  }
-
-  if (!doc) throw new NotFoundError('User account not found.');
 });
 
 const User = model('User', userSchema);
