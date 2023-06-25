@@ -1,44 +1,37 @@
-import RoleDAO from '../daos/role.dao.js';
+import { roleRepository } from '../repositories/role.repository.js';
 
 class RoleService {
-  /**
-   * Creates a new user role.
-   * @param {RoleAdd} newRoleDTO
-   * @returns
-   */
-  static async createRole(newRoleDTO) {
-    const newRole = await RoleDAO.insert(newRoleDTO);
-
-    return newRole;
+  async createRole(createRoleDTO) {
+    return roleRepository.insert(createRoleDTO);
   }
 
-  static async getRoles() {
-    const foundRoles = await RoleDAO.find();
+  async getRoles() {
+    const foundRoles = await roleRepository.find();
     const count = Intl.NumberFormat('en-US').format(foundRoles.length);
 
     return { count, foundRoles };
   }
 
-  static async getRoleById(roleId) {
-    const foundRole = await RoleDAO.findById(roleId);
+  async getRoleById(roleId) {
+    const foundRole = await roleRepository.findById(roleId);
 
     return foundRole;
   }
 
-  static async getRole(filter) {
-    const foundRole = await RoleDAO.findOne(filter);
+  async getRole(filter) {
+    const foundRole = await roleRepository.findOne(filter);
 
     return foundRole;
   }
 
-  static async updateRole(roleId, updateRoleDTO) {
-    const updatedRole = await RoleDAO.update(roleId, updateRoleDTO);
+  async updateRole(roleId, updateRoleDTO) {
+    const updatedRole = await roleRepository.update(roleId, updateRoleDTO);
 
     return updatedRole;
   }
 
-  static async deleteRole(roleId) {
-    const deletedRole = await RoleDAO.remove(roleId);
+  async deleteRole(roleId) {
+    const deletedRole = await roleRepository.remove(roleId);
 
     return deletedRole;
   }

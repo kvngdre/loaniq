@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
+import { ValidationError } from '../errors/index.js';
 import TenantService from '../services/tenant.service.js';
+import { HttpCode } from '../utils/common.js';
 import tenantValidator from '../validators/tenant.validator.js';
-import ValidationError from '../errors/ValidationError.js';
+import BaseController from './base.controller.js';
 
 class TenantController extends BaseController {
   /**
@@ -10,7 +10,7 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static signUp = async (req, res) => {
+  signUp = async (req, res) => {
     const { value, error } = tenantValidator.validateSignUp(req.body);
     if (error) throw new ValidationError(null, error);
 
@@ -20,7 +20,7 @@ class TenantController extends BaseController {
       result,
     );
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   /**
@@ -28,14 +28,14 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static onBoardTenant = async (req, res) => {
+  onBoardTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateOnBoarding(req.body);
     if (error) throw new ValidationError(null, error);
 
     const tenant = await TenantService.onBoardTenant(value);
     const response = this.apiResponse('Tenant information updated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -43,13 +43,13 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getTenants = async (req, res) => {
+  getTenants = async (req, res) => {
     const [count, tenants] = await TenantService.getTenants();
 
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, tenants);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -57,11 +57,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getTenant = async (req, res) => {
+  getTenant = async (req, res) => {
     const tenant = await TenantService.getTenant(req.params.tenantId);
     const response = this.apiResponse('Fetched tenant.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -69,11 +69,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getCurrentTenant = async (req, res) => {
+  getCurrentTenant = async (req, res) => {
     const tenant = await TenantService.getTenant(req.currentUser.tenantId);
     const response = this.apiResponse('Fetched tenant.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -81,14 +81,14 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static updateTenant = async (req, res) => {
+  updateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
     const tenant = await TenantService.updateTenant(req.params.tenantId, value);
     const response = this.apiResponse('Tenant updated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -96,11 +96,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static deleteTenant = async (req, res) => {
+  deleteTenant = async (req, res) => {
     await TenantService.deleteTenant(req.params.tenantId);
     const response = this.apiResponse('Tenant deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -108,7 +108,7 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static requestTenantActivavtion = async (req, res) => {
+  requestTenantActivavtion = async (req, res) => {
     const { value, error } = tenantValidator.validateActivationRequest(
       req.body,
     );
@@ -120,7 +120,7 @@ class TenantController extends BaseController {
     );
     const response = this.apiResponse('Submitted and awaiting review.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -128,11 +128,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static activateTenant = async (req, res) => {
+  activateTenant = async (req, res) => {
     const tenant = await TenantService.activateTenant();
     const response = this.apiResponse('Tenant deactivated', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -140,7 +140,7 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static requestToDeactivateTenant = async (req, res) => {
+  requestToDeactivateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateDeactivationRequest(
       req.body,
     );
@@ -149,7 +149,7 @@ class TenantController extends BaseController {
     await TenantService.requestToDeactivateTenant(req.currentUser, value);
     const response = this.apiResponse('Deactivation request sent');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -157,11 +157,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static reactivateTenant = async (req, res) => {
+  reactivateTenant = async (req, res) => {
     const tenant = await TenantService.reactivateTenant(req.params.tenantId);
     const response = this.apiResponse('Tenant reactivated.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -169,11 +169,11 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static generatePublicUrl = async (req, res) => {
+  generatePublicUrl = async (req, res) => {
     const publicUrl = await TenantService.generateFormId(req.params.tenantId);
     const response = this.apiResponse('Link generated.', publicUrl);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -181,14 +181,14 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getPublicFormData = async (req, res) => {
+  getPublicFormData = async (req, res) => {
     const formData = await TenantService.getFormData(req.params.formId);
     const response = this.apiResponse(
       'Fetched tenant public form data.',
       formData,
     );
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -196,14 +196,14 @@ class TenantController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static uploadFiles = async (req, res) => {
+  uploadFiles = async (req, res) => {
     const tenant = await TenantService.uploadDocs(
       req.currentUser.tenantId,
       req.files,
     );
     const response = this.apiResponse('Files uploaded.', tenant);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

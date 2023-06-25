@@ -1,9 +1,8 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
+import { ForbiddenError } from '../errors/index.js';
 import { canUserResetPwd } from '../helpers/user.helpers.js';
-import { roles } from '../config/index.js';
-import BaseValidator from './base.validator.js';
-import ForbiddenError from '../errors/ForbiddenError.js';
+import { BaseValidator } from './lib/base-validator.js';
 
 class UserValidator extends BaseValidator {
   #jobTitle;

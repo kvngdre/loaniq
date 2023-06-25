@@ -1,18 +1,11 @@
 // import { requiresAuth } from 'express-openid-connect'
 import { Router } from 'express';
-import checkPermission from '../middleware/checkPermission.js';
-import tenantConfigRoutes from './tenantConfig.routes.js';
 import TenantController from '../controllers/tenant.controller.js';
-import upload from '../middleware/fileUploader.js';
+import checkPermission from '../middleware/checkPermission.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
-import walletRoutes from './wallet.routes.js';
 
 const router = Router();
-
-router.use('/configurations', tenantConfigRoutes);
-
-router.use('/wallets', walletRoutes);
 
 router.post('/sign-up', TenantController.signUp);
 
@@ -38,18 +31,6 @@ router.post(
   validateObjectId,
   checkPermission('onBoardOwn', 'tenant'),
   TenantController.onBoardTenant,
-);
-
-router.post(
-  '/:tenantId/uploads',
-  verifyJWT,
-  validateObjectId,
-  checkPermission('uploadDocs', 'tenant'),
-  upload.fields([
-    { name: 'logo', maxCount: 1 },
-    { name: 'documents', maxCount: 5 },
-  ]),
-  TenantController.uploadFiles,
 );
 
 router.get('/forms/:formId', TenantController.getPublicFormData);

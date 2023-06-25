@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import SegConfigService from '../services/segConfig.service.js';
-import segConfigValidator from '../validators/segConfig.validator.js';
 import ValidationError from '../errors/ValidationError.js';
+import SegConfigService from '../services/segConfig.service.js';
+import { HttpCode } from '../utils/common.js';
+import segConfigValidator from '../validators/segConfig.validator.js';
+import BaseController from './base.controller.js';
 
 class SegConfigController extends BaseController {
   static createSegConfig = async (req, res) => {
@@ -18,7 +18,7 @@ class SegConfigController extends BaseController {
       newSegConfig,
     );
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   static getSegConfigs = async (req, res) => {
@@ -29,7 +29,7 @@ class SegConfigController extends BaseController {
 
     const response = this.apiResponse(message, segConfigs);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static getSegConfig = async (req, res) => {
@@ -39,7 +39,7 @@ class SegConfigController extends BaseController {
       segConfig,
     );
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static updateConfig = async (req, res) => {
@@ -55,14 +55,14 @@ class SegConfigController extends BaseController {
       segConfig,
     );
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static deleteSegConfig = async (req, res) => {
     await SegConfigService.deleteConfig(req.params.segConfigId);
     const response = this.apiResponse('Segment configurations deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

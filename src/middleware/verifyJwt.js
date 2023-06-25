@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { constants } from '../config/index.js';
-import { httpCodes } from '../utils/common.js';
-import BaseError from '../errors/BaseError.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import { BaseError } from '../errors/lib/base-error.js';
 import User from '../models/user.model.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
+import { httpCodes } from '../utils/common.js';
 
 export default async function verifyJWT(req, res, next) {
   try {

@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import PermissionService from '../services/permission.service.js';
-import permissionValidator from '../validators/permission.validator.js';
 import ValidationError from '../errors/ValidationError.js';
+import PermissionService from '../services/permission.service.js';
+import { HttpCode } from '../utils/common.js';
+import permissionValidator from '../validators/permission.validator.js';
+import BaseController from './base.controller.js';
 
 class PermissionController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class PermissionController extends BaseController {
     const newPermission = await PermissionService.create(value);
     const response = this.apiResponse('Permission created', newPermission);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   /**
@@ -31,7 +31,7 @@ class PermissionController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundPermissions);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -45,7 +45,7 @@ class PermissionController extends BaseController {
     );
     const response = this.apiResponse('Fetched permission', foundPermission);
 
-    res.status(httpCodes).json(response);
+    res.status(HttpCode).json(response);
   };
 
   /**
@@ -63,7 +63,7 @@ class PermissionController extends BaseController {
     );
     const response = this.apiResponse('Permission updated', permission);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -75,7 +75,7 @@ class PermissionController extends BaseController {
     await PermissionService.deletePermission(req.params.permissionId);
     const response = this.apiResponse('Permission deleted');
 
-    res.status(httpCodes.NO_CONTENT).json(response);
+    res.status(HttpCode.NO_CONTENT).json(response);
   };
 }
 

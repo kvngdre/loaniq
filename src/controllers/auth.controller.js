@@ -1,11 +1,11 @@
 import requestIp from 'request-ip';
 import { constants } from '../config/index.js';
-import { httpCodes } from '../utils/common.js';
+import ValidationError from '../errors/ValidationError.js';
 import AuthService from '../services/auth.service.js';
+import ErrorResponse from '../utils/ErrorResponse.js';
+import { HttpCode } from '../utils/common.js';
 import authValidator from '../validators/auth.validator.js';
 import BaseController from './base.controller.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
-import ValidationError from '../errors/ValidationError.js';
 
 class AuthController extends BaseController {
   /**
@@ -40,7 +40,7 @@ class AuthController extends BaseController {
       maxAge: constants.jwt.exp_time.refresh * 1000,
     });
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -51,7 +51,7 @@ class AuthController extends BaseController {
   static getNewTokens = async (req, res) => {
     const token = req.cookies?.jwt;
     if (!token) {
-      return res.status(httpCodes.BAD_REQUEST).json(
+      return res.status(HttpCode.BAD_REQUEST).json(
         new ErrorResponse({
           name: 'Validation Error',
           message: 'No token provided',
@@ -77,7 +77,7 @@ class AuthController extends BaseController {
     });
 
     const response = this.apiResponse('Success', { accessToken });
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -92,7 +92,7 @@ class AuthController extends BaseController {
     await AuthService.sendOTP(value);
     const response = this.apiResponse('OTP sent to email.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -110,7 +110,7 @@ class AuthController extends BaseController {
     });
 
     const response = this.apiResponse('Logged out');
-    res.status(httpCodes.NO_CONTENT).json(response);
+    res.status(HttpCode.NO_CONTENT).json(response);
   };
 
   /**
@@ -122,7 +122,7 @@ class AuthController extends BaseController {
     await AuthService.signOutAllSessions(req.currentUser._id, req.cookies?.jwt);
     const response = this.apiResponse('Signed out of all devices.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static callback = (req, res) => {

@@ -1,68 +1,57 @@
 /* eslint-disable camelcase */
-import fs from 'fs';
 import { startSession } from 'mongoose';
-import transaction from 'mongoose-trx';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { TenantResponseDto } from '../dtos/tenant-response.dto.js';
 import ConflictError from '../errors/conflict.error.js';
 import DependencyError from '../errors/dependency.error.js';
 import UnauthorizedError from '../errors/unauthorized.error.js';
-import RoleDAO from '../repository/role.dao.js';
-import { TenantRepository } from '../repository/tenant.repository.js';
-import TenantConfigDAO from '../repository/tenantConfig.dao.js';
-import UserDAO from '../repository/user.dao.js';
-import SessionRepository from '../repository/userConfig.dao.js';
-import WalletDAO from '../repository/wallet.dao.js';
-import { ENTITY_STATUS } from '../utils/common.js';
-import driverUploader from '../utils/driveUploader.js';
+import { roleRepository } from '../repositories/role.repository.js';
+import { tenantRepository } from '../repositories/tenant.repository.js';
+import { tokenRepository } from '../repositories/token.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
 import generateOTP from '../utils/generateOTP.js';
-import logger from '../utils/logger.js';
 import randomString from '../utils/randomString.js';
 import EmailService from './email.service.js';
 
-class TenantService {
-  async createTenant({ tenant, user }) {
-    /**
-     * TODO: Check if mongoose has fixed the issue with session.withTransaction
-     * TODO: method not returning the data.
-     */
+export class TenantService {
+  async createTenant(signUpDto) {
     user.otp = generateOTP(8);
     const session = await startSession();
 
-    const result = await session.withTransaction(async () => {
-      const [newTenant, newUser] = await Promise.all([
-        TenantRepository.insert(tenant, session),
-        UserDAO.insert(user, session),
-        TenantConfigDAO.insert({ tenantId: tenant._id }, session),
-        SessionRepository.insert(
-          { tenantId: tenant._id, userId: user._id },
-          session,
-        ),
+    await session.withTransaction(async () => {
+      await Promise.all([
+        tenantRepository.insert(signUpDto, session),
+        userRepository.insert(signUpDto, session),
+        tokenRepository.save({}, session),
         // Cloning default admin user role for new tenant.
-        RoleDAO.findOne({ name: 'admin', isDefault: true }).then((doc) => {
-          doc._id = user.role;
-          doc.tenantId = user.tenantId;
-          doc.isDefault = false;
-          doc.isNew = true;
+        roleRepository
+          .findOne({ name: 'admin', isDefault: true })
+          .then((doc) => {
+            doc._id = user.role;
+            doc.tenantId = user.tenantId;
+            doc.isDefault = false;
+            doc.isNew = true;
 
-          doc.save({ session });
-        }),
+            doc.save({ session });
+          }),
       ]);
-
-      await EmailService.send({
-        to: user.email,
-        templateName: 'new-tenant-user',
-        context: { otp: user.otp.pin },
-      });
-
-      newUser.purgeSensitiveData();
-
-      return {
-        tenant: newTenant,
-        user: newUser,
-      };
     });
-    return result;
+
+    await EmailService.send({
+      to: signUpDto.email,
+      templateName: 'new-tenant-user',
+      context: { otp: user.otp.pin },
+    });
+
+    return {
+      message: 'You have successfully signed up for the service.',
+      data: {
+        next_steps: [
+          'Check email for an OTP to verify your account.',
+          'Log in  and explore the features.',
+          'Customize your profile, manage your settings, and access our support.',
+        ],
+      },
+    };
   }
 
   async onBoardTenant(tenantId, onBoardTenantDTO) {
@@ -147,7 +136,7 @@ class TenantService {
   async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
     const [foundTenant, foundUser] = await Promise.all([
       TenantRepository.findById(tenantId),
-      UserDAO.findById(_id),
+      UserRepository.findById(_id),
     ]);
 
     const { isValid, reason } = foundUser.validateOTP(otp);
@@ -176,12 +165,12 @@ class TenantService {
       await TenantRepository.update(tenantId, {
         status: ENTITY_STATUS.DEACTIVATED,
       }),
-      await UserDAO.find(
+      await UserRepository.find(
         { tenantId, 'role.name': 'admin' },
         { password: 0, resetPwd: 0, otp: 0 },
         { createdAt: 1 },
       ),
-      await UserDAO.updateMany({ tenantId }, { active: false }),
+      await UserRepository.updateMany({ tenantId }, { active: false }),
     ]);
 
     const info = await EmailService.send({
@@ -201,7 +190,7 @@ class TenantService {
   async reactivateTenant(tenantId) {
     const [tenant] = await Promise.all([
       TenantRepository.update(tenantId, { active: true }),
-      UserDAO.updateMany({ tenantId }, { active: true }),
+      UserRepository.updateMany({ tenantId }, { active: true }),
     ]);
 
     return tenant;
@@ -231,77 +220,4 @@ class TenantService {
       theme: form_theme,
     };
   }
-
-  async uploadDocs(tenantId, uploadFiles) {
-    const foundTenant = await TenantRepository.findById(tenantId);
-    const folderName = `t-${tenantId.toString()}`;
-
-    const [foundFolder] = await driverUploader.findFolder(folderName);
-
-    // Selecting folder
-    const folderId = foundFolder?.id
-      ? foundFolder.id
-      : await driverUploader.createFolder(folderName);
-
-    logger.debug(folderId);
-
-    for (const key of Object.keys(uploadFiles)) {
-      const file = uploadFiles[key][0];
-
-      const name = file.originalname;
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const filePath = path.resolve(__dirname, `../../${file.path}`);
-      const mimeType = file.mimetype;
-
-      const response = await driverUploader.createFile(
-        name,
-        filePath,
-        folderId,
-        mimeType,
-      );
-      logger.debug(response.data.id);
-
-      if (key === 'logo') {
-        foundTenant.set({
-          logo: response.data.id,
-        });
-      }
-
-      // ! Delete uploaded file from file system
-      fs.unlinkSync(filePath);
-    }
-
-    await foundTenant.save();
-    return foundTenant;
-  }
 }
-
-// async handleGuestLoan (payload) {
-//   try {
-//     const lender = await findOne({ id })
-
-//     user = {
-//       id: payload.customer.employer.ippis,
-//       lender: lender._id.toString(),
-//       role: 'guest',
-//       email: payload.customer.contactInfo.email
-//     }
-
-//     const response = await createLoanReq(user, payload)
-
-//     return {
-//       message: 'Loan application submitted successfully.',
-//       data: response.data
-//     }
-//   } catch (exception) {
-//     logger.error({
-//       method: 'handle_guest_loan',
-//       message: exception.message,
-//       meta: exception.stack
-//     })
-//     debug(exception)
-//     return { errorCode: 500, message: 'Something went wrong.' }
-//   }
-// }
-
-export default TenantService;

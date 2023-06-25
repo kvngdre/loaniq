@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import {
-  STATUS,
+  TENANT_STATUS,
   VALID_ID,
   companyCategory,
   tenantDocTypes,
@@ -41,17 +41,10 @@ const tenantSchema = new Schema(
       enum: companyCategory,
     },
 
-    email: String,
-
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
-
     status: {
       type: String,
-      enum: Object.values(STATUS),
-      default: STATUS.ONBOARDING,
+      enum: Object.values(TENANT_STATUS),
+      default: TENANT_STATUS.AWAITING_ACTIVATION,
     },
 
     identification: {

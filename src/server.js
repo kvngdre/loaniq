@@ -13,7 +13,7 @@ export const server = http.createServer(app);
 
 console.clear();
 
-async function startServer() {
+async function bootstrap() {
   try {
     await loaders.init({ app: app, routes: routes });
 
@@ -25,4 +25,4 @@ async function startServer() {
   }
 }
 
-startServer();
+bootstrap();

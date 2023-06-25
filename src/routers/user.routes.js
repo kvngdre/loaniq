@@ -1,24 +1,13 @@
 import { Router } from 'express';
-import upload from '../middleware/fileUploader.js';
-import userConfigRouter from './userConfig.routes.js';
 import UserController from '../controllers/user.controller.js';
 import validateObjectId from '../middleware/validateObjectId.js';
 import verifyJWT from '../middleware/verifyJWT.js';
 
 const router = Router();
 
-router.use('/configurations', userConfigRouter);
-
 router.post('/', verifyJWT, UserController.createUser);
 
 router.post('/forgot-password', UserController.forgotPassword);
-
-router.post(
-  '/uploads',
-  verifyJWT,
-  upload.single('avatar'),
-  UserController.uploadFiles,
-);
 
 router.post('/verify-signup', UserController.verifySignup);
 

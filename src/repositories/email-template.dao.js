@@ -1,10 +1,11 @@
 import { Error } from 'mongoose';
-import ConflictError from '../errors/conflict.error.js';
-import ValidationError from '../errors/validation.error.js';
-import EmailTemplate from '../models/email-template.model.js';
-import BaseRepository from './lib/base.repository.js';
 
-class EmailTemplateDAO extends BaseRepository {
+import { ConflictError, ValidationError } from '../errors/index.js';
+import EmailTemplate from '../models/email-template.model.js';
+import { getDuplicateField } from './lib/get-duplicate-field.js';
+import { getValidationErrorMessage } from './lib/get-validation-error-message.js';
+
+class EmailTemplateDAO {
   static async insert(dto, trx) {
     try {
       const newRecord = new EmailTemplate(dto);
@@ -12,13 +13,13 @@ class EmailTemplateDAO extends BaseRepository {
 
       return newRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception);
+      if (exception.message.includes('E11000')) {
+        const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
+        const errMsg = getValidationErrorMessage(exception);
         throw new ValidationError(errMsg);
       }
 
@@ -53,13 +54,13 @@ class EmailTemplateDAO extends BaseRepository {
 
       return foundRecord;
     } catch (exception) {
-      if (exception.code === this.DUPLICATE_ERROR_CODE) {
-        const field = this.getDuplicateField(exception);
+      if (exception.message.includes('E11000')) {
+        const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = this.getValidationErrorMsg(exception);
+        const errMsg = getValidationErrorMessage(exception);
         throw new ValidationError(errMsg);
       }
 

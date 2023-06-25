@@ -99,7 +99,7 @@ export const socials = [
   'tictok',
 ];
 
-export const STATUS = {
+export const TENANT_STATUS = {
   ACTIVE: 'active',
   AWAITING_ACTIVATION: 'awaiting_activation',
   DEACTIVATED: 'deactivated',

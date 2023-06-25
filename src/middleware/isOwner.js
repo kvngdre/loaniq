@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
-import { httpCodes } from '../utils/common.js';
 import { roles } from '../config/index.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
+import { HttpCode } from '../utils/common.js';
 
 const isOwner = (...rolesToCheck) => {
   let disallowedRoles = [roles.AGENT, roles.ANALYST, roles.SUPPORT];
@@ -19,7 +19,7 @@ const isOwner = (...rolesToCheck) => {
       req.params.userId != req.currentUser._id &&
       disallowedRoles.includes(req.currentUser.role)
     ) {
-      return res.status(httpCodes.FORBIDDEN).json(
+      return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
           message:

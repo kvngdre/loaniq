@@ -1,27 +1,24 @@
 /* eslint-disable camelcase */
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import path from 'path';
 import transaction from 'mongoose-trx';
+import { constants } from '../config/index.js';
+import {
+  ConflictError,
+  DependencyError,
+  UnauthorizedError,
+  ValidationError,
+} from '../errors/index.js';
+import { events, pubsub } from '../pubsub/index.js';
+import { userRepository } from '../repositories/index.js';
 import {
   generateAccessToken,
   generateRefreshToken,
 } from '../utils/generateJWT.js';
-import { constants } from '../config/index.js';
-import { events, pubsub } from '../pubsub/index.js';
-import ConflictError from '../errors/ConflictError.js';
-import DependencyError from '../errors/DependencyError.js';
-import driverUploader from '../utils/driveUploader.js';
-import EmailService from './email.service.js';
 import generateSession from '../utils/generateSession.js';
 import logger from '../utils/logger.js';
 import mailer from '../utils/mailer.js';
 import randomString from '../utils/randomString.js';
 import similarity from '../utils/stringSimilarity.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
-import UserConfigService from './userConfig.service.js';
-import UserDAO from '../daos/user.dao.js';
-import ValidationError from '../errors/ValidationError.js';
+import EmailService from './email.service.js';
 
 class UserService {
   static createUser = async (newUserDTO) => {
@@ -29,7 +26,7 @@ class UserService {
       newUserDTO.password = randomString();
 
       const [newUser] = await Promise.all([
-        UserDAO.insert(newUserDTO, session),
+        userRepository.insert(newUserDTO, session),
         UserConfigService.createConfig(
           {
             userId: newUserDTO._id,
@@ -60,7 +57,7 @@ class UserService {
   static verifyNewUser = async (verifyNewUserDTO, userAgent, clientIp) => {
     const { email, otp, current_password, new_password } = verifyNewUserDTO;
 
-    const foundUser = await UserDAO.findOne({ email });
+    const foundUser = await userRepository.findOne({ email });
     if (foundUser.isEmailVerified) {
       throw new ConflictError('Account already verified, please sign in.');
     }
@@ -121,7 +118,7 @@ class UserService {
     tenantId,
     projection = { password: 0, resetPwd: 0, otp: 0 },
   ) => {
-    const foundUsers = await UserDAO.find({ tenantId }, projection);
+    const foundUsers = await userRepository.find({ tenantId }, projection);
     const count = Intl.NumberFormat('en-US').format(foundUsers.length);
 
     return { count, users: foundUsers };
@@ -131,7 +128,7 @@ class UserService {
     userId,
     projection = { password: 0, resetPwd: 0, otp: 0 },
   ) => {
-    const foundUser = await UserDAO.findById(userId, projection);
+    const foundUser = await userRepository.findById(userId, projection);
 
     return foundUser;
   };
@@ -140,13 +137,13 @@ class UserService {
     filter,
     projection = { password: 0, resetPwd: 0, otp: 0 },
   ) => {
-    const foundUser = await UserDAO.findOne(filter, projection);
+    const foundUser = await userRepository.findOne(filter, projection);
 
     return foundUser;
   };
 
   static getCurrentUser = async (userId) => {
-    const foundUser = await UserDAO.findById(userId);
+    const foundUser = await userRepository.findById(userId);
 
     foundUser.purgeSensitiveData();
 
@@ -165,7 +162,7 @@ class UserService {
     updateUserDTO,
     projection = { password: 0, resetPwd: 0, otp: 0 },
   ) => {
-    const updatedUser = await UserDAO.update(
+    const updatedUser = await userRepository.update(
       { userId },
       updateUserDTO,
       projection,
@@ -175,14 +172,14 @@ class UserService {
   };
 
   static updateBulk = async (filter, updateDTO) => {
-    const result = await UserDAO.updateMany(filter, updateDTO);
+    const result = await userRepository.updateMany(filter, updateDTO);
 
     return result;
   };
 
   static deleteUser = async (userId) => {
     const [deletedUser] = await Promise.all([
-      UserDAO.remove(userId),
+      userRepository.remove(userId),
       UserConfigService.deleteConfig(userId),
     ]);
 
@@ -192,7 +189,7 @@ class UserService {
   static changePassword = async (userId, changePasswordDTO) => {
     const { current_password, new_password } = changePasswordDTO;
 
-    const foundUser = await UserDAO.findById(userId);
+    const foundUser = await userRepository.findById(userId);
 
     const isMatch = foundUser.comparePasswords(current_password);
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.');
@@ -247,7 +244,10 @@ class UserService {
   static forgotPassword = async ({ email, new_password }) => {
     logger.info('Sending password change email...');
     const [user] = await Promise.all([
-      UserDAO.update({ email }, { password: new_password, resetPwd: false }),
+      userRepository.update(
+        { email },
+        { password: new_password, resetPwd: false },
+      ),
       mailer({
         to: email,
         subject: 'Password changed',
@@ -263,7 +263,7 @@ class UserService {
   static resetPassword = async (userId) => {
     const randomPwd = randomString(6);
 
-    const foundUser = await UserDAO.update(userId, {
+    const foundUser = await userRepository.update(userId, {
       resetPwd: true,
       password: randomPwd,
     });
@@ -283,7 +283,7 @@ class UserService {
   };
 
   static deactivateUser = async (userId, { password }) => {
-    const foundUser = await UserDAO.findById(userId);
+    const foundUser = await userRepository.findById(userId);
 
     const isMatch = foundUser.comparePasswords(password);
     if (!isMatch) throw new UnauthorizedError('Password is incorrect.');
@@ -300,51 +300,10 @@ class UserService {
   };
 
   static reactivateUser = async (userId) => {
-    const foundUser = await UserDAO.update(userId, { active: true });
+    const foundUser = await userRepository.update(userId, { active: true });
 
     foundUser.purgeSensitiveData();
 
-    return foundUser;
-  };
-
-  static uploadImage = async ({ userId, tenantId }, uploadFile) => {
-    const foundUser = await UserDAO.findById(userId, {
-      password: 0,
-      resetPwd: 0,
-      otp: 0,
-    });
-    const folderName = `t-${tenantId.toString()}`;
-
-    const [foundFolder] = await driverUploader.findFolder(folderName);
-
-    // Selecting folder
-    const folderId = foundFolder?.id
-      ? foundFolder.id
-      : await driverUploader.createFolder(folderName);
-
-    // const newFolderId = await driverUploader.createFolder('users', folderId)
-
-    const name = uploadFile.originalname;
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const filePath = path.resolve(__dirname, `../../${uploadFile.path}`);
-    const mimeType = uploadFile.mimetype;
-
-    const response = await driverUploader.createFile(
-      name,
-      filePath,
-      folderId,
-      mimeType,
-    );
-    logger.debug(response.data.id);
-
-    foundUser.set({
-      avatar: response.data.id,
-    });
-
-    // ! Delete uploaded file from file system
-    fs.unlinkSync(filePath);
-
-    await foundUser.save();
     return foundUser;
   };
 }

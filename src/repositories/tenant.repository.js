@@ -6,13 +6,10 @@ import {
   ValidationError,
 } from '../errors/index.js';
 import { Tenant } from '../models/tenant.model.js';
-import { BaseRepository } from './lib/base.repository.js';
+import { getDuplicateField } from './lib/get-duplicate-field.js';
+import { getValidationErrorMessage } from './lib/get-validation-error-message.js';
 
-export class TenantRepository extends BaseRepository {
-  constructor() {
-    super();
-  }
-
+class TenantRepository {
   async save(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
@@ -21,12 +18,12 @@ export class TenantRepository extends BaseRepository {
       return tenant;
     } catch (exception) {
       if (exception.message.includes('E11000')) {
-        const field = this.getDuplicateField(exception);
+        const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errorMessage = this.getValidationErrorMessage(exception);
+        const errorMessage = getValidationErrorMessage(exception);
         throw new ValidationError(errorMessage);
       }
 
@@ -50,7 +47,7 @@ export class TenantRepository extends BaseRepository {
     try {
       const foundTenant = await Tenant.findById(id).select(projection);
       if (!foundTenant) {
-        throw new NotFoundError('Tenant does not exist');
+        throw new NotFoundError('Tenant not found');
       }
 
       foundTenant.set(updateTenantDto);
@@ -59,12 +56,12 @@ export class TenantRepository extends BaseRepository {
       return foundTenant;
     } catch (exception) {
       if (exception.message.includes('E11000')) {
-        const field = this.getDuplicateField(exception);
+        const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errorMessage = this.getValidationErrorMessage(exception);
+        const errorMessage = getValidationErrorMessage(exception);
         throw new ValidationError(errorMessage);
       }
 
@@ -73,6 +70,13 @@ export class TenantRepository extends BaseRepository {
   }
 
   async destroy(id) {
-    return Tenant.deleteOne({ _id: id });
+    const foundTenant = await Tenant.findById({ _id: id });
+    if (!foundTenant) {
+      throw new NotFoundError('Tenant not found');
+    }
+
+    foundTenant.delete();
   }
 }
+
+export const tenantRepository = new TenantRepository();

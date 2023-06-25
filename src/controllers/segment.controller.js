@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import SegmentService from '../services/segment.service.js';
-import segmentValidator from '../validators/segment.validator.js';
 import ValidationError from '../errors/ValidationError.js';
+import SegmentService from '../services/segment.service.js';
+import { HttpCode } from '../utils/common.js';
+import segmentValidator from '../validators/segment.validator.js';
+import BaseController from './base.controller.js';
 
 class SegmentController extends BaseController {
   static createSegment = async (req, res) => {
@@ -12,7 +12,7 @@ class SegmentController extends BaseController {
     const newSegment = await SegmentService.createSegment(value);
     const response = this.apiResponse('Segment created.', newSegment);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   static getSegments = async (req, res) => {
@@ -21,14 +21,14 @@ class SegmentController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, segments);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static getSegment = async (req, res) => {
     const segment = await SegmentService.getSegment(req.params.segmentId);
     const response = this.apiResponse('Fetched segment.', segment);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static updateSegment = async (req, res) => {
@@ -41,14 +41,14 @@ class SegmentController extends BaseController {
     );
     const response = this.apiResponse('Segment updated.', updatedSegment);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static deleteSegment = async (req, res) => {
     await SegmentService.deleteSegment(req.params.segmentId);
     const response = this.apiResponse('Segment deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

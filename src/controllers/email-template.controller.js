@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import EmailService from '../services/email.service.js';
-import emailTemplateValidator from '../validators/email-template.validator.js';
 import ValidationError from '../errors/ValidationError.js';
+import EmailService from '../services/email.service.js';
+import { HttpCode } from '../utils/common.js';
+import emailTemplateValidator from '../validators/email-template.validator.js';
+import BaseController from './base.controller.js';
 
 class EmailTemplateController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class EmailTemplateController extends BaseController {
     const newTemplate = await EmailService.addTemplate(value);
     const response = this.apiResponse('Template created', newTemplate);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   /**
@@ -30,7 +30,7 @@ class EmailTemplateController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundTemplates);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -42,7 +42,7 @@ class EmailTemplateController extends BaseController {
     const foundTemplate = await EmailService.getTemplate(req.params.templateId);
     const response = this.apiResponse('Fetched template', foundTemplate);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -60,7 +60,7 @@ class EmailTemplateController extends BaseController {
     );
     const response = this.apiResponse('Template updated', template);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -72,7 +72,7 @@ class EmailTemplateController extends BaseController {
     await EmailService.deleteTemplate(req.params.templateId);
     const response = this.apiResponse('Template deleted');
 
-    res.status(httpCodes.NO_CONTENT).json(response);
+    res.status(HttpCode.NO_CONTENT).json(response);
   };
 }
 

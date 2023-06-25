@@ -1,10 +1,11 @@
-import { createTransport } from 'nodemailer';
-import { fileURLToPath } from 'url';
 import { google } from 'googleapis';
-import path from 'path';
+import { createTransport } from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
-import DependencyError from '../errors/DependencyError.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import { constants } from '../config/index.js';
+import { DependencyError } from '../errors/index.js';
 import logger from './logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

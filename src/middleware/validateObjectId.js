@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { httpCodes } from '../utils/common.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
+import { HttpCode } from '../utils/common.js';
 
 export default function (req, res, next) {
   for (const key in req.params) {
@@ -8,7 +8,7 @@ export default function (req, res, next) {
       /[a-z]+Id$|^id$/g.test(key) &&
       !Types.ObjectId.isValid(req.params[key])
     ) {
-      return res.status(httpCodes.BAD_REQUEST).json(
+      return res.status(HttpCode.BAD_REQUEST).json(
         new ErrorResponse({
           name: 'Validation Error',
           message: `Invalid ${key

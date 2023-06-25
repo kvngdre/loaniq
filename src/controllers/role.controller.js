@@ -1,6 +1,6 @@
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
 import RoleService from '../services/role.service.js';
+import { HttpCode } from '../utils/common.js';
+import BaseController from './base.controller.js';
 
 class RoleController extends BaseController {
   /**
@@ -13,7 +13,7 @@ class RoleController extends BaseController {
     const newRole = await RoleService.createRole(req.body);
     const response = this.apiResponse('Role created', newRole);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   /**
@@ -28,7 +28,7 @@ class RoleController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundRoles);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -40,7 +40,7 @@ class RoleController extends BaseController {
     const foundRole = await RoleService.getRole(req.params.roleId);
     const response = this.apiResponse('Fetched role', foundRole);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -52,7 +52,7 @@ class RoleController extends BaseController {
     const role = await RoleService.updateRole(req.params.roleId);
     const response = this.apiResponse('Role updated', role);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -64,7 +64,7 @@ class RoleController extends BaseController {
     await RoleService.deleteRole(req.params.roleId);
     const response = this.apiResponse('Deleted role');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

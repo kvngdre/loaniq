@@ -1,12 +1,7 @@
 import bcrypt from 'bcryptjs';
+
 import { Schema, model } from 'mongoose';
 import autoPopulate from 'mongoose-autopopulate';
-import NotFoundError from '../errors/not-found.error.js';
-
-const schemaOptions = {
-  timestamps: true,
-  id: false,
-};
 
 const userSchema = new Schema(
   {
@@ -15,34 +10,34 @@ const userSchema = new Schema(
       default: null,
     },
 
-    first_name: {
+    firstName: {
       type: String,
       trim: true,
       required: true,
     },
 
-    last_name: {
+    lastName: {
       type: String,
       trim: true,
       required: true,
     },
 
-    middle_name: {
+    middleName: {
       type: String,
       trim: true,
       default: null,
     },
 
-    display_name: {
+    displayName: {
       type: String,
       trim: true,
       maxLength: 50,
       default() {
-        return this.first_name.concat(` ${this.last_name}`);
+        return this.firstName.concat(` ${this.lastName}`);
       },
     },
 
-    job_title: {
+    jobTitle: {
       type: String,
       minLength: 2,
       maxLength: 50,
@@ -54,7 +49,7 @@ const userSchema = new Schema(
       default: null,
     },
 
-    phone_number: {
+    phoneNo: {
       type: String,
       unique: true,
       trim: true,
@@ -103,24 +98,12 @@ const userSchema = new Schema(
       default: null,
     },
 
-    otp: {
-      pin: {
-        type: String,
-        default: null,
-      },
-
-      expiresIn: {
-        type: Number,
-        default: null,
-      },
-    },
-
     last_login_time: {
       type: Date,
       default: null,
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
 
 userSchema.plugin(autoPopulate);
@@ -173,10 +156,8 @@ userSchema.methods.permitLogin = function () {
 };
 
 userSchema.methods.purgeSensitiveData = function () {
-  delete this._doc?.otp;
   delete this._doc?.password;
   delete this._doc?.resetPwd;
-  delete this._doc?.salt;
 };
 
 userSchema.methods.validateOTP = function (otp) {
@@ -204,6 +185,4 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-const User = model('User', userSchema);
-
-export default User;
+export const User = model('User', userSchema);

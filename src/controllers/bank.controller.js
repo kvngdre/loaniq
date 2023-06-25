@@ -1,8 +1,8 @@
-import { httpCodes } from '../utils/common.js';
+import ValidationError from '../errors/ValidationError.js';
 import BankService from '../services/bank.service.js';
+import { HttpCode } from '../utils/common.js';
 import bankValidator from '../validators/bank.validator.js';
 import BaseController from './base.controller.js';
-import ValidationError from '../errors/ValidationError.js';
 
 class BankController extends BaseController {
   static createBank = async (req, res) => {
@@ -12,7 +12,7 @@ class BankController extends BaseController {
     const newBank = await BankService.create(value);
     const response = this.apiResponse('Bank created.', newBank);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   static getBanks = async (req, res) => {
@@ -20,14 +20,14 @@ class BankController extends BaseController {
     const message = this.getMsgFromCount(count);
 
     const response = this.apiResponse(message, banks);
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static getBank = async (req, res) => {
     const bank = await BankService.getBank(req.params.bankId);
     const response = this.apiResponse('Fetched bank.', bank);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static updateBank = async (req, res) => {
@@ -37,14 +37,14 @@ class BankController extends BaseController {
     const bank = await BankService.updateBank(req.params.bankId, value);
     const response = this.apiResponse('Bank updated', bank);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   static deleteBank = async (req, res) => {
     await BankService.deleteBank(req.params.bankId);
     const response = this.apiResponse('Bank deleted.');
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

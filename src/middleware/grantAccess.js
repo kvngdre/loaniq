@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
-import { httpCodes } from '../utils/common.js';
 import { roles } from '../config/index.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
+import { HttpCode } from '../utils/common.js';
 
 /**
  * Grants or denies user access to resource
@@ -15,7 +15,7 @@ function grantAccess(...allowedRoles) {
 
   return (req, res, next) => {
     if (!req.currentUser.role) {
-      return res.status(httpCodes.FORBIDDEN).json(
+      return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
           message: 'Forbidden',
@@ -24,7 +24,7 @@ function grantAccess(...allowedRoles) {
     }
 
     if (!allowedRoles.includes(req.currentUser.role)) {
-      return res.status(httpCodes.FORBIDDEN).json(
+      return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
           message:

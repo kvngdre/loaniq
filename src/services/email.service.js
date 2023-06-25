@@ -1,6 +1,6 @@
 import Sqrl from 'squirrelly';
 import { constants } from '../config/index.js';
-import EmailTemplateDAO from '../repository/email-template.dao.js';
+import EmailTemplateDAO from '../repositories/email-template.dao.js';
 import getMailTransport from '../utils/getMailTransport.js';
 import logger from '../utils/logger.js';
 

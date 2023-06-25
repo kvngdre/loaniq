@@ -1,10 +1,10 @@
 import requestIp from 'request-ip';
-import { httpCodes } from '../utils/common.js';
-import BaseController from './base.controller.js';
-import ClientService from '../services/client.service.js';
-import clientValidator from '../validators/client.validator.js';
-import ValidationError from '../errors/ValidationError.js';
 import { constants } from '../config/index.js';
+import ValidationError from '../errors/ValidationError.js';
+import ClientService from '../services/client.service.js';
+import { HttpCode } from '../utils/common.js';
+import clientValidator from '../validators/client.validator.js';
+import BaseController from './base.controller.js';
 
 class OriginController extends BaseController {
   /**
@@ -19,7 +19,7 @@ class OriginController extends BaseController {
     const newClient = await ClientService.create(value);
     const response = this.apiResponse('Client created', newClient);
 
-    res.status(httpCodes.CREATED).json(response);
+    res.status(HttpCode.CREATED).json(response);
   };
 
   /**
@@ -48,7 +48,7 @@ class OriginController extends BaseController {
 
     const response = this.apiResponse('Client verified', { user, accessToken });
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -63,7 +63,7 @@ class OriginController extends BaseController {
     const newClient = await ClientService.register(value);
     const response = this.apiResponse('Registration successful', newClient);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -79,7 +79,7 @@ class OriginController extends BaseController {
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundClients);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 
   /**
@@ -91,7 +91,7 @@ class OriginController extends BaseController {
     const foundClient = await ClientService.getClientById(req.params.clientId);
     const response = this.apiResponse('Fetched client', foundClient);
 
-    res.status(httpCodes.OK).json(response);
+    res.status(HttpCode.OK).json(response);
   };
 }
 

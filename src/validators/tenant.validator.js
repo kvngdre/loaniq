@@ -1,25 +1,16 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
 import { companyCategory, socials, status, validIds } from '../utils/common.js';
-import BaseValidator from './base.validator.js';
+import BaseValidator from './lib/base-validator.js';
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema;
-
   #cacNumberSchema;
-
   #categorySchema;
-
   #socialSchema;
-
   #supportSchema;
-
-  #allowUserPwdResetSchema;
-
   #idTypeSchema;
-
   #idSchema;
-
   #documentationSchema;
 
   constructor() {
@@ -99,10 +90,6 @@ class TenantValidator extends BaseValidator {
       .min(1)
       .label('Support');
 
-    this.#allowUserPwdResetSchema = Joi.boolean()
-      .label('Allow user password reset')
-      .default(false);
-
     this.#documentationSchema = Joi.array()
       .items(
         Joi.object({
@@ -115,32 +102,26 @@ class TenantValidator extends BaseValidator {
   }
 
   validateSignUp = (dto) => {
-    const newUserId = new Types.ObjectId();
-    const newTenantId = new Types.ObjectId();
     const adminRoleId = new Types.ObjectId();
 
     const schema = Joi.object({
-      tenant: Joi.object({
-        _id: Joi.any().default(newTenantId).forbidden(),
-        status: Joi.string().default(status.ONBOARDING).forbidden(),
-        company_name: Joi.string().min(2).max(50).required(),
-      }).required(),
-      user: Joi.object({
-        _id: Joi.any().default(newUserId).forbidden(),
-        tenantId: Joi.any().default(newTenantId).forbidden(),
-        first_name: this._nameSchema.extract('first').required(),
-        last_name: this._nameSchema.extract('last').required(),
-        email: this._emailSchema.required(),
-        phone_number: this._phoneNumberSchema.required(),
-        password: this._passwordSchema(8).required(),
-        confirm_password: this._confirmPasswordSchema.required(),
-        role: Joi.any().default(adminRoleId).forbidden(),
-        resetPwd: Joi.boolean().default(false).forbidden(),
-      }).required(),
+      businessName: Joi.string()
+        .label('Business name')
+        .min(2)
+        .max(50)
+        .required(),
+      firstName: this._nameSchema.extract('first').required(),
+      lastName: this._nameSchema.extract('last').required(),
+      email: this._emailSchema.required(),
+      phoneNo: this._phoneNumberSchema.required(),
+      password: this._passwordSchema(8).required(),
+      confirm_password: this._confirmPasswordSchema.required(),
+      role: Joi.any().default(adminRoleId).forbidden(),
+      resetPwd: Joi.boolean().default(false).forbidden(),
     });
 
     let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this._refineError(error);
+    if (error) error = this._refineError(error);
 
     return { value, error };
   };
