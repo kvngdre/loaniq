@@ -1,7 +1,13 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
-import { companyCategory, socials, status, validIds } from '../utils/common.js';
-import BaseValidator from './lib/base-validator.js';
+
+import {
+  companyCategory,
+  socials,
+  TENANT_STATUS,
+  VALID_ID,
+} from '../utils/common.js';
+import { BaseValidator } from './lib/base-validator.js';
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema;
@@ -77,7 +83,7 @@ class TenantValidator extends BaseValidator {
     this.#idTypeSchema = Joi.string()
       .lowercase()
       .label('Id type')
-      .valid(...validIds.filter((id) => id !== 'staff id card'));
+      .valid(...VALID_ID);
 
     this.#idSchema = Joi.string().alphanum().trim().uppercase().messages({
       'string.pattern.base': 'Invalid staff id number',

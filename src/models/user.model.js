@@ -1,7 +1,7 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 
-import { Schema, model } from 'mongoose';
-import autoPopulate from 'mongoose-autopopulate';
+import { Schema, model } from "mongoose";
+import autoPopulate from "mongoose-autopopulate";
 
 const userSchema = new Schema(
   {
@@ -61,6 +61,7 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
       unique: true,
+      index: true,
       required: true,
     },
 
@@ -77,10 +78,8 @@ const userSchema = new Schema(
     },
 
     role: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'Role',
-      autopopulate: true,
     },
 
     resetPwd: {
@@ -118,7 +117,7 @@ userSchema.methods.fullName = function () {
 
   fullNameParts.push(lastName);
 
-  return fullNameParts.join(' ');
+  return fullNameParts.join(" ");
 };
 
 // Checking if user can be permitted to login
@@ -129,7 +128,7 @@ userSchema.methods.permitLogin = function () {
     data.redirect.verifyNewUser = true;
     return {
       isPermitted: false,
-      message: 'Your account has not been verified.',
+      message: "Your account has not been verified.",
       data,
     };
   }
@@ -138,7 +137,7 @@ userSchema.methods.permitLogin = function () {
     data.redirect.reset_password = true;
     return {
       isPermitted: false,
-      message: 'Your password reset has been triggered.',
+      message: "Your password reset has been triggered.",
       data,
     };
   }
@@ -147,7 +146,7 @@ userSchema.methods.permitLogin = function () {
     data.redirect.inactive = true;
     return {
       isPermitted: false,
-      message: 'Account deactivated. Contact your administrator.',
+      message: "Account deactivated. Contact your administrator.",
       data,
     };
   }
@@ -162,11 +161,11 @@ userSchema.methods.purgeSensitiveData = function () {
 
 userSchema.methods.validateOTP = function (otp) {
   if (Date.now() > this.otp.expiresIn) {
-    return { isValid: false, reason: 'OTP expired' };
+    return { isValid: false, reason: "OTP expired" };
   }
 
   if (otp !== this.otp.pin) {
-    return { isValid: false, reason: 'Invalid OTP' };
+    return { isValid: false, reason: "Invalid OTP" };
   }
 
   return { isValid: true };
@@ -177,12 +176,12 @@ userSchema.methods.validatePassword = function (password) {
 };
 
 // ! Hashing user password before insert
-userSchema.pre('save', function (next) {
-  if (this.modifiedPaths()?.includes('password')) {
+userSchema.pre("save", function (next) {
+  if (this.modifiedPaths()?.includes("password")) {
     this.password = bcrypt.hashSync(this.password, 12);
   }
 
   next();
 });
 
-export const User = model('User', userSchema);
+export const User = model("User", userSchema);

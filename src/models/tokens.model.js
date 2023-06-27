@@ -19,7 +19,7 @@ const tokensSchema = new Schema(
     },
 
     expiration_time: {
-      type: NUmber,
+      type: Number,
       required: true,
     },
 

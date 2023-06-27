@@ -1,23 +1,23 @@
-import { Error } from 'mongoose';
+import { Error } from "mongoose";
 
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from '../errors/index.js';
-import { Tenant } from '../models/tenant.model.js';
-import { getDuplicateField } from './lib/get-duplicate-field.js';
-import { getValidationErrorMessage } from './lib/get-validation-error-message.js';
+} from "../errors/index.js";
+import { Tenant } from "../models/tenant.model.js";
+import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
-class TenantRepository {
-  async save(createTenantDto, session) {
+export class TenantRepository {
+  static async save(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
       tenant.save({ session });
 
       return tenant;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
@@ -47,7 +47,7 @@ class TenantRepository {
     try {
       const foundTenant = await Tenant.findById(id).select(projection);
       if (!foundTenant) {
-        throw new NotFoundError('Tenant not found');
+        throw new NotFoundError("Tenant not found");
       }
 
       foundTenant.set(updateTenantDto);
@@ -55,7 +55,7 @@ class TenantRepository {
 
       return foundTenant;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
@@ -72,11 +72,9 @@ class TenantRepository {
   async destroy(id) {
     const foundTenant = await Tenant.findById({ _id: id });
     if (!foundTenant) {
-      throw new NotFoundError('Tenant not found');
+      throw new NotFoundError("Tenant not found");
     }
 
     foundTenant.delete();
   }
 }
-
-export const tenantRepository = new TenantRepository();

@@ -1,27 +1,28 @@
-import { Router } from 'express';
-import RoleController from '../controllers/role.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+
+import RoleController from "../controllers/role.controller.js";
+import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
 const router = Router();
 
-router.post('/', verifyJWT, RoleController.create);
+router.post("/", verifyJWT, RoleController.create);
 
-router.get('/', verifyJWT, RoleController.getRoles);
+router.get("/", verifyJWT, RoleController.getRoles);
 
-router.get('/:roleId', verifyJWT, validateObjectId, RoleController.getRole);
+router.get("/:roleId", verifyJWT, validateIdMiddleware, RoleController.getRole);
 
 router.patch(
-  '/:roleId',
+  "/:roleId",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   RoleController.updateRole,
 );
 
 router.delete(
-  '/:roleId',
+  "/:roleId",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   RoleController.deleteRole,
 );
 

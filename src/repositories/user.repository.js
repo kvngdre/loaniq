@@ -1,23 +1,23 @@
-import { Error } from 'mongoose';
+import { Error } from "mongoose";
 
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from '../errors/index.js';
-import { User } from '../models/user.model.js';
-import { getDuplicateField } from './lib/get-duplicate-field.js';
-import { getValidationErrorMessage } from './lib/get-validation-error-message.js';
+} from "../errors/index.js";
+import { User } from "../models/user.model.js";
+import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
-class UserRepository {
-  async save(createUserDto, session) {
+export class UserRepository {
+  static async save(createUserDto, session) {
     try {
       const user = new User(createUserDto);
       user.save({ session });
 
       return user;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
@@ -36,18 +36,18 @@ class UserRepository {
   }
 
   async findById(id, projection = {}) {
-    return User.findById(id).select(projection).populate({ path: 'role' });
+    return User.findById(id).select(projection).populate({ path: "role" });
   }
 
   async findOne(filter, projection = {}) {
-    return User.findOne(filter).select(projection).populate({ path: 'role' });
+    return User.findOne(filter).select(projection).populate({ path: "role" });
   }
 
   async updateOne(id, updateUserDto, projection = {}) {
     try {
       const foundUser = await User.findById(id).select(projection);
       if (!foundUser) {
-        throw new NotFoundError('User does not exist');
+        throw new NotFoundError("User does not exist");
       }
 
       foundUser.set(updateUserDto);
@@ -55,7 +55,7 @@ class UserRepository {
 
       return foundUser;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
@@ -77,5 +77,3 @@ class UserRepository {
     User.deleteOne({ _id: id });
   }
 }
-
-export const userRepository = new UserRepository();

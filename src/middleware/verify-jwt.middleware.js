@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+
 import { constants } from '../config/index.js';
 import { BaseError } from '../errors/lib/base-error.js';
-import User from '../models/user.model.js';
+import { User } from '../models/user.model.js';
 import ErrorResponse from '../utils/ErrorResponse.js';
-import { httpCodes } from '../utils/common.js';
+import { HttpCode } from '../utils/common.js';
 
 export default async function verifyJWT(req, res, next) {
   try {
@@ -14,7 +15,7 @@ export default async function verifyJWT(req, res, next) {
      */
     const getTokenFromHeader = (req) => {
       if (!req.headers?.authorization) {
-        return res.status(httpCodes.BAD_REQUEST).json(
+        return res.status(HttpCode.BAD_REQUEST).json(
           new ErrorResponse({
             name: 'Validation Error',
             message: 'No token provided',
@@ -30,7 +31,7 @@ export default async function verifyJWT(req, res, next) {
 
     // Checking if token claims are valid.
     if (scheme !== 'Bearer' || decoded.iss !== constants.jwt.issuer) {
-      return res.status(httpCodes.UNAUTHORIZED).json(
+      return res.status(HttpCode.UNAUTHORIZED).json(
         new ErrorResponse({
           name: 'Auth Error',
           message: 'Invalid access token provided.',
@@ -44,7 +45,7 @@ export default async function verifyJWT(req, res, next) {
       .populate({ path: 'role', populate: { path: 'permissions' } })
       .catch((error) => {
         if (error instanceof BaseError) {
-          return res.status(httpCodes.NOT_FOUND).json(
+          return res.status(HttpCode.NOT_FOUND).json(
             new ErrorResponse({
               name: 'Not Found Error',
               message: 'User account not found',
@@ -57,7 +58,7 @@ export default async function verifyJWT(req, res, next) {
 
     // Checking if user is inactive.
     if (!user.active) {
-      return res.status(httpCodes.FORBIDDEN).json(
+      return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
           message: 'Account deactivated. Contact administrator.',
@@ -70,7 +71,7 @@ export default async function verifyJWT(req, res, next) {
     next();
   } catch (exception) {
     if (exception instanceof jwt.JsonWebTokenError) {
-      res.status(httpCodes.FORBIDDEN).json(
+      res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
           name: 'Auth Error',
           message: exception.message,

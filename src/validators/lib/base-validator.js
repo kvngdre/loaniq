@@ -155,13 +155,10 @@ export class BaseValidator {
       .equal(Joi.ref('password'))
       .messages({ 'any.only': 'Passwords do not match' });
 
-    this._roleSchema = Joi.string()
-      .label('Role')
-      .valid(...Object.values(roles))
-      .messages({
-        'any.only': '{#label} is not valid',
-        'any.invalid': "{#label} '{#value}', cannot be assigned to this user",
-      });
+    this._roleSchema = Joi.string().label('Role').messages({
+      'any.only': '{#label} is not valid',
+      'any.invalid': "{#label} '{#value}', cannot be assigned to this user",
+    });
 
     this._locationSchema = Joi.object({
       address: Joi.string()

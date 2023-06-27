@@ -13,7 +13,6 @@ class ErrorResponse {
    */
   constructor(args) {
     this.success = false;
-    this.name = args.name;
     this.errors = args?.errors ? { ...args.errors } : { message: args.message };
     this.data = args?.data;
   }

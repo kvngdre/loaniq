@@ -1,60 +1,60 @@
-import { Router } from 'express';
-import UserController from '../controllers/user.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+import UserController from "../controllers/user.controller.js";
+import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
 const router = Router();
 
-router.post('/', verifyJWT, UserController.createUser);
+router.post("/", verifyJWT, UserController.createUser);
 
-router.post('/forgot-password', UserController.forgotPassword);
+router.post("/forgot-password", UserController.forgotPassword);
 
-router.post('/verify-signup', UserController.verifySignup);
+router.post("/verify-signup", UserController.verifySignup);
 
 router.post(
-  '/:userId/change-password',
+  "/:userId/change-password",
   verifyJWT,
   UserController.changePassword,
 );
 
 router.post(
-  '/:userId/deactivate',
+  "/:userId/deactivate",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   UserController.deactivateUser,
 );
 
-router.get('/', verifyJWT, UserController.getUsers);
+router.get("/", verifyJWT, UserController.getUsers);
 
-router.get('/me', verifyJWT, UserController.getCurrentUser);
+router.get("/me", verifyJWT, UserController.getCurrentUser);
 
-router.get('/:userId', verifyJWT, validateObjectId, UserController.getUser);
+router.get("/:userId", verifyJWT, validateIdMiddleware, UserController.getUser);
 
 router.get(
-  '/:userId/reactivate',
+  "/:userId/reactivate",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   UserController.reactivateUser,
 );
 
 router.get(
-  '/:userId/reset-password',
+  "/:userId/reset-password",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   UserController.resetPassword,
 );
 
 router.patch(
-  '/:userId',
+  "/:userId",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   UserController.updateUser,
 );
 
 router.delete(
-  '/:userId',
+  "/:userId",
   verifyJWT,
-  validateObjectId,
+  validateIdMiddleware,
   UserController.deleteUser,
 );
 

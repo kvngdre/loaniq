@@ -1,100 +1,100 @@
-// import { requiresAuth } from 'express-openid-connect'
-import { Router } from 'express';
-import TenantController from '../controllers/tenant.controller.js';
-import checkPermission from '../middleware/checkPermission.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+
+import { tenantController } from "../controllers/index.js";
+import checkPermission from "../middleware/checkPermission.js";
+import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
 const router = Router();
 
-router.post('/sign-up', TenantController.signUp);
+router.post("/sign-up", tenantController.signUp);
 
 router.post(
-  '/:tenantId/activate',
+  "/:tenantId/activate",
   verifyJWT,
-  validateObjectId,
-  checkPermission('submitToActivateOwn', 'tenant'),
-  TenantController.requestTenantActivavtion,
-);
-
-router.post(
-  '/:tenantId/deactivate',
-  verifyJWT,
-  validateObjectId,
-  checkPermission('requestToDeactivateOwn', 'tenant'),
-  TenantController.requestTenantActivavtion,
+  validateIdMiddleware,
+  checkPermission("submitToActivateOwn", "tenant"),
+  tenantController.requestTenantActivavtion,
 );
 
 router.post(
-  '/:tenantId/onboard',
+  "/:tenantId/deactivate",
   verifyJWT,
-  validateObjectId,
-  checkPermission('onBoardOwn', 'tenant'),
-  TenantController.onBoardTenant,
+  validateIdMiddleware,
+  checkPermission("requestToDeactivateOwn", "tenant"),
+  tenantController.requestTenantActivavtion,
 );
 
-router.get('/forms/:formId', TenantController.getPublicFormData);
-
-router.get(
-  '/self',
+router.post(
+  "/:tenantId/onboard",
   verifyJWT,
-  checkPermission('viewOwn', 'tenant'),
-  TenantController.getCurrentTenant,
+  validateIdMiddleware,
+  checkPermission("onBoardOwn", "tenant"),
+  tenantController.onBoardTenant,
 );
 
-router.get(
-  '/',
-  verifyJWT,
-  checkPermission('viewAny', 'tenant'),
-  TenantController.getTenants,
-);
+router.get("/forms/:formId", tenantController.getPublicFormData);
 
 router.get(
-  '/:tenantId',
+  "/self",
   verifyJWT,
-  validateObjectId,
-  checkPermission('viewOwn', 'tenant'),
-  TenantController.getTenant,
+  checkPermission("viewOwn", "tenant"),
+  tenantController.getCurrentTenant,
 );
 
 router.get(
-  '/:tenantId/deactivate',
+  "/",
   verifyJWT,
-  validateObjectId,
-  checkPermission('deactivateAny', 'tenant'),
-  TenantController.requestToDeactivateTenant,
+  checkPermission("viewAny", "tenant"),
+  tenantController.getTenants,
 );
 
 router.get(
-  '/:tenantId/public-url',
+  "/:tenantId",
   verifyJWT,
-  validateObjectId,
-  checkPermission('generateOwnUrl', 'tenant'),
-  TenantController.generatePublicUrl,
+  validateIdMiddleware,
+  checkPermission("viewOwn", "tenant"),
+  tenantController.getTenant,
 );
 
 router.get(
-  '/:tenantId/reactivate',
+  "/:tenantId/deactivate",
   verifyJWT,
-  validateObjectId,
-  checkPermission('reactivateOwn', 'tenant'),
-  TenantController.reactivateTenant,
+  validateIdMiddleware,
+  checkPermission("deactivateAny", "tenant"),
+  tenantController.requestToDeactivateTenant,
+);
+
+router.get(
+  "/:tenantId/public-url",
+  verifyJWT,
+  validateIdMiddleware,
+  checkPermission("generateOwnUrl", "tenant"),
+  tenantController.generatePublicUrl,
+);
+
+router.get(
+  "/:tenantId/reactivate",
+  verifyJWT,
+  validateIdMiddleware,
+  checkPermission("reactivateOwn", "tenant"),
+  tenantController.reactivateTenant,
 );
 
 router.patch(
-  '/:tenantId',
+  "/:tenantId",
   verifyJWT,
-  validateObjectId,
-  checkPermission('updateOwn', 'tenant'),
-  TenantController.updateTenant,
+  validateIdMiddleware,
+  checkPermission("updateOwn", "tenant"),
+  tenantController.updateTenant,
 );
 
 router.delete(
-  '/:tenantId',
+  "/:tenantId",
   verifyJWT,
-  validateObjectId,
-  checkPermission('delete', 'tenant'),
-  TenantController.deleteTenant,
+  validateIdMiddleware,
+  checkPermission("delete", "tenant"),
+  tenantController.deleteTenant,
 );
 
 export default router;

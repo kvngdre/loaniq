@@ -1,10 +1,10 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const sessionSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       unique: true,
     },
@@ -23,6 +23,6 @@ const sessionSchema = new Schema(
   { timestamps: true },
 );
 
-const Session = model('Session', sessionSchema);
+const Session = model("Session", sessionSchema);
 
 export default Session;

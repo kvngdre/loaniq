@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Types } from 'mongoose';
 import { ForbiddenError } from '../errors/index.js';
-import { canUserResetPwd } from '../helpers/user.helpers.js';
+// import { canUserResetPwd } from '../helpers/user.helpers.js';
 import { BaseValidator } from './lib/base-validator.js';
 
 class UserValidator extends BaseValidator {
@@ -139,12 +139,12 @@ class UserValidator extends BaseValidator {
       return { value, error };
     }
 
-    const canReset = await canUserResetPwd(value.email);
-    if (!canReset) {
-      throw new ForbiddenError(
-        "You can't reset your own password. If you can't sign in, you need to contact your administrator to reset your password for you.",
-      );
-    }
+    // const canReset = await canUserResetPwd(value.email);
+    // if (!canReset) {
+    //   throw new ForbiddenError(
+    //     "You can't reset your own password. If you can't sign in, you need to contact your administrator to reset your password for you.",
+    //   );
+    // }
 
     schema = schema.keys({
       new_password: this._passwordSchema(8).required(),

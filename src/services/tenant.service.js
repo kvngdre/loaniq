@@ -1,54 +1,45 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
-import { startSession } from 'mongoose';
-import { TenantResponseDto } from '../dtos/tenant-response.dto.js';
-import ConflictError from '../errors/conflict.error.js';
-import DependencyError from '../errors/dependency.error.js';
-import UnauthorizedError from '../errors/unauthorized.error.js';
-import { roleRepository } from '../repositories/role.repository.js';
-import { tenantRepository } from '../repositories/tenant.repository.js';
-import { tokenRepository } from '../repositories/token.repository.js';
-import { userRepository } from '../repositories/user.repository.js';
-import generateOTP from '../utils/generateOTP.js';
-import randomString from '../utils/randomString.js';
-import EmailService from './email.service.js';
+import { startSession } from "mongoose";
 
-export class TenantService {
-  async createTenant(signUpDto) {
-    user.otp = generateOTP(8);
+import {
+  ConflictError,
+  DependencyError,
+  UnauthorizedError,
+} from "../errors/index.js";
+import { TenantRepository } from "../repositories/tenant.repository.js";
+import { TokenRepository } from "../repositories/token.repository.js";
+import { UserRepository } from "../repositories/user.repository.js";
+import generateOTP from "../utils/generateOTP.js";
+import randomString from "../utils/randomString.js";
+import EmailService from "./email.service.js";
+
+class TenantService {
+  static async createTenant(signUpDto) {
+    const otp = generateOTP(8);
     const session = await startSession();
 
     await session.withTransaction(async () => {
-      await Promise.all([
-        tenantRepository.insert(signUpDto, session),
-        userRepository.insert(signUpDto, session),
-        tokenRepository.save({}, session),
-        // Cloning default admin user role for new tenant.
-        roleRepository
-          .findOne({ name: 'admin', isDefault: true })
-          .then((doc) => {
-            doc._id = user.role;
-            doc.tenantId = user.tenantId;
-            doc.isDefault = false;
-            doc.isNew = true;
-
-            doc.save({ session });
-          }),
+      const [tenant, user] = await Promise.all([
+        TenantRepository.save(signUpDto, session),
+        UserRepository.insert(signUpDto, session),
       ]);
+      const k = await TokenRepository.save({}, session),
     });
 
     await EmailService.send({
       to: signUpDto.email,
-      templateName: 'new-tenant-user',
+      templateName: "new-tenant-user",
       context: { otp: user.otp.pin },
     });
 
     return {
-      message: 'You have successfully signed up for the service.',
+      message: "You have successfully signed up for the service.",
       data: {
         next_steps: [
-          'Check email for an OTP to verify your account.',
-          'Log in  and explore the features.',
-          'Customize your profile, manage your settings, and access our support.',
+          "Check email for an OTP to verify your account.",
+          "Log in  and explore the features.",
+          "Customize your profile, manage your settings, and access our support.",
         ],
       },
     };
@@ -65,7 +56,7 @@ export class TenantService {
 
   async getTenants(filters) {
     const foundTenants = await TenantRepository.find(filters);
-    const count = Intl.NumberFormat('en-US').format(foundTenants.length);
+    const count = Intl.NumberFormat("en-US").format(foundTenants.length);
 
     return [count, foundTenants];
   }
@@ -88,7 +79,7 @@ export class TenantService {
   async requestToActivateTenant(tenantId, activateTenantDTO) {
     const foundTenant = await TenantRepository.findById(tenantId);
     if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
-      throw new ConflictError('Tenant has already been activated.');
+      throw new ConflictError("Tenant has already been activated.");
     }
 
     foundTenant.set({
@@ -112,7 +103,7 @@ export class TenantService {
       ]);
 
       if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
-        throw new ConflictError('Tenant has already been activated.');
+        throw new ConflictError("Tenant has already been activated.");
       }
 
       foundTenant.set({
@@ -145,15 +136,15 @@ export class TenantService {
     // Email super admin about tenant deactivation
     await EmailService.send({
       from: foundUser.email,
-      to: 'kennedydre3@gmail.com',
-      templateName: 'request-tenant-deactivation',
+      to: "kennedydre3@gmail.com",
+      templateName: "request-tenant-deactivation",
       context: { username: foundUser.first_name },
     });
 
     // Email tenant admin about tenant deactivation
     await EmailService.send({
       to: foundUser.email,
-      templateName: 'requested-tenant-deactivation',
+      templateName: "requested-tenant-deactivation",
       context: { username: foundUser.first_name },
     });
 
@@ -166,7 +157,7 @@ export class TenantService {
         status: ENTITY_STATUS.DEACTIVATED,
       }),
       await UserRepository.find(
-        { tenantId, 'role.name': 'admin' },
+        { tenantId, "role.name": "admin" },
         { password: 0, resetPwd: 0, otp: 0 },
         { createdAt: 1 },
       ),
@@ -175,12 +166,12 @@ export class TenantService {
 
     const info = await EmailService.send({
       to: foundAdminUsers[0].email,
-      templateName: 'deactivate-tenant',
+      templateName: "deactivate-tenant",
       context: { name: foundAdminUsers[0].first_name },
     });
     if (info.error) {
       throw new DependencyError(
-        'Operation failed: Error sending deactivated email to user.',
+        "Operation failed: Error sending deactivated email to user.",
       );
     }
 
@@ -221,3 +212,5 @@ export class TenantService {
     };
   }
 }
+
+export const tenantService = new TenantService();

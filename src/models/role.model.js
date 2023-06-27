@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const roleSchema = new Schema(
   {
@@ -12,6 +12,7 @@ const roleSchema = new Schema(
       required: true,
       unique: true,
       lowercase: true,
+      index: true,
     },
 
     description: String,
@@ -19,11 +20,11 @@ const roleSchema = new Schema(
     permissions: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Permission',
+        ref: "Permission",
       },
     ],
   },
   { timestamps: true },
 );
 
-export const Role = model('Role', roleSchema);
+export const Role = model("Role", roleSchema);

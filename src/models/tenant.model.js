@@ -1,10 +1,10 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 import {
   TENANT_STATUS,
   VALID_ID,
   companyCategory,
   tenantDocTypes,
-} from '../utils/common.js';
+} from "../utils/common.js";
 
 const tenantSchema = new Schema(
   {
@@ -106,4 +106,4 @@ const tenantSchema = new Schema(
   { timestamps: true },
 );
 
-export const Tenant = model('Tenant', tenantSchema);
+export const Tenant = model("Tenant", tenantSchema);

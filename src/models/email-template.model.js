@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/not-found.error.js';
+import { NotFoundError } from '../errors/index.js';
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
