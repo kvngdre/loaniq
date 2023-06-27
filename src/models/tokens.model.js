@@ -1,10 +1,10 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const tokensSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
 
@@ -18,16 +18,19 @@ const tokensSchema = new Schema(
       required: true,
     },
 
-    expiration_time: {
+    expirationTime: {
       type: Number,
       required: true,
     },
 
-    isUsed: Boolean,
+    isUsed: {
+      type: Boolean,
+      default: false,
+    },
 
     usedAt: Date,
   },
   { timestamps: true },
 );
 
-export const Token = model('Token', tokensSchema);
+export const Token = model("Token", tokensSchema);

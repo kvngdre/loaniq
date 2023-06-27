@@ -20,17 +20,27 @@ class TenantService {
     const session = await startSession();
 
     await session.withTransaction(async () => {
-      const [tenant, user] = await Promise.all([
-        TenantRepository.save(signUpDto, session),
+      const [user] = await Promise.all([
         UserRepository.insert(signUpDto, session),
+        TenantRepository.save(signUpDto, session),
       ]);
-      const k = await TokenRepository.save({}, session),
+
+      await TokenRepository.save(
+        {
+          user: user._id,
+          token: otp.pin,
+          type: "sign-up token",
+          expirationTime: otp.expires,
+          isUsed: false,
+        },
+        session,
+      );
     });
 
     await EmailService.send({
       to: signUpDto.email,
       templateName: "new-tenant-user",
-      context: { otp: user.otp.pin },
+      context: { otp: otp.pin },
     });
 
     return {
@@ -38,14 +48,14 @@ class TenantService {
       data: {
         next_steps: [
           "Check email for an OTP to verify your account.",
-          "Log in  and explore the features.",
+          "Log in and explore the features.",
           "Customize your profile, manage your settings, and access our support.",
         ],
       },
     };
   }
 
-  async onBoardTenant(tenantId, onBoardTenantDTO) {
+  static async onBoardTenant(tenantId, onBoardTenantDTO) {
     const foundTenant = await TenantRepository.update(
       tenantId,
       onBoardTenantDTO,
