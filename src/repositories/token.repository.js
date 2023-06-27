@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "../errors/index.js";
+import { NotFoundError, ValidationException } from "../errors/index.js";
 import { Token } from "../models/index.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
@@ -12,7 +12,7 @@ export class TokenRepository {
     } catch (exception) {
       if (exception instanceof Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;
@@ -45,7 +45,7 @@ export class TokenRepository {
     } catch (exception) {
       if (exception instanceof Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;

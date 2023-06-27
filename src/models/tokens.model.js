@@ -6,10 +6,12 @@ const tokensSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     token: {
       type: String,
+      index: true,
       required: true,
     },
 

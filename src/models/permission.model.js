@@ -1,5 +1,4 @@
-import { Schema, model } from 'mongoose';
-import NotFoundError from '../errors/NotFoundError.js';
+import { Schema, model } from "mongoose";
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -31,21 +30,13 @@ const permissionSchema = new Schema(
 
     level: {
       type: String,
-      enum: ['admin', 'user'],
-      default: 'user',
+      enum: ["admin", "user"],
+      default: "user",
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
 
-permissionSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Permissions not found.');
-  }
-
-  if (!doc) throw new NotFoundError('Permission not found.');
-});
-
-const Permission = model('Permission', permissionSchema);
+const Permission = model("Permission", permissionSchema);
 
 export default Permission;

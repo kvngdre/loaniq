@@ -1,30 +1,30 @@
-import { Router } from 'express';
-import EmailTemplateController from '../controllers/email-template.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+import validateObjectId from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import EmailTemplateController from "../web/controllers/email-template.controller.js";
 
 const router = Router();
 
-router.post('/', EmailTemplateController.createTemplate);
+router.post("/", EmailTemplateController.createTemplate);
 
-router.get('/', EmailTemplateController.getTemplates);
+router.get("/", EmailTemplateController.getTemplates);
 
 router.get(
-  '/:templateId',
+  "/:templateId",
   verifyJWT,
   validateObjectId,
   EmailTemplateController.getTemplate,
 );
 
 router.patch(
-  '/:templateId',
+  "/:templateId",
   verifyJWT,
   validateObjectId,
   EmailTemplateController.updateTemplate,
 );
 
 router.delete(
-  '/:templateId',
+  "/:templateId",
   verifyJWT,
   validateObjectId,
   EmailTemplateController.deleteTemplate,

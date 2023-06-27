@@ -3,7 +3,7 @@ import { Error } from "mongoose";
 import {
   ConflictError,
   NotFoundError,
-  ValidationError,
+  ValidationException,
 } from "../errors/index.js";
 import { User } from "../models/user.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
@@ -24,7 +24,7 @@ export class UserRepository {
 
       if (exception instanceof Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;
@@ -62,7 +62,7 @@ export class UserRepository {
 
       if (exception instanceof Error.ValidationError) {
         const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        throw new ValidationException(errMsg);
       }
 
       throw exception;

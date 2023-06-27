@@ -1,28 +1,28 @@
-import { Router } from 'express';
-import StateController from '../controllers/state.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+import validateObjectId from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import StateController from "../web/controllers/state.controller.js";
 
 const router = Router();
 
-router.post('/', [verifyJWT], StateController.createState);
+router.post("/", [verifyJWT], StateController.createState);
 
-router.get('/', StateController.getStates);
+router.get("/", StateController.getStates);
 
 router.get(
-  '/:stateId',
+  "/:stateId",
   [verifyJWT, validateObjectId],
   StateController.getState,
 );
 
 router.patch(
-  '/:stateId',
+  "/:stateId",
   [verifyJWT, validateObjectId],
   StateController.updateState,
 );
 
 router.delete(
-  '/:stateId',
+  "/:stateId",
   [verifyJWT, validateObjectId],
   StateController.deleteState,
 );

@@ -1,28 +1,28 @@
-import { Router } from 'express';
-import verifyJWT from '../middleware/verifyJWT.js';
-import SegConfigController from '../controllers/segConfig.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
+import { Router } from "express";
+import validateObjectId from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import SegConfigController from "../web/controllers/segConfig.controller.js";
 
 const router = Router();
 
-router.post('/', [verifyJWT], SegConfigController.createSegConfig);
+router.post("/", [verifyJWT], SegConfigController.createSegConfig);
 
-router.get('/', SegConfigController.getSegConfigs);
+router.get("/", SegConfigController.getSegConfigs);
 
 router.get(
-  '/:segConfigId',
+  "/:segConfigId",
   [validateObjectId],
   SegConfigController.getSegConfig,
 );
 
 router.patch(
-  '/:segConfigId',
+  "/:segConfigId",
   [validateObjectId],
   SegConfigController.updateConfig,
 );
 
 router.delete(
-  '/:segConfigId',
+  "/:segConfigId",
   [validateObjectId],
   SegConfigController.deleteSegConfig,
 );

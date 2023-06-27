@@ -7,9 +7,11 @@ import {
   DependencyError,
   UnauthorizedError,
 } from "../errors/index.js";
-import { TenantRepository } from "../repositories/tenant.repository.js";
-import { TokenRepository } from "../repositories/token.repository.js";
-import { UserRepository } from "../repositories/user.repository.js";
+import {
+  TenantRepository,
+  TokenRepository,
+  UserRepository,
+} from "../repositories/index.js";
 import generateOTP from "../utils/generateOTP.js";
 import randomString from "../utils/randomString.js";
 import EmailService from "./email.service.js";
@@ -21,11 +23,11 @@ class TenantService {
 
     await session.withTransaction(async () => {
       const [user] = await Promise.all([
-        UserRepository.insert(signUpDto, session),
+        UserRepository.save(signUpDto, session),
         TenantRepository.save(signUpDto, session),
       ]);
 
-      await TokenRepository.save(
+      TokenRepository.save(
         {
           user: user._id,
           token: otp.pin,
@@ -37,7 +39,7 @@ class TenantService {
       );
     });
 
-    await EmailService.send({
+    EmailService.send({
       to: signUpDto.email,
       templateName: "new-tenant-user",
       context: { otp: otp.pin },

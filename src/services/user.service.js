@@ -1,24 +1,24 @@
 /* eslint-disable camelcase */
-import transaction from 'mongoose-trx';
-import { constants } from '../config/index.js';
+import transaction from "mongoose-trx";
+import { constants } from "../config/index.js";
 import {
   ConflictError,
   DependencyError,
   UnauthorizedError,
-  ValidationError,
-} from '../errors/index.js';
-import { events, pubsub } from '../pubsub/index.js';
-import { userRepository } from '../repositories/index.js';
+  ValidationException,
+} from "../errors/index.js";
+import { events, pubsub } from "../pubsub/index.js";
+import { UserRepository } from "../repositories/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from '../utils/generateJWT.js';
-import generateSession from '../utils/generateSession.js';
-import logger from '../utils/logger.js';
-import mailer from '../utils/mailer.js';
-import randomString from '../utils/randomString.js';
-import similarity from '../utils/stringSimilarity.js';
-import EmailService from './email.service.js';
+} from "../utils/generateJWT.js";
+import generateSession from "../utils/generateSession.js";
+import logger from "../utils/logger.js";
+import mailer from "../utils/mailer.js";
+import randomString from "../utils/randomString.js";
+import similarity from "../utils/stringSimilarity.js";
+import EmailService from "./email.service.js";
 
 class UserService {
   static createUser = async (newUserDTO) => {
@@ -26,7 +26,7 @@ class UserService {
       newUserDTO.password = randomString();
 
       const [newUser] = await Promise.all([
-        userRepository.insert(newUserDTO, session),
+        UserRepository.save(newUserDTO, session),
         UserConfigService.createConfig(
           {
             userId: newUserDTO._id,
@@ -39,11 +39,11 @@ class UserService {
       // Send temporary password to new user email.
       const info = await EmailService.send({
         to: newUserDTO.email,
-        templateName: 'new-user',
+        templateName: "new-user",
         context: { name: newUserDTO.first_name, password: newUserDTO.password },
       });
       if (info.error) {
-        throw new DependencyError('Failed to send password to user email.');
+        throw new DependencyError("Failed to send password to user email.");
       }
 
       newUser.purgeSensitiveData();
@@ -59,23 +59,25 @@ class UserService {
 
     const foundUser = await userRepository.findOne({ email });
     if (foundUser.isEmailVerified) {
-      throw new ConflictError('Account already verified, please sign in.');
+      throw new ConflictError("Account already verified, please sign in.");
     }
 
     if (otp) {
       const { isValid, reason } = foundUser.validateOTP(otp);
-      if (!isValid) throw new ValidationError(reason);
+      if (!isValid) throw new ValidationException(reason);
 
-      foundUser.set({ 'otp.pin': null, 'otp.expiresIn': null });
+      foundUser.set({ "otp.pin": null, "otp.expiresIn": null });
     } else {
       const isValid = foundUser.validatePassword(current_password);
-      if (!isValid) throw new UnauthorizedError('Password is incorrect.');
+      if (!isValid) throw new UnauthorizedError("Password is incorrect.");
 
       // * Measuring similarity of new password to the current temporary password.
       const similarityPercent =
         similarity(new_password, current_password) * 100;
       if (similarityPercent >= constants.max_similarity) {
-        throw new ValidationError('Password is too similar to old password.');
+        throw new ValidationException(
+          "Password is too similar to old password.",
+        );
       }
 
       // Setting user password
@@ -119,7 +121,7 @@ class UserService {
     projection = { password: 0, resetPwd: 0, otp: 0 },
   ) => {
     const foundUsers = await userRepository.find({ tenantId }, projection);
-    const count = Intl.NumberFormat('en-US').format(foundUsers.length);
+    const count = Intl.NumberFormat("en-US").format(foundUsers.length);
 
     return { count, users: foundUsers };
   };
@@ -192,45 +194,45 @@ class UserService {
     const foundUser = await userRepository.findById(userId);
 
     const isMatch = foundUser.comparePasswords(current_password);
-    if (!isMatch) throw new UnauthorizedError('Password is incorrect.');
+    if (!isMatch) throw new UnauthorizedError("Password is incorrect.");
 
     const percentageSimilarity =
       similarity(new_password, current_password) * 100;
 
     if (percentageSimilarity >= constants.max_similarity) {
-      throw new ValidationError('Password is too similar to old password.');
+      throw new ValidationException("Password is too similar to old password.");
     }
 
-    const formatter = new Intl.DateTimeFormat('en-GB', {
-      month: 'long',
-      year: 'numeric',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      month: "long",
+      year: "numeric",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
       hour12: false,
     });
 
     // Send temporary password to new user email.
     const info = await EmailService.send({
       to: foundUser.email,
-      templateName: 'user_password_change',
+      templateName: "user_password_change",
       context: {
         name: foundUser.first_name,
         datetime: formatter.format(new Date()),
       },
     });
     if (info.error) {
-      throw new DependencyError('Failed to send password to user email.');
+      throw new DependencyError("Failed to send password to user email.");
     }
 
     // ! Notify user of password change
-    logger.debug('Sending password change email...');
+    logger.debug("Sending password change email...");
     mailer({
       to: foundUser.email,
-      subject: 'Password changed',
+      subject: "Password changed",
       name: foundUser.first_name,
-      template: 'password-change',
+      template: "password-change",
     });
 
     foundUser.set({ password: new_password });
@@ -242,7 +244,7 @@ class UserService {
   };
 
   static forgotPassword = async ({ email, new_password }) => {
-    logger.info('Sending password change email...');
+    logger.info("Sending password change email...");
     const [user] = await Promise.all([
       userRepository.update(
         { email },
@@ -250,8 +252,8 @@ class UserService {
       ),
       mailer({
         to: email,
-        subject: 'Password changed',
-        template: 'password-change',
+        subject: "Password changed",
+        template: "password-change",
       }),
     ]);
 
@@ -268,12 +270,12 @@ class UserService {
       password: randomPwd,
     });
 
-    logger.info('Sending password reset mail...');
+    logger.info("Sending password reset mail...");
     await mailer({
       to: foundUser.email,
-      subject: 'Password reset triggered',
+      subject: "Password reset triggered",
       name: foundUser.first_name,
-      template: 'password-reset',
+      template: "password-reset",
       payload: { password: randomPwd },
     });
 
@@ -286,7 +288,7 @@ class UserService {
     const foundUser = await userRepository.findById(userId);
 
     const isMatch = foundUser.comparePasswords(password);
-    if (!isMatch) throw new UnauthorizedError('Password is incorrect.');
+    if (!isMatch) throw new UnauthorizedError("Password is incorrect.");
 
     pubsub.publish(events.user.resetPwd, { userId }, { sessions: [] });
 
