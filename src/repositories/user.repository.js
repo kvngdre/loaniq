@@ -2,7 +2,7 @@ import { Error } from "mongoose";
 
 import {
   ConflictError,
-  NotFoundError,
+  NotFoundException,
   ValidationException,
 } from "../errors/index.js";
 import { User } from "../models/user.model.js";
@@ -13,7 +13,7 @@ export class UserRepository {
   static async save(createUserDto, session) {
     try {
       const user = new User(createUserDto);
-      user.save({ session });
+      await user.save({ session });
 
       return user;
     } catch (exception) {
@@ -47,7 +47,7 @@ export class UserRepository {
     try {
       const foundUser = await User.findById(id).select(projection);
       if (!foundUser) {
-        throw new NotFoundError("User does not exist");
+        throw new NotFoundException("User does not exist");
       }
 
       foundUser.set(updateUserDto);

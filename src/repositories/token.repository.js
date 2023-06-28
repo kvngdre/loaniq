@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationException } from "../errors/index.js";
+import { NotFoundException, ValidationException } from "../errors/index.js";
 import { Token } from "../models/index.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
@@ -6,7 +6,7 @@ export class TokenRepository {
   static async save(createTokenDto, session) {
     try {
       const token = new Token(createTokenDto);
-      token.save({ session });
+      await token.save({ session });
 
       return token;
     } catch (exception) {
@@ -35,7 +35,7 @@ export class TokenRepository {
     try {
       const foundToken = await Tenant.findById(id).select(projection);
       if (!foundToken) {
-        throw new NotFoundError("Tenant not found");
+        throw new NotFoundException("Tenant not found");
       }
 
       foundToken.set(updateTokenDto);
@@ -55,7 +55,7 @@ export class TokenRepository {
   async destroy(id) {
     const foundToken = await Token.findById({ _id: id });
     if (!foundToken) {
-      throw new NotFoundError("Token not found");
+      throw new NotFoundException("Token not found");
     }
 
     foundToken.delete();

@@ -1,13 +1,19 @@
 import { Router } from "express";
 
+import { SignUpDto } from "../dtos/index.js";
 import checkPermission from "../middleware/checkPermission.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import { ValidateRequestMiddleware } from "../middleware/validate-request.middleware.js";
 import verifyJWT from "../middleware/verify-jwt.middleware.js";
 import { TenantController } from "../web/controllers/index.js";
 
 const router = Router();
 
-router.post("/sign-up", TenantController.signUp);
+router.post(
+  "/sign-up",
+  ValidateRequestMiddleware.with(SignUpDto),
+  TenantController.signUp,
+);
 
 router.post(
   "/:tenantId/activate",
@@ -45,7 +51,7 @@ router.get(
 router.get(
   "/",
   verifyJWT,
-  checkPermission("viewAny", "tenant"),
+  // checkPermission("viewAny", "tenant"),
   TenantController.getTenants,
 );
 

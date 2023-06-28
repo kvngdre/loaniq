@@ -2,7 +2,7 @@ import { Error } from "mongoose";
 
 import {
   ConflictError,
-  NotFoundError,
+  NotFoundException,
   ValidationException,
 } from "../errors/index.js";
 import { Tenant } from "../models/tenant.model.js";
@@ -13,7 +13,7 @@ export class TenantRepository {
   static async save(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
-      tenant.save({ session });
+      await tenant.save({ session });
 
       return tenant;
     } catch (exception) {
@@ -23,6 +23,7 @@ export class TenantRepository {
       }
 
       if (exception instanceof Error.ValidationError) {
+        console.log("=======================>");
         const errorMessage = getValidationErrorMessage(exception);
         throw new ValidationException(errorMessage);
       }
@@ -47,7 +48,7 @@ export class TenantRepository {
     try {
       const foundTenant = await Tenant.findById(id).select(projection);
       if (!foundTenant) {
-        throw new NotFoundError("Tenant not found");
+        throw new NotFoundException("Tenant not found");
       }
 
       foundTenant.set(updateTenantDto);
@@ -72,7 +73,7 @@ export class TenantRepository {
   async destroy(id) {
     const foundTenant = await Tenant.findById({ _id: id });
     if (!foundTenant) {
-      throw new NotFoundError("Tenant not found");
+      throw new NotFoundException("Tenant not found");
     }
 
     foundTenant.delete();

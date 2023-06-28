@@ -1,5 +1,5 @@
 import { ValidationException } from "../../errors/index.js";
-import { tenantService } from "../../services/index.js";
+import { TenantService } from "../../services/index.js";
 import { HttpCode } from "../../utils/common.js";
 import { tenantValidator } from "../../validators/tenant.validator.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
@@ -11,7 +11,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static async signUp(req, res) {
-    const signUpResponse = await tenantService.createTenant(req.body);
+    const signUpResponse = await TenantService.signUp(req.body);
     const response = BaseHttpResponse.success(signUpResponse, 200);
 
     res.status(response.statusCode).json(response);
@@ -26,7 +26,7 @@ export class TenantController {
     const { value, error } = tenantValidator.validateOnBoarding(req.body);
     if (error) throw new ValidationException(null, error);
 
-    const tenant = await tenantService.onBoardTenant(value);
+    const tenant = await TenantService.onBoardTenant(value);
     const response = this.apiResponse("Tenant information updated.", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -38,7 +38,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static getTenants = async (req, res) => {
-    const [count, tenants] = await tenantService.getTenants();
+    const [count, tenants] = await TenantService.getTenants();
 
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, tenants);
@@ -52,7 +52,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static getTenant = async (req, res) => {
-    const tenant = await tenantService.getTenant(req.params.tenantId);
+    const tenant = await TenantService.getTenant(req.params.tenantId);
     const response = this.apiResponse("Fetched tenant.", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -64,7 +64,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static getCurrentTenant = async (req, res) => {
-    const tenant = await tenantService.getTenant(req.currentUser.tenantId);
+    const tenant = await TenantService.getTenant(req.currentUser.tenantId);
     const response = this.apiResponse("Fetched tenant.", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -79,7 +79,7 @@ export class TenantController {
     const { value, error } = tenantValidator.validateUpdate(req.body);
     if (error) throw new ValidationException(null, error);
 
-    const tenant = await tenantService.updateTenant(req.params.tenantId, value);
+    const tenant = await TenantService.updateTenant(req.params.tenantId, value);
     const response = this.apiResponse("Tenant updated.", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -91,7 +91,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static deleteTenant = async (req, res) => {
-    await tenantService.deleteTenant(req.params.tenantId);
+    await TenantService.deleteTenant(req.params.tenantId);
     const response = this.apiResponse("Tenant deleted.");
 
     res.status(HttpCode.OK).json(response);
@@ -108,7 +108,7 @@ export class TenantController {
     );
     if (error) throw new ValidationException(null, error);
 
-    const tenant = await tenantService.requestToActivateTenant(
+    const tenant = await TenantService.requestToActivateTenant(
       req.params.tenantId,
       value,
     );
@@ -123,7 +123,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static activateTenant = async (req, res) => {
-    const tenant = await tenantService.activateTenant();
+    const tenant = await TenantService.activateTenant();
     const response = this.apiResponse("Tenant deactivated", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -140,7 +140,7 @@ export class TenantController {
     );
     if (error) throw new ValidationException(null, error);
 
-    await tenantService.requestToDeactivateTenant(req.currentUser, value);
+    await TenantService.requestToDeactivateTenant(req.currentUser, value);
     const response = this.apiResponse("Deactivation request sent");
 
     res.status(HttpCode.OK).json(response);
@@ -152,7 +152,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static reactivateTenant = async (req, res) => {
-    const tenant = await tenantService.reactivateTenant(req.params.tenantId);
+    const tenant = await TenantService.reactivateTenant(req.params.tenantId);
     const response = this.apiResponse("Tenant reactivated.", tenant);
 
     res.status(HttpCode.OK).json(response);
@@ -164,7 +164,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static generatePublicUrl = async (req, res) => {
-    const publicUrl = await tenantService.generateFormId(req.params.tenantId);
+    const publicUrl = await TenantService.generateFormId(req.params.tenantId);
     const response = this.apiResponse("Link generated.", publicUrl);
 
     res.status(HttpCode.OK).json(response);
@@ -176,7 +176,7 @@ export class TenantController {
    * @param {import('express').Response} res
    */
   static getPublicFormData = async (req, res) => {
-    const formData = await tenantService.getFormData(req.params.formId);
+    const formData = await TenantService.getFormData(req.params.formId);
     const response = this.apiResponse(
       "Fetched tenant public form data.",
       formData,

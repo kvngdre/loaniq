@@ -16,45 +16,58 @@ import generateOTP from "../utils/generateOTP.js";
 import randomString from "../utils/randomString.js";
 import EmailService from "./email.service.js";
 
-class TenantService {
-  static async createTenant(signUpDto) {
-    const otp = generateOTP(8);
+export class TenantService {
+  static async signUp(signUpDto) {
     const session = await startSession();
+    session.startTransaction();
 
-    await session.withTransaction(async () => {
-      const [user] = await Promise.all([
-        UserRepository.save(signUpDto, session),
-        TenantRepository.save(signUpDto, session),
-      ]);
+    try {
+      const otp = generateOTP(5);
+      const newUser = await UserRepository.save(
+        { role: "admin", resetPwd: false, ...signUpDto },
+        session,
+      );
 
-      TokenRepository.save(
+      await TenantRepository.save(signUpDto, session);
+
+      await TokenRepository.save(
         {
-          user: user._id,
-          token: otp.pin,
+          user: newUser._id,
+          token: otp.value,
           type: "sign-up token",
           expirationTime: otp.expires,
           isUsed: false,
         },
         session,
       );
-    });
 
-    EmailService.send({
-      to: signUpDto.email,
-      templateName: "new-tenant-user",
-      context: { otp: otp.pin },
-    });
+      await EmailService.send({
+        to: signUpDto.email,
+        templateName: "new-tenant-user",
+        context: {
+          name: newUser.firstName,
+          otp: otp.value,
+          expiresIn: otp.ttl,
+        },
+      });
 
-    return {
-      message: "You have successfully signed up for the service.",
-      data: {
+      await session.commitTransaction();
+
+      return {
+        message: "You have successfully signed up for the service.",
         next_steps: [
           "Check email for an OTP to verify your account.",
           "Log in and explore the features.",
           "Customize your profile, manage your settings, and access our support.",
         ],
-      },
-    };
+      };
+    } catch (exception) {
+      await session.abortTransaction();
+
+      throw exception;
+    } finally {
+      await session.endSession();
+    }
   }
 
   static async onBoardTenant(tenantId, onBoardTenantDTO) {
@@ -224,5 +237,3 @@ class TenantService {
     };
   }
 }
-
-export const tenantService = new TenantService();

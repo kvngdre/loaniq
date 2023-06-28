@@ -131,7 +131,6 @@ export class BaseValidator {
       .min(1)
       .max(128)
       .trim()
-      .label("First name")
       .pattern(/^[a-zA-Z]+( [a-zA-Z]+)*$/)
       .messages({
         "string.min": "{#label} is too small",

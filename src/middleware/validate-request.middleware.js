@@ -1,7 +1,8 @@
 export class ValidateRequestMiddleware {
   constructor(dto, withParams = false) {
-    this.dto = dto;
+    this.dtoClass = dto;
     this.withParams = withParams;
+    this.execute = this.execute.bind(this);
   }
 
   execute(req, res, next) {
@@ -11,7 +12,7 @@ export class ValidateRequestMiddleware {
         ...req.params,
       };
     }
-    req.body = this.dto.from(req.body);
+    req.body = this.dtoClass.from(req.body);
 
     next();
   }

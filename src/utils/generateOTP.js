@@ -2,17 +2,15 @@
  * Generates a random number string of specified length and expiration time.
  * @param {number} len The number of digits the otp should contain.
  * @param {number} expires OTP time-to-live in minutes.
- * @returns {{pin: string, expires: number}}
+ * @returns {{value: string, expires: number, ttl: number}}
  */
-export default function generateOTP(len, expires = 10) {
-  if (!len) throw new Error('Length is required.');
+export default function generateOTP(len, ttl = 10) {
+  if (typeof len !== "number" || typeof ttl !== "number") {
+    throw new Error('Arguments must be of type "number"');
+  }
 
-  const ONE_MINUTE_IN_MILLISECONDS = 60_000;
-  const val1 = 10 ** (len - 1);
-  const val2 = val1 * 9;
+  const value = `${Math.floor(Math.random() * 10 ** len)}`;
+  const expires = Date.now() + ttl * 60 * 1_000;
 
-  const pin = Math.floor(Math.random() * val2 + val1).toString();
-  const expiresIn = Date.now() + expires * ONE_MINUTE_IN_MILLISECONDS;
-
-  return { pin, expiresIn };
+  return { value, expires, ttl };
 }

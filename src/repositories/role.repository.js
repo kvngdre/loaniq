@@ -2,7 +2,7 @@ import { Error } from "mongoose";
 
 import {
   ConflictError,
-  NotFoundError,
+  NotFoundException,
   ValidationException,
 } from "../errors/index.js";
 import { Role } from "../models/role.model.js";
@@ -47,7 +47,7 @@ class RoleRepository {
     try {
       const foundRole = await Role.findById(id).select(projection);
       if (!foundRole) {
-        throw new NotFoundError("Role not found");
+        throw new NotFoundException("Role not found");
       }
 
       foundRole.set(updateRoleDto);

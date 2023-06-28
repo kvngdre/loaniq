@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
+import autoPopulate from "mongoose-autopopulate";
 
 import { Schema, model } from "mongoose";
-import autoPopulate from "mongoose-autopopulate";
 
 const userSchema = new Schema(
   {
@@ -49,12 +49,7 @@ const userSchema = new Schema(
       default: null,
     },
 
-    phoneNo: {
-      type: String,
-      unique: true,
-      trim: true,
-      required: true,
-    },
+    phoneNo: String,
 
     email: {
       type: String,
@@ -72,8 +67,6 @@ const userSchema = new Schema(
 
     password: {
       type: String,
-      trim: true,
-      maxLength: 1024,
       required: true,
     },
 
@@ -97,7 +90,7 @@ const userSchema = new Schema(
       default: null,
     },
 
-    last_login_time: {
+    lastLoginTime: {
       type: Date,
       default: null,
     },

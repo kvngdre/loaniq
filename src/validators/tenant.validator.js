@@ -117,8 +117,8 @@ class TenantValidator extends BaseValidator {
         .min(2)
         .max(50)
         .required(),
-      first_name: this.nameSchema.extract("first").required(),
-      last_name: this.nameSchema.extract("last").required(),
+      first_name: this.nameSchema.label("First name").required(),
+      last_name: this.nameSchema.label("Last name").required(),
       email: this.emailSchema.required(),
       phone_no: this.phoneNumberSchema.required(),
       password: this.passwordSchema(8).required(),

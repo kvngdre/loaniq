@@ -4,8 +4,8 @@ declare global {
       PORT: string;
       ENCRYPTION_KEY: string;
       RATE: string;
-      DEV_DB_URI_LOCAL: string;
-      DEV_DB_URI_REMOTE: string;
+      DB_URI_LOCAL: string;
+      DB_URI_REMOTE: string;
       DB_URI_TEST: string;
       FLW_PUBLIC_KEY: string;
       FLW_PRIVATE_KEY: string;
@@ -22,7 +22,7 @@ declare global {
       CLIENT_SECRET: string;
       SENDER_EMAIL: string;
       OAUTH_PLAYGROUND: string;
-      AUTH0_CLIENT_ID: string;
+      CLIENT_ID: string;
       REFRESH_TOKEN: string;
       MAX_SIMILARITY: string;
       PSK_SECRET_KEY: string;
