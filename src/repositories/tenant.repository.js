@@ -78,3 +78,5 @@ export class TenantRepository {
     foundTenant.delete();
   }
 }
+
+export const tenantRepository = new TenantRepository();

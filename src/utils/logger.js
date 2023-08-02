@@ -5,7 +5,7 @@ const { align, cli, colorize, combine, timestamp, printf } = format;
 function isDevEnvironment() {
   if (process.env.NODE_ENV === 'development') return true;
 
-  return false;
+  return false; 
 }
 
 const custom = {

@@ -7,21 +7,21 @@ import {
   DependencyError,
   UnauthorizedError,
 } from "../errors/index.js";
+import { userRepository } from "../repositories/index.js";
 import { TenantRepository } from "../repositories/tenant.repository.js";
 import { TokenRepository } from "../repositories/token.repository.js";
-import { UserRepository } from "../repositories/user.repository.js";
 import generateOTP from "../utils/generateOTP.js";
 import randomString from "../utils/randomString.js";
 import EmailService from "./email.service.js";
 
 class TenantService {
-  static async createTenant(signUpDto) {
+  async createTenant(signUpDto) {
     const otp = generateOTP(8);
     const session = await startSession();
 
     await session.withTransaction(async () => {
       const [user] = await Promise.all([
-        UserRepository.insert(signUpDto, session),
+        userRepository.insert(signUpDto, session),
         TenantRepository.save(signUpDto, session),
       ]);
 
@@ -55,7 +55,7 @@ class TenantService {
     };
   }
 
-  static async onBoardTenant(tenantId, onBoardTenantDTO) {
+  async onBoardTenant(tenantId, onBoardTenantDTO) {
     const foundTenant = await TenantRepository.update(
       tenantId,
       onBoardTenantDTO,
@@ -137,7 +137,7 @@ class TenantService {
   async requestToDeactivateTenant({ _id, tenantId }, { otp }) {
     const [foundTenant, foundUser] = await Promise.all([
       TenantRepository.findById(tenantId),
-      UserRepository.findById(_id),
+      userRepository.findById(_id),
     ]);
 
     const { isValid, reason } = foundUser.validateOTP(otp);
@@ -166,12 +166,12 @@ class TenantService {
       await TenantRepository.update(tenantId, {
         status: ENTITY_STATUS.DEACTIVATED,
       }),
-      await UserRepository.find(
+      await userRepository.find(
         { tenantId, "role.name": "admin" },
         { password: 0, resetPwd: 0, otp: 0 },
         { createdAt: 1 },
       ),
-      await UserRepository.updateMany({ tenantId }, { active: false }),
+      await userRepository.updateMany({ tenantId }, { active: false }),
     ]);
 
     const info = await EmailService.send({
@@ -191,7 +191,7 @@ class TenantService {
   async reactivateTenant(tenantId) {
     const [tenant] = await Promise.all([
       TenantRepository.update(tenantId, { active: true }),
-      UserRepository.updateMany({ tenantId }, { active: true }),
+      userRepository.updateMany({ tenantId }, { active: true }),
     ]);
 
     return tenant;

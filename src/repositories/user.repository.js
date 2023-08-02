@@ -9,7 +9,7 @@ import { User } from "../models/user.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
-export class UserRepository {
+class UserRepository {
   static async save(createUserDto, session) {
     try {
       const user = new User(createUserDto);
@@ -77,3 +77,5 @@ export class UserRepository {
     User.deleteOne({ _id: id });
   }
 }
+
+export const userRepository = new UserRepository();

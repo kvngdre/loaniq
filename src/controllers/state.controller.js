@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import StateService from '../services/state.service.js';
-import { HttpCode } from '../utils/common.js';
-import stateValidator from '../validators/stateValidator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/validation.error.js";
+import StateService from "../services/state.service.js";
+import { HttpCode } from "../utils/common.js";
+import stateValidator from "../validators/stateValidator.js";
+import BaseController from "./base.controller.js";
 
 class StateController extends BaseController {
   static createState = async (req, res) => {
@@ -10,7 +10,7 @@ class StateController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newState = await StateService.create(value);
-    const response = this.apiResponse('State created.', newState);
+    const response = this.apiResponse("State created.", newState);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -25,7 +25,7 @@ class StateController extends BaseController {
 
   static getState = async (req, res) => {
     const state = await StateService.getState(req.params.stateId);
-    const response = this.apiResponse('Fetched state.', state);
+    const response = this.apiResponse("Fetched state.", state);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -35,14 +35,14 @@ class StateController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const state = await StateService.update(req.params.stateId, value);
-    const response = this.apiResponse('State updated.', state);
+    const response = this.apiResponse("State updated.", state);
 
     res.status(HttpCode.OK).json(response);
   };
 
   static deleteState = async (req, res) => {
     await StateService.delete(req.params.stateId);
-    const response = this.apiResponse('State deleted.');
+    const response = this.apiResponse("State deleted.");
 
     res.status(HttpCode.OK).json(response);
   };
