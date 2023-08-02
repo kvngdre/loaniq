@@ -1,22 +1,22 @@
 /* eslint-disable camelcase */
 /* eslint-disable eqeqeq */
-import jwt from 'jsonwebtoken';
-import { constants } from '../config/index.js';
+import jwt from "jsonwebtoken";
+import { constants } from "../config/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from '../utils/generateJWT.js';
-import ConflictError from '../errors/ConflictError.js';
-import DependencyError from '../errors/DependencyError.js';
-import EmailService from './email.service.js';
-import ForbiddenError from '../errors/ForbiddenError.js';
-import generateOTP from '../utils/generateOTP.js';
-import generateSession from '../utils/generateSession.js';
-import logger from '../utils/logger.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
-import userConfigService from './userConfig.service.js';
-import UserDAO from '../daos/user.dao.js';
-import ClientDAO from '../daos/client.dao.js';
+} from "../utils/generateJWT.js";
+import ConflictError from "../errors/ConflictError.js";
+import DependencyError from "../errors/DependencyError.js";
+import EmailService from "./email.service.js";
+import ForbiddenError from "../errors/ForbiddenError.js";
+import generateOTP from "../utils/generateOTP.js";
+import generateSession from "../utils/generateSession.js";
+import logger from "../utils/logger.js";
+import UnauthorizedError from "../errors/UnauthorizedError.js";
+import userConfigService from "./userConfig.service.js";
+import UserDAO from "../daos/user.dao.js";
+import ClientDAO from "../daos/client.dao.js";
 
 class AuthService {
   static async login(loginDTO, token, userAgent, clientIp) {
@@ -26,7 +26,7 @@ class AuthService {
       const foundUser = await UserDAO.findOne({ email });
 
       const isValid = foundUser.validatePassword(password);
-      if (!isValid) throw new UnauthorizedError('Invalid credentials');
+      if (!isValid) throw new UnauthorizedError("Invalid credentials");
 
       const { isPermitted, message, data } = foundUser.permitLogin();
       if (!isPermitted) throw new ForbiddenError(message, data);
@@ -47,7 +47,7 @@ class AuthService {
       }
 
       if (userConfig.sessions.length >= 3) {
-        throw new ConflictError('Maximum allowed devices reached.');
+        throw new ConflictError("Maximum allowed devices reached.");
       }
 
       const accessToken = generateAccessToken({ id: foundUser._id });
@@ -78,7 +78,7 @@ class AuthService {
     });
 
     const isValid = foundClient.validatePasscode(passcode);
-    if (!isValid) throw new UnauthorizedError('Invalid credentials');
+    if (!isValid) throw new UnauthorizedError("Invalid credentials");
 
     const { isPermitted, message, data } = foundClient.permitLogin();
     if (!isPermitted) throw new ForbiddenError(message, data);
@@ -109,9 +109,9 @@ class AuthService {
       const decoded = jwt.verify(token, secret.refresh, { issuer });
       if (decoded.client) {
         const foundClient = await ClientDAO.findOne({
-          'sessions.token': token,
+          "sessions.token": token,
         }).catch(async () => {
-          logger.warn('Attempted refresh token reuse detected.');
+          logger.warn("Attempted refresh token reuse detected.");
 
           await ClientDAO.update(decoded.id, { sessions: null }).catch(
             (err) => {
@@ -119,12 +119,12 @@ class AuthService {
             },
           );
 
-          throw new ForbiddenError('Forbidden');
+          throw new ForbiddenError("Forbidden");
         });
 
         // Validating if token payload is valid
         if (decoded.id != foundClient._id) {
-          throw new ForbiddenError('Invalid token');
+          throw new ForbiddenError("Invalid token");
         }
 
         // Generating tokens
@@ -142,8 +142,8 @@ class AuthService {
         foundClient.session.expiresIn =
           Date.now() + constants.jwt.exp_time.refresh * 1_000;
         await foundClient.updateOne({
-          'session.token': refreshToken,
-          'session.expiresIn':
+          "session.token": refreshToken,
+          "session.expiresIn":
             Date.now() + constants.jwt.exp_time.refresh * 1_000,
         });
 
@@ -152,9 +152,9 @@ class AuthService {
 
       // ! Tenant user requesting for new tokens.
       const foundUserConfig = await userConfigService
-        .getConfig({ 'sessions.token': token })
+        .getConfig({ "sessions.token": token })
         .catch(async () => {
-          logger.warn('Attempted refresh token reuse detected.');
+          logger.warn("Attempted refresh token reuse detected.");
 
           await userConfigService
             .updateConfig(decoded.id, { sessions: [] })
@@ -162,12 +162,12 @@ class AuthService {
               logger.error(err.message, err.stack);
             });
 
-          throw new ForbiddenError('Forbidden');
+          throw new ForbiddenError("Forbidden");
         });
 
       // Validating if token payload is valid
       if (decoded.id != foundUserConfig.userId) {
-        throw new ForbiddenError('Invalid token');
+        throw new ForbiddenError("Invalid token");
       }
 
       const currentSession = {
@@ -210,11 +210,11 @@ class AuthService {
     // Sending OTP to user email
     const info = await EmailService.send({
       to: email,
-      templateName: 'otp-request',
+      templateName: "otp-request",
       context: { otp: generatedOTP.pin, expiresIn: 10 },
     });
     if (info.error) {
-      throw new DependencyError('Error sending OTP to email.');
+      throw new DependencyError("Error sending OTP to email.");
     }
 
     return foundUser;
@@ -223,7 +223,7 @@ class AuthService {
   static async logout(token) {
     try {
       const userConfig = await userConfigService.getConfig({
-        'sessions.token': token,
+        "sessions.token": token,
       });
 
       userConfig.sessions = userConfig.sessions.filter(

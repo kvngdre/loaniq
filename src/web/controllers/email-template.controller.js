@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import EmailService from '../services/email.service.js';
-import { HttpCode } from '../utils/common.js';
-import emailTemplateValidator from '../validators/email-template.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import EmailService from "../services/email.service.js";
+import { HttpCode } from "../utils/common.js";
+import emailTemplateValidator from "../validators/email-template.validator.js";
+import BaseController from "./base.controller.js";
 
 class EmailTemplateController extends BaseController {
   /**
@@ -15,7 +15,7 @@ class EmailTemplateController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newTemplate = await EmailService.addTemplate(value);
-    const response = this.apiResponse('Template created', newTemplate);
+    const response = this.apiResponse("Template created", newTemplate);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -40,7 +40,7 @@ class EmailTemplateController extends BaseController {
    */
   static getTemplate = async (req, res) => {
     const foundTemplate = await EmailService.getTemplate(req.params.templateId);
-    const response = this.apiResponse('Fetched template', foundTemplate);
+    const response = this.apiResponse("Fetched template", foundTemplate);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -58,7 +58,7 @@ class EmailTemplateController extends BaseController {
       req.params.templateId,
       value,
     );
-    const response = this.apiResponse('Template updated', template);
+    const response = this.apiResponse("Template updated", template);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -70,7 +70,7 @@ class EmailTemplateController extends BaseController {
    */
   static deleteTemplate = async (req, res) => {
     await EmailService.deleteTemplate(req.params.templateId);
-    const response = this.apiResponse('Template deleted');
+    const response = this.apiResponse("Template deleted");
 
     res.status(HttpCode.NO_CONTENT).json(response);
   };

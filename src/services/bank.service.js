@@ -1,4 +1,4 @@
-import BankDAO from '../daos/bank.dao.js';
+import BankDAO from "../daos/bank.dao.js";
 
 class BankService {
   static async create(dto) {
@@ -9,7 +9,7 @@ class BankService {
 
   static async getBanks(filter) {
     const foundBanks = await BankDAO.find(filter);
-    const count = Intl.NumberFormat('en-US').format(foundBanks.length);
+    const count = Intl.NumberFormat("en-US").format(foundBanks.length);
 
     return [count, foundBanks];
   }

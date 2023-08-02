@@ -1,4 +1,4 @@
-import ErrorResponse from '../utils/ErrorResponse.js';
+import ErrorResponse from "../utils/ErrorResponse.js";
 
 /**
  *
@@ -16,7 +16,7 @@ const checkPermission = (action, target) => (req, res, next) => {
   function canActOnAny() {
     return req.currentUser.role.permissions.some(
       (p) =>
-        p.action === action.slice(0, action.length - 3).concat('Any') &&
+        p.action === action.slice(0, action.length - 3).concat("Any") &&
         p.target === target,
     );
   }
@@ -34,18 +34,18 @@ const checkPermission = (action, target) => (req, res, next) => {
     if (!hasPermission()) {
       return res.status(403).json(
         new ErrorResponse({
-          name: 'Auth Error',
+          name: "Auth Error",
           message:
-            'You do not have sufficient permissions to perform this action.',
+            "You do not have sufficient permissions to perform this action.",
         }),
       );
     }
     if (req.params.tenantId && !isTenant()) {
       return res.status(403).json(
         new ErrorResponse({
-          name: 'Auth Error',
+          name: "Auth Error",
           message:
-            'You do not have sufficient permissions to perform this action.',
+            "You do not have sufficient permissions to perform this action.",
         }),
       );
     }

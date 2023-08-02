@@ -1,4 +1,4 @@
-import ReviewDAO from '../daos/review.dao.js';
+import ReviewDAO from "../daos/review.dao.js";
 
 class ReviewService {
   static async createReview(dto) {
@@ -11,7 +11,7 @@ class ReviewService {
     const filter = { tenantId: currentUser.tenantId };
 
     const foundReviews = await ReviewDAO.find(filter);
-    const count = Intl.NumberFormat('en-US').format(foundReviews.length);
+    const count = Intl.NumberFormat("en-US").format(foundReviews.length);
 
     return [count, foundReviews];
   }

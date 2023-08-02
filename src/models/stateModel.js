@@ -1,5 +1,5 @@
-import { Schema, model } from 'mongoose';
-import { geoZones } from '../utils/common.js';
+import { Schema, model } from "mongoose";
+import { geoZones } from "../utils/common.js";
 
 const stateSchema = new Schema(
   {
@@ -32,6 +32,6 @@ const stateSchema = new Schema(
   { timestamps: true },
 );
 
-const State = model('State', stateSchema);
+const State = model("State", stateSchema);
 
 export default State;

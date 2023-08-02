@@ -1,12 +1,12 @@
 /* eslint-disable eqeqeq */
-import { roles } from '../config/index.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
-import { HttpCode } from '../utils/common.js';
+import { roles } from "../config/index.js";
+import ErrorResponse from "../utils/ErrorResponse.js";
+import { HttpCode } from "../utils/common.js";
 
 const isOwner = (...rolesToCheck) => {
   let disallowedRoles = [roles.AGENT, roles.ANALYST, roles.SUPPORT];
 
-  if (rolesToCheck[0] === 'all') {
+  if (rolesToCheck[0] === "all") {
     disallowedRoles = Array.from(
       new Set(disallowedRoles.concat(Object.values(roles))),
     );
@@ -21,9 +21,9 @@ const isOwner = (...rolesToCheck) => {
     ) {
       return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
-          name: 'Auth Error',
+          name: "Auth Error",
           message:
-            'You do not have sufficient permissions to perform this action.',
+            "You do not have sufficient permissions to perform this action.",
         }),
       );
     }

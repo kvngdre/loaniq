@@ -1,22 +1,22 @@
 export default {
   tenant: {
-    signUp: 'onTenantSignUp',
+    signUp: "onTenantSignUp",
   },
 
   user: {
-    new: 'onCreateUser',
-    delete: 'onUserDelete',
-    updateConfig: 'onUserUpdateConfigRequest',
+    new: "onCreateUser",
+    delete: "onUserDelete",
+    updateConfig: "onUserUpdateConfigRequest",
   },
 
   wallet: {
-    credit: 'onWalletCredit',
-    debit: 'onWalletDebit',
+    credit: "onWalletCredit",
+    debit: "onWalletDebit",
   },
 
   webhook: {
-    success: 'onWebhookSuccessEvent',
-    failure: 'onWebhookFailedEvent',
-    pending: 'onWebhookPendingEvent',
+    success: "onWebhookSuccessEvent",
+    failure: "onWebhookFailedEvent",
+    pending: "onWebhookPendingEvent",
   },
 };

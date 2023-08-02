@@ -1,4 +1,4 @@
-import UserConfigDAO from '../daos/userConfig.dao.js';
+import UserConfigDAO from "../daos/userConfig.dao.js";
 
 class UserConfigService {
   static async createConfig(newUserConfigDTO, trx) {
@@ -9,7 +9,7 @@ class UserConfigService {
 
   static async getConfigs(filter) {
     const foundConfigs = await UserConfigDAO.find(filter);
-    const count = Intl.NumberFormat('en-US').format(foundConfigs.length);
+    const count = Intl.NumberFormat("en-US").format(foundConfigs.length);
 
     return { count, foundConfigs };
   }

@@ -1,4 +1,4 @@
-import LoanDAO from '../daos/loan.dao.js';
+import LoanDAO from "../daos/loan.dao.js";
 
 class LoanService {
   static async createLoan(dto, currentUser) {
@@ -9,7 +9,7 @@ class LoanService {
 
   static async getLoans(tenantId) {
     const foundLoans = await LoanDAO.find({ tenantId });
-    const count = Intl.NumberFormat('en-US').format(foundLoans.length);
+    const count = Intl.NumberFormat("en-US").format(foundLoans.length);
 
     return [count, foundLoans];
   }

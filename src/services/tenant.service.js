@@ -7,7 +7,12 @@ import {
   DependencyError,
   UnauthorizedError,
 } from "../errors/index.js";
-import { TenantRepository, TokenRepository } from "../repositories/index.js";
+import {
+  TenantRepository,
+  TokenRepository,
+  UserRepository,
+} from "../repositories/index.js";
+import { TENANT_STATUS } from "../utils/common.js";
 import generateOTP from "../utils/generateOTP.js";
 import randomString from "../utils/randomString.js";
 import EmailService from "./email.service.js";
@@ -99,12 +104,12 @@ export class TenantService {
 
   async requestToActivateTenant(tenantId, activateTenantDTO) {
     const foundTenant = await TenantRepository.findById(tenantId);
-    if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
+    if (foundTenant.status === TENANT_STATUS.ACTIVE) {
       throw new ConflictError("Tenant has already been activated.");
     }
 
     foundTenant.set({
-      status: ENTITY_STATUS.AWAITING_ACTIVATION,
+      status: TENANT_STATUS.AWAITING_ACTIVATION,
       ...activateTenantDTO,
     });
     await foundTenant.save();
@@ -123,13 +128,13 @@ export class TenantService {
         WalletDAO.insert({ tenantId }, transactionSession),
       ]);
 
-      if (foundTenant.status === ENTITY_STATUS.ACTIVE) {
+      if (foundTenant.status === TENANT_STATUS.ACTIVE) {
         throw new ConflictError("Tenant has already been activated.");
       }
 
       foundTenant.set({
         isEmailVerified: true,
-        status: ENTITY_STATUS.ACTIVE,
+        status: TENANT_STATUS.ACTIVE,
         activated: true,
       });
       await foundTenant.save({ session: transactionSession });
@@ -175,7 +180,7 @@ export class TenantService {
   async deactivateTenant(tenantId) {
     const [foundTenant, foundAdminUsers] = await Promise.all([
       await TenantRepository.update(tenantId, {
-        status: ENTITY_STATUS.DEACTIVATED,
+        status: TENANT_STATUS.DEACTIVATED,
       }),
       await userRepository.find(
         { tenantId, "role.name": "admin" },

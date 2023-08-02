@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import CustomerService from '../services/customer.service.js';
-import { HttpCode } from '../utils/common.js';
-import customerValidator from '../validators/customer.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import CustomerService from "../services/customer.service.js";
+import { HttpCode } from "../utils/common.js";
+import customerValidator from "../validators/customer.validator.js";
+import BaseController from "./base.controller.js";
 
 class CustomerController extends BaseController {
   static createCustomer = async (req, res) => {
@@ -13,7 +13,7 @@ class CustomerController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newCustomer = await CustomerService.create(value);
-    const response = this.apiResponse('Customer created', newCustomer);
+    const response = this.apiResponse("Customer created", newCustomer);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -30,7 +30,7 @@ class CustomerController extends BaseController {
 
   static getCustomer = async (req, res) => {
     const customer = await CustomerService.getCustomer(req.params.customerId);
-    const response = this.apiResponse('Fetched customer', customer);
+    const response = this.apiResponse("Fetched customer", customer);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -43,14 +43,14 @@ class CustomerController extends BaseController {
       req.params.customerId,
       value,
     );
-    const response = this.apiResponse('Customer updated.', customer);
+    const response = this.apiResponse("Customer updated.", customer);
 
     res.status(HttpCode.OK).json(response);
   };
 
   static deleteCustomer = async (req, res) => {
     await CustomerService.deleteCustomer(req.params.customerId);
-    const response = this.apiResponse('Customer deleted.');
+    const response = this.apiResponse("Customer deleted.");
 
     res.status(HttpCode.OK).json(response);
   };
@@ -60,7 +60,7 @@ class CustomerController extends BaseController {
       req.params.customerId,
       req.files,
     );
-    const response = this.apiResponse('Files uploaded', customer);
+    const response = this.apiResponse("Files uploaded", customer);
 
     res.status(HttpCode.OK).json(response);
   };

@@ -1,5 +1,5 @@
-import { connection } from 'mongoose';
-import { httpTerminator, server } from '../server';
+import { connection } from "mongoose";
+import { httpTerminator, server } from "../server";
 
 class ExitHandler {
   async handleExit(code, timeout = 5000) {
@@ -12,12 +12,12 @@ class ExitHandler {
       }, timeout).unref();
 
       if (server.listening) {
-        console.log('Terminating HTTP connections');
+        console.log("Terminating HTTP connections");
         await httpTerminator.terminate();
       }
 
-      connection.on('open', async () => {
-        console.log('Closing database connection');
+      connection.on("open", async () => {
+        console.log("Closing database connection");
 
         await connection.close();
       });
@@ -25,7 +25,7 @@ class ExitHandler {
       console.log(`Exiting gracefully with code ${code}`);
       process.exit(code);
     } catch (error) {
-      console.log('Error shutting down gracefully');
+      console.log("Error shutting down gracefully");
       console.log(error);
       console.log(`Forcing exit with code ${code}`);
       process.exit(code);

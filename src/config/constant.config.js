@@ -1,8 +1,8 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
 const foundEnv = config();
-if (foundEnv.error || process.env.NODE_ENV === 'production') {
-  throw new Error('No .env file found.');
+if (foundEnv.error || process.env.NODE_ENV === "production") {
+  throw new Error("No .env file found.");
 }
 
 export default {
@@ -13,11 +13,11 @@ export default {
     client_id: process.env.AUTH0_CLIENT_ID,
   },
   api: {
-    prefix: '/api',
-    version: '/v1',
+    prefix: "/api",
+    version: "/v1",
     encryption_key: process.env.ENCRYPTION_KEY,
   },
-  companyInfo: { name: 'AIdea' },
+  companyInfo: { name: "AIdea" },
   charge: process.env.RATE,
   flw: {
     public_key: process.env.FLW_PUBLIC_KEY,
@@ -58,6 +58,6 @@ export default {
   salt: process.env.SALT,
   secure_cookie: false,
   support: {
-    email: 'support@apex.com',
+    email: "support@apex.com",
   },
 };

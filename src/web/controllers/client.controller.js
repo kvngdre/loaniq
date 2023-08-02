@@ -1,10 +1,10 @@
-import requestIp from 'request-ip';
-import { constants } from '../config/index.js';
-import ValidationError from '../errors/ValidationError.js';
-import ClientService from '../services/client.service.js';
-import { HttpCode } from '../utils/common.js';
-import clientValidator from '../validators/client.validator.js';
-import BaseController from './base.controller.js';
+import requestIp from "request-ip";
+import { constants } from "../config/index.js";
+import ValidationError from "../errors/ValidationError.js";
+import ClientService from "../services/client.service.js";
+import { HttpCode } from "../utils/common.js";
+import clientValidator from "../validators/client.validator.js";
+import BaseController from "./base.controller.js";
 
 class OriginController extends BaseController {
   /**
@@ -17,7 +17,7 @@ class OriginController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newClient = await ClientService.create(value);
-    const response = this.apiResponse('Client created', newClient);
+    const response = this.apiResponse("Client created", newClient);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -34,19 +34,19 @@ class OriginController extends BaseController {
     const { accessToken, refreshToken, user } =
       await ClientService.verifyClient(
         value,
-        req.headers['user-agent'],
+        req.headers["user-agent"],
         requestIp.getClientIp(req),
       );
 
     // ! Create secure cookie with refresh token.
-    res.cookie('jwt', refreshToken.token, {
+    res.cookie("jwt", refreshToken.token, {
       httpOnly: true,
-      sameSite: 'none',
+      sameSite: "none",
       secure: constants.secure_cookie,
       maxAge: constants.jwt.exp_time.refresh * 1000,
     });
 
-    const response = this.apiResponse('Client verified', { user, accessToken });
+    const response = this.apiResponse("Client verified", { user, accessToken });
 
     res.status(HttpCode.OK).json(response);
   };
@@ -61,7 +61,7 @@ class OriginController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newClient = await ClientService.register(value);
-    const response = this.apiResponse('Registration successful', newClient);
+    const response = this.apiResponse("Registration successful", newClient);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -89,7 +89,7 @@ class OriginController extends BaseController {
    */
   static getClient = async (req, res) => {
     const foundClient = await ClientService.getClientById(req.params.clientId);
-    const response = this.apiResponse('Fetched client', foundClient);
+    const response = this.apiResponse("Fetched client", foundClient);
 
     res.status(HttpCode.OK).json(response);
   };

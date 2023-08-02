@@ -1,4 +1,4 @@
-import SegmentDAO from '../daos/segment.dao.js';
+import SegmentDAO from "../daos/segment.dao.js";
 
 class SegmentService {
   static async createSegment(dto) {
@@ -9,7 +9,7 @@ class SegmentService {
 
   static async getSegments(filter) {
     const foundSegments = await SegmentDAO.find(filter);
-    const count = Intl.NumberFormat('en-US').format(foundSegments.length);
+    const count = Intl.NumberFormat("en-US").format(foundSegments.length);
 
     return { count, segments: foundSegments };
   }

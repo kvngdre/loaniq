@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const segmentSchema = new Schema(
   {
@@ -30,6 +30,6 @@ const segmentSchema = new Schema(
   { timestamps: true },
 );
 
-const Segment = model('Segment', segmentSchema);
+const Segment = model("Segment", segmentSchema);
 
 export default Segment;

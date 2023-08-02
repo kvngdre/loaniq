@@ -1,25 +1,25 @@
-import { createHmac } from 'crypto';
-import { constants } from '../config/index.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
+import { createHmac } from "crypto";
+import { constants } from "../config/index.js";
+import UnauthorizedError from "../errors/UnauthorizedError.js";
 
 export default function authWebhook(req, res, next) {
   function getSignatureFromHeader(req) {
-    if (!req.headers['x-paystack-signature']) {
-      throw new UnauthorizedError('No signature.');
+    if (!req.headers["x-paystack-signature"]) {
+      throw new UnauthorizedError("No signature.");
     }
 
-    return req.headers['x-paystack-signature'];
+    return req.headers["x-paystack-signature"];
   }
 
   const signature = getSignatureFromHeader(req);
-  const hash = createHmac('sha512', constants.paystack.key.private)
+  const hash = createHmac("sha512", constants.paystack.key.private)
     .update(JSON.stringify(req.body))
-    .digest('hex');
+    .digest("hex");
 
   console.log(hash);
 
   if (hash !== signature) {
-    throw new UnauthorizedError('Invalid signature.');
+    throw new UnauthorizedError("Invalid signature.");
   }
 
   next();

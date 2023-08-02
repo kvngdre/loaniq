@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
-import { roles } from '../config/index.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
-import { HttpCode } from '../utils/common.js';
+import { roles } from "../config/index.js";
+import ErrorResponse from "../utils/ErrorResponse.js";
+import { HttpCode } from "../utils/common.js";
 
 /**
  * Grants or denies user access to resource
@@ -9,7 +9,7 @@ import { HttpCode } from '../utils/common.js';
  * @returns
  */
 function grantAccess(...allowedRoles) {
-  if (allowedRoles[0] === 'all') {
+  if (allowedRoles[0] === "all") {
     allowedRoles = Object.values(roles);
   }
 
@@ -17,8 +17,8 @@ function grantAccess(...allowedRoles) {
     if (!req.currentUser.role) {
       return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
-          name: 'Auth Error',
-          message: 'Forbidden',
+          name: "Auth Error",
+          message: "Forbidden",
         }),
       );
     }
@@ -26,9 +26,9 @@ function grantAccess(...allowedRoles) {
     if (!allowedRoles.includes(req.currentUser.role)) {
       return res.status(HttpCode.FORBIDDEN).json(
         new ErrorResponse({
-          name: 'Auth Error',
+          name: "Auth Error",
           message:
-            'You do not have sufficient permissions to perform this action.',
+            "You do not have sufficient permissions to perform this action.",
         }),
       );
     }

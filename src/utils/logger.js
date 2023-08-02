@@ -1,21 +1,21 @@
-import { addColors, format, createLogger, transports } from 'winston';
+import { addColors, format, createLogger, transports } from "winston";
 
 const { align, cli, colorize, combine, timestamp, printf } = format;
 
 function isDevEnvironment() {
-  if (process.env.NODE_ENV === 'development') return true;
+  if (process.env.NODE_ENV === "development") return true;
 
-  return false; 
+  return false;
 }
 
 const custom = {
   colors: {
-    fatal: 'red',
-    error: 'red',
-    warn: 'yellow',
-    info: 'green',
-    debug: 'cyan',
-    silly: 'magenta',
+    fatal: "red",
+    error: "red",
+    warn: "yellow",
+    info: "green",
+    debug: "cyan",
+    silly: "magenta",
   },
   levels: { fatal: 0, error: 0, warn: 0, info: 0, debug: 0, silly: 0 },
 };
@@ -23,22 +23,22 @@ const custom = {
 const devFormatter = combine(
   cli(),
   colorize(),
-  timestamp({ format: 'HH:mm:ss' }),
+  timestamp({ format: "HH:mm:ss" }),
   printf(({ level, timestamp, message, meta }) => {
-    message = message.replace('undefined', '');
+    message = message.replace("undefined", "");
     return `[${level}] ${timestamp} ${message}  ${
-      meta ? JSON.stringify(meta, null, 2) : ''
+      meta ? JSON.stringify(meta, null, 2) : ""
     }`;
   }),
 );
 
 const prodFormatter = combine(
   align(),
-  timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   printf(
     ({ level, timestamp, message, meta }) =>
       `[${level}]${timestamp} ${message}  ${
-        meta ? JSON.stringify(meta, null, 2) : ''
+        meta ? JSON.stringify(meta, null, 2) : ""
       }`,
   ),
 );
@@ -50,15 +50,15 @@ class Logger {
     });
 
     const prodTransport = new transports.File({
-      level: 'error',
-      filename: 'src/logs/error.log',
+      level: "error",
+      filename: "src/logs/error.log",
       format: prodFormatter,
       handleExceptions: true,
       json: true,
     });
 
     this.logger = createLogger({
-      level: isDevEnvironment() ? 'silly' : 'error',
+      level: isDevEnvironment() ? "silly" : "error",
       levels: custom.levels,
       transports: [isDevEnvironment() ? devTransport : prodTransport],
     });
@@ -67,7 +67,7 @@ class Logger {
   }
 
   fatal(message, meta) {
-    this.logger.log('fatal', { message, meta });
+    this.logger.log("fatal", { message, meta });
   }
 
   error(message, meta) {

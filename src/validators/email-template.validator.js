@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
 
 class EmailTemplateValidator extends BaseValidator {
   #nameSchema;
@@ -13,13 +13,13 @@ class EmailTemplateValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#nameSchema = Joi.string().lowercase().trim().label('Name');
+    this.#nameSchema = Joi.string().lowercase().trim().label("Name");
     this.#templateNameSchema = Joi.string()
       .lowercase()
       .trim()
-      .label('Template name');
-    this.#subjectSchema = Joi.string().label('Subject');
-    this.#htmlSchema = Joi.string().label('Html');
+      .label("Template name");
+    this.#subjectSchema = Joi.string().label("Subject");
+    this.#htmlSchema = Joi.string().label("Html");
   }
 
   validateCreate = (newTemplateDTO) => {

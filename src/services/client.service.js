@@ -1,11 +1,11 @@
 import {
   generateAccessToken,
   generateRefreshToken,
-} from '../utils/generateJWT.js';
-import { status } from '../utils/common.js';
-import ClientDAO from '../daos/client.dao.js';
-import UnauthorizedError from '../errors/UnauthorizedError.js';
-import generateSession from '../utils/generateSession.js';
+} from "../utils/generateJWT.js";
+import { status } from "../utils/common.js";
+import ClientDAO from "../daos/client.dao.js";
+import UnauthorizedError from "../errors/UnauthorizedError.js";
+import generateSession from "../utils/generateSession.js";
 
 class ClientService {
   static create = async (newClientDTO) => {
@@ -41,8 +41,8 @@ class ClientService {
     foundClient.set({
       isPhoneVerified: true,
       status: status.ACTIVE,
-      'otp.pin': null,
-      'otp.expiresIn': null,
+      "otp.pin": null,
+      "otp.expiresIn": null,
       last_login_time: new Date(),
       resetPwd: false,
       session: newSession,
@@ -63,7 +63,7 @@ class ClientService {
     },
   ) => {
     const foundClients = await ClientDAO.find(filter, projection);
-    const count = Intl.NumberFormat('en-US').format(foundClients.length);
+    const count = Intl.NumberFormat("en-US").format(foundClients.length);
 
     return { count, foundClients };
   };

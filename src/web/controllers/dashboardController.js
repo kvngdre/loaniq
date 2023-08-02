@@ -1,9 +1,9 @@
-import { loanStatus } from '../utils/common.js';
-import Customer from '../models/customer.model.js';
-import Tenant from '../models/tenant.model.js';
-import Loan from '../models/loan.model.js';
-import User from '../models/user.model.js';
-import logger from '../utils/logger.js';
+import { loanStatus } from "../utils/common.js";
+import Customer from "../models/customer.model.js";
+import Tenant from "../models/tenant.model.js";
+import Loan from "../models/loan.model.js";
+import User from "../models/user.model.js";
+import logger from "../utils/logger.js";
 
 export const getLoanData = async (user, status) => {
   try {
@@ -20,9 +20,9 @@ export const getLoanData = async (user, status) => {
         $group: {
           _id: {
             year: currentYear,
-            month: { $month: '$createdAt' },
+            month: { $month: "$createdAt" },
           },
-          value: { $sum: '$recommendedAmount' },
+          value: { $sum: "$recommendedAmount" },
         },
       },
     ]);
@@ -32,12 +32,12 @@ export const getLoanData = async (user, status) => {
     }
 
     return {
-      message: 'success',
+      message: "success",
       data: approvedLoans,
     };
   } catch (exception) {
     logger.error({
-      method: 'get_loan_data',
+      method: "get_loan_data",
       message: exception.message,
       meta: exception.stack,
     });

@@ -1,8 +1,8 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 // import { computeDTI, applyFees, computeRepaymentSet } from '../helpers'
-import { loanStatus, loanRemarks } from '../utils/common.js';
-import logger from '../utils/logger.js';
-import NotFoundError from '../errors/NotFoundError.js';
+import { loanStatus, loanRemarks } from "../utils/common.js";
+import logger from "../utils/logger.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -15,7 +15,7 @@ const loanSchema = new Schema(
 
     customer: {
       type: Schema.Types.ObjectId,
-      ref: 'Customer',
+      ref: "Customer",
       required: true,
     },
 
@@ -79,13 +79,13 @@ const loanSchema = new Schema(
 
     analyst: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
 
     agent: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
 
@@ -144,9 +144,9 @@ const loanSchema = new Schema(
   schemaOptions,
 );
 
-loanSchema.pre('save', function (next) {
+loanSchema.pre("save", function (next) {
   try {
-    const isPresent = (path) => ['amount', 'tenor'].includes(path);
+    const isPresent = (path) => ["amount", "tenor"].includes(path);
     if (this.modifiedPaths().some(isPresent)) {
       this.proposed_amount = this.amount;
       this.proposed_tenor = this.tenor;
@@ -154,9 +154,9 @@ loanSchema.pre('save', function (next) {
 
     // setting loan metrics
     const hasTrigger = (path) =>
-      ['recommendedAmount', 'recommendedTenor'].includes(path);
+      ["recommendedAmount", "recommendedTenor"].includes(path);
     if (this.modifiedPaths().some(hasTrigger)) {
-      console.log('yes');
+      console.log("yes");
 
       // this.upfrontFee = calcUpfrontFee(
       //   this.recommendedAmount,
@@ -186,18 +186,18 @@ loanSchema.pre('save', function (next) {
     next();
   } catch (exception) {
     logger.error(exception.message, exception.meta);
-    next(new Error(500, 'Something went wrong'));
+    next(new Error(500, "Something went wrong"));
   }
 });
 
 loanSchema.post(/^find/, (doc) => {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Loans not found.');
+    throw new NotFoundError("Loans not found.");
   }
 
-  if (!doc) throw new NotFoundError('Loan not found.');
+  if (!doc) throw new NotFoundError("Loan not found.");
 });
 
-const Loan = model('Loan', loanSchema);
+const Loan = model("Loan", loanSchema);
 
 export default Loan;

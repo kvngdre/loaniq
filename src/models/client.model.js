@@ -1,14 +1,14 @@
-import { Schema, model } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { Schema, model } from "mongoose";
+import bcrypt from "bcryptjs";
 import {
   maritalStatus,
   relationships,
   status,
   validIds,
-} from '../utils/common.js';
-import computeAge from '../utils/computeAge.js';
-import computeTenure from '../utils/computeTenure.js';
-import NotFoundError from '../errors/NotFoundError.js';
+} from "../utils/common.js";
+import computeAge from "../utils/computeAge.js";
+import computeTenure from "../utils/computeTenure.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 const schemaOptions = {
   timestamps: true,
@@ -59,15 +59,15 @@ const clientSchema = new Schema(
 
     role: {
       type: Schema.Types.ObjectId,
-      ref: 'Role',
-      default: '643d935b91a080bc035b5bf8',
+      ref: "Role",
+      default: "643d935b91a080bc035b5bf8",
       autopopulate: true,
     },
 
     gender: {
       type: String,
       // required: true,
-      enum: ['male', 'female'],
+      enum: ["male", "female"],
     },
 
     birth_date: {
@@ -87,7 +87,7 @@ const clientSchema = new Schema(
       type: Schema.Types.ObjectId,
       // required: true,
       default: null,
-      ref: 'State',
+      ref: "State",
     },
 
     phone_number: {
@@ -171,7 +171,7 @@ const clientSchema = new Schema(
       type: Schema.Types.ObjectId,
       default: null,
       // required: true,
-      ref: 'Segment',
+      ref: "Segment",
     },
 
     command: {
@@ -191,7 +191,7 @@ const clientSchema = new Schema(
       type: Schema.Types.ObjectId,
       // required: true,
       default: null,
-      ref: 'State',
+      ref: "State",
     },
 
     hire_date: {
@@ -223,7 +223,7 @@ const clientSchema = new Schema(
       type: Schema.Types.ObjectId,
       default: null,
       // required: true,
-      ref: 'State',
+      ref: "State",
     },
 
     nok_phone_number: {
@@ -256,7 +256,7 @@ const clientSchema = new Schema(
       type: Schema.Types.ObjectId,
       default: null,
       // required: true,
-      ref: 'Bank',
+      ref: "Bank",
     },
 
     isValidAccInfo: {
@@ -285,18 +285,18 @@ const clientSchema = new Schema(
   schemaOptions,
 );
 
-clientSchema.virtual('full_name').get(function () {
+clientSchema.virtual("full_name").get(function () {
   return this.first_name.concat(
-    this.middle_name ? ` ${this.middle_name}` : '',
+    this.middle_name ? ` ${this.middle_name}` : "",
     ` ${this.last_name}`,
   );
 });
 
-clientSchema.virtual('age').get(function () {
+clientSchema.virtual("age").get(function () {
   return computeAge(this.birth_date);
 });
 
-clientSchema.virtual('tenure').get(function () {
+clientSchema.virtual("tenure").get(function () {
   return computeTenure(this.hire_date);
 });
 
@@ -312,7 +312,7 @@ clientSchema.methods.permitLogin = function () {
     data.redirect.verifyNewUser = true;
     return {
       isPermitted: false,
-      message: 'Your account has not been verified.',
+      message: "Your account has not been verified.",
       data,
     };
   }
@@ -321,7 +321,7 @@ clientSchema.methods.permitLogin = function () {
     data.redirect.reset_password = true;
     return {
       isPermitted: false,
-      message: 'Your passcode reset has been triggered.',
+      message: "Your passcode reset has been triggered.",
       data,
     };
   }
@@ -333,7 +333,7 @@ clientSchema.methods.permitLogin = function () {
     data.redirect.inactive = true;
     return {
       isPermitted: false,
-      message: 'Account deactivated. Contact support.',
+      message: "Account deactivated. Contact support.",
       data,
     };
   }
@@ -350,11 +350,11 @@ clientSchema.methods.purgeSensitiveData = function () {
 
 clientSchema.methods.validateOTP = function (otp) {
   if (Date.now() > this.otp.expiresIn) {
-    return { isValid: false, reason: 'OTP expired' };
+    return { isValid: false, reason: "OTP expired" };
   }
 
   if (otp !== this.otp.pin) {
-    return { isValid: false, reason: 'Invalid OTP' };
+    return { isValid: false, reason: "Invalid OTP" };
   }
 
   return { isValid: true };
@@ -365,8 +365,8 @@ clientSchema.methods.validatePasscode = function (passcode) {
 };
 
 // ! Hashing client passcode before insert
-clientSchema.pre('save', function (next) {
-  if (this.modifiedPaths()?.includes('passcode')) {
+clientSchema.pre("save", function (next) {
+  if (this.modifiedPaths()?.includes("passcode")) {
     this.passcode = bcrypt.hashSync(this.passcode, 12);
   }
 
@@ -375,12 +375,12 @@ clientSchema.pre('save', function (next) {
 
 clientSchema.post(/^find/, (doc) => {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('No client accounts found');
+    throw new NotFoundError("No client accounts found");
   }
 
-  if (!doc) throw new NotFoundError('Client account not found');
+  if (!doc) throw new NotFoundError("Client account not found");
 });
 
-const Origin = model('Client', clientSchema);
+const Origin = model("Client", clientSchema);
 
 export default Origin;

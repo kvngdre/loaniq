@@ -1,4 +1,4 @@
-import PermissionDAO from '../daos/permission.dao.js';
+import PermissionDAO from "../daos/permission.dao.js";
 
 class PermissionService {
   static async createPermission(newPermissionDTO) {
@@ -9,7 +9,7 @@ class PermissionService {
 
   static async getPermissions() {
     const foundPermissions = await PermissionDAO.find();
-    const count = Intl.NumberFormat('en-US').format(foundPermissions.length);
+    const count = Intl.NumberFormat("en-US").format(foundPermissions.length);
 
     return { count, foundPermissions };
   }

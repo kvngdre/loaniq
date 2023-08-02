@@ -1,4 +1,4 @@
-import StateDAO from '../daos/state.dao.js';
+import StateDAO from "../daos/state.dao.js";
 
 class StateService {
   static async create(dto) {
@@ -9,7 +9,7 @@ class StateService {
 
   static async getStates(filters) {
     const foundStates = await StateDAO.find(filters);
-    const count = Intl.NumberFormat('en-US').format(foundStates.length);
+    const count = Intl.NumberFormat("en-US").format(foundStates.length);
 
     return [count, foundStates];
   }

@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import SegConfigService from '../services/segConfig.service.js';
-import { HttpCode } from '../utils/common.js';
-import segConfigValidator from '../validators/segConfig.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import SegConfigService from "../services/segConfig.service.js";
+import { HttpCode } from "../utils/common.js";
+import segConfigValidator from "../validators/segConfig.validator.js";
+import BaseController from "./base.controller.js";
 
 class SegConfigController extends BaseController {
   static createSegConfig = async (req, res) => {
@@ -14,7 +14,7 @@ class SegConfigController extends BaseController {
 
     const newSegConfig = await SegConfigService.createConfig(value);
     const response = this.apiResponse(
-      'Segment configurations created.',
+      "Segment configurations created.",
       newSegConfig,
     );
 
@@ -35,7 +35,7 @@ class SegConfigController extends BaseController {
   static getSegConfig = async (req, res) => {
     const segConfig = await SegConfigService.getConfig(req.params.segConfigId);
     const response = this.apiResponse(
-      'Fetched segment configuration.',
+      "Fetched segment configuration.",
       segConfig,
     );
 
@@ -51,7 +51,7 @@ class SegConfigController extends BaseController {
       value,
     );
     const response = this.apiResponse(
-      'Segment configurations updated.',
+      "Segment configurations updated.",
       segConfig,
     );
 
@@ -60,7 +60,7 @@ class SegConfigController extends BaseController {
 
   static deleteSegConfig = async (req, res) => {
     await SegConfigService.deleteConfig(req.params.segConfigId);
-    const response = this.apiResponse('Segment configurations deleted.');
+    const response = this.apiResponse("Segment configurations deleted.");
 
     res.status(HttpCode.OK).json(response);
   };

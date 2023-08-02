@@ -1,8 +1,8 @@
-import axios from 'axios';
-import { constants } from '../config/index.js';
-import DependencyError from '../errors/DependencyError.js';
-import TenantService from './tenant.service.js';
-import logger from '../utils/logger.js';
+import axios from "axios";
+import { constants } from "../config/index.js";
+import DependencyError from "../errors/DependencyError.js";
+import TenantService from "./tenant.service.js";
+import logger from "../utils/logger.js";
 
 class PaystackService {
   #headers;
@@ -15,13 +15,13 @@ class PaystackService {
 
   constructor() {
     this.#headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${constants.paystack.key.private}`,
     };
-    this.#initTxnUrl = 'https://api.paystack.co/transaction/initialize';
-    this.#payment_channels = ['card', 'bank_transfer'];
+    this.#initTxnUrl = "https://api.paystack.co/transaction/initialize";
+    this.#payment_channels = ["card", "bank_transfer"];
     this.#verifyTxnUrl =
-      'https://api.paystack.co/transaction/verify/:reference';
+      "https://api.paystack.co/transaction/verify/:reference";
   }
 
   #calcFee(amount) {
@@ -37,7 +37,7 @@ class PaystackService {
   async initTransaction(tenantId, amount) {
     try {
       if (!tenantId || !amount) {
-        throw new Error('Missing arguments.');
+        throw new Error("Missing arguments.");
       }
 
       const { email } = await TenantService.getTenant(tenantId);
@@ -60,7 +60,7 @@ class PaystackService {
       return { url: response.data.data.authorization_url };
     } catch (exception) {
       if (exception.response) {
-        throw new DependencyError('Error initializing transaction.');
+        throw new DependencyError("Error initializing transaction.");
       }
 
       throw exception;
@@ -70,7 +70,7 @@ class PaystackService {
   async verifyTransaction(ref) {
     try {
       const response = await axios.get(
-        this.#verifyTxnUrl.replace(':reference', ref.toString()),
+        this.#verifyTxnUrl.replace(":reference", ref.toString()),
         { headers: this.#headers },
       );
 

@@ -1,8 +1,8 @@
-import { Schema, model } from 'mongoose';
-import { maritalStatus, relationships, validIds } from '../utils/common.js';
-import computeAge from '../utils/computeAge.js';
-import computeTenure from '../utils/computeTenure.js';
-import NotFoundError from '../errors/NotFoundError.js';
+import { Schema, model } from "mongoose";
+import { maritalStatus, relationships, validIds } from "../utils/common.js";
+import computeAge from "../utils/computeAge.js";
+import computeTenure from "../utils/computeTenure.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 const schemaOptions = { timestamps: true, versionKey: false };
 
@@ -10,7 +10,7 @@ const customerSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
-      ref: 'Tenant',
+      ref: "Tenant",
       required: true,
     },
 
@@ -49,7 +49,7 @@ const customerSchema = new Schema(
 
     gender: {
       type: String,
-      enum: ['male', 'female'],
+      enum: ["male", "female"],
       required: true,
     },
 
@@ -68,7 +68,7 @@ const customerSchema = new Schema(
 
     state: {
       type: Schema.Types.ObjectId,
-      ref: 'State',
+      ref: "State",
       required: true,
     },
 
@@ -120,7 +120,7 @@ const customerSchema = new Schema(
 
     segment: {
       type: Schema.Types.ObjectId,
-      ref: 'Segment',
+      ref: "Segment",
       required: true,
     },
 
@@ -140,7 +140,7 @@ const customerSchema = new Schema(
 
     employer_state: {
       type: String,
-      ref: 'State',
+      ref: "State",
       required: true,
     },
 
@@ -170,7 +170,7 @@ const customerSchema = new Schema(
 
     nok_state: {
       type: Schema.Types.ObjectId,
-      ref: 'State',
+      ref: "State",
       required: true,
     },
 
@@ -201,13 +201,13 @@ const customerSchema = new Schema(
 
     bank: {
       type: Schema.Types.ObjectId,
-      ref: 'Bank',
+      ref: "Bank",
       required: true,
     },
 
     agent: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
   },
   schemaOptions,
@@ -218,29 +218,29 @@ customerSchema.index({ staff_id: 1, tenantId: 1 }, { unique: true });
 customerSchema.index({ bvn: 1, tenantId: 1 }, { unique: true });
 customerSchema.index({ account_number: 1, tenantId: 1 }, { unique: true });
 
-customerSchema.virtual('full_name').get(function () {
+customerSchema.virtual("full_name").get(function () {
   return this.first_name.concat(
-    this.middle_name ? ` ${this.middle_name}` : '',
+    this.middle_name ? ` ${this.middle_name}` : "",
     ` ${this.last_name}`,
   );
 });
 
-customerSchema.virtual('age').get(function () {
+customerSchema.virtual("age").get(function () {
   return computeAge(this.birth_date);
 });
 
-customerSchema.virtual('tenure').get(function () {
+customerSchema.virtual("tenure").get(function () {
   return computeTenure(this.hire_date);
 });
 
 customerSchema.post(/^find/, (doc) => {
   if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError('Customers not found.');
+    throw new NotFoundError("Customers not found.");
   }
 
-  if (!doc) throw new NotFoundError('Customer not found.');
+  if (!doc) throw new NotFoundError("Customer not found.");
 });
 
-const Customer = model('Customer', customerSchema);
+const Customer = model("Customer", customerSchema);
 
 export default Customer;

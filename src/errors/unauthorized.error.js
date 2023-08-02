@@ -1,5 +1,5 @@
-import { HttpCode } from '../utils/common.js';
-import { BaseError } from './lib/base-error.js';
+import { HttpCode } from "../utils/common.js";
+import { BaseError } from "./lib/base-error.js";
 
 export class UnauthorizedError extends BaseError {
   constructor(description) {

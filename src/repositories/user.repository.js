@@ -9,7 +9,7 @@ import { User } from "../models/user.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
-class UserRepository {
+export class UserRepository {
   static async save(createUserDto, session) {
     try {
       const user = new User(createUserDto);
@@ -31,19 +31,23 @@ class UserRepository {
     }
   }
 
-  async find(filter = {}, projection = {}, sortOrder = { first_name: 1 }) {
+  static async find(
+    filter = {},
+    projection = {},
+    sortOrder = { first_name: 1 },
+  ) {
     return User.find(filter).select(projection).sort(sortOrder);
   }
 
-  async findById(id, projection = {}) {
+  static async findById(id, projection = {}) {
     return User.findById(id).select(projection).populate({ path: "role" });
   }
 
-  async findOne(filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     return User.findOne(filter).select(projection).populate({ path: "role" });
   }
 
-  async updateOne(id, updateUserDto, projection = {}) {
+  static async updateOne(id, updateUserDto, projection = {}) {
     try {
       const foundUser = await User.findById(id).select(projection);
       if (!foundUser) {
@@ -69,13 +73,11 @@ class UserRepository {
     }
   }
 
-  async updateMany(filter, dto) {
+  static async updateMany(filter, dto) {
     return User.updateMany(filter, dto);
   }
 
-  async remove(id) {
+  static async remove(id) {
     User.deleteOne({ _id: id });
   }
 }
-
-export const userRepository = new UserRepository();

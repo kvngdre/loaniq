@@ -1,16 +1,16 @@
-import { google } from 'googleapis';
-import { createTransport } from 'nodemailer';
-import hbs from 'nodemailer-express-handlebars';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { google } from "googleapis";
+import { createTransport } from "nodemailer";
+import hbs from "nodemailer-express-handlebars";
+import path from "path";
+import { fileURLToPath } from "url";
 
-import { constants } from '../config/index.js';
-import { DependencyError } from '../errors/index.js';
-import logger from './logger.js';
+import { constants } from "../config/index.js";
+import { DependencyError } from "../errors/index.js";
+import logger from "./logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const partialsPath = path.resolve(__dirname, '../assets/templates/partials/');
-const viewsPath = path.resolve(__dirname, '../assets/templates/views/');
+const partialsPath = path.resolve(__dirname, "../assets/templates/partials/");
+const viewsPath = path.resolve(__dirname, "../assets/templates/views/");
 
 // todo Clean up sendMail with domain name for sending mails
 const { clientId, clientSecret, refreshToken, senderEmail, oauthPlayground } =
@@ -31,9 +31,9 @@ async function getTransporter() {
   try {
     const accessToken = await oauth2Client.getAccessToken();
     const transporter = createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
-        type: 'OAuth2',
+        type: "OAuth2",
         user: senderEmail,
         clientId,
         clientSecret,
@@ -45,7 +45,7 @@ async function getTransporter() {
     return transporter;
   } catch (exception) {
     logger.error(exception.message, exception.stack);
-    throw new DependencyError('Error sending OTP, try again later.');
+    throw new DependencyError("Error sending OTP, try again later.");
   }
 }
 
@@ -77,8 +77,8 @@ const sendMail = async function ({
     template,
     context: {
       name,
-      OTP: payload?.otp || '',
-      pwd: payload?.password || '',
+      OTP: payload?.otp || "",
+      pwd: payload?.password || "",
     },
     attachments: [],
   };
@@ -87,16 +87,16 @@ const sendMail = async function ({
 
   // Setting transport template engine.
   transporter.use(
-    'compile',
+    "compile",
     hbs({
       viewEngine: {
-        extname: '.hbs',
+        extname: ".hbs",
         layoutsDir: viewsPath,
         partialsDir: partialsPath,
         defaultLayout: false,
       },
       viewPath: viewsPath,
-      extName: '.hbs',
+      extName: ".hbs",
     }),
   );
 
@@ -105,7 +105,7 @@ const sendMail = async function ({
     return await transporter.sendMail(mailOptions);
   } catch (exception) {
     logger.fatal(`Mailer: ${exception.message}`, exception.stack);
-    throw new DependencyError('Error sending mail, try again later.');
+    throw new DependencyError("Error sending mail, try again later.");
   }
 };
 

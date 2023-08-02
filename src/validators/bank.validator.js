@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
 
 class BankValidator extends BaseValidator {
   #nameSchema;
@@ -9,15 +9,15 @@ class BankValidator extends BaseValidator {
   constructor() {
     super();
 
-    this.#nameSchema = Joi.string().label('Name').trim().min(8).max(20);
+    this.#nameSchema = Joi.string().label("Name").trim().min(8).max(20);
     this.#codeSchema = Joi.string()
       .min(3)
       .max(6)
       .pattern(/^[0-9]{3,6}$/)
       .messages({
-        'string.min': '{#label} is not valid',
-        'string.max': '{#label} is not valid',
-        'string.pattern.base': '{#label} is not valid',
+        "string.min": "{#label} is not valid",
+        "string.max": "{#label} is not valid",
+        "string.pattern.base": "{#label} is not valid",
       });
   }
 

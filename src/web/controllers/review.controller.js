@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import ReviewService from '../services/review.service.js';
-import { HttpCode } from '../utils/common.js';
-import reviewValidator from '../validators/review.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import ReviewService from "../services/review.service.js";
+import { HttpCode } from "../utils/common.js";
+import reviewValidator from "../validators/review.validator.js";
+import BaseController from "./base.controller.js";
 
 class ReviewController extends BaseController {
   static createReview = async (req, res) => {
@@ -14,7 +14,7 @@ class ReviewController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newReview = await ReviewService.createReview(value);
-    const response = this.apiResponse('Review created & Submitted.', newReview);
+    const response = this.apiResponse("Review created & Submitted.", newReview);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -30,7 +30,7 @@ class ReviewController extends BaseController {
 
   static getReview = async (req, res) => {
     const review = await ReviewService.getReviewById(req.params.reviewId);
-    const response = this.apiResponse('Fetched review.', review);
+    const response = this.apiResponse("Fetched review.", review);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -40,14 +40,14 @@ class ReviewController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const review = await ReviewService.updateReview(req.params.reviewId, value);
-    const response = this.apiResponse('Review updated.', review);
+    const response = this.apiResponse("Review updated.", review);
 
     res.status(HttpCode.OK).json(response);
   };
 
   static deleteReview = async (req, res) => {
     await ReviewService.deleteReview(req.params.reviewId);
-    const response = this.apiResponse('Review deleted.');
+    const response = this.apiResponse("Review deleted.");
 
     res.status(HttpCode.OK).json(response);
   };

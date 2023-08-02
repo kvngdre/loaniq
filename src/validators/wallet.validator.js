@@ -1,7 +1,7 @@
-import { randomBytes } from 'crypto';
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
-import { txnPurposes, txnStatus, txnTypes } from '../utils/common.js';
+import { randomBytes } from "crypto";
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
+import { txnPurposes, txnStatus, txnTypes } from "../utils/common.js";
 
 class WalletValidator extends BaseValidator {
   #referenceSchema;
@@ -10,18 +10,18 @@ class WalletValidator extends BaseValidator {
     super();
 
     this.#referenceSchema = Joi.string().default(
-      randomBytes(4).toString('hex'),
+      randomBytes(4).toString("hex"),
     );
   }
 
   validateCreate = (dto, tenantId) => {
     const schema = Joi.object({
       tenantId: this._objectIdSchema
-        .label('Tenant id')
+        .label("Tenant id")
         .default(tenantId)
         .forbidden(),
-      balance: this._amountSchema.label('Balance').default(0),
-      last_credit_date: this._dateSchema.label('Last credit date'),
+      balance: this._amountSchema.label("Balance").default(0),
+      last_credit_date: this._dateSchema.label("Last credit date"),
     });
 
     let { value, error } = schema.validate(dto, {
@@ -35,8 +35,8 @@ class WalletValidator extends BaseValidator {
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
-      balance: this._amountSchema.label('Balance'),
-      last_credit_date: this._dateSchema.label('Last credit date'),
+      balance: this._amountSchema.label("Balance"),
+      last_credit_date: this._dateSchema.label("Last credit date"),
     });
 
     let { value, error } = schema.validate(dto, {

@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
 
 class UserConfigValidator extends BaseValidator {
   #timezoneSchema;
@@ -7,19 +7,19 @@ class UserConfigValidator extends BaseValidator {
   constructor() {
     super();
 
-    const supportedTimeZones = Intl.supportedValuesOf('timeZone');
+    const supportedTimeZones = Intl.supportedValuesOf("timeZone");
     this.#timezoneSchema = Joi.string()
-      .label('Timezone')
+      .label("Timezone")
       .valid(...supportedTimeZones)
       .messages({
-        'any.only': '{#label} is not supported',
+        "any.only": "{#label} is not supported",
       });
   }
 
   validateCreate = (dto) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id').required(),
-      userId: this._objectIdSchema.label('User id').required(),
+      tenantId: this._objectIdSchema.label("Tenant id").required(),
+      userId: this._objectIdSchema.label("User id").required(),
       timezone: this.#timezoneSchema,
     });
 
@@ -31,8 +31,8 @@ class UserConfigValidator extends BaseValidator {
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
-      tenantId: this._objectIdSchema.label('Tenant id'),
-      userId: this._objectIdSchema.label('User id'),
+      tenantId: this._objectIdSchema.label("Tenant id"),
+      userId: this._objectIdSchema.label("User id"),
       timezone: this.#timezoneSchema,
     });
 

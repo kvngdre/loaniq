@@ -1,8 +1,8 @@
-import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
-import ConflictError from '../errors/ConflictError.js';
-import Client from '../models/client.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import { Error } from "mongoose";
+import BaseDAO from "./base.dao.js";
+import ConflictError from "../errors/ConflictError.js";
+import Client from "../models/client.model.js";
+import ValidationError from "../errors/ValidationError.js";
 
 class ClientDAO extends BaseDAO {
   static async insert(dto, trx) {

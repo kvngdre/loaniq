@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import ValidationError from '../errors/validation.error.js';
-import SegConfigDAO from '../repositories/segConfig.dao.js';
+import ValidationError from "../errors/validation.error.js";
+import SegConfigDAO from "../repositories/segConfig.dao.js";
 
 class SegConfigService {
   static createConfig = async (dto) => {
@@ -14,7 +14,7 @@ class SegConfigService {
       max_net_pay,
     );
     if (!isValid) {
-      throw new ValidationError('Overlap or gap found in net pay range.');
+      throw new ValidationError("Overlap or gap found in net pay range.");
     }
 
     const newSegConfig = await SegConfigDAO.insert(dto);
@@ -24,7 +24,7 @@ class SegConfigService {
 
   static async getConfigs(tenantId) {
     const foundSegConfigs = await SegConfigDAO.find({ tenantId });
-    const count = Intl.NumberFormat('en-US').format(foundSegConfigs.length);
+    const count = Intl.NumberFormat("en-US").format(foundSegConfigs.length);
 
     return { count, segConfigs: foundSegConfigs };
   }
@@ -39,7 +39,7 @@ class SegConfigService {
     const foundSegConfig = await SegConfigDAO.update(segConfigId, dto);
     foundSegConfig.set(dto);
 
-    const triggers = ['min_net_pay', 'max_net_pay'];
+    const triggers = ["min_net_pay", "max_net_pay"];
 
     const containsTrigger = triggers.some((trigger) =>
       Object.keys(dto).includes(trigger),
@@ -55,7 +55,7 @@ class SegConfigService {
         max_net_pay,
       );
       if (isValid) {
-        throw new ValidationError('Overlap or gap found in net pay range.');
+        throw new ValidationError("Overlap or gap found in net pay range.");
       }
     }
 

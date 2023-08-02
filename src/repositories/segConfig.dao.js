@@ -1,8 +1,8 @@
-import { Error } from 'mongoose';
-import ConflictError from '../errors/conflict.error.js';
-import ValidationError from '../errors/validation.error.js';
-import SegConfig from '../models/segConfig.model.js';
-import BaseRepository from './lib/base.repository.js';
+import { Error } from "mongoose";
+import ConflictError from "../errors/conflict.error.js";
+import ValidationError from "../errors/validation.error.js";
+import SegConfig from "../models/segConfig.model.js";
+import BaseRepository from "./lib/base.repository.js";
 
 class SegConfigDAO extends BaseRepository {
   static async insert(dto, trx) {

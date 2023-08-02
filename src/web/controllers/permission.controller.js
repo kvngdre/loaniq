@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import PermissionService from '../services/permission.service.js';
-import { HttpCode } from '../utils/common.js';
-import permissionValidator from '../validators/permission.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import PermissionService from "../services/permission.service.js";
+import { HttpCode } from "../utils/common.js";
+import permissionValidator from "../validators/permission.validator.js";
+import BaseController from "./base.controller.js";
 
 class PermissionController extends BaseController {
   /**
@@ -15,7 +15,7 @@ class PermissionController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newPermission = await PermissionService.create(value);
-    const response = this.apiResponse('Permission created', newPermission);
+    const response = this.apiResponse("Permission created", newPermission);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -43,7 +43,7 @@ class PermissionController extends BaseController {
     const foundPermission = await PermissionService.getPermission(
       req.params.permissionId,
     );
-    const response = this.apiResponse('Fetched permission', foundPermission);
+    const response = this.apiResponse("Fetched permission", foundPermission);
 
     res.status(HttpCode).json(response);
   };
@@ -61,7 +61,7 @@ class PermissionController extends BaseController {
       req.params.permissionId,
       value,
     );
-    const response = this.apiResponse('Permission updated', permission);
+    const response = this.apiResponse("Permission updated", permission);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -73,7 +73,7 @@ class PermissionController extends BaseController {
    */
   static deletePermission = async (req, res) => {
     await PermissionService.deletePermission(req.params.permissionId);
-    const response = this.apiResponse('Permission deleted');
+    const response = this.apiResponse("Permission deleted");
 
     res.status(HttpCode.NO_CONTENT).json(response);
   };

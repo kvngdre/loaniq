@@ -1,8 +1,8 @@
-import { Error } from 'mongoose';
-import BaseDAO from './base.dao.js';
-import ConflictError from '../errors/ConflictError.js';
-import Permission from '../models/permission.model.js';
-import ValidationError from '../errors/ValidationError.js';
+import { Error } from "mongoose";
+import ConflictError from "../errors/ConflictError.js";
+import ValidationError from "../errors/ValidationError.js";
+import Permission from "../models/permission.model.js";
+import BaseDAO from "./base.dao.js";
 
 class PermissionDAO extends BaseDAO {
   static async insert(newRecordDTO) {

@@ -1,11 +1,11 @@
-import allowedOrigins from './allowedOrigins.js';
+import allowedOrigins from "./allowedOrigins.js";
 
 const options = {
   origin: (origin, callback) => {
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'), false);
+      callback(new Error("Not allowed by CORS"), false);
     }
   },
 };

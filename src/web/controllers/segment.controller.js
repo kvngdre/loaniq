@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import SegmentService from '../services/segment.service.js';
-import { HttpCode } from '../utils/common.js';
-import segmentValidator from '../validators/segment.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import SegmentService from "../services/segment.service.js";
+import { HttpCode } from "../utils/common.js";
+import segmentValidator from "../validators/segment.validator.js";
+import BaseController from "./base.controller.js";
 
 class SegmentController extends BaseController {
   static createSegment = async (req, res) => {
@@ -10,7 +10,7 @@ class SegmentController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newSegment = await SegmentService.createSegment(value);
-    const response = this.apiResponse('Segment created.', newSegment);
+    const response = this.apiResponse("Segment created.", newSegment);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -26,7 +26,7 @@ class SegmentController extends BaseController {
 
   static getSegment = async (req, res) => {
     const segment = await SegmentService.getSegment(req.params.segmentId);
-    const response = this.apiResponse('Fetched segment.', segment);
+    const response = this.apiResponse("Fetched segment.", segment);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -39,14 +39,14 @@ class SegmentController extends BaseController {
       req.params.segmentId,
       value,
     );
-    const response = this.apiResponse('Segment updated.', updatedSegment);
+    const response = this.apiResponse("Segment updated.", updatedSegment);
 
     res.status(HttpCode.OK).json(response);
   };
 
   static deleteSegment = async (req, res) => {
     await SegmentService.deleteSegment(req.params.segmentId);
-    const response = this.apiResponse('Segment deleted.');
+    const response = this.apiResponse("Segment deleted.");
 
     res.status(HttpCode.OK).json(response);
   };

@@ -32,19 +32,19 @@ export class TenantRepository {
     }
   }
 
-  async find(filter = {}, projection = {}) {
+  static async find(filter = {}, projection = {}) {
     return Tenant.find(filter).select(projection);
   }
 
-  async findById(id, projection = {}) {
+  static async findById(id, projection = {}) {
     return Tenant.findById(id).select(projection);
   }
 
-  async findOne(filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     return Tenant.findOne(filter).select(projection);
   }
 
-  async updateOne(id, updateTenantDto, projection = {}) {
+  static async updateOne(id, updateTenantDto, projection = {}) {
     try {
       const foundTenant = await Tenant.findById(id).select(projection);
       if (!foundTenant) {
@@ -70,7 +70,7 @@ export class TenantRepository {
     }
   }
 
-  async destroy(id) {
+  static async destroy(id) {
     const foundTenant = await Tenant.findById({ _id: id });
     if (!foundTenant) {
       throw new NotFoundException("Tenant not found");
@@ -79,5 +79,3 @@ export class TenantRepository {
     foundTenant.delete();
   }
 }
-
-export const tenantRepository = new TenantRepository();

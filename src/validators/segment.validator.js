@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
 
 class SegmentValidator extends BaseValidator {
   #nameSchema;
@@ -13,26 +13,26 @@ class SegmentValidator extends BaseValidator {
 
     this.#nameSchema = Joi.string()
       .trim()
-      .label('Segment name')
+      .label("Segment name")
       .max(255)
       .messages({
-        'string.max': 'Segment name is too long',
+        "string.max": "Segment name is too long",
       });
 
     this.#codeSchema = Joi.string()
-      .label('Segment code')
+      .label("Segment code")
       .trim()
       .pattern(/^[a-zA-Z]{2,5}$/)
       .messages({
-        'string.pattern.base': '{#label} is not valid',
+        "string.pattern.base": "{#label} is not valid",
       });
 
     this.#prefixSchema = Joi.string()
-      .label('ID prefix')
+      .label("ID prefix")
       .trim()
       .pattern(/[a-zA-Z]{2,8}/)
       .messages({
-        'string.pattern.base': '{#label} is not valid',
+        "string.pattern.base": "{#label} is not valid",
       });
   }
 
@@ -43,9 +43,9 @@ class SegmentValidator extends BaseValidator {
       id_prefix: this.#prefixSchema.required(),
       active: this._activeSchema,
       recommendation: Joi.object({
-        max_age: this._ageSchema.label('Max age').max(60),
-        max_tenure: this._tenorSchema.label('Max tenure'),
-        min_income: this._amountSchema.label('Min income'),
+        max_age: this._ageSchema.label("Max age").max(60),
+        max_tenure: this._tenorSchema.label("Max tenure"),
+        min_income: this._amountSchema.label("Min income"),
       }),
     });
 
@@ -65,9 +65,9 @@ class SegmentValidator extends BaseValidator {
       id_prefix: this.#prefixSchema,
       active: this._activeSchema,
       recommendation: Joi.object({
-        max_age: this._ageSchema.label('Max age').max(60),
-        max_tenure: this._tenorSchema.label('Max tenure'),
-        min_income: this._amountSchema.label('Min income'),
+        max_age: this._ageSchema.label("Max age").max(60),
+        max_tenure: this._tenorSchema.label("Max tenure"),
+        min_income: this._amountSchema.label("Min income"),
       }),
     });
 

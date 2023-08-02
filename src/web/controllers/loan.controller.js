@@ -1,8 +1,8 @@
-import ValidationError from '../errors/ValidationError.js';
-import LoanService from '../services/loan.service.js';
-import { HttpCode } from '../utils/common.js';
-import loanValidator from '../validators/loan.validator.js';
-import BaseController from './base.controller.js';
+import ValidationError from "../errors/ValidationError.js";
+import LoanService from "../services/loan.service.js";
+import { HttpCode } from "../utils/common.js";
+import loanValidator from "../validators/loan.validator.js";
+import BaseController from "./base.controller.js";
 
 class LoanController extends BaseController {
   static createLoan = async (req, res) => {
@@ -10,7 +10,7 @@ class LoanController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const newLoan = await LoanService.createLoan(value, req.currentUser);
-    const response = this.apiResponse('Loan created.', newLoan);
+    const response = this.apiResponse("Loan created.", newLoan);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -26,7 +26,7 @@ class LoanController extends BaseController {
 
   static getLoan = async (req, res) => {
     const loan = await LoanService.getLoan(req.currentUser.tenantId);
-    const response = this.apiResponse('Fetched loan.', loan);
+    const response = this.apiResponse("Fetched loan.", loan);
 
     res.status(HttpCode.OK).json(response);
   };
@@ -36,14 +36,14 @@ class LoanController extends BaseController {
     if (error) throw new ValidationError(null, error);
 
     const loan = await LoanService.updateLoan(req.params.loanId, value);
-    const response = this.apiResponse('Loan updated.', loan);
+    const response = this.apiResponse("Loan updated.", loan);
 
     res.status(HttpCode.OK).json(response);
   };
 
   static deleteLoan = async (req, res) => {
     await LoanService.deleteLoan(req.params.loanId);
-    const response = this.apiResponse('Loan deleted.');
+    const response = this.apiResponse("Loan deleted.");
 
     res.status(HttpCode.OK).json(response);
   };

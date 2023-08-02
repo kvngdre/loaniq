@@ -1,6 +1,6 @@
-import Joi from 'joi';
-import { geoZones } from '../utils/common.js';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import { geoZones } from "../utils/common.js";
+import BaseValidator from "./base.validator.js";
 
 class StateValidator extends BaseValidator {
   #codeSchema;
@@ -16,19 +16,19 @@ class StateValidator extends BaseValidator {
 
     this.#codeSchema = Joi.string()
       .trim()
-      .label('Code')
+      .label("Code")
       .pattern(/^[a-zA-Z]{2}$/)
       .messages({
-        'string.pattern.base': '{#label} is not valid',
+        "string.pattern.base": "{#label} is not valid",
       });
 
-    this.#nameSchema = Joi.string().trim().label('Name');
+    this.#nameSchema = Joi.string().trim().label("Name");
 
-    this.#lgaSchema = Joi.array().items(Joi.string().trim()).label('LGAs');
+    this.#lgaSchema = Joi.array().items(Joi.string().trim()).label("LGAs");
 
     this.#regionSchema = Joi.string()
       .valid(...geoZones)
-      .label('Geo');
+      .label("Geo");
   }
 
   validateCreate = (dto) => {

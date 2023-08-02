@@ -1,4 +1,4 @@
-import CustomerDAO from '../daos/customer.dao.js';
+import CustomerDAO from "../daos/customer.dao.js";
 
 class CustomerService {
   static async create(dto, trx) {
@@ -9,7 +9,7 @@ class CustomerService {
 
   static async getCustomers(tenantId) {
     const foundCustomers = await CustomerDAO.find({ tenantId });
-    const count = Intl.NumberFormat('en-US').format(foundCustomers.length);
+    const count = Intl.NumberFormat("en-US").format(foundCustomers.length);
 
     return [count, foundCustomers];
   }

@@ -19,19 +19,19 @@ export class TokenRepository {
     }
   }
 
-  async find(filter = {}, projection = {}) {
+  static async find(filter = {}, projection = {}) {
     return Token.find(filter).select(projection);
   }
 
-  async findById(id, projection = {}) {
+  static async findById(id, projection = {}) {
     return Token.findById(id).select(projection);
   }
 
-  async findOne(filter, projection = {}) {
+  static async findOne(filter, projection = {}) {
     return Token.findOne(filter).select(projection);
   }
 
-  async updateOne(id, updateTokenDto, projection = {}) {
+  static async updateOne(id, updateTokenDto, projection = {}) {
     try {
       const foundToken = await Tenant.findById(id).select(projection);
       if (!foundToken) {
@@ -52,7 +52,7 @@ export class TokenRepository {
     }
   }
 
-  async destroy(id) {
+  static async destroy(id) {
     const foundToken = await Token.findById({ _id: id });
     if (!foundToken) {
       throw new NotFoundException("Token not found");

@@ -1,6 +1,6 @@
-import TenantService from '../services/tenant.service';
-import ErrorResponse from '../utils/ErrorResponse';
-import { HttpCode, status } from '../utils/common';
+import TenantService from "../services/tenant.service";
+import ErrorResponse from "../utils/ErrorResponse";
+import { HttpCode, status } from "../utils/common";
 
 /**
  *
@@ -14,8 +14,8 @@ const isTenantActivated = async (req, res, next) => {
   if (tenant.status !== status.ACTIVE) {
     return res.status(HttpCode.FORBIDDEN).json(
       new ErrorResponse({
-        name: 'Auth Error',
-        errors: 'Tenant not activated.',
+        name: "Auth Error",
+        errors: "Tenant not activated.",
       }),
     );
   }

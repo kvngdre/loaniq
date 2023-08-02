@@ -1,6 +1,6 @@
-import Joi from 'joi';
-import objectId from 'joi-objectid';
-import { roles } from '../utils/constants';
+import Joi from "joi";
+import objectId from "joi-objectid";
+import { roles } from "../utils/constants";
 
 Joi.objectId = objectId(Joi);
 
@@ -52,7 +52,7 @@ class LoanValidator {
     this.#netPaySchema = Joi.number()
       .min(this.#minNetPay)
       .messages({
-        'number.min': `Net pay must be greater than or equal to ${
+        "number.min": `Net pay must be greater than or equal to ${
           this.#minNetPay
         }.`,
       });
@@ -60,17 +60,17 @@ class LoanValidator {
       .min(this.#minLoanAmount)
       .max(this.#maxLoanAmount)
       .messages({
-        'number.min': `Loan amount cannot be less than ${this.#minLoanAmount.toLocaleString()}.`,
-        'number.max': `Loan amount cannot be greater than ${this.#maxLoanAmount.toLocaleString()}.`,
-        'any.required': 'Loan amount is required',
+        "number.min": `Loan amount cannot be less than ${this.#minLoanAmount.toLocaleString()}.`,
+        "number.max": `Loan amount cannot be greater than ${this.#maxLoanAmount.toLocaleString()}.`,
+        "any.required": "Loan amount is required",
       });
     this.#tenorSchema = Joi.number()
       .min(this.#minTenor)
       .max(this.#maxTenor)
       .messages({
-        'number.min': `Loan tenor cannot be less than ${this.#minTenor.toLocaleString()} months.`,
-        'number.max': `Loan tenor cannot be greater than ${this.#maxTenor.toLocaleString()} months.`,
-        'any.required': 'Loan tenor is required',
+        "number.min": `Loan tenor cannot be less than ${this.#minTenor.toLocaleString()} months.`,
+        "number.max": `Loan tenor cannot be greater than ${this.#maxTenor.toLocaleString()} months.`,
+        "any.required": "Loan tenor is required",
       });
   }
 
@@ -78,17 +78,17 @@ class LoanValidator {
     const schema = Joi.object({
       amount: this.#amountSchema.required(),
       amountInWords: Joi.string().min(18).max(50).required().messages({
-        'string.min': 'Loan amount in words is too short',
-        'string.max': 'Loan amount in words is too long',
-        'any.required': 'Amount in words is required',
+        "string.min": "Loan amount in words is too short",
+        "string.max": "Loan amount in words is too long",
+        "any.required": "Amount in words is required",
       }),
       tenor: this.#tenorSchema.required(),
       loanType: Joi.string()
-        .valid('New', 'Top Up')
+        .valid("New", "Top Up")
         .messages({
-          'any.only': 'Invalid loan type',
+          "any.only": "Invalid loan type",
         })
-        .default('New'),
+        .default("New"),
       creditUser: Joi.objectId(),
       agent: Joi.objectId(),
       params: Joi.object({
@@ -116,16 +116,16 @@ class LoanValidator {
         recommendedAmount: Joi.number()
           .min(this.#minLoanAmount)
           .max(this.#maxLoanAmount)
-          .when('status', {
-            is: ['Approved', 'Denied', 'On Hold'],
+          .when("status", {
+            is: ["Approved", "Denied", "On Hold"],
             then: Joi.optional(),
           })
           .messages({
-            'number.min': `"Recommended amount" must be greater than or equal to ${this.#minLoanAmount.toLocaleString()}.`,
-            'number.max': `"Recommended amount" must be less than or equal to ${this.#maxLoanAmount.toLocaleString()}.`,
+            "number.min": `"Recommended amount" must be greater than or equal to ${this.#minLoanAmount.toLocaleString()}.`,
+            "number.max": `"Recommended amount" must be less than or equal to ${this.#maxLoanAmount.toLocaleString()}.`,
           }),
         amountInWords: Joi.string()
-          .when('amount', {
+          .when("amount", {
             is: Joi.exist(),
             then: Joi.required(),
             otherwise: Joi.optional(),
@@ -133,69 +133,69 @@ class LoanValidator {
           .min(18)
           .max(50)
           .messages({
-            'string.min': 'Loan amount in words is too short',
-            'string.max': 'Loan amount in words is too long',
-            'any.required': 'Amount in words is required',
+            "string.min": "Loan amount in words is too short",
+            "string.max": "Loan amount in words is too long",
+            "any.required": "Amount in words is required",
           }),
         tenor: this.#tenorSchema,
         recommendedTenor: Joi.number()
           .min(this.#minTenor)
           .max(this.#maxTenor)
-          .when('status', {
-            is: 'Approved',
+          .when("status", {
+            is: "Approved",
             then: Joi.required(),
             otherwise: Joi.optional(),
           })
           .messages({
-            'number.min': `"Recommended tenor" must be greater than or equal to ${this.#minTenor.toLocaleString()} months.`,
-            'number.max': `"Recommended tenor" must be less than or equal to ${this.#maxTenor.toLocaleString()} months.`,
+            "number.min": `"Recommended tenor" must be greater than or equal to ${this.#minTenor.toLocaleString()} months.`,
+            "number.max": `"Recommended tenor" must be less than or equal to ${this.#maxTenor.toLocaleString()} months.`,
           }),
-        loanType: Joi.string().valid('New', 'Top Up').messages({
-          'any.only': 'Invalid loan type',
+        loanType: Joi.string().valid("New", "Top Up").messages({
+          "any.only": "Invalid loan type",
         }),
         status: Joi.string().valid(
-          'Discontinued',
-          'Liquidated',
-          'Approved',
-          'On Hold',
-          'Pending',
-          'Denied',
+          "Discontinued",
+          "Liquidated",
+          "Approved",
+          "On Hold",
+          "Pending",
+          "Denied",
         ),
         remark: Joi.string()
-          .when('status', {
+          .when("status", {
             is: Joi.exist(),
-            then: Joi.when('status', {
-              is: ['Pending'],
+            then: Joi.when("status", {
+              is: ["Pending"],
               then: Joi.optional(),
               otherwise: Joi.required(),
             }),
           })
-          .invalid('', ' ')
+          .invalid("", " ")
           .valid(
-            'Duplicate request',
-            'Ok for disbursement',
-            'Net pay below threshold',
-            'Inconsistent net pay',
-            'High exposure',
-            'Confirm recommended loan amount',
-            'Confirm recommended tenor',
-            'Confirm BVN',
-            'Confirm account number',
-            'Confirm BVN and account number',
-            'Bad loan with other institution',
-            'Age above threshold',
-            'Length of service above threshold',
-            'Negative net pay',
-            'Department not eligible',
-            'Name mismatch',
-            'Not eligible for top up',
-            'Net pay not available',
-            'Incorrect IPPIS number',
-            'Client rejected offer',
-            'Failed to provide valid documentation',
+            "Duplicate request",
+            "Ok for disbursement",
+            "Net pay below threshold",
+            "Inconsistent net pay",
+            "High exposure",
+            "Confirm recommended loan amount",
+            "Confirm recommended tenor",
+            "Confirm BVN",
+            "Confirm account number",
+            "Confirm BVN and account number",
+            "Bad loan with other institution",
+            "Age above threshold",
+            "Length of service above threshold",
+            "Negative net pay",
+            "Department not eligible",
+            "Name mismatch",
+            "Not eligible for top up",
+            "Net pay not available",
+            "Incorrect IPPIS number",
+            "Client rejected offer",
+            "Failed to provide valid documentation",
           )
           .messages({
-            'any.required': 'Remark is required',
+            "any.required": "Remark is required",
           }),
       });
 
@@ -205,7 +205,7 @@ class LoanValidator {
       const schema = Joi.object({
         amount: this.#amountSchema,
         amountInWords: Joi.string()
-          .when('amount', {
+          .when("amount", {
             is: Joi.exist(),
             then: Joi.required(),
             otherwise: Joi.optional(),
@@ -213,13 +213,13 @@ class LoanValidator {
           .min(18)
           .max(50)
           .messages({
-            'string.min': 'Loan amount in words is too short',
-            'string.max': 'Loan amount in words is too long',
-            'any.required': 'Amount in words is required',
+            "string.min": "Loan amount in words is too short",
+            "string.max": "Loan amount in words is too long",
+            "any.required": "Amount in words is required",
           }),
         tenor: this.#tenorSchema,
-        loanType: Joi.string().valid('New', 'Top Up').messages({
-          'any.only': 'Invalid loan type',
+        loanType: Joi.string().valid("New", "Top Up").messages({
+          "any.only": "Invalid loan type",
         }),
         customer: Joi.objectId(),
         creditUser: Joi.objectId(),
@@ -238,7 +238,7 @@ class LoanValidator {
     const schema = Joi.object({
       amount: this.#amountSchema,
       amountInWords: Joi.string()
-        .when('amount', {
+        .when("amount", {
           is: Joi.exist(),
           then: Joi.required(),
           otherwise: Joi.optional(),
@@ -246,13 +246,13 @@ class LoanValidator {
         .min(18)
         .max(50)
         .messages({
-          'string.min': 'Loan amount in words is too short',
-          'string.max': 'Loan amount in words is too long',
-          'any.required': 'Amount in words is required',
+          "string.min": "Loan amount in words is too short",
+          "string.max": "Loan amount in words is too long",
+          "any.required": "Amount in words is required",
         }),
       tenor: this.#tenorSchema,
-      loanType: Joi.string().valid('New', 'Top Up').messages({
-        'any.only': 'Invalid loan type',
+      loanType: Joi.string().valid("New", "Top Up").messages({
+        "any.only": "Invalid loan type",
       }),
     }).min(1);
 

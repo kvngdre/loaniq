@@ -1,8 +1,8 @@
-import Sqrl from 'squirrelly';
-import { constants } from '../config/index.js';
-import EmailTemplateDAO from '../repositories/email-template.dao.js';
-import getMailTransport from '../utils/getMailTransport.js';
-import logger from '../utils/logger.js';
+import Sqrl from "squirrelly";
+import { constants } from "../config/index.js";
+import EmailTemplateDAO from "../repositories/email-template.dao.js";
+import getMailTransport from "../utils/getMailTransport.js";
+import logger from "../utils/logger.js";
 
 class EmailService {
   static async sendTest() {}
@@ -15,7 +15,7 @@ class EmailService {
 
   static async getTemplates(filter) {
     const foundTemplates = await EmailTemplateDAO.find(filter);
-    const count = Intl.NumberFormat('en-US').format(foundTemplates.length);
+    const count = Intl.NumberFormat("en-US").format(foundTemplates.length);
 
     return { count, foundTemplates };
   }

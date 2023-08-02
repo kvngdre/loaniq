@@ -1,9 +1,9 @@
-import Joi from 'joi';
-import Segment from '../models/segment.model';
-import State from '../models/stateModel';
+import Joi from "joi";
+import Segment from "../models/segment.model";
+import State from "../models/stateModel";
 
 async function getSegments() {
-  return await Segment.find({ active: true }).select('code');
+  return await Segment.find({ active: true }).select("code");
 }
 
 async function getCountryStates() {
@@ -16,7 +16,7 @@ export default async function (filters) {
 
   function validateSegment(value, helpers) {
     const foundSegment = segments.find((segment) => segment.code === value);
-    if (!foundSegment) return helpers.message('Segment is not supported');
+    if (!foundSegment) return helpers.message("Segment is not supported");
 
     return foundSegment._id;
   }
@@ -25,29 +25,29 @@ export default async function (filters) {
     const foundState = countryStates.find(
       (state) => state.name.toLowerCase() === value.toLowerCase(),
     );
-    if (!foundState) return helpers.message('State is incorrect');
+    if (!foundState) return helpers.message("State is incorrect");
 
     return foundState.name;
   }
 
   const schema = Joi.object({
-    name: Joi.string().label('Name').optional().allow(''),
+    name: Joi.string().label("Name").optional().allow(""),
     segment: Joi.string()
-      .label('Segment')
+      .label("Segment")
       .optional()
-      .allow('')
+      .allow("")
       .custom(validateSegment),
     state: Joi.string()
-      .label('State')
+      .label("State")
       .optional()
-      .allow('')
+      .allow("")
       .custom(validateCountryState),
-    minAge: Joi.number().label('Minimum age').min(0).optional().allow(''),
-    maxAge: Joi.number().label('Maximum age').min(0).optional().allow(''),
-    minBal: Joi.number().label('Minimum balance').min(0).optional().allow(''),
-    maxBal: Joi.number().label('Maximum balance').min(0).optional().allow(''),
-    minPay: Joi.number().label('Minimum net pay').min(0).optional().allow(''),
-    maxPay: Joi.number().label('Maximum net pay').min(0).optional().allow(''),
+    minAge: Joi.number().label("Minimum age").min(0).optional().allow(""),
+    maxAge: Joi.number().label("Maximum age").min(0).optional().allow(""),
+    minBal: Joi.number().label("Minimum balance").min(0).optional().allow(""),
+    maxBal: Joi.number().label("Maximum balance").min(0).optional().allow(""),
+    minPay: Joi.number().label("Minimum net pay").min(0).optional().allow(""),
+    maxPay: Joi.number().label("Maximum net pay").min(0).optional().allow(""),
   });
 
   return schema.validate(filters);

@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import BaseValidator from './base.validator.js';
+import Joi from "joi";
+import BaseValidator from "./base.validator.js";
 
 class PermissionValidator extends BaseValidator {
   #nameSchema;
@@ -12,10 +12,10 @@ class PermissionValidator extends BaseValidator {
 
   constructor() {
     super();
-    this.#nameSchema = Joi.string().lowercase().trim().label('Name').max(100);
-    this.#actionSchema = Joi.string().trim().label('Action').max(100);
-    this.#targetSchema = Joi.string().trim().label('Target').max(100);
-    this.#levelSchema = Joi.string().valid('admin', 'user').label('Level');
+    this.#nameSchema = Joi.string().lowercase().trim().label("Name").max(100);
+    this.#actionSchema = Joi.string().trim().label("Action").max(100);
+    this.#targetSchema = Joi.string().trim().label("Target").max(100);
+    this.#levelSchema = Joi.string().valid("admin", "user").label("Level");
   }
 
   validateCreate = (newPermissionDTO) => {
@@ -24,7 +24,7 @@ class PermissionValidator extends BaseValidator {
       description: this._descSchema.required(),
       action: this.#actionSchema.required(),
       target: this.#targetSchema.required(),
-      type: this.#nameSchema.label('Type').required(),
+      type: this.#nameSchema.label("Type").required(),
       level: this.#levelSchema,
     });
 
@@ -42,7 +42,7 @@ class PermissionValidator extends BaseValidator {
       description: this._descSchema,
       action: this.#actionSchema,
       target: this.#targetSchema,
-      type: this.#nameSchema.label('Type'),
+      type: this.#nameSchema.label("Type"),
       level: this.#levelSchema,
     });
 
