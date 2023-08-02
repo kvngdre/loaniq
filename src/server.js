@@ -1,11 +1,13 @@
-import './loaders/process.js';
-import 'express-async-errors';
+import 'dotenv/config.js';
 import express from 'express';
+import 'express-async-errors';
 import http from 'http';
+import './loaders/process.js';
+
 import { constants } from './config/index.js';
 import loaders from './loaders/index.js';
-import logger from './utils/logger.js';
 import routes from './routers/index.js';
+import logger from './utils/logger.js';
 
 import randomString from './utils/randomString.js';
 
