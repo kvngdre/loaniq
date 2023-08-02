@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import RoleController from "../controllers/role.controller.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
 import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import RoleController from "../web/controllers/role.controller.js";
 
 const router = Router();
 

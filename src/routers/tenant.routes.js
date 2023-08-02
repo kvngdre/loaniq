@@ -1,20 +1,26 @@
 import { Router } from "express";
 
-import { tenantController } from "../controllers/index.js";
+import { SignUpDto } from "../dtos/index.js";
 import checkPermission from "../middleware/checkPermission.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import { ValidateRequestMiddleware } from "../middleware/validate-request.middleware.js";
 import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import { TenantController } from "../web/controllers/index.js";
 
 const router = Router();
 
-router.post("/sign-up", tenantController.signUp);
+router.post(
+  "/sign-up",
+  ValidateRequestMiddleware.with(SignUpDto),
+  TenantController.signUp,
+);
 
 router.post(
   "/:tenantId/activate",
   verifyJWT,
   validateIdMiddleware,
   checkPermission("submitToActivateOwn", "tenant"),
-  tenantController.requestTenantActivavtion,
+  TenantController.requestTenantActivation,
 );
 
 router.post(
@@ -22,7 +28,7 @@ router.post(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("requestToDeactivateOwn", "tenant"),
-  tenantController.requestTenantActivavtion,
+  TenantController.requestTenantActivation,
 );
 
 router.post(
@@ -30,23 +36,23 @@ router.post(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("onBoardOwn", "tenant"),
-  tenantController.onBoardTenant,
+  TenantController.onBoardTenant,
 );
 
-router.get("/forms/:formId", tenantController.getPublicFormData);
+router.get("/forms/:formId", TenantController.getPublicFormData);
 
 router.get(
   "/self",
   verifyJWT,
   checkPermission("viewOwn", "tenant"),
-  tenantController.getCurrentTenant,
+  TenantController.getCurrentTenant,
 );
 
 router.get(
   "/",
   verifyJWT,
-  checkPermission("viewAny", "tenant"),
-  tenantController.getTenants,
+  // checkPermission("viewAny", "tenant"),
+  TenantController.getTenants,
 );
 
 router.get(
@@ -54,7 +60,7 @@ router.get(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("viewOwn", "tenant"),
-  tenantController.getTenant,
+  TenantController.getTenant,
 );
 
 router.get(
@@ -62,7 +68,7 @@ router.get(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("deactivateAny", "tenant"),
-  tenantController.requestToDeactivateTenant,
+  TenantController.requestToDeactivateTenant,
 );
 
 router.get(
@@ -70,7 +76,7 @@ router.get(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("generateOwnUrl", "tenant"),
-  tenantController.generatePublicUrl,
+  TenantController.generatePublicUrl,
 );
 
 router.get(
@@ -78,7 +84,7 @@ router.get(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("reactivateOwn", "tenant"),
-  tenantController.reactivateTenant,
+  TenantController.reactivateTenant,
 );
 
 router.patch(
@@ -86,7 +92,7 @@ router.patch(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("updateOwn", "tenant"),
-  tenantController.updateTenant,
+  TenantController.updateTenant,
 );
 
 router.delete(
@@ -94,7 +100,7 @@ router.delete(
   verifyJWT,
   validateIdMiddleware,
   checkPermission("delete", "tenant"),
-  tenantController.deleteTenant,
+  TenantController.deleteTenant,
 );
 
 export default router;

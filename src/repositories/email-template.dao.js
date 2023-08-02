@@ -1,9 +1,9 @@
-import { Error } from 'mongoose';
+import { Error } from "mongoose";
 
-import { ConflictError, ValidationError } from '../errors/index.js';
-import EmailTemplate from '../models/email-template.model.js';
-import { getDuplicateField } from './lib/get-duplicate-field.js';
-import { getValidationErrorMessage } from './lib/get-validation-error-message.js';
+import { ConflictError, ValidationException } from "../errors/index.js";
+import EmailTemplate from "../models/email-template.model.js";
+import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 class EmailTemplateDAO {
   static async insert(dto, trx) {
@@ -13,14 +13,14 @@ class EmailTemplateDAO {
 
       return newRecord;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
         const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        throw new ValidationException(errMsg);
       }
 
       throw exception;
@@ -54,14 +54,14 @@ class EmailTemplateDAO {
 
       return foundRecord;
     } catch (exception) {
-      if (exception.message.includes('E11000')) {
+      if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
       if (exception instanceof Error.ValidationError) {
         const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        throw new ValidationException(errMsg);
       }
 
       throw exception;

@@ -2,8 +2,8 @@ import { Error } from "mongoose";
 
 import {
   ConflictError,
-  NotFoundError,
-  ValidationError,
+  NotFoundException,
+  ValidationException,
 } from "../errors/index.js";
 import { User } from "../models/user.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
@@ -13,7 +13,7 @@ class UserRepository {
   static async save(createUserDto, session) {
     try {
       const user = new User(createUserDto);
-      user.save({ session });
+      await user.save({ session });
 
       return user;
     } catch (exception) {
@@ -24,7 +24,7 @@ class UserRepository {
 
       if (exception instanceof Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;
@@ -47,7 +47,7 @@ class UserRepository {
     try {
       const foundUser = await User.findById(id).select(projection);
       if (!foundUser) {
-        throw new NotFoundError("User does not exist");
+        throw new NotFoundException("User does not exist");
       }
 
       foundUser.set(updateUserDto);
@@ -62,7 +62,7 @@ class UserRepository {
 
       if (exception instanceof Error.ValidationError) {
         const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        throw new ValidationException(errMsg);
       }
 
       throw exception;

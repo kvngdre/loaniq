@@ -1,31 +1,31 @@
-import { Router } from 'express';
-import segConfigRoutes from './segConfig.routes.js';
-import SegmentController from '../controllers/segment.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+import validateObjectId from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import SegmentController from "../web/controllers/segment.controller.js";
+import segConfigRoutes from "./segConfig.routes.js";
 
 const router = Router();
 
-router.use('/configurations', segConfigRoutes);
+router.use("/configurations", segConfigRoutes);
 
-router.post('/', [verifyJWT], SegmentController.createSegment);
+router.post("/", [verifyJWT], SegmentController.createSegment);
 
-router.get('/', [verifyJWT], SegmentController.getSegments);
+router.get("/", [verifyJWT], SegmentController.getSegments);
 
 router.get(
-  '/:segmentId',
+  "/:segmentId",
   [verifyJWT, validateObjectId],
   SegmentController.getSegment,
 );
 
 router.patch(
-  '/:segmentId',
+  "/:segmentId",
   [verifyJWT, validateObjectId],
   SegmentController.updateSegment,
 );
 
 router.delete(
-  '/:segmentId',
+  "/:segmentId",
   [verifyJWT, validateObjectId],
   SegmentController.deleteSegment,
 );

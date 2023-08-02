@@ -5,10 +5,10 @@ import {
   ConflictError,
   DependencyError,
   UnauthorizedError,
-  ValidationError,
+  ValidationException,
 } from "../errors/index.js";
 import { events, pubsub } from "../pubsub/index.js";
-import { userRepository } from "../repositories/index.js";
+import { UserRepository } from "../repositories/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -26,7 +26,7 @@ class UserService {
       newUserDTO.password = randomString();
 
       const [newUser] = await Promise.all([
-        userRepository.insert(newUserDTO, session),
+        UserRepository.save(newUserDTO, session),
         UserConfigService.createConfig(
           {
             userId: newUserDTO._id,
@@ -64,7 +64,7 @@ class UserService {
 
     if (otp) {
       const { isValid, reason } = foundUser.validateOTP(otp);
-      if (!isValid) throw new ValidationError(reason);
+      if (!isValid) throw new ValidationException(reason);
 
       foundUser.set({ "otp.pin": null, "otp.expiresIn": null });
     } else {
@@ -75,7 +75,9 @@ class UserService {
       const similarityPercent =
         similarity(new_password, current_password) * 100;
       if (similarityPercent >= constants.max_similarity) {
-        throw new ValidationError("Password is too similar to old password.");
+        throw new ValidationException(
+          "Password is too similar to old password.",
+        );
       }
 
       // Setting user password
@@ -198,7 +200,7 @@ class UserService {
       similarity(new_password, current_password) * 100;
 
     if (percentageSimilarity >= constants.max_similarity) {
-      throw new ValidationError("Password is too similar to old password.");
+      throw new ValidationException("Password is too similar to old password.");
     }
 
     const formatter = new Intl.DateTimeFormat("en-GB", {

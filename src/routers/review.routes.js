@@ -1,28 +1,28 @@
-import { Router } from 'express';
-import ReviewController from '../controllers/review.controller.js';
-import validateObjectId from '../middleware/validateObjectId.js';
-import verifyJWT from '../middleware/verifyJWT.js';
+import { Router } from "express";
+import validateObjectId from "../middleware/validate-id.middleware.js";
+import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import ReviewController from "../web/controllers/review.controller.js";
 
 const router = Router();
 
-router.post('/', [verifyJWT], ReviewController.createReview);
+router.post("/", [verifyJWT], ReviewController.createReview);
 
-router.get('/', [verifyJWT], ReviewController.getReviews);
+router.get("/", [verifyJWT], ReviewController.getReviews);
 
 router.get(
-  '/:reviewId',
+  "/:reviewId",
   [verifyJWT, validateObjectId],
   ReviewController.getReview,
 );
 
 router.patch(
-  '/:reviewId',
+  "/:reviewId",
   [verifyJWT, validateObjectId],
   ReviewController.updateReview,
 );
 
 router.delete(
-  '/:reviewId',
+  "/:reviewId",
   [verifyJWT, validateObjectId],
   ReviewController.deleteReview,
 );

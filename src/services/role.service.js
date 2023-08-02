@@ -1,13 +1,13 @@
-import { roleRepository } from '../repositories/role.repository.js';
+import { roleRepository } from "../repositories/role.repository.js";
 
 class RoleService {
-  async createRole(createRoleDTO) {
+  static async createRole(createRoleDTO) {
     return roleRepository.insert(createRoleDTO);
   }
 
   async getRoles() {
     const foundRoles = await roleRepository.find();
-    const count = Intl.NumberFormat('en-US').format(foundRoles.length);
+    const count = Intl.NumberFormat("en-US").format(foundRoles.length);
 
     return { count, foundRoles };
   }

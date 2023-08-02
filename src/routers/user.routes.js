@@ -1,7 +1,7 @@
 import { Router } from "express";
-import UserController from "../controllers/user.controller.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
 import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import UserController from "../web/controllers/user.controller.js";
 
 const router = Router();
 

@@ -2,8 +2,8 @@ import { Error } from "mongoose";
 
 import {
   ConflictError,
-  NotFoundError,
-  ValidationError,
+  NotFoundException,
+  ValidationException,
 } from "../errors/index.js";
 import { Tenant } from "../models/tenant.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
@@ -13,7 +13,7 @@ export class TenantRepository {
   static async save(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
-      tenant.save({ session });
+      await tenant.save({ session });
 
       return tenant;
     } catch (exception) {
@@ -23,8 +23,9 @@ export class TenantRepository {
       }
 
       if (exception instanceof Error.ValidationError) {
+        console.log("=======================>");
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;
@@ -47,7 +48,7 @@ export class TenantRepository {
     try {
       const foundTenant = await Tenant.findById(id).select(projection);
       if (!foundTenant) {
-        throw new NotFoundError("Tenant not found");
+        throw new NotFoundException("Tenant not found");
       }
 
       foundTenant.set(updateTenantDto);
@@ -62,7 +63,7 @@ export class TenantRepository {
 
       if (exception instanceof Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        throw new ValidationException(errorMessage);
       }
 
       throw exception;
@@ -72,7 +73,7 @@ export class TenantRepository {
   async destroy(id) {
     const foundTenant = await Tenant.findById({ _id: id });
     if (!foundTenant) {
-      throw new NotFoundError("Tenant not found");
+      throw new NotFoundException("Tenant not found");
     }
 
     foundTenant.delete();
