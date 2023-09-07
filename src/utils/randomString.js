@@ -1,9 +1,9 @@
 /**
  * Generates a random string of fixed length.
- * @param {number} len The number of characters
+ * @param {number} [len] The number of characters
  * @returns {string}
  */
-export default function randomString(len = 6) {
+export function genRandomString(len = 6) {
   let str = "";
   const charSet = "2468ABCDEFGHJKMNOPQRSTUVWXYZ0abcdefghjkmnopqrstuvwxyz13579";
 

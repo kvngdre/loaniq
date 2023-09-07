@@ -1,6 +1,6 @@
-import ValidationError from "../errors/ValidationError.js";
 import ReviewService from "../services/review.service.js";
 import { HttpCode } from "../utils/common.js";
+import ValidationError from "../utils/errors/ValidationError.js";
 import reviewValidator from "../validators/review.validator.js";
 import BaseController from "./base.controller.js";
 

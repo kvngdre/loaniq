@@ -1,14 +1,9 @@
-import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
-import {
-  maritalStatus,
-  relationships,
-  status,
-  validIds,
-} from "../utils/common.js";
+import { Schema, model } from "mongoose";
+import { NotFoundError } from "../../utils/errors/index.js";
+import { maritalStatus, relationships } from "../utils/common.js";
 import computeAge from "../utils/computeAge.js";
 import computeTenure from "../utils/computeTenure.js";
-import NotFoundError from "../errors/NotFoundError.js";
 
 const schemaOptions = {
   timestamps: true,
@@ -53,8 +48,8 @@ const clientSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(status),
-      default: status.ONBOARDING,
+      // enum: Object.values(status),
+      // default: status.ONBOARDING,
     },
 
     role: {
@@ -157,7 +152,7 @@ const clientSchema = new Schema(
     id_type: {
       type: String,
       // required: true,
-      enum: validIds,
+      // enum: validIds,
     },
 
     id_number: {
@@ -326,17 +321,17 @@ clientSchema.methods.permitLogin = function () {
     };
   }
 
-  if (
-    !this.status === status.SUSPENDED ||
-    !this.status === status.DEACTIVATED
-  ) {
-    data.redirect.inactive = true;
-    return {
-      isPermitted: false,
-      message: "Account deactivated. Contact support.",
-      data,
-    };
-  }
+  // if (
+  //   !this.status === status.SUSPENDED ||
+  //   !this.status === status.DEACTIVATED
+  // ) {
+  //   data.redirect.inactive = true;
+  //   return {
+  //     isPermitted: false,
+  //     message: "Account deactivated. Contact support.",
+  //     data,
+  //   };
+  // }
 
   return { isPermitted: true };
 };

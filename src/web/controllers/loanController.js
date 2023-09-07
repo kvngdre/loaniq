@@ -14,7 +14,7 @@
 // import PendingEdit from '../models/review.model'
 // import { computeAge, computeTenure, flatten, pickRandomUser } from '../helpers'
 // import Segment from '../models/segment.model'
-// import ServerError from '../errors/serverError'
+// import ServerError from '../utils/errors/serverError'
 // import Transaction from '../models/transaction.model'
 // const debug = require('debug')('app:loanCtrl')
 // const logger = require('../utils/logger')

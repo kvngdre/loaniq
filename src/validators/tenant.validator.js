@@ -1,7 +1,7 @@
 import Joi from "joi";
 
-import { ValidationException } from "../errors/validation.exception.js";
 import { companyCategory, socials, VALID_ID } from "../utils/common.js";
+import { ValidationError } from "../utils/errors/index.js";
 import { BaseValidator } from "./lib/base-validator.js";
 
 class TenantValidator extends BaseValidator {
@@ -129,7 +129,7 @@ class TenantValidator extends BaseValidator {
 
     if (error) {
       const message = this.formatErrorMessage(error.details[0].message);
-      throw new ValidationException(message);
+      throw new ValidationError(message);
     }
 
     return value;

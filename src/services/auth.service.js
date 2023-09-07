@@ -1,29 +1,87 @@
-/* eslint-disable camelcase */
-/* eslint-disable eqeqeq */
 import jwt from "jsonwebtoken";
+import { startSession } from "mongoose";
+
 import { constants } from "../config/index.js";
+import ClientRepository from "../data/repositories/client.dao.js";
+import { TokenRepository, UserRepository } from "../data/repositories/index.js";
+import {
+  ConflictError,
+  DependencyError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "../utils/errors/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateJWT.js";
-import ConflictError from "../errors/ConflictError.js";
-import DependencyError from "../errors/DependencyError.js";
-import EmailService from "./email.service.js";
-import ForbiddenError from "../errors/ForbiddenError.js";
 import generateOTP from "../utils/generateOTP.js";
 import generateSession from "../utils/generateSession.js";
-import logger from "../utils/logger.js";
-import UnauthorizedError from "../errors/UnauthorizedError.js";
-import userConfigService from "./userConfig.service.js";
-import UserDAO from "../daos/user.dao.js";
-import ClientDAO from "../daos/client.dao.js";
+import { logger } from "../utils/logger.js";
+import { EmailService } from "./email.service.js";
+import { TenantService } from "./tenant.service.js";
+import { TokenService } from "./token.service.js";
+import { UserService } from "./user.service.js";
 
-class AuthService {
+export class AuthService {
+  static async register(signUpDto) {
+    const session = await startSession();
+    session.startTransaction();
+
+    try {
+      const newUser = await UserRepository.save(
+        { role: "admin", resetPwd: false, ...signUpDto },
+        session,
+      );
+
+      await TenantService.create(signUpDto, session);
+      await UserService.create(signUpDto);
+      const token = TokenService.generateToken(6);
+
+      await TokenRepository.save(
+        {
+          user: newUser._id,
+          token: token.value,
+          type: "sign-up token",
+          expirationTime: token.expires,
+          isUsed: false,
+        },
+        session,
+      );
+
+      await EmailService.send({
+        to: signUpDto.email,
+        templateName: "new-tenant-user",
+        context: {
+          name: newUser.firstName,
+          otp: token.value,
+          expiresIn: token.ttl,
+        },
+      });
+
+      await session.commitTransaction();
+
+      return {
+        message: "You have successfully signed up for the service.",
+        next_steps: [
+          "Check email for an OTP to verify your account.",
+          "Log in and explore the features.",
+          "Customize your profile, manage your settings, and access our support.",
+        ],
+      };
+    } catch (exception) {
+      await session.abortTransaction();
+
+      throw exception;
+    } finally {
+      await session.endSession();
+    }
+  }
+
   static async login(loginDTO, token, userAgent, clientIp) {
     if (loginDTO.email) {
       // ! Tenant login
       const { email, password } = loginDTO;
-      const foundUser = await UserDAO.findOne({ email });
+      const foundUser = await UserRepository.findOne({ email });
 
       const isValid = foundUser.validatePassword(password);
       if (!isValid) throw new UnauthorizedError("Invalid credentials");
@@ -73,7 +131,7 @@ class AuthService {
 
     // ! Client login
     const { phoneOrStaffId, passcode } = loginDTO;
-    const foundClient = await ClientDAO.findOne({
+    const foundClient = await ClientRepository.findOne({
       $or: [{ phone_number: phoneOrStaffId }, { staff_id: phoneOrStaffId }],
     });
 
@@ -108,12 +166,12 @@ class AuthService {
     try {
       const decoded = jwt.verify(token, secret.refresh, { issuer });
       if (decoded.client) {
-        const foundClient = await ClientDAO.findOne({
+        const foundClient = await ClientRepository.findOne({
           "sessions.token": token,
         }).catch(async () => {
           logger.warn("Attempted refresh token reuse detected.");
 
-          await ClientDAO.update(decoded.id, { sessions: null }).catch(
+          await ClientRepository.update(decoded.id, { sessions: null }).catch(
             (err) => {
               logger.error(err.message, err.stack);
             },
@@ -166,7 +224,7 @@ class AuthService {
         });
 
       // Validating if token payload is valid
-      if (decoded.id != foundUserConfig.userId) {
+      if (decoded.id !== foundUserConfig.userId) {
         throw new ForbiddenError("Invalid token");
       }
 
@@ -205,7 +263,10 @@ class AuthService {
   static async sendOTP({ email, len }) {
     const generatedOTP = generateOTP(len);
 
-    const foundUser = await UserDAO.update({ email }, { otp: generatedOTP });
+    const foundUser = await UserRepository.update(
+      { email },
+      { otp: generatedOTP },
+    );
 
     // Sending OTP to user email
     const info = await EmailService.send({
@@ -245,5 +306,3 @@ class AuthService {
     return userConfig;
   }
 }
-
-export default AuthService;

@@ -1,6 +1,6 @@
-import ValidationError from "../errors/ValidationError.js";
 import BankService from "../services/bank.service.js";
 import { HttpCode } from "../utils/common.js";
+import ValidationError from "../utils/errors/ValidationError.js";
 import bankValidator from "../validators/bank.validator.js";
 import BaseController from "./base.controller.js";
 

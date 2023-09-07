@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import ValidationError from "../errors/validation.error.js";
-import SegConfigDAO from "../repositories/segConfig.dao.js";
+import SegConfigDAO from "../data/repositories/segConfig.dao.js";
+import ValidationError from "../utils/errors/validation.error.js";
 
 class SegConfigService {
   static createConfig = async (dto) => {

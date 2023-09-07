@@ -1,58 +1,58 @@
-/* eslint-disable camelcase */
-import transaction from "mongoose-trx";
+import { startSession } from "mongoose";
+
 import { constants } from "../config/index.js";
+import { UserRepository } from "../data/repositories/index.js";
+import { events, pubsub } from "../pubsub/index.js";
 import {
   ConflictError,
   DependencyError,
   UnauthorizedError,
-  ValidationException,
-} from "../errors/index.js";
-import { events, pubsub } from "../pubsub/index.js";
-import { UserRepository } from "../repositories/index.js";
+  ValidationError,
+} from "../utils/errors/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateJWT.js";
 import generateSession from "../utils/generateSession.js";
-import logger from "../utils/logger.js";
+import { calcSimilarity, genRandomString } from "../utils/index.js";
+import { logger } from "../utils/logger.js";
 import mailer from "../utils/mailer.js";
-import randomString from "../utils/randomString.js";
-import similarity from "../utils/stringSimilarity.js";
-import EmailService from "./email.service.js";
+import { EmailService } from "./email.service.js";
 
-class UserService {
-  static createUser = async (newUserDTO) => {
-    const result = await transaction(async (session) => {
-      newUserDTO.password = randomString();
+export class UserService {
+  static async create(createUserDTO) {
+    const session = await startSession();
+    session.startTransaction();
 
-      const [newUser] = await Promise.all([
-        UserRepository.save(newUserDTO, session),
-        UserConfigService.createConfig(
-          {
-            userId: newUserDTO._id,
-            tenantId: newUserDTO.tenantId,
-          },
-          session,
-        ),
-      ]);
+    try {
+      const password = genRandomString(6);
+      const newUser = await UserRepository.save(
+        { ...createUserDTO, password },
+        session,
+      );
 
       // Send temporary password to new user email.
       const info = await EmailService.send({
-        to: newUserDTO.email,
+        to: createUserDTO.email,
         templateName: "new-user",
-        context: { name: newUserDTO.first_name, password: newUserDTO.password },
+        context: {
+          name: createUserDTO.first_name,
+          password,
+        },
       });
+
       if (info.error) {
-        throw new DependencyError("Failed to send password to user email.");
+        throw new DependencyError("Failed to send password to user email");
       }
 
-      newUser.purgeSensitiveData();
-
-      return newUser;
-    });
-
-    return result;
-  };
+      return newUser.purgeSensitiveData();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
+  }
 
   static verifyNewUser = async (verifyNewUserDTO, userAgent, clientIp) => {
     const { email, otp, current_password, new_password } = verifyNewUserDTO;
@@ -64,7 +64,7 @@ class UserService {
 
     if (otp) {
       const { isValid, reason } = foundUser.validateOTP(otp);
-      if (!isValid) throw new ValidationException(reason);
+      if (!isValid) throw new ValidationError(reason);
 
       foundUser.set({ "otp.pin": null, "otp.expiresIn": null });
     } else {
@@ -73,11 +73,9 @@ class UserService {
 
       // * Measuring similarity of new password to the current temporary password.
       const similarityPercent =
-        similarity(new_password, current_password) * 100;
+        calcSimilarity(new_password, current_password) * 100;
       if (similarityPercent >= constants.max_similarity) {
-        throw new ValidationException(
-          "Password is too similar to old password.",
-        );
+        throw new ValidationError("Password is too similar to old password.");
       }
 
       // Setting user password
@@ -197,10 +195,10 @@ class UserService {
     if (!isMatch) throw new UnauthorizedError("Password is incorrect.");
 
     const percentageSimilarity =
-      similarity(new_password, current_password) * 100;
+      calcSimilarity(new_password, current_password) * 100;
 
     if (percentageSimilarity >= constants.max_similarity) {
-      throw new ValidationException("Password is too similar to old password.");
+      throw new ValidationError("Password is too similar to old password.");
     }
 
     const formatter = new Intl.DateTimeFormat("en-GB", {
@@ -263,7 +261,7 @@ class UserService {
   };
 
   static resetPassword = async (userId) => {
-    const randomPwd = randomString(6);
+    const randomPwd = genRandomString(6);
 
     const foundUser = await userRepository.update(userId, {
       resetPwd: true,
@@ -309,5 +307,3 @@ class UserService {
     return foundUser;
   };
 }
-
-export default UserService;

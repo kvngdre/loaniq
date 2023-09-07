@@ -5,8 +5,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { constants } from "../config/index.js";
-import { DependencyError } from "../errors/index.js";
-import logger from "./logger.js";
+import { DependencyError } from "../utils/errors/index.js";
+import { logger } from "./logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const partialsPath = path.resolve(__dirname, "../assets/templates/partials/");

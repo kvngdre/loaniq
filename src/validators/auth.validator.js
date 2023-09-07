@@ -1,7 +1,34 @@
 import Joi from "joi";
-import BaseValidator from "./base.validator.js";
+
+import { ValidationError } from "../utils/errors/index.js";
+import { BaseValidator } from "./lib/base-validator.js";
 
 class AuthValidator extends BaseValidator {
+  validateSignUpDto = (dto) => {
+    const schema = Joi.object({
+      businessName: Joi.string()
+        .label("Business name")
+        .min(2)
+        .max(50)
+        .required(),
+      firstName: this.nameSchema.label("First name").required(),
+      lastName: this.nameSchema.label("Last name").required(),
+      email: this.emailSchema.required(),
+      phoneNo: this.phoneNumberSchema.required(),
+      password: this.passwordSchema(8).required(),
+      confirmPassword: this.confirmPasswordSchema.required(),
+    });
+
+    const { value, error } = schema.validate(dto);
+
+    if (error) {
+      const message = this.formatErrorMessage(error.details[0].message);
+      throw new ValidationError(message);
+    }
+
+    return value;
+  };
+
   validateLogin = (loginDTO) => {
     let schema = Joi.object({
       email: this._emailSchema,

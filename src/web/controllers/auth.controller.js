@@ -1,13 +1,30 @@
 import requestIp from "request-ip";
 import { constants } from "../../config/index.js";
-import { ValidationError } from "../../errors/index.js";
-import AuthService from "../../services/auth.service.js";
+import { AuthService } from "../../services/index.js";
 import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
+import { ValidationError } from "../../utils/errors/index.js";
 import authValidator from "../../validators/auth.validator.js";
+import { tenantValidator } from "../../validators/tenant.validator.js";
+import { BaseHttpResponse } from "../lib/base-http-response.js";
 import BaseController from "./base.controller.js";
 
-class AuthController extends BaseController {
+export class AuthController extends BaseController {
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static register = async (req, res) => {
+    const { value, error } = tenantValidator.validateSignUp(req.body);
+    if (error) throw new ValidationError(null, error);
+
+    const result = await AuthService.register(value);
+    const response = BaseHttpResponse.success(result.message, result.data);
+
+    res.status(HttpCode.CREATED).json(response);
+  };
+
   /**
    *
    * @param {import('express').Request} req
@@ -129,5 +146,3 @@ class AuthController extends BaseController {
     res.status(200).json(req.body);
   };
 }
-
-export default AuthController;

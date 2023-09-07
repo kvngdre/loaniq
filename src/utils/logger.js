@@ -1,11 +1,9 @@
-import { addColors, format, createLogger, transports } from "winston";
+import { addColors, createLogger, format, transports } from "winston";
 
-const { align, cli, colorize, combine, timestamp, printf } = format;
+const { align, colorize, combine, timestamp, printf } = format;
 
 function isDevEnvironment() {
-  if (process.env.NODE_ENV === "development") return true;
-
-  return false;
+  return process.env.NODE_ENV === "development";
 }
 
 const custom = {
@@ -21,12 +19,11 @@ const custom = {
 };
 
 const devFormatter = combine(
-  cli(),
   colorize(),
   timestamp({ format: "HH:mm:ss" }),
   printf(({ level, timestamp, message, meta }) => {
-    message = message.replace("undefined", "");
-    return `[${level}] ${timestamp} ${message}  ${
+    const msg = message.replace("undefined", "");
+    return `[${level}] ${timestamp} ${msg}  ${
       meta ? JSON.stringify(meta, null, 2) : ""
     }`;
   }),
@@ -51,7 +48,7 @@ class Logger {
 
     const prodTransport = new transports.File({
       level: "error",
-      filename: "src/logs/error.log",
+      filename: "logs/error.log",
       format: prodFormatter,
       handleExceptions: true,
       json: true,
@@ -91,4 +88,4 @@ class Logger {
   }
 }
 
-export default new Logger();
+export const logger = new Logger();

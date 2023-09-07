@@ -1,8 +1,7 @@
-import { ValidationException } from "../../errors/index.js";
 import { TenantService } from "../../services/index.js";
 import { HttpCode } from "../../utils/common.js";
+import { ValidationError } from "../../utils/errors/index.js";
 import { tenantValidator } from "../../validators/tenant.validator.js";
-import { BaseHttpResponse } from "../lib/base-http-response.js";
 
 export class TenantController {
   /**
@@ -10,21 +9,9 @@ export class TenantController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static async signUp(req, res) {
-    const signUpResponse = await TenantService.signUp(req.body);
-    const response = BaseHttpResponse.success(signUpResponse, 200);
-
-    res.status(response.statusCode).json(response);
-  }
-
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
   static onBoardTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateOnBoarding(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const tenant = await TenantService.onBoardTenant(value);
     const response = this.apiResponse("Tenant information updated.", tenant);
@@ -77,7 +64,7 @@ export class TenantController {
    */
   static updateTenant = async (req, res) => {
     const { value, error } = tenantValidator.validateUpdate(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const tenant = await TenantService.updateTenant(req.params.tenantId, value);
     const response = this.apiResponse("Tenant updated.", tenant);
@@ -106,7 +93,7 @@ export class TenantController {
     const { value, error } = tenantValidator.validateActivationRequest(
       req.body,
     );
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const tenant = await TenantService.requestToActivateTenant(
       req.params.tenantId,
@@ -138,7 +125,7 @@ export class TenantController {
     const { value, error } = tenantValidator.validateDeactivationRequest(
       req.body,
     );
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     await TenantService.requestToDeactivateTenant(req.currentUser, value);
     const response = this.apiResponse("Deactivation request sent");

@@ -1,8 +1,8 @@
 import requestIp from "request-ip";
 import { constants } from "../config/index.js";
-import ValidationError from "../errors/ValidationError.js";
 import ClientService from "../services/client.service.js";
 import { HttpCode } from "../utils/common.js";
+import ValidationError from "../utils/errors/ValidationError.js";
 import clientValidator from "../validators/client.validator.js";
 import BaseController from "./base.controller.js";
 

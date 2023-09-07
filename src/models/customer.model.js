@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import { maritalStatus, relationships, validIds } from "../utils/common.js";
 import computeAge from "../utils/computeAge.js";
 import computeTenure from "../utils/computeTenure.js";
-import NotFoundError from "../errors/NotFoundError.js";
+import NotFoundError from "../utils/errors/NotFoundError.js";
 
 const schemaOptions = { timestamps: true, versionKey: false };
 

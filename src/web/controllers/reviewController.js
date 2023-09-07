@@ -4,7 +4,7 @@
 // import { findById as _findById } from '../models/loan.model'
 // import { Types } from 'mongoose'
 // import Review, { aggregate, findOne } from '../models/review.model'
-// import ServerError from '../errors/serverError'
+// import ServerError from '../utils/errors/serverError'
 // const debug = require('debug')('app:pendingEditCtrl')
 // const logger = require('../utils/logger')
 

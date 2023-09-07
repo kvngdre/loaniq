@@ -1,6 +1,6 @@
-import ValidationError from "../errors/validation.error.js";
 import StateService from "../services/state.service.js";
 import { HttpCode } from "../utils/common.js";
+import ValidationError from "../utils/errors/validation.error.js";
 import stateValidator from "../validators/stateValidator.js";
 import BaseController from "./base.controller.js";
 

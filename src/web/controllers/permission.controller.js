@@ -1,6 +1,6 @@
-import ValidationError from "../errors/ValidationError.js";
 import PermissionService from "../services/permission.service.js";
 import { HttpCode } from "../utils/common.js";
+import ValidationError from "../utils/errors/ValidationError.js";
 import permissionValidator from "../validators/permission.validator.js";
 import BaseController from "./base.controller.js";
 

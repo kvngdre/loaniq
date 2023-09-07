@@ -1,11 +1,19 @@
+import { google } from "googleapis";
+import { createTransport } from "nodemailer";
 import Sqrl from "squirrelly";
-import { constants } from "../config/index.js";
-import EmailTemplateDAO from "../repositories/email-template.dao.js";
-import getMailTransport from "../utils/getMailTransport.js";
-import logger from "../utils/logger.js";
 
-class EmailService {
-  static async sendTest() {}
+import EmailTemplateDAO from "../data/repositories/email-template.dao.js";
+import getMailTransport from "../utils/getMailTransport.js";
+import { logger } from "../utils/index.js";
+
+export class EmailService {
+  #transport;
+
+  constructor() {
+    this.#transport = this.#getMailTransporter();
+  }
+
+  // static async sendTest() {}
 
   static async addTemplate(newEmailTemplateDTO) {
     const newTemplate = await EmailTemplateDAO.insert(newEmailTemplateDTO);
@@ -70,6 +78,36 @@ class EmailService {
       return { error: true, reason: error.message };
     }
   }
-}
 
-export default EmailService;
+  async #getMailTransporter() {
+    // try {
+    const options = {
+      clientId: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      refreshToken: process.env.REFRESH_TOKEN,
+      oauthPlayground: process.env.OAUTH_PLAYGROUND,
+    };
+    const oauth2Client = new google.auth.OAuth2(options);
+
+    oauth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+    const accessToken = await oauth2Client.getAccessToken();
+
+    const transporter = createTransport({
+      service: "gmail",
+      auth: {
+        type: "OAuth2",
+        user: process.env.SENDER_EMAIL,
+        clientId: options.clientId,
+        clientSecret: options.clientSecret,
+        refreshToken: options.refreshToken,
+        accessToken,
+      },
+    });
+
+    return transporter;
+    // } catch (exception) {
+    //   logger.fatal(exception.message, exception.stack);
+    //   throw new Error("Error creating mail transport.");
+    // }
+  }
+}

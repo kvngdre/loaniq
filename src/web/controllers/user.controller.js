@@ -1,8 +1,8 @@
 import requestIp from "request-ip";
 import { constants } from "../../config/index.js";
-import { ValidationException } from "../../errors/index.js";
-import UserService from "../../services/user.service.js";
+import { UserService } from "../../services/user.service.js";
 import { HttpCode } from "../../utils/common.js";
+import { ValidationError } from "../../utils/errors/index.js";
 import userValidator from "../../validators/user.validator.js";
 import BaseController from "./base.controller.js";
 
@@ -12,7 +12,7 @@ class UserController extends BaseController {
       req.body,
       req.currentUser.tenantId,
     );
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const newUser = await UserService.createUser(value);
     const response = this.apiResponse(
@@ -25,7 +25,7 @@ class UserController extends BaseController {
 
   static verifySignup = async (req, res) => {
     const { value, error } = userValidator.validateVerifySignUp(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const { accessToken, refreshToken, user } = await UserService.verifyNewUser(
       value,
@@ -73,7 +73,7 @@ class UserController extends BaseController {
 
   static updateUser = async (req, res) => {
     const { value, error } = userValidator.validateUpdate(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     const user = await UserService.updateUser(req.params.userId, value);
     const response = this.apiResponse("User account update", user);
@@ -90,7 +90,7 @@ class UserController extends BaseController {
 
   static changePassword = async (req, res) => {
     const { value, error } = userValidator.validateUpdatePassword(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     await UserService.changePassword(req.params.userId, value);
     const response = this.apiResponse("Password updated");
@@ -103,7 +103,7 @@ class UserController extends BaseController {
     const { value, error } = await userValidator.validateForgotPassword(
       req.body,
     );
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     await UserService.forgotPassword(value);
     const response = this.apiResponse("User password has been reset.");
@@ -120,7 +120,7 @@ class UserController extends BaseController {
 
   static deactivateUser = async (req, res) => {
     const { value, error } = userValidator.validateDeactivation(req.body);
-    if (error) throw new ValidationException(null, error);
+    if (error) throw new ValidationError(null, error);
 
     await UserService.deactivateUser(req.params.userId, value);
     const response = this.apiResponse("User deactivated");
