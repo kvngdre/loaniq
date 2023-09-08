@@ -1,4 +1,4 @@
-import { Error } from "mongoose";
+import mongoose from "mongoose";
 
 import {
   ConflictError,
@@ -20,7 +20,7 @@ export class TenantRepository {
         throw new ConflictError(`${field} already in use.`);
       }
 
-      if (exception instanceof Error.ValidationError) {
+      if (exception instanceof mongoose.Error.ValidationError) {
         const msg = getValidationErrorMessage(exception);
         throw new ValidationError(msg);
       }

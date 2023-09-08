@@ -23,6 +23,10 @@ class DBContext {
     }
   }
 
+  async disconnect() {
+    await mongoose.disconnect();
+  }
+
   get Tenant() {
     return mongoose.model("Tenant", tenantSchema);
   }

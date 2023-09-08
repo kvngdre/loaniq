@@ -1,7 +1,7 @@
 export class BaseHttpResponse {
-  constructor(message, error, data) {
+  constructor(message, errors, data) {
     this.message = message;
-    this.error = error;
+    this.errors = errors;
     this.data = data;
   }
 
@@ -9,7 +9,7 @@ export class BaseHttpResponse {
     return new BaseHttpResponse(message, undefined, data);
   }
 
-  static failure(message, errors) {
+  static failed(message, errors) {
     return new BaseHttpResponse(message, errors, undefined);
   }
 }

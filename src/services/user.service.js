@@ -16,8 +16,7 @@ import {
 import generateSession from "../utils/generateSession.js";
 import { calcSimilarity, genRandomString } from "../utils/index.js";
 import { logger } from "../utils/logger.js";
-import mailer from "../utils/mailer.js";
-import { EmailService } from "./email.service.js";
+import { MailService } from "./mail.service.js";
 
 export class UserService {
   static async create(createUserDTO) {
@@ -32,7 +31,7 @@ export class UserService {
       );
 
       // Send temporary password to new user email.
-      const info = await EmailService.send({
+      const info = await MailService.send({
         to: createUserDTO.email,
         templateName: "new-user",
         context: {
@@ -44,6 +43,8 @@ export class UserService {
       if (info.error) {
         throw new DependencyError("Failed to send password to user email");
       }
+
+      await session.commitTransaction();
 
       return newUser.purgeSensitiveData();
     } catch (error) {
@@ -212,7 +213,7 @@ export class UserService {
     });
 
     // Send temporary password to new user email.
-    const info = await EmailService.send({
+    const info = await MailService.send({
       to: foundUser.email,
       templateName: "user_password_change",
       context: {

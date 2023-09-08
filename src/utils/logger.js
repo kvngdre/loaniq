@@ -12,10 +12,10 @@ const custom = {
     error: "red",
     warn: "yellow",
     info: "green",
+    http: "magenta",
     debug: "cyan",
-    silly: "magenta",
   },
-  levels: { fatal: 0, error: 0, warn: 0, info: 0, debug: 0, silly: 0 },
+  levels: { fatal: 0, error: 1, warn: 2, info: 3, http: 4, debug: 5 },
 };
 
 const devFormatter = combine(
@@ -55,7 +55,7 @@ class Logger {
     });
 
     this.logger = createLogger({
-      level: isDevEnvironment() ? "silly" : "error",
+      level: isDevEnvironment() ? "debug" : "error",
       levels: custom.levels,
       transports: [isDevEnvironment() ? devTransport : prodTransport],
     });
@@ -79,12 +79,12 @@ class Logger {
     this.logger.info({ message, meta });
   }
 
-  debug(message, meta) {
-    this.logger.debug({ message, meta });
+  http(message, meta) {
+    this.logger.http({ message, meta });
   }
 
-  silly(message, meta) {
-    this.logger.silly({ message, meta });
+  debug(message, meta) {
+    this.logger.debug({ message, meta });
   }
 }
 

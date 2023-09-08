@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-// import authRouter from './auth.routes.js';
+import authRouter from "./auth.routes.js";
 // import bankRouter from './bank.routes.js';
 // import customerRouter from './customer.routes.js';
 // import dashboardRouter from './dashboard.routes.js';
@@ -19,7 +19,7 @@ import userRoutes from "./user.routes.js";
 
 export const appRouter = Router();
 
-// router.use('/auth', authRouter);
+appRouter.use("/auth", authRouter);
 // router.use('/banks', bankRouter);
 // router.use('/clients', clientRouter);
 // router.use('/customers', customerRouter);

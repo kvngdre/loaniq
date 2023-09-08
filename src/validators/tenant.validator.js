@@ -1,7 +1,6 @@
 import Joi from "joi";
 
 import { companyCategory, socials, VALID_ID } from "../utils/common.js";
-import { ValidationError } from "../utils/errors/index.js";
 import { BaseValidator } from "./lib/base-validator.js";
 
 class TenantValidator extends BaseValidator {
@@ -109,31 +108,6 @@ class TenantValidator extends BaseValidator {
       )
       .label("Documentation");
   }
-
-  validateSignUpDto = (dto) => {
-    const schema = Joi.object({
-      business_name: Joi.string()
-        .label("Business name")
-        .min(2)
-        .max(50)
-        .required(),
-      first_name: this.nameSchema.label("First name").required(),
-      last_name: this.nameSchema.label("Last name").required(),
-      email: this.emailSchema.required(),
-      phone_no: this.phoneNumberSchema.required(),
-      password: this.passwordSchema(8).required(),
-      confirm_password: this.confirmPasswordSchema.required(),
-    });
-
-    const { value, error } = schema.validate(dto);
-
-    if (error) {
-      const message = this.formatErrorMessage(error.details[0].message);
-      throw new ValidationError(message);
-    }
-
-    return value;
-  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({

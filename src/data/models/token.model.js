@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 export const tokensSchema = new Schema(
   {
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -20,7 +20,7 @@ export const tokensSchema = new Schema(
       required: true,
     },
 
-    expirationTime: {
+    expires: {
       type: Number,
       required: true,
     },
@@ -34,5 +34,7 @@ export const tokensSchema = new Schema(
   },
   { timestamps: true },
 );
+
+tokensSchema.index({ userId: 1, type: 1 }, { unique: true });
 
 export const Token = model("Token", tokensSchema);

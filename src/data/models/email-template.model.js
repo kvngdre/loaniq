@@ -1,24 +1,22 @@
 import { Schema, model } from "mongoose";
-import { NotFoundError } from "../../utils/errors/index.js";
 
-const schemaOptions = { timestamps: true, versionKey: false };
-
-const emailTemplateSchema = new Schema(
+export const emailTemplateSchema = new Schema(
   {
     name: {
       type: String,
       lowercase: true,
       trim: true,
+      index: true,
       unique: true,
       required: true,
     },
 
-    templateName: {
+    description: {
       type: String,
       lowercase: true,
       trim: true,
-      unique: true,
-      required: true,
+      maxLength: 255,
+      default: null,
     },
 
     type: {
@@ -30,21 +28,13 @@ const emailTemplateSchema = new Schema(
       required: true,
     },
 
-    html: {
+    body: {
       type: String,
       required: true,
     },
   },
-  schemaOptions,
+  { timestamps: true },
 );
-
-emailTemplateSchema.post(/^find/, (doc) => {
-  if (Array.isArray(doc) && doc.length === 0) {
-    throw new NotFoundError("No templates not found.");
-  }
-
-  if (!doc) throw new NotFoundError("Template not found.");
-});
 
 const EmailTemplate = model("email_template", emailTemplateSchema);
 

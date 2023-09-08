@@ -1,15 +1,15 @@
 export class BaseHttpResponse {
-  constructor(data, error, statusCode) {
+  constructor(message, data, errors) {
+    this.message = message;
     this.data = data;
-    this.error = error;
-    this.statusCode = statusCode;
+    this.errors = errors;
   }
 
-  static success(data, statusCode) {
-    return new BaseHttpResponse(data, null, statusCode);
+  static success(message, data = undefined) {
+    return new BaseHttpResponse(message, data, undefined);
   }
 
-  static failed(error, statusCode) {
-    return new BaseHttpResponse(null, error, statusCode);
+  static failed(message, errors = undefined) {
+    return new BaseHttpResponse(message, undefined, errors);
   }
 }

@@ -2,18 +2,6 @@ import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
 import autoPopulate from "mongoose-autopopulate";
 
-const userConfigSchema = new Schema({
-  avatar: {
-    type: String,
-    default: null,
-  },
-
-  lastLoginTime: {
-    type: Date,
-    default: null,
-  },
-});
-
 export const userSchema = new Schema(
   {
     firstName: {
@@ -44,7 +32,12 @@ export const userSchema = new Schema(
       default: null,
     },
 
-    phoneNo: String,
+    phoneNumber: {
+      type: String,
+      unique: true,
+      default: null,
+      sparse: true,
+    },
 
     email: {
       type: String,
@@ -85,7 +78,17 @@ export const userSchema = new Schema(
       default: null,
     },
 
-    configurations: userConfigSchema,
+    configurations: {
+      avatar: {
+        type: String,
+        default: null,
+      },
+
+      lastLoginTime: {
+        type: Date,
+        default: null,
+      },
+    },
   },
 
   { timestamps: true },

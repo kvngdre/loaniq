@@ -3,11 +3,15 @@ import { startSession } from "mongoose";
 
 import { constants } from "../config/index.js";
 import ClientRepository from "../data/repositories/client.dao.js";
-import { TokenRepository, UserRepository } from "../data/repositories/index.js";
+import {
+  TenantRepository,
+  UserRepository,
+} from "../data/repositories/index.js";
 import {
   ConflictError,
   DependencyError,
   ForbiddenError,
+  ServerError,
   UnauthorizedError,
 } from "../utils/errors/index.js";
 import {
@@ -17,60 +21,65 @@ import {
 import generateOTP from "../utils/generateOTP.js";
 import generateSession from "../utils/generateSession.js";
 import { logger } from "../utils/logger.js";
-import { EmailService } from "./email.service.js";
-import { TenantService } from "./tenant.service.js";
+import { MailService } from "./mail.service.js";
 import { TokenService } from "./token.service.js";
-import { UserService } from "./user.service.js";
 
 export class AuthService {
-  static async register(signUpDto) {
+  static async register(registerDto) {
     const session = await startSession();
     session.startTransaction();
 
     try {
-      const newUser = await UserRepository.save(
-        { role: "admin", resetPwd: false, ...signUpDto },
-        session,
-      );
-
-      await TenantService.create(signUpDto, session);
-      await UserService.create(signUpDto);
       const token = TokenService.generateToken(6);
 
-      await TokenRepository.save(
+      const { _id } = await UserRepository.save(
+        { role: "admin", resetPassword: false, ...registerDto },
+        session,
+      );
+      const tenant = await TenantRepository.save(registerDto, session);
+      const res = await TokenService.upsert(
         {
-          user: newUser._id,
+          userId: "64fa74cd2e3f7c956fceecd5",
           token: token.value,
-          type: "sign-up token",
-          expirationTime: token.expires,
-          isUsed: false,
+          type: "register",
+          expires: token.expires,
         },
         session,
       );
 
-      await EmailService.send({
-        to: signUpDto.email,
+      console.log(res);
+
+      const { error } = await MailService.send({
+        to: registerDto.email,
         templateName: "new-tenant-user",
         context: {
-          name: newUser.firstName,
+          name: registerDto.firstName,
           otp: token.value,
           expiresIn: token.ttl,
         },
       });
+      if (error) {
+        throw new ServerError(
+          `Registration Failed. ${error.message}`,
+          error.stack,
+        );
+      }
 
       await session.commitTransaction();
 
       return {
         message: "You have successfully signed up for the service.",
-        next_steps: [
-          "Check email for an OTP to verify your account.",
-          "Log in and explore the features.",
-          "Customize your profile, manage your settings, and access our support.",
-        ],
+        data: {
+          id: tenant._id,
+          next_steps: [
+            "Check email for an OTP to verify your account.",
+            "Log in and explore the features.",
+            "Customize your profile, manage your settings, and access our support.",
+          ],
+        },
       };
     } catch (exception) {
       await session.abortTransaction();
-
       throw exception;
     } finally {
       await session.endSession();
@@ -269,7 +278,7 @@ export class AuthService {
     );
 
     // Sending OTP to user email
-    const info = await EmailService.send({
+    const info = await MailService.send({
       to: email,
       templateName: "otp-request",
       context: { otp: generatedOTP.pin, expiresIn: 10 },

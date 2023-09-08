@@ -1,4 +1,4 @@
-import { Error } from "mongoose";
+import mongoose from "mongoose";
 
 import {
   ConflictError,
@@ -22,9 +22,9 @@ export class UserRepository {
         throw new ConflictError(`${field} already in use.`);
       }
 
-      if (exception instanceof Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+      if (exception instanceof mongoose.Error.ValidationError) {
+        const msg = getValidationErrorMessage(exception);
+        throw new ValidationError(msg);
       }
 
       throw exception;

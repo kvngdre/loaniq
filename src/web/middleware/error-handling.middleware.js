@@ -1,20 +1,38 @@
 import { BaseHttpResponse } from "../../utils/base-http-response.js";
-import { NotFoundError, ValidationError } from "../../utils/errors/index.js";
+import {
+  ConflictError,
+  NotFoundError,
+  ServerError,
+  ValidationError,
+} from "../../utils/errors/index.js";
+import { logger } from "../../utils/logger.js";
 
 export function errorHandlingMiddleware(err, req, res, next) {
   if (err instanceof ValidationError) {
-    const response = BaseHttpResponse.failed(err.message, 422);
-    return res.status(response.statusCode).json(response);
+    const response = BaseHttpResponse.failed(err.message, err.errors);
+    return res.status(400).json(response);
   }
 
   if (err instanceof NotFoundError) {
-    const response = BaseHttpResponse.failed(err.message, 404);
-    return res.status(response.statusCode).json(response);
+    const response = BaseHttpResponse.failed(err.message, err.errors);
+    return res.status(404).json(response);
+  }
+
+  if (err instanceof ConflictError) {
+    const response = BaseHttpResponse.failed(err.message, err.errors);
+    return res.status(409).json(response);
+  }
+
+  if (err instanceof ServerError) {
+    logger.error(err.message, err.errors);
+    const response = BaseHttpResponse.failed(err.message);
+    return res.status(500).json(response);
   }
 
   if (err instanceof Error) {
-    const response = BaseHttpResponse.failed(err.message, 500);
-    return res.status(response.statusCode).json(response);
+    logger.fatal(err.message, err.stack);
+    const response = BaseHttpResponse.failed("Something Went Wrong");
+    return res.status(500).json(response);
   }
 
   return next();

@@ -1,3 +1,4 @@
+export * from "./email-template.model.js";
 export * from "./role.model.js";
 export * from "./tenant.model.js";
 export * from "./token.model.js";

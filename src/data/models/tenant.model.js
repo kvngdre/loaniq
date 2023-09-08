@@ -7,99 +7,6 @@ import {
   tenantDocTypes,
 } from "../../utils/common.js";
 
-const tenantConfigSchema = new Schema(
-  {
-    defaultParams: {
-      minLoanAmount: {
-        type: Number,
-        default: null,
-      },
-
-      maxLoanAmount: {
-        type: Number,
-        default: null,
-      },
-
-      minTenor: {
-        // In  months
-        type: Number,
-        default: null,
-      },
-
-      maxTenor: {
-        // In months
-        type: Number,
-        default: null,
-      },
-
-      interestRate: {
-        type: Number,
-        default: null,
-      },
-
-      maxDti: {
-        type: Number,
-        default: null,
-      },
-    },
-
-    fees: [
-      {
-        name: {
-          type: String,
-          required: true,
-        },
-
-        type: {
-          type: String,
-          enum: Object.values(feeTypes),
-          required: true,
-        },
-
-        value: {
-          type: Number,
-          set: (v) => Math.floor(v * 100) / 100,
-          required: true,
-        },
-      },
-    ],
-
-    socials: {
-      type: [
-        {
-          platform: { type: String, trim: true, required: true },
-          url: { type: String, trim: true, required: true },
-        },
-      ],
-    },
-
-    support: {
-      email: {
-        type: String,
-        trim: true,
-        default: null,
-      },
-
-      phoneNumber: {
-        type: String,
-        default: null,
-      },
-    },
-
-    formId: {
-      type: String,
-      default: null,
-    },
-
-    formTheme: {
-      backgroundColor: String,
-      font: String,
-      fontColor: String,
-    },
-  },
-  { timestamps: true },
-);
-
 export const tenantSchema = new Schema(
   {
     logo: {
@@ -125,8 +32,6 @@ export const tenantSchema = new Schema(
 
     cacNumber: {
       type: String,
-      unique: true,
-      sparse: true,
       default: null,
     },
 
@@ -162,7 +67,95 @@ export const tenantSchema = new Schema(
       ],
     },
 
-    configurations: tenantConfigSchema,
+    configurations: {
+      defaultParams: {
+        minLoanAmount: {
+          type: Number,
+          default: null,
+        },
+
+        maxLoanAmount: {
+          type: Number,
+          default: null,
+        },
+
+        minTenor: {
+          // In  months
+          type: Number,
+          default: null,
+        },
+
+        maxTenor: {
+          // In months
+          type: Number,
+          default: null,
+        },
+
+        interestRate: {
+          type: Number,
+          default: null,
+        },
+
+        maxDti: {
+          type: Number,
+          default: null,
+        },
+      },
+
+      fees: [
+        {
+          name: {
+            type: String,
+            required: true,
+          },
+
+          type: {
+            type: String,
+            enum: Object.values(feeTypes),
+            required: true,
+          },
+
+          value: {
+            type: Number,
+            set: (v) => Math.floor(v * 100) / 100,
+            required: true,
+          },
+        },
+      ],
+
+      socials: {
+        type: [
+          {
+            platform: { type: String, trim: true, required: true },
+            url: { type: String, trim: true, required: true },
+          },
+        ],
+      },
+
+      support: {
+        email: {
+          type: String,
+          trim: true,
+          default: null,
+        },
+
+        phoneNumber: {
+          type: String,
+          default: null,
+        },
+      },
+
+      formId: {
+        type: String,
+        default: null,
+      },
+
+      formTheme: {
+        backgroundColor: String,
+        font: String,
+        fontColor: String,
+      },
+    },
   },
   { timestamps: true },
 );

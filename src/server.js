@@ -8,20 +8,42 @@ import { logger } from "./utils/logger.js";
 import { App } from "./web/application.js";
 
 async function bootstrap() {
-  try {
-    const { app } = new App({ morgan: { mode: "dev" } });
-    const server = http.createServer(app);
+  const { app } = new App({ morgan: { mode: "dev" } });
+  const server = http.createServer(app);
 
-    await dbContext.connect();
+  // Register Process Listeners
+  process.on("SIGTERM", async () => {
+    logger.info("SIGTERM signal received: shutting down gracefully");
+    await dbContext.disconnect();
+    server.close();
+    process.exit(0);
+  });
 
-    server.listen(process.env.PORT, () => {
-      logger.info(`Server listening on port: ${process.env.PORT}`);
-    });
+  process.on("unhandledRejection", (reason) => {
+    throw reason;
+  });
 
-    // TODO: register process listeners
-  } catch (error) {
-    logger.fatal(error.message, error.stack);
-  }
+  process.on("uncaughtException", (error) => {
+    logger.fatal("Uncaught Exception:", error.stack);
+
+    dbContext
+      .disconnect()
+      .then(() => {
+        server.close();
+        console.log("Disconnected from database");
+        process.exit(1);
+      })
+      .catch((err) => {
+        logger.fatal("Error disconnecting from database:", err);
+        server.close();
+        process.exit(1);
+      });
+  });
+
+  await dbContext.connect();
+  server.listen(process.env.PORT, () => {
+    logger.info(`Server listening on port:${process.env.PORT}`);
+  });
 }
 
 bootstrap();

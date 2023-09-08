@@ -10,7 +10,7 @@ import {
   UnauthorizedError,
 } from "../utils/errors/index.js";
 import { genRandomString } from "../utils/randomString.js";
-import { EmailService } from "./email.service.js";
+import { MailService } from "./mail.service.js";
 
 export class TenantService {
   static async create(createTenantDto) {
@@ -114,7 +114,7 @@ export class TenantService {
     if (!isValid) throw new UnauthorizedError(reason);
 
     // Email super admin about tenant deactivation
-    await EmailService.send({
+    await MailService.send({
       from: foundUser.email,
       to: "kennedydre3@gmail.com",
       templateName: "request-tenant-deactivation",
@@ -122,7 +122,7 @@ export class TenantService {
     });
 
     // Email tenant admin about tenant deactivation
-    await EmailService.send({
+    await MailService.send({
       to: foundUser.email,
       templateName: "requested-tenant-deactivation",
       context: { username: foundUser.first_name },
@@ -144,7 +144,7 @@ export class TenantService {
       await userRepository.updateMany({ tenantId }, { active: false }),
     ]);
 
-    const info = await EmailService.send({
+    const info = await MailService.send({
       to: foundAdminUsers[0].email,
       templateName: "deactivate-tenant",
       context: { name: foundAdminUsers[0].first_name },

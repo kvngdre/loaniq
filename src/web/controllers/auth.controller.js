@@ -3,9 +3,6 @@ import { constants } from "../../config/index.js";
 import { AuthService } from "../../services/index.js";
 import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
-import { ValidationError } from "../../utils/errors/index.js";
-import authValidator from "../../validators/auth.validator.js";
-import { tenantValidator } from "../../validators/tenant.validator.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
 import BaseController from "./base.controller.js";
 
@@ -16,10 +13,7 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static register = async (req, res) => {
-    const { value, error } = tenantValidator.validateSignUp(req.body);
-    if (error) throw new ValidationError(null, error);
-
-    const result = await AuthService.register(value);
+    const result = await AuthService.register(req.body);
     const response = BaseHttpResponse.success(result.message, result.data);
 
     res.status(HttpCode.CREATED).json(response);
@@ -38,8 +32,8 @@ export class AuthController extends BaseController {
       secure: constants.secure_cookie,
     });
 
-    const { value, error } = authValidator.validateLogin(req.body);
-    if (error) throw new ValidationError(null, error);
+    // const { value, error } = authValidator.validateLogin(req.body);
+    // if (error) throw new ValidationError(null, error);
 
     const [data, refreshToken] = await AuthService.login(
       value,
@@ -103,8 +97,8 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static sendOTP = async (req, res) => {
-    const { value, error } = authValidator.validateSendOTP(req.query);
-    if (error) throw new ValidationError(null, error);
+    // const { value, error } = authValidator.validateSendOTP(req.query);
+    // if (error) throw new ValidationError(null, error);
 
     await AuthService.sendOTP(value);
     const response = this.apiResponse("OTP sent to email.");

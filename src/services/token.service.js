@@ -1,3 +1,5 @@
+import { TokenRepository } from "../data/repositories/index.js";
+
 export class TokenService {
   /**
    * Generates a random number string of specified length and expiration time.
@@ -11,8 +13,16 @@ export class TokenService {
     }
 
     const value = `${Math.floor(Math.random() * 10 ** len)}`;
-    const expiresIn = Date.now() + ttl * 60 * 1_000;
+    const expires = Date.now() + ttl * 60 * 1_000;
 
-    return { value, expiresIn, ttl };
+    return { value, expires, ttl };
+  }
+
+  static async create(createTokenDto, session) {
+    return TokenRepository.save(createTokenDto, session);
+  }
+
+  static async upsert(upsertTokenDto, session) {
+    return TokenRepository.upsert(upsertTokenDto, session);
   }
 }
