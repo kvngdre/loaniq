@@ -28,8 +28,12 @@ export class SessionRepository {
     return dbContext.Session.findById(id).select(projection);
   }
 
-  static async findOne(filter, projection = {}) {
-    return dbContext.Session.findOne(filter).select(projection);
+  static async findOne(filter) {
+    return dbContext.Session.findOne(filter);
+  }
+
+  static async findByToken(token) {
+    return dbContext.Session.findOne({ "sessions.refreshToken": token });
   }
 
   static async upsert(upsertSessionDto, session) {

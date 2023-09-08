@@ -7,5 +7,8 @@ export const messages = {
       FAILED: "Login Failed",
       SUCCESS: "Login Successful",
     },
+    LOGOUT: {
+      SUCCESS: "Logout successful",
+    },
   },
 };

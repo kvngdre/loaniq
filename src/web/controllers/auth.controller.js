@@ -67,13 +67,34 @@ export class AuthController extends BaseController {
     );
     const response = BaseHttpResponse.success(message, data);
 
-    //  ! Create secure cookie with refresh token.
+    // ! Create secure cookie with refresh token.
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
       sameSite: "none",
       secure: config.secure_cookie,
       maxAge: config.jwt.ttl.refresh * 1000,
     });
+
+    res.json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static logout = async (req, res) => {
+    const token = req.cookies?.jwt;
+
+    const result = await AuthService.logout(token);
+
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: "none",
+      secure: config.secure_cookie,
+    });
+
+    const response = BaseHttpResponse.success(result.message, result?.data);
 
     res.json(response);
   };
@@ -135,26 +156,8 @@ export class AuthController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static logout = async (req, res) => {
-    await AuthService.logout(req.cookies?.jwt);
-
-    res.clearCookie("jwt", {
-      httpOnly: true,
-      sameSite: "none",
-      secure: config.secure_cookie,
-    });
-
-    const response = this.apiResponse("Logged out");
-    res.status(HttpCode.NO_CONTENT).json(response);
-  };
-
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
   static signOutAllSessions = async (req, res) => {
-    await AuthService.signOutAllSessions(req.currentUser._id, req.cookies?.jwt);
+    await AuthService.logOutAllSessions(req.currentUser._id, req.cookies?.jwt);
     const response = this.apiResponse("Signed out of all devices.");
 
     res.status(HttpCode.OK).json(response);

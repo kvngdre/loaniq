@@ -162,7 +162,7 @@ export class AuthService {
         // ! Prune user sessions for expired refresh tokens.
         session.sessions = token
           ? session.sessions.filter(
-              (s) => s.token !== token && Date.now() < s.expiresIn,
+              (s) => token !== s.refreshToken && Date.now() < s.expiresIn,
             )
           : session.sessions.filter((s) => Date.now() < s.expiresIn);
 
@@ -184,7 +184,7 @@ export class AuthService {
 
     MailService.send({
       to: email,
-      templateName: "new-login",
+      templateName: "new-loginn",
       context: { name: foundUser.firstName, loginTime: new Date(), ip, agent },
     });
 
@@ -197,6 +197,30 @@ export class AuthService {
       },
       refreshToken,
     };
+  }
+
+  static async logout(token) {
+    const session = await SessionRepository.findByToken(token);
+    if (session) {
+      session.sessions = session.sessions.filter(
+        (s) => token !== s.refreshToken && Date.now() < s.expiresIn,
+      );
+
+      await session.save();
+    }
+    return {
+      message: messages.AUTH.LOGOUT.SUCCESS,
+    };
+  }
+
+  static async logOutAllSessions(userId, token) {
+    const userConfig = await userConfigService.getConfig({ userId });
+
+    // ! Prune refresh token array for expired refresh tokens.
+    userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token);
+    await userConfig.save();
+
+    return userConfig;
   }
 
   static async getNewTokens(token) {
@@ -316,30 +340,5 @@ export class AuthService {
     }
 
     return foundUser;
-  }
-
-  static async logout(token) {
-    try {
-      const userConfig = await userConfigService.getConfig({
-        "sessions.token": token,
-      });
-
-      userConfig.sessions = userConfig.sessions.filter(
-        (s) => s.token !== token && Date.now() < s.expiresIn,
-      );
-      await userConfig.save();
-    } catch (exception) {
-      logger.warn(exception.message);
-    }
-  }
-
-  static async signOutAllSessions(userId, token) {
-    const userConfig = await userConfigService.getConfig({ userId });
-
-    // ! Prune refresh token array for expired refresh tokens.
-    userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token);
-    await userConfig.save();
-
-    return userConfig;
   }
 }
