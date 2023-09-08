@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { tenantValidator } from "../../validators/index.js";
+import { tenantValidator } from "../validators/index.js";
 
 export class SignUpDto {
   constructor(

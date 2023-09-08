@@ -1,16 +1,13 @@
 import mongoose from "mongoose";
 
-import {
-  ConflictError,
-  NotFoundError,
-  ValidationError,
-} from "../../utils/errors/index.js";
+import { ConflictError, ValidationError } from "../../utils/errors/index.js";
+import dbContext from "../db-context.js";
 import { User } from "../models/index.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class UserRepository {
-  static async save(createUserDto, session) {
+  static async insert(createUserDto, session) {
     try {
       const user = new User(createUserDto);
       await user.save({ session });
@@ -47,15 +44,16 @@ export class UserRepository {
     return User.findOne(filter).select(projection).populate({ path: "role" });
   }
 
-  static async updateOne(id, updateUserDto, projection = {}) {
+  static async findByEmail(email) {
+    return User.findOne({ email }).populate({ path: "role" });
+  }
+
+  static async updateById(id, changes, projection = {}) {
     try {
       const foundUser = await User.findById(id).select(projection);
-      if (!foundUser) {
-        throw new NotFoundError("User does not exist");
-      }
 
-      foundUser.set(updateUserDto);
-      foundUser.save();
+      foundUser?.set(changes);
+      foundUser?.save();
 
       return foundUser;
     } catch (exception) {
@@ -67,6 +65,29 @@ export class UserRepository {
       if (exception instanceof Error.ValidationError) {
         const errMsg = getValidationErrorMessage(exception);
         throw new ValidationError(errMsg);
+      }
+
+      throw exception;
+    }
+  }
+
+  static async updateOne(filter, changes) {
+    try {
+      return dbContext.User.findOneAndUpdate(filter, changes, {
+        new: true,
+      });
+
+      // foundUser.set(changes);
+      // foundUser.save();
+    } catch (exception) {
+      if (exception.message.includes("E11000")) {
+        const field = getDuplicateField(exception);
+        throw new ConflictError(`${field} already in use`);
+      }
+
+      if (exception instanceof Error.ValidationError) {
+        const msg = getValidationErrorMessage(exception);
+        throw new ValidationError(msg);
       }
 
       throw exception;

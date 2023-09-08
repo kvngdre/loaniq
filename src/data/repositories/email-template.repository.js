@@ -5,7 +5,7 @@ import EmailTemplate from "../models/email-template.model.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
-class EmailTemplateDAO {
+export class EmailTemplateRepository {
   static async insert(dto, trx) {
     try {
       const newRecord = new EmailTemplate(dto);
@@ -74,5 +74,3 @@ class EmailTemplateDAO {
     return deletedRecord;
   }
 }
-
-export default EmailTemplateDAO;

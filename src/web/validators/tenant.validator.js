@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-import { companyCategory, socials, VALID_ID } from "../utils/common.js";
+import { companyCategory, socials, VALID_ID } from "../../utils/common.js";
 import { BaseValidator } from "./lib/base-validator.js";
 
 class TenantValidator extends BaseValidator {

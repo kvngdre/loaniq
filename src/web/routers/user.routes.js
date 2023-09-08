@@ -9,8 +9,6 @@ router.post("/", verifyJWT, UserController.createUser);
 
 router.post("/forgot-password", UserController.forgotPassword);
 
-router.post("/verify-signup", UserController.verifySignup);
-
 router.post(
   "/:userId/change-password",
   verifyJWT,

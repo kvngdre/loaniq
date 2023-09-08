@@ -1,4 +1,4 @@
-// import { UserConfigRepo } from "../data/repositories/index.js";
+// import { UserConfigRepo } from "../../data/repositories/index.js";
 
 // class UserConfigService {
 //   static async createConfig(newUserConfigDTO, trx) {

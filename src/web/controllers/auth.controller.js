@@ -1,6 +1,7 @@
 import requestIp from "request-ip";
+
 import { constants } from "../../config/index.js";
-import { AuthService } from "../../services/index.js";
+import { AuthService } from "../../logic/services/index.js";
 import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
@@ -17,6 +18,34 @@ export class AuthController extends BaseController {
     const response = BaseHttpResponse.success(result.message, result.data);
 
     res.status(HttpCode.CREATED).json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static verify = async (req, res) => {
+    // const { value, error } = userValidator.validateVerifySignUp(req.body);
+    // if (error) throw new ValidationError(null, error);
+
+    const result = await AuthService.verify(
+      req.query.email,
+      req.body.otp,
+      // req.headers["user-agent"],
+      // req.clientIp,
+    );
+
+    // res.cookie("jwt", refreshToken.token, {
+    //   httpOnly: true,
+    //   sameSite: "none",
+    //   secure: constants.secure_cookie,
+    //   maxAge: constants.jwt.exp_time.refresh * 1000,
+    // });
+
+    const response = BaseHttpResponse.success(result.message);
+
+    res.json(response);
   };
 
   /**

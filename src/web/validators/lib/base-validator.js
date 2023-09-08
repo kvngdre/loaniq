@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { joiPassword } from "joi-password";
 
-import { feeTypes, maritalStatus } from "../../utils/common.js";
+import { feeTypes, maritalStatus } from "../../../utils/common.js";
 
 export class BaseValidator {
   constructor() {
@@ -44,7 +44,7 @@ export class BaseValidator {
       .lowercase()
       .label("Email")
       .messages({
-        "string.email": "{#label} is  not valid",
+        "string.email": "Invalid email",
       });
 
     this.percentageSchema = Joi.number()

@@ -2,21 +2,21 @@
 /* eslint-disable camelcase */
 import { startSession } from "mongoose";
 
-import { TenantRepository } from "../data/repositories/index.js";
-import { TENANT_STATUS } from "../utils/common.js";
+import { TenantRepository } from "../../data/repositories/index.js";
+import { TENANT_STATUS } from "../../utils/common.js";
 import {
   ConflictError,
   DependencyError,
   UnauthorizedError,
-} from "../utils/errors/index.js";
-import { genRandomString } from "../utils/randomString.js";
+} from "../../utils/errors/index.js";
+import { genRandomString } from "../../utils/randomString.js";
 import { MailService } from "./mail.service.js";
 
 export class TenantService {
   static async create(createTenantDto) {
     const session = await startSession();
     try {
-      return TenantRepository.save(createTenantDto);
+      return TenantRepository.insert(createTenantDto);
     } catch (error) {
       await session.abortTransaction();
       throw error;

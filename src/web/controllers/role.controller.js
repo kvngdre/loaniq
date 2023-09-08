@@ -1,4 +1,4 @@
-import RoleService from "../../services/role.service.js";
+import RoleService from "../../logic/services/role.service.js";
 import { HttpCode } from "../../utils/common.js";
 import BaseController from "./base.controller.js";
 

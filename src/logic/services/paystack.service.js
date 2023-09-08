@@ -1,7 +1,7 @@
 import axios from "axios";
+import DependencyError from "../../utils/errors/DependencyError.js";
+import { logger } from "../../utils/logger.js";
 import { constants } from "../config/index.js";
-import DependencyError from "../utils/errors/DependencyError.js";
-import { logger } from "../utils/logger.js";
 import TenantService from "./tenant.service.js";
 
 class PaystackService {

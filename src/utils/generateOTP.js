@@ -4,7 +4,7 @@
  * @param {number} expires OTP time-to-live in minutes.
  * @returns {{value: string, expires: number, ttl: number}}
  */
-export default function generateOTP(len, ttl = 10) {
+export function generateOTP(len, ttl = 10) {
   if (typeof len !== "number" || typeof ttl !== "number") {
     throw new Error('Arguments must be of type "number"');
   }

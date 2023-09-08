@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
 import {
   TENANT_STATUS,
   VALID_ID,
@@ -159,5 +159,3 @@ export const tenantSchema = new Schema(
   },
   { timestamps: true },
 );
-
-export const Tenant = model("Tenant", tenantSchema);

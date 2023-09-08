@@ -1,9 +1,7 @@
-import requestIp from "request-ip";
-import { constants } from "../../config/index.js";
-import { UserService } from "../../services/user.service.js";
+import { UserService } from "../../logic/services/user.service.js";
 import { HttpCode } from "../../utils/common.js";
 import { ValidationError } from "../../utils/errors/index.js";
-import userValidator from "../../validators/user.validator.js";
+import userValidator from "../validators/user.validator.js";
 import BaseController from "./base.controller.js";
 
 class UserController extends BaseController {
@@ -21,29 +19,6 @@ class UserController extends BaseController {
     );
 
     res.status(HttpCode.CREATED).json(response);
-  };
-
-  static verifySignup = async (req, res) => {
-    const { value, error } = userValidator.validateVerifySignUp(req.body);
-    if (error) throw new ValidationError(null, error);
-
-    const { accessToken, refreshToken, user } = await UserService.verifyNewUser(
-      value,
-      req.headers["user-agent"],
-      requestIp.getClientIp(req),
-    );
-
-    // ! Create secure cookie with refresh token.
-    res.cookie("jwt", refreshToken.token, {
-      httpOnly: true,
-      sameSite: "none",
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
-    });
-
-    const response = this.apiResponse("User verified", { user, accessToken });
-
-    res.status(HttpCode.OK).json(response);
   };
 
   static getUsers = async (req, res) => {

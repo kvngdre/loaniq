@@ -1,10 +1,8 @@
 import { Error } from "mongoose";
+import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import State from "../models/stateModel.js";
-import ConflictError from "../utils/errors/ConflictError.js";
-import ValidationError from "../utils/errors/ValidationError.js";
-import BaseDAO from "./base.dao.js";
 
-class StateDAO extends BaseDAO {
+class StateDAO {
   static async insert(dto) {
     try {
       const newRecord = new State(dto);

@@ -1,28 +1,26 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
 
-const sessionSchema = new Schema(
+export const sessionSchema = new Schema(
   {
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       unique: true,
+      index: true,
     },
 
     sessions: {
       type: [
         {
-          ip: String,
-          loginTime: Date,
-          token: String,
-          expiresIn: Number,
+          ip: { type: String, required: true },
+          agent: { type: String, required: true },
+          loginTime: { type: Date },
+          refreshToken: { type: String, index: true, required: true },
+          expiresIn: { type: Number, required: true },
         },
       ],
     },
   },
   { timestamps: true },
 );
-
-const Session = model("Session", sessionSchema);
-
-export default Session;

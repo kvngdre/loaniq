@@ -1,7 +1,7 @@
-import { TenantService } from "../../services/index.js";
+import { TenantService } from "../../logic/services/index.js";
 import { HttpCode } from "../../utils/common.js";
 import { ValidationError } from "../../utils/errors/index.js";
-import { tenantValidator } from "../../validators/tenant.validator.js";
+import { tenantValidator } from "../validators/tenant.validator.js";
 
 export class TenantController {
   /**

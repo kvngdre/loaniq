@@ -1,11 +1,11 @@
-import ClientDAO from "../daos/client.dao.js";
-import { status } from "../utils/common.js";
-import UnauthorizedError from "../utils/errors/UnauthorizedError.js";
+import { status } from "../../utils/common.js";
+import UnauthorizedError from "../../utils/errors/UnauthorizedError.js";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../utils/generateJWT.js";
-import generateSession from "../utils/generateSession.js";
+} from "../../utils/generateJWT.js";
+import generateSession from "../../utils/generateSession.js";
+import ClientDAO from "../daos/client.dao.js";
 
 class ClientService {
   static create = async (newClientDTO) => {

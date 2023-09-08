@@ -1,10 +1,12 @@
 // In milliseconds
 const tokenExpirationTime = process.env.JWT_REFRESH_TIME * 1_000;
-export default function generateSession(token, ip) {
+
+export function generateSession(refreshToken, agent, ip) {
   return {
     ip,
-    token,
-    login_time: new Date(),
+    agent,
+    refreshToken,
+    loginTime: new Date(),
     expiresIn: Date.now() + tokenExpirationTime,
   };
 }

@@ -1,26 +1,21 @@
 import jwt from "jsonwebtoken";
 import { startSession } from "mongoose";
 
-import { constants } from "../config/index.js";
-import ClientRepository from "../data/repositories/client.dao.js";
+import { constants } from "../../config/index.js";
+import ClientRepository from "../../data/repositories/client.dao.js";
 import {
   TenantRepository,
   UserRepository,
-} from "../data/repositories/index.js";
+} from "../../data/repositories/index.js";
 import {
   ConflictError,
   DependencyError,
   ForbiddenError,
-  ServerError,
+  NotFoundError,
   UnauthorizedError,
-} from "../utils/errors/index.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/generateJWT.js";
-import generateOTP from "../utils/generateOTP.js";
-import generateSession from "../utils/generateSession.js";
-import { logger } from "../utils/logger.js";
+  ValidationError,
+} from "../../utils/errors/index.js";
+import { generateOTP, generateSession, logger } from "../../utils/index.js";
 import { MailService } from "./mail.service.js";
 import { TokenService } from "./token.service.js";
 
@@ -32,14 +27,17 @@ export class AuthService {
     try {
       const token = TokenService.generateToken(6);
 
-      const { _id } = await UserRepository.save(
-        { role: "admin", resetPassword: false, ...registerDto },
-        session,
-      );
-      const tenant = await TenantRepository.save(registerDto, session);
-      const res = await TokenService.upsert(
+      const [user, tenant] = await Promise.all([
+        UserRepository.insert(
+          { role: "admin", resetPassword: false, ...registerDto },
+          session,
+        ),
+        TenantRepository.insert(registerDto, session),
+      ]);
+
+      await TokenService.create(
         {
-          userId: "64fa74cd2e3f7c956fceecd5",
+          userId: user._id,
           token: token.value,
           type: "register",
           expires: token.expires,
@@ -47,23 +45,22 @@ export class AuthService {
         session,
       );
 
-      console.log(res);
-
-      const { error } = await MailService.send({
-        to: registerDto.email,
-        templateName: "new-tenant-user",
-        context: {
-          name: registerDto.firstName,
-          otp: token.value,
-          expiresIn: token.ttl,
-        },
-      });
-      if (error) {
-        throw new ServerError(
-          `Registration Failed. ${error.message}`,
-          error.stack,
-        );
-      }
+      // const { error } = await MailService.send({
+      //   to: registerDto.email,
+      //   templateName: "new-tenant-user",
+      //   context: {
+      //     name: registerDto.firstName,
+      //     otp: token.value,
+      //     expiresIn: token.ttl,
+      //   },
+      // });
+      // if (error) {
+      //   // TODO: improve this later
+      //   throw new ServerError(
+      //     `Registration Failed. Error mailing OTP`,
+      //     error.stack,
+      //   );
+      // }
 
       await session.commitTransaction();
 
@@ -71,11 +68,12 @@ export class AuthService {
         message: "You have successfully signed up for the service.",
         data: {
           id: tenant._id,
-          next_steps: [
+          nextSteps: [
             "Check email for an OTP to verify your account.",
             "Log in and explore the features.",
             "Customize your profile, manage your settings, and access our support.",
           ],
+          verificationUrl: `${process.env.BASE_URL}/auth/verify?email=${user.email}`,
         },
       };
     } catch (exception) {
@@ -84,6 +82,48 @@ export class AuthService {
     } finally {
       await session.endSession();
     }
+  }
+
+  static async verify(email, otp) {
+    const foundUser = await UserRepository.findByEmail(email);
+    // const isMatch = foundUser?.validatePassword(password);
+    if (!foundUser) {
+      throw new NotFoundError("User account not found");
+    } else if (foundUser.isEmailVerified) {
+      throw new ConflictError("Account already verified, please sign in.");
+    }
+
+    const { isValid, reason } = await TokenService.findByTokenAndValidate(otp);
+    if (!isValid) throw new ValidationError(reason);
+
+    foundUser.set({
+      // "configurations.lastLoginTime": new Date(),
+      isEmailVerified: true,
+      active: true,
+    });
+
+    await Promise.all([
+      TokenService.deleteOne({ userId: foundUser._id, type: "register" }),
+      foundUser.save(),
+    ]);
+
+    return {
+      message: "Verification Successful",
+    };
+
+    // const accessToken = JwtService.genAccessToken({ id: foundUser._id });
+    // const refreshToken = JwtService.genRefreshToken({ id: foundUser._id });
+
+    // await SessionService.create({ refreshToken, agent, ip });
+
+    // mailer({
+    //   to: foundUser.email,
+    //   subject: 'Welcome to AIdea!',
+    //   name: foundUser.first_name,
+    //   template: 'new-tenant'
+    // })
+
+    // return { accessToken, refreshToken, user: foundUser.purgeSensitiveData() };
   }
 
   static async login(loginDTO, token, userAgent, clientIp) {

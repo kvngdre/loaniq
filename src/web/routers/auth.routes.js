@@ -1,17 +1,23 @@
 import { Router } from "express";
 
-import { authValidators } from "../../validators/index.js";
 import { AuthController } from "../controllers/index.js";
 import { ValidateRequest } from "../middleware/index.js";
 import verifyJWT from "../middleware/verify-jwt.middleware.js";
+import { authValidators } from "../validators/index.js";
 
 const router = Router();
-const { registerSchema } = authValidators;
+const { registerSchema, verifySchema } = authValidators;
 
 router.post(
   "/register",
   ValidateRequest.with(registerSchema),
   AuthController.register,
+);
+
+router.post(
+  "/verify",
+  ValidateRequest.with(verifySchema),
+  AuthController.verify,
 );
 
 router.post("/login", AuthController.login);

@@ -1,17 +1,17 @@
-import EmailTemplateDAO from "../data/repositories/email-template.dao.js";
-import { NotFoundError } from "../utils/errors/index.js";
+import { EmailTemplateRepository } from "../../data/repositories/index.js";
+import { NotFoundError } from "../../utils/errors/index.js";
 
 export class EmailTemplateService {
   static async create(newEmailTemplateDTO) {
-    return EmailTemplateDAO.insert(newEmailTemplateDTO);
+    return EmailTemplateRepository.insert(newEmailTemplateDTO);
   }
 
   static async getAll(filter = {}) {
-    return EmailTemplateDAO.find(filter);
+    return EmailTemplateRepository.find(filter);
   }
 
   static async getById(id) {
-    const foundTemplate = await EmailTemplateDAO.findById(id);
+    const foundTemplate = await EmailTemplateRepository.findById(id);
     if (!foundTemplate) {
       throw new NotFoundError("Email template not found");
     }
@@ -20,7 +20,7 @@ export class EmailTemplateService {
   }
 
   static async getTemplate(filter) {
-    const foundTemplate = await EmailTemplateDAO.findOne(filter);
+    const foundTemplate = await EmailTemplateRepository.findOne(filter);
     if (!foundTemplate) {
       throw new NotFoundError("Email template not found");
     }
@@ -29,10 +29,10 @@ export class EmailTemplateService {
   }
 
   static async update(id, updateTemplateDTO) {
-    return EmailTemplateDAO.update(id, updateTemplateDTO);
+    return EmailTemplateRepository.update(id, updateTemplateDTO);
   }
 
   static async delete(id) {
-    return EmailTemplateDAO.remove(id);
+    return EmailTemplateRepository.remove(id);
   }
 }

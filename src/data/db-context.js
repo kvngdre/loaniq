@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 
 import { logger } from "../utils/index.js";
-import { tenantSchema, tokensSchema, userSchema } from "./models/index.js";
+import {
+  sessionSchema,
+  tenantSchema,
+  tokenSchema,
+  userSchema,
+} from "./models/index.js";
 
 class DBContext {
   #_db;
@@ -35,8 +40,12 @@ class DBContext {
     return mongoose.model("User", userSchema);
   }
 
+  get Session() {
+    return mongoose.model("Session", sessionSchema);
+  }
+
   get Token() {
-    return mongoose.model("Token", tokensSchema);
+    return mongoose.model("Token", tokenSchema);
   }
 }
 

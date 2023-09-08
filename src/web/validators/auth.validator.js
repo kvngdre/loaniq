@@ -21,6 +21,12 @@ class AuthValidator extends BaseValidator {
     params: Joi.object({}),
   });
 
+  verifySchema = Joi.object({
+    query: Joi.object({ email: this.emailSchema.required() }),
+    params: Joi.object({}),
+    body: Joi.object({ otp: this.otpSchema(6) }),
+  });
+
   validateLogin = (loginDTO) => {
     let schema = Joi.object({
       email: this._emailSchema,

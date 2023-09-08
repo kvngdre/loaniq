@@ -15,13 +15,13 @@ export class MailService {
       const transport = await this.#getMailTransporter();
 
       const subject = Sqrl.render(template.subject, context);
-      const body = Sqrl.render(template.body, context);
+      const html = Sqrl.render(template.body, context);
 
       const info = await transport.sendMail({
         from: `"AIdea" <${process.env.SENDER_EMAIL}>`,
         to,
         subject,
-        html: body,
+        html,
       });
 
       return { error: null, info };

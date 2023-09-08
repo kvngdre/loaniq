@@ -136,21 +136,9 @@ userSchema.methods.permitLogin = function () {
 
 userSchema.methods.purgeSensitiveData = function () {
   delete this._doc?.password;
-  delete this._doc?.resetPassword;
+  // delete this._doc?.resetPassword;
 
   return this;
-};
-
-userSchema.methods.validateOTP = function (otp) {
-  if (Date.now() > this.otp.expiresIn) {
-    return { isValid: false, reason: "OTP expired" };
-  }
-
-  if (otp !== this.otp.pin) {
-    return { isValid: false, reason: "Invalid OTP" };
-  }
-
-  return { isValid: true };
 };
 
 userSchema.methods.validatePassword = function (password) {

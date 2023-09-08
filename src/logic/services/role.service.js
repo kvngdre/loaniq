@@ -1,4 +1,4 @@
-import { roleRepository } from "../data/repositories/role.repository.js";
+import { roleRepository } from "../../data/repositories/role.repository.js";
 
 class RoleService {
   static async createRole(createRoleDTO) {

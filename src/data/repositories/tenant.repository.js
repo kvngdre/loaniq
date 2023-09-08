@@ -10,7 +10,7 @@ import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class TenantRepository {
-  static async save(createTenantDto, session) {
+  static async insert(createTenantDto, session) {
     try {
       const tenant = new dbContext.Tenant(createTenantDto);
       return tenant.save({ session });

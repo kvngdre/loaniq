@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import requestIp from "request-ip";
 
 import { logger } from "../utils/index.js";
 import {
@@ -41,6 +42,7 @@ export class App {
     this.#app.use(express.json());
     this.#app.use(express.urlencoded({ extended: true }));
     this.#app.use(cookieParser());
+    this.#app.use(requestIp.mw());
     this.#app.use(
       morgan(options.morgan.mode, {
         stream: {

@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-export const tokensSchema = new Schema(
+export const tokenSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -35,6 +35,18 @@ export const tokensSchema = new Schema(
   { timestamps: true },
 );
 
-tokensSchema.index({ userId: 1, type: 1 }, { unique: true });
+tokenSchema.index({ userId: 1, type: 1 }, { unique: true });
 
-export const Token = model("Token", tokensSchema);
+tokenSchema.methods.validateToken = (token) => {
+  if (Date.now() > this.expires) {
+    return { isValid: false, reason: "Token Expired" };
+  }
+
+  if (token !== this.token) {
+    return { isValid: false, reason: "Invalid Token" };
+  }
+
+  return { isValid: true };
+};
+
+export const Token = model("Token", tokenSchema);
