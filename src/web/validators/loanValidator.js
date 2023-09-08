@@ -1,6 +1,6 @@
 import Joi from "joi";
 import objectId from "joi-objectid";
-import { roles } from "../utils/constants";
+import { roles } from "../utils/config";
 
 Joi.objectId = objectId(Joi);
 

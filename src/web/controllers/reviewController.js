@@ -1,4 +1,4 @@
-// import { roles } from '../utils/constants'
+// import { roles } from '../utils/config'
 // import { findById } from '../models/customer.model'
 // import { flatten } from '../helpers'
 // import { findById as _findById } from '../models/loan.model'

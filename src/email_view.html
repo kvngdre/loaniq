@@ -13,7 +13,7 @@
   </head>
   <body
     style='
-      padding: 20px 5px;
+      padding: 20px 10px;
       background-color: white;
       font-family: Cambria, Cochin, Georgia, Times, serif, sans-serif;
     '
@@ -26,39 +26,31 @@
         color: rgba(20, 19, 19, 0.808);
       '
     >
-      <div>
-        <p>Hi {{it.name}},</p>
-        <p>
-          Welcome to Apex, please use the single use pin below to verify your account:
-        </p>
-      </div>
-      <div
-        style='
-          width: 55%;
-          margin: auto;
-          height: auto;
-          padding: 10px;
-          text-align: center;
-          border: 1px solid white;
-          border-radius: 1rem;
-          background-color: rgba(20, 19, 19, 0.808);
-        '
-      >
-        <span
-          style='
-            color: rgb(255, 255, 255);
-            letter-spacing: 6px;
-            font-size: 1.6rem;
-            font-weight: 400;
-          '
-          >{{it.otp}}</span
-        >
-      </div>
-      <p style="text-align: center; margin: 0;">expires in: <span style="color: rgb(200, 160, 20)">{{it.expiresIn}} minutes</span></p>
-      <div></div>
+      <p>Hi {{it.name}},</p>
+      <p style='margin-bottom: 0;'>
+        We noticed a sign in from a new device or browser:
+        <p style='margin-top: 2px;'>IP: {{it.ip}} <br> Device: {{it.agent}} <br> {{it.loginT}}</p>
+      </p>
+
+      <p>
+        <span style='font-weight: 600'>If this was you,</span> you can safely
+        disregard this email.
+      </p>
+      <p>
+        <span style='font-weight: 600'>If this wasn't you,</span> please change
+        your password immediately to secure your account.<br />
+        For added security, we recommend enabling Two-Step Verification.
+      </p>
+
+      <p>
+        For further assistance, contact us at
+        <span style='color: rgba(50, 196, 90, 0.8); text-decoration: underline'
+          >support@aidea.com</span
+        >.
+      </p>
       <div>
         <p style='margin-bottom: 0'>Kind Regards,</p>
-        <p style='margin-top: 1px'>Apex</p>
+        <p style='margin-top: 1px'>AIdea Team</p>
       </div>
     </div>
   </body>
@@ -66,14 +58,13 @@
     <a
       href=''
       style='margin: 20px 0 20px 0; color: #83a2d0; text-decoration: none'
-      >help.apex.co</a
+      >help.aidea.co</a
     >
     <p style='margin-bottom: 5px'>
       Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolorum, nobis.
     </p>
     <p>
-      <a href='' style='color: #83a2d0'>Terms of Service</a>
-      |
+      <a href='' style='color: #83a2d0'>Terms of Service</a> |
       <a href='' style='color: #83a2d0'>Privacy Policy</a>
     </p>
   </footer>

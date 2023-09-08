@@ -1,4 +1,4 @@
-function credentials(req, res, next) {
+export function credentials(req, res, next) {
   const allowedOrigins = [
     "http://localhost:8480",
     "http://127.0.0.1:8480",
@@ -20,5 +20,3 @@ function credentials(req, res, next) {
 
   next();
 }
-
-export default credentials;

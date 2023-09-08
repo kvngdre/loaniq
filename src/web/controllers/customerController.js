@@ -1,6 +1,6 @@
 // import _ from 'lodash'
 // import { DateTime } from 'luxon'
-// import { roles } from '../utils/constants'
+// import { roles } from '../utils/config'
 // import Customer, { find, findById } from '../models/customer.model'
 // import { validateCreateCustomer, validateUpdateCustomer } from '../validators/customer.validator'
 // import filterValidator from '../validators/filter.validator'

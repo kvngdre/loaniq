@@ -1,6 +1,4 @@
-import requestIp from "request-ip";
-
-import { constants } from "../../config/index.js";
+import { config } from "../../config/index.js";
 import { AuthService } from "../../logic/services/index.js";
 import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
@@ -26,9 +24,6 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static verify = async (req, res) => {
-    // const { value, error } = userValidator.validateVerifySignUp(req.body);
-    // if (error) throw new ValidationError(null, error);
-
     const result = await AuthService.verify(
       req.query.email,
       req.body.otp,
@@ -39,8 +34,8 @@ export class AuthController extends BaseController {
     // res.cookie("jwt", refreshToken.token, {
     //   httpOnly: true,
     //   sameSite: "none",
-    //   secure: constants.secure_cookie,
-    //   maxAge: constants.jwt.exp_time.refresh * 1000,
+    //   secure: config.secure_cookie,
+    //   maxAge: config.jwt.exp_time.refresh * 1000,
     // });
 
     const response = BaseHttpResponse.success(result.message);
@@ -58,29 +53,29 @@ export class AuthController extends BaseController {
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     // const { value, error } = authValidator.validateLogin(req.body);
     // if (error) throw new ValidationError(null, error);
 
-    const [data, refreshToken] = await AuthService.login(
-      value,
+    const { message, data, refreshToken } = await AuthService.login(
+      req.body,
       token,
       req.headers["user-agent"],
-      requestIp.getClientIp(req),
+      req.clientIp,
     );
-    const response = this.apiResponse("Login successful", data);
+    const response = BaseHttpResponse.success(message, data);
 
     //  ! Create secure cookie with refresh token.
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.ttl.refresh * 1000,
     });
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   /**
@@ -103,7 +98,7 @@ export class AuthController extends BaseController {
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     const [accessToken, refreshToken] = await AuthService.getNewTokens(token);
@@ -112,8 +107,8 @@ export class AuthController extends BaseController {
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     const response = this.apiResponse("Success", { accessToken });
@@ -146,7 +141,7 @@ export class AuthController extends BaseController {
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
+      secure: config.secure_cookie,
     });
 
     const response = this.apiResponse("Logged out");

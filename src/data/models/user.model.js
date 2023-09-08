@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
 import autoPopulate from "mongoose-autopopulate";
 
+import { config } from "../../config/index.js";
+import { messages } from "../../utils/index.js";
+
 export const userSchema = new Schema(
   {
     firstName: {
@@ -100,43 +103,28 @@ userSchema.methods.fullName = function () {
   return this.firstName.concat(` ${this.lastName}`);
 };
 
-// Checking if user can be permitted to login
 userSchema.methods.permitLogin = function () {
-  const data = { id: this._id, redirect: {} };
+  const data = { message: "", redirect: { url: null } };
 
   if (!this.isEmailVerified && !this.active) {
-    data.redirect.verifyNewUser = true;
-    return {
-      isPermitted: false,
-      message: "Your account has not been verified.",
-      data,
-    };
+    data.redirect.url = `${config.api.base_url}/auth/verify?email=${this.email}`;
+    data.message = messages.AUTH.LOGIN.ACCOUNT_UNVERIFIED;
+  } else if (!this.active) {
+    data.redirect.url = `${config.api.base_url}/tenants/contact-admin?email=${this.email}`;
+    data.message = messages.AUTH.LOGIN.ACCOUNT_DEACTIVATED;
+  } else if (this.resetPassword) {
+    data.redirect.url = `${config.api.base_url}/auth/reset-password?email=${this.email}`;
+    data.message = messages.AUTH.LOGIN.RESET_PWD;
+  } else {
+    return { isPermitted: true, data };
   }
 
-  if (this.resetPassword) {
-    data.redirect.resetPassword = true;
-    return {
-      isPermitted: false,
-      message: "Your password reset has been triggered.",
-      data,
-    };
-  }
-
-  if (!this.active) {
-    data.redirect.inactive = true;
-    return {
-      isPermitted: false,
-      message: "Account deactivated. Contact your administrator.",
-      data,
-    };
-  }
-
-  return { isGranted: true };
+  return { isPermitted: false, data };
 };
 
 userSchema.methods.purgeSensitiveData = function () {
   delete this._doc?.password;
-  // delete this._doc?.resetPassword;
+  delete this._doc?.resetPassword;
 
   return this;
 };

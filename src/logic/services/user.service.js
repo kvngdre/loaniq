@@ -1,6 +1,6 @@
 import { startSession } from "mongoose";
 
-import { constants } from "../../config/index.js";
+import { config } from "../../config/index.js";
 import { UserRepository } from "../../data/repositories/index.js";
 import { events, pubsub } from "../../pubsub/index.js";
 import {
@@ -131,7 +131,7 @@ export class UserService {
     const percentageSimilarity =
       calcSimilarity(new_password, current_password) * 100;
 
-    if (percentageSimilarity >= constants.max_similarity) {
+    if (percentageSimilarity >= config.max_similarity) {
       throw new ValidationError("Password is too similar to old password.");
     }
 

@@ -1,6 +1,6 @@
 // import _ from 'lodash'
 // import { DateTime } from 'luxon'
-// import { roles, txnStatus, loanStatus } from '../utils/constants'
+// import { roles, txnStatus, loanStatus } from '../utils/config'
 // import { get } from '../config'
 // import Customer, { findById, findOne } from '../models/customer.model'
 // import { findById as _findById } from '../models/tenant.model'

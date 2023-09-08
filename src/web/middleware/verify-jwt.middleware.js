@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-import { constants } from "../../config/index.js";
+import { config } from "../../config/index.js";
 import { User } from "../../data/models/user.model.js";
 import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
@@ -27,10 +27,10 @@ export default async function verifyJWT(req, res, next) {
     };
 
     const [scheme, token] = getTokenFromHeader(req);
-    const decoded = jwt.verify(token, constants.jwt.secret.access);
+    const decoded = jwt.verify(token, config.jwt.secret.access);
 
     // Checking if token claims are valid.
-    if (scheme !== "Bearer" || decoded.iss !== constants.jwt.issuer) {
+    if (scheme !== "Bearer" || decoded.iss !== config.jwt.issuer) {
       return res.status(HttpCode.UNAUTHORIZED).json(
         new ErrorResponse({
           name: "Auth Error",

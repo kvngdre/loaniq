@@ -1,9 +1,11 @@
 import jwt from "jsonwebtoken";
 import { startSession } from "mongoose";
 
-import { constants } from "../../config/index.js";
+import { config } from "../../config/index.js";
+import { SessionEntity } from "../../data/entities/session.entity.js";
 import ClientRepository from "../../data/repositories/client.dao.js";
 import {
+  SessionRepository,
   TenantRepository,
   UserRepository,
 } from "../../data/repositories/index.js";
@@ -12,10 +14,12 @@ import {
   DependencyError,
   ForbiddenError,
   NotFoundError,
+  ServerError,
   UnauthorizedError,
   ValidationError,
 } from "../../utils/errors/index.js";
-import { generateOTP, generateSession, logger } from "../../utils/index.js";
+import { generateOTP, logger, messages } from "../../utils/index.js";
+import { JwtService } from "./jwt.service.js";
 import { MailService } from "./mail.service.js";
 import { TokenService } from "./token.service.js";
 
@@ -45,22 +49,22 @@ export class AuthService {
         session,
       );
 
-      // const { error } = await MailService.send({
-      //   to: registerDto.email,
-      //   templateName: "new-tenant-user",
-      //   context: {
-      //     name: registerDto.firstName,
-      //     otp: token.value,
-      //     expiresIn: token.ttl,
-      //   },
-      // });
-      // if (error) {
-      //   // TODO: improve this later
-      //   throw new ServerError(
-      //     `Registration Failed. Error mailing OTP`,
-      //     error.stack,
-      //   );
-      // }
+      const { error } = await MailService.send({
+        to: registerDto.email,
+        templateName: "new-tenant-user",
+        context: {
+          name: registerDto.firstName,
+          otp: token.value,
+          expiresIn: token.ttl,
+        },
+      });
+      if (error) {
+        // TODO: improve this later
+        throw new ServerError(
+          `Registration Failed. Error mailing OTP`,
+          error.stack,
+        );
+      }
 
       await session.commitTransaction();
 
@@ -73,7 +77,7 @@ export class AuthService {
             "Log in and explore the features.",
             "Customize your profile, manage your settings, and access our support.",
           ],
-          verificationUrl: `${process.env.BASE_URL}/auth/verify?email=${user.email}`,
+          verificationUrl: `${config.api.base_url}/auth/verify?email=${user.email}`,
         },
       };
     } catch (exception) {
@@ -126,92 +130,77 @@ export class AuthService {
     // return { accessToken, refreshToken, user: foundUser.purgeSensitiveData() };
   }
 
-  static async login(loginDTO, token, userAgent, clientIp) {
-    if (loginDTO.email) {
-      // ! Tenant login
-      const { email, password } = loginDTO;
-      const foundUser = await UserRepository.findOne({ email });
-
-      const isValid = foundUser.validatePassword(password);
-      if (!isValid) throw new UnauthorizedError("Invalid credentials");
-
-      const { isPermitted, message, data } = foundUser.permitLogin();
-      if (!isPermitted) throw new ForbiddenError(message, data);
-
-      const userConfig = await userConfigService.getConfig({
-        userId: foundUser._id,
-      });
-
-      // ! Prune user sessions for expired refresh tokens.
-      if (token) {
-        userConfig.sessions = userConfig.sessions.filter(
-          (s) => s.token !== token && Date.now() < s.expiresIn,
-        );
-      } else {
-        userConfig.sessions = userConfig.sessions.filter(
-          (s) => Date.now() < s.expiresIn,
-        );
-      }
-
-      if (userConfig.sessions.length >= 3) {
-        throw new ConflictError("Maximum allowed devices reached.");
-      }
-
-      const accessToken = generateAccessToken({ id: foundUser._id });
-      const refreshToken = generateRefreshToken({ id: foundUser._id });
-      const newSession = generateSession(refreshToken, userAgent, clientIp);
-
-      await Promise.all([
-        foundUser.updateOne({ last_login_time: new Date() }),
-        userConfig.updateOne({
-          sessions: [newSession, ...userConfig.sessions],
-        }),
-        // EmailService.send({
-        //   to: email,
-        //   templateName: 'tenant-login',
-        //   context: { loginTime: new Date() }
-        // })
-      ]);
-
-      foundUser.purgeSensitiveData();
-
-      return [{ user: foundUser, accessToken, redirect: null }, refreshToken];
+  static async login({ email, password }, token, agent, ip) {
+    const foundUser = await UserRepository.findByEmail(email);
+    const isMatch = foundUser?.validatePassword(password);
+    if (!foundUser || !isMatch) {
+      throw new UnauthorizedError("Invalid Credentials");
     }
 
-    // ! Client login
-    const { phoneOrStaffId, passcode } = loginDTO;
-    const foundClient = await ClientRepository.findOne({
-      $or: [{ phone_number: phoneOrStaffId }, { staff_id: phoneOrStaffId }],
+    const { isPermitted, data } = foundUser.permitLogin();
+    if (!isPermitted) {
+      throw new ForbiddenError(messages.AUTH.LOGIN.FAILED, data);
+    }
+
+    const accessToken = JwtService.generateAccessToken({ id: foundUser._id });
+    const refreshToken = JwtService.generateRefreshToken({
+      id: foundUser._id,
+    });
+    const newSession = SessionEntity.make({
+      userId: foundUser._id,
+      agent,
+      ip,
+      refreshToken,
     });
 
-    const isValid = foundClient.validatePasscode(passcode);
-    if (!isValid) throw new UnauthorizedError("Invalid credentials");
-
-    const { isPermitted, message, data } = foundClient.permitLogin();
-    if (!isPermitted) throw new ForbiddenError(message, data);
-
-    const accessToken = generateAccessToken({
-      id: foundClient._id,
-      client: true,
-    });
-    const refreshToken = generateRefreshToken({
-      id: foundClient._id,
-      client: true,
-    });
-    const newSession = generateSession(refreshToken, userAgent, clientIp);
-
-    await foundClient.updateOne({
-      session: newSession,
-      last_login_time: new Date(),
+    const session = await SessionRepository.findOne({
+      userId: foundUser._id,
     });
 
-    foundClient.purgeSensitiveData();
+    if (session) {
+      if (session.sessions.length > 0) {
+        // ! Prune user sessions for expired refresh tokens.
+        session.sessions = token
+          ? session.sessions.filter(
+              (s) => s.token !== token && Date.now() < s.expiresIn,
+            )
+          : session.sessions.filter((s) => Date.now() < s.expiresIn);
 
-    return [{ client: foundClient, accessToken, redirect: null }, refreshToken];
+        if (session.sessions.length >= 3) {
+          throw new ConflictError("Maximum allowed devices reached");
+        }
+
+        session.sessions.push(newSession.sessions[0]);
+      } else {
+        session.sessions = newSession.sessions;
+      }
+
+      await session.save();
+    } else {
+      SessionRepository.insert(newSession);
+    }
+
+    await foundUser.updateOne({ "configurations.lastLoginTime": new Date() });
+
+    MailService.send({
+      to: email,
+      templateName: "new-login",
+      context: { name: foundUser.firstName, loginTime: new Date(), ip, agent },
+    });
+
+    return {
+      message: "Login Successful",
+      data: {
+        accessToken,
+        user: foundUser.purgeSensitiveData(),
+        redirect: null,
+      },
+      refreshToken,
+    };
   }
 
   static async getNewTokens(token) {
-    const { issuer, secret } = constants.jwt;
+    const { issuer, secret } = config.jwt;
     try {
       const decoded = jwt.verify(token, secret.refresh, { issuer });
       if (decoded.client) {
@@ -247,11 +236,10 @@ export class AuthService {
         // Updating client session with new tokens
         foundClient.session.token = refreshToken;
         foundClient.session.expiresIn =
-          Date.now() + constants.jwt.exp_time.refresh * 1_000;
+          Date.now() + config.jwt.exp_time.refresh * 1_000;
         await foundClient.updateOne({
           "session.token": refreshToken,
-          "session.expiresIn":
-            Date.now() + constants.jwt.exp_time.refresh * 1_000,
+          "session.expiresIn": Date.now() + config.jwt.exp_time.refresh * 1_000,
         });
 
         return [accessToken, refreshToken];
@@ -292,7 +280,7 @@ export class AuthService {
 
       currentSession.token = refreshToken;
       currentSession.expiresIn =
-        Date.now() + constants.jwt.exp_time.refresh * 1_000;
+        Date.now() + config.jwt.exp_time.refresh * 1_000;
 
       foundUserConfig.set({
         sessions: [currentSession, ...filteredSessions],

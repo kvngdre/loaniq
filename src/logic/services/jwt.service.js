@@ -1,17 +1,19 @@
 import jwt from "jsonwebtoken";
 
+import { config } from "../../config/index.js";
+
 export class JwtService {
-  static genAccessToken(payload) {
-    jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: process.env.JWT_ACCESS_TTL,
-      issuer: process.env.JWT_ISSUER,
+  static generateAccessToken(payload) {
+    return jwt.sign(payload, config.jwt.secret.access, {
+      expiresIn: config.jwt.ttl.access,
+      issuer: config.jwt.issuer,
     });
   }
 
-  static genRefreshToken(payload) {
-    jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_TTL,
-      issuer: process.env.JWT_ISSUER,
+  static generateRefreshToken(payload) {
+    return jwt.sign(payload, config.jwt.secret.refresh, {
+      expiresIn: config.jwt.ttl.refresh,
+      issuer: config.jwt.issuer,
     });
   }
 }

@@ -1,7 +1,7 @@
 import axios from "axios";
 import DependencyError from "../../utils/errors/DependencyError.js";
 import { logger } from "../../utils/logger.js";
-import { constants } from "../config/index.js";
+import { config } from "../config/index.js";
 import TenantService from "./tenant.service.js";
 
 class PaystackService {
@@ -16,7 +16,7 @@ class PaystackService {
   constructor() {
     this.#headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${constants.paystack.key.private}`,
+      Authorization: `Bearer ${config.paystack.key.private}`,
     };
     this.#initTxnUrl = "https://api.paystack.co/transaction/initialize";
     this.#payment_channels = ["card", "bank_transfer"];

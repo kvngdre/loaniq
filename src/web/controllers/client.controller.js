@@ -1,5 +1,5 @@
 import requestIp from "request-ip";
-import { constants } from "../config/index.js";
+import { config } from "../config/index.js";
 import ClientService from "../services/client.service.js";
 import { HttpCode } from "../utils/common.js";
 import ValidationError from "../utils/errors/ValidationError.js";
@@ -42,8 +42,8 @@ class OriginController extends BaseController {
     res.cookie("jwt", refreshToken.token, {
       httpOnly: true,
       sameSite: "none",
-      secure: constants.secure_cookie,
-      maxAge: constants.jwt.exp_time.refresh * 1000,
+      secure: config.secure_cookie,
+      maxAge: config.jwt.exp_time.refresh * 1000,
     });
 
     const response = this.apiResponse("Client verified", { user, accessToken });
