@@ -3,10 +3,11 @@ import { startSession } from "mongoose";
 
 import { config } from "../../config/index.js";
 import { SessionEntity } from "../../data/entities/session.entity.js";
-import ClientRepository from "../../data/repositories/client.dao.js";
+import { TokenEntity } from "../../data/entities/token.entity.js";
 import {
   SessionRepository,
   TenantRepository,
+  TokenRepository,
   UserRepository,
 } from "../../data/repositories/index.js";
 import {
@@ -18,7 +19,7 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "../../utils/errors/index.js";
-import { generateOTP, logger, messages } from "../../utils/index.js";
+import { logger, messages } from "../../utils/index.js";
 import { JwtService } from "./jwt.service.js";
 import { MailService } from "./mail.service.js";
 import { TokenService } from "./token.service.js";
@@ -29,8 +30,6 @@ export class AuthService {
     session.startTransaction();
 
     try {
-      const token = TokenService.generateToken(6);
-
       const [user, tenant] = await Promise.all([
         UserRepository.insert(
           { role: "admin", resetPassword: false, ...registerDto },
@@ -39,23 +38,21 @@ export class AuthService {
         TenantRepository.insert(registerDto, session),
       ]);
 
-      await TokenService.create(
-        {
-          userId: user._id,
-          token: token.value,
-          type: "register",
-          expires: token.expires,
-        },
-        session,
-      );
+      const ttl = 10; // in minutes
+      const newToken = TokenEntity.make({
+        userId: user._id,
+        type: "verify",
+        ttl,
+      });
+      await TokenService.insert(newToken, session);
 
       const { error } = await MailService.send({
         to: registerDto.email,
         templateName: "new-tenant-user",
         context: {
           name: registerDto.firstName,
-          otp: token.value,
-          expiresIn: token.ttl,
+          otp: newToken.value,
+          expiresIn: ttl,
         },
       });
       if (error) {
@@ -101,14 +98,13 @@ export class AuthService {
     if (!isValid) throw new ValidationError(reason);
 
     foundUser.set({
-      // "configurations.lastLoginTime": new Date(),
       isEmailVerified: true,
       active: true,
     });
 
     await Promise.all([
-      TokenService.deleteOne({ userId: foundUser._id, type: "register" }),
       foundUser.save(),
+      TokenService.deleteOne({ userId: foundUser._id, type: "register" }),
     ]);
 
     return {
@@ -146,6 +142,7 @@ export class AuthService {
     const refreshToken = JwtService.generateRefreshToken({
       id: foundUser._id,
     });
+
     const newSession = SessionEntity.make({
       userId: foundUser._id,
       agent,
@@ -177,7 +174,7 @@ export class AuthService {
 
       await session.save();
     } else {
-      SessionRepository.insert(newSession);
+      await SessionRepository.insert(newSession);
     }
 
     await foundUser.updateOne({ "configurations.lastLoginTime": new Date() });
@@ -200,6 +197,10 @@ export class AuthService {
   }
 
   static async logout(token) {
+    if (!token) {
+      throw new ValidationError("No token provided");
+    }
+
     const session = await SessionRepository.findByToken(token);
     if (session) {
       session.sessions = session.sessions.filter(
@@ -208,137 +209,121 @@ export class AuthService {
 
       await session.save();
     }
+
     return {
       message: messages.AUTH.LOGOUT.SUCCESS,
     };
   }
 
-  static async logOutAllSessions(userId, token) {
-    const userConfig = await userConfigService.getConfig({ userId });
+  static async logOutAllSessions(token) {
+    if (!token) {
+      throw new ValidationError("No token provided");
+    }
 
-    // ! Prune refresh token array for expired refresh tokens.
-    userConfig.sessions = userConfig.sessions.filter((s) => s.token !== token);
-    await userConfig.save();
+    const session = await SessionRepository.findByToken(token);
 
-    return userConfig;
-  }
-
-  static async getNewTokens(token) {
-    const { issuer, secret } = config.jwt;
-    try {
-      const decoded = jwt.verify(token, secret.refresh, { issuer });
-      if (decoded.client) {
-        const foundClient = await ClientRepository.findOne({
-          "sessions.token": token,
-        }).catch(async () => {
-          logger.warn("Attempted refresh token reuse detected.");
-
-          await ClientRepository.update(decoded.id, { sessions: null }).catch(
-            (err) => {
-              logger.error(err.message, err.stack);
-            },
-          );
-
-          throw new ForbiddenError("Forbidden");
-        });
-
-        // Validating if token payload is valid
-        if (decoded.id != foundClient._id) {
-          throw new ForbiddenError("Invalid token");
-        }
-
-        // Generating tokens
-        const accessToken = generateAccessToken({
-          id: foundClient._id,
-          client: true,
-        });
-        const refreshToken = generateRefreshToken({
-          id: foundClient._id,
-          client: true,
-        });
-
-        // Updating client session with new tokens
-        foundClient.session.token = refreshToken;
-        foundClient.session.expiresIn =
-          Date.now() + config.jwt.exp_time.refresh * 1_000;
-        await foundClient.updateOne({
-          "session.token": refreshToken,
-          "session.expiresIn": Date.now() + config.jwt.exp_time.refresh * 1_000,
-        });
-
-        return [accessToken, refreshToken];
-      }
-
-      // ! Tenant user requesting for new tokens.
-      const foundUserConfig = await userConfigService
-        .getConfig({ "sessions.token": token })
-        .catch(async () => {
-          logger.warn("Attempted refresh token reuse detected.");
-
-          await userConfigService
-            .updateConfig(decoded.id, { sessions: [] })
-            .catch((err) => {
-              logger.error(err.message, err.stack);
-            });
-
-          throw new ForbiddenError("Forbidden");
-        });
-
-      // Validating if token payload is valid
-      if (decoded.id !== foundUserConfig.userId) {
-        throw new ForbiddenError("Invalid token");
-      }
-
-      const currentSession = {
-        ...foundUserConfig.sessions.find((s) => s.token === token),
-      };
-
-      // ! Prune user sessions for expired refresh tokens.
-      const filteredSessions = foundUserConfig.sessions.filter(
-        (s) => s.token !== token && Date.now() < s.expiresIn,
+    if (session) {
+      session.sessions = session.sessions.filter(
+        (s) => token === s.refreshToken,
       );
 
-      // Generating tokens
-      const accessToken = generateAccessToken({ id: foundUserConfig.userId });
-      const refreshToken = generateRefreshToken({ id: foundUserConfig.userId });
+      await session.save();
+    }
 
-      currentSession.token = refreshToken;
-      currentSession.expiresIn =
-        Date.now() + config.jwt.exp_time.refresh * 1_000;
+    return {
+      message: "Logged out all sessions",
+    };
+  }
 
-      foundUserConfig.set({
-        sessions: [currentSession, ...filteredSessions],
+  static async genTokenSet(token, agent, ip) {
+    try {
+      if (!token) {
+        throw new ValidationError("No token provided");
+      }
+
+      const { issuer, secret } = config.jwt;
+      const decoded = jwt.verify(token, secret.refresh, { issuer });
+
+      const session = await SessionRepository.findByToken(token);
+      if (!session) {
+        logger.warn("Attempted refresh token reuse detected.");
+        await SessionRepository.updateOne(decoded.id, { sessions: [] });
+        throw new ForbiddenError("Forbidden");
+      } else if (decoded.id !== session.userId.toString()) {
+        throw new ForbiddenError("Invalid Token");
+      }
+
+      // ! Prune user sessions for expired refresh tokens.
+      session.sessions = session.sessions.filter(
+        (s) => token !== s.refreshToken && Date.now() < s.expiresIn,
+      );
+
+      const accessToken = JwtService.generateAccessToken({
+        id: session.userId,
       });
-      await foundUserConfig.save();
+      const refreshToken = JwtService.generateRefreshToken({
+        id: session.userId,
+      });
 
-      return [accessToken, refreshToken];
+      const newSession = SessionEntity.make({
+        userId: session.userId,
+        agent,
+        ip,
+        refreshToken,
+      });
+      session.sessions.push(newSession.sessions[0]);
+
+      await session.save();
+
+      return {
+        message: messages.AUTH.TOKENS.GEN_SUCCESS,
+        data: { accessToken, refreshToken },
+      };
     } catch (exception) {
       if (exception instanceof jwt.JsonWebTokenError) {
         throw new ForbiddenError(exception.message);
       }
-
       throw exception;
     }
   }
 
-  static async sendOTP({ email, len }) {
-    const generatedOTP = generateOTP(len);
+  static async requestToken({ email, type }) {
+    const session = await startSession();
+    session.startTransaction();
 
-    const foundUser = await UserRepository.update(
-      { email },
-      { otp: generatedOTP },
-    );
+    try {
+      const foundUser = await UserRepository.findByEmail(email);
+      if (!foundUser) {
+        throw new NotFoundError("User not found");
+      }
 
-    // Sending OTP to user email
-    const info = await MailService.send({
-      to: email,
-      templateName: "otp-request",
-      context: { otp: generatedOTP.pin, expiresIn: 10 },
-    });
-    if (info.error) {
-      throw new DependencyError("Error sending OTP to email.");
+      const ttl = 10; // in minutes;
+      const newToken = TokenEntity.make({
+        userId: foundUser._id,
+        type,
+        ttl,
+      });
+      await TokenRepository.upsert(newToken, session);
+
+      const { error } = await MailService.send({
+        to: email,
+        templateName: "otp-request",
+        context: { otp: newToken.value, expiresIn: ttl },
+      });
+      if (error) {
+        throw new DependencyError("Error sending OTP to email");
+      }
+
+      await session.commitTransaction();
+
+      return {
+        message: messages.AUTH.TOKENS.REQ_SUCCESS,
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
     }
-
-    return foundUser;
   }
 }

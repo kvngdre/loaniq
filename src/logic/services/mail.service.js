@@ -26,9 +26,9 @@ export class MailService {
         html,
       });
 
-      return info;
+      return { error: null, info };
     } catch (error) {
-      throw new Error(`Error sending mail: ${error.stack}`);
+      return { error, info: null };
     }
   }
 

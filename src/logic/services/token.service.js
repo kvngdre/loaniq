@@ -24,7 +24,7 @@ export class TokenService {
 
   static async findByTokenAndValidate(token) {
     const foundToken = await TokenRepository.findOne({ token });
-    if (!foundToken || token !== foundToken.token) {
+    if (!foundToken || token !== foundToken.value) {
       return { isValid: false, reason: "Invalid Token" };
     }
 

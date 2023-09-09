@@ -9,7 +9,7 @@ export const tokenSchema = new Schema(
       index: true,
     },
 
-    token: {
+    value: {
       type: String,
       index: true,
       required: true,
@@ -24,13 +24,6 @@ export const tokenSchema = new Schema(
       type: Number,
       required: true,
     },
-
-    isUsed: {
-      type: Boolean,
-      default: false,
-    },
-
-    usedAt: Date,
   },
   { timestamps: true },
 );
@@ -42,7 +35,7 @@ tokenSchema.methods.validateToken = (token) => {
     return { isValid: false, reason: "Token Expired" };
   }
 
-  if (token !== this.token) {
+  if (token !== this.value) {
     return { isValid: false, reason: "Invalid Token" };
   }
 

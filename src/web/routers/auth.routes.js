@@ -2,7 +2,6 @@ import { Router } from "express";
 
 import { AuthController } from "../controllers/index.js";
 import { ValidateRequest } from "../middleware/index.js";
-import verifyJWT from "../middleware/verify-jwt.middleware.js";
 import { authValidators } from "../validators/index.js";
 
 const router = Router();
@@ -24,12 +23,12 @@ router.post("/login", AuthController.login);
 
 router.post("/callback", AuthController.callback);
 
-router.get("/logout", AuthController.logout);
+router.post("/logout", AuthController.logout);
 
-router.get("/sessions/logout", [verifyJWT], AuthController.signOutAllSessions);
+router.post("/request-otp", AuthController.requestOTP);
 
-router.get("/request-otp", AuthController.sendOTP);
+router.get("/sessions/logout", AuthController.logOutAllSessions);
 
-router.get("/tokens", AuthController.getNewTokens);
+router.get("/tokens", AuthController.genTokens);
 
 export default router;

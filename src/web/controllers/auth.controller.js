@@ -1,6 +1,5 @@
 import { config } from "../../config/index.js";
 import { AuthService } from "../../logic/services/index.js";
-import ErrorResponse from "../../utils/ErrorResponse.js";
 import { HttpCode } from "../../utils/common.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
 import BaseController from "./base.controller.js";
@@ -24,20 +23,7 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static verify = async (req, res) => {
-    const result = await AuthService.verify(
-      req.query.email,
-      req.body.otp,
-      // req.headers["user-agent"],
-      // req.clientIp,
-    );
-
-    // res.cookie("jwt", refreshToken.token, {
-    //   httpOnly: true,
-    //   sameSite: "none",
-    //   secure: config.secure_cookie,
-    //   maxAge: config.jwt.exp_time.refresh * 1000,
-    // });
-
+    const result = await AuthService.verify(req.query.email, req.body.otp);
     const response = BaseHttpResponse.success(result.message);
 
     res.json(response);
@@ -84,17 +70,14 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static logout = async (req, res) => {
-    const token = req.cookies?.jwt;
-
-    const result = await AuthService.logout(token);
-
+    const result = await AuthService.logout(req.cookies?.jwt);
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
       secure: config.secure_cookie,
     });
 
-    const response = BaseHttpResponse.success(result.message, result?.data);
+    const response = BaseHttpResponse.success(result.message, result.data);
 
     res.json(response);
   };
@@ -104,36 +87,43 @@ export class AuthController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getNewTokens = async (req, res) => {
-    const token = req.cookies?.jwt;
-    if (!token) {
-      return res.status(HttpCode.BAD_REQUEST).json(
-        new ErrorResponse({
-          name: "Validation Error",
-          message: "No token provided",
-        }),
-      );
-    }
+  static logOutAllSessions = async (req, res) => {
+    const result = await AuthService.logOutAllSessions(req.cookies?.jwt);
+    const response = BaseHttpResponse.success(result.message);
 
-    // Clear jwt cookie
+    res.json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static genTokens = async (req, res) => {
+    const { message, data } = await AuthService.genTokenSet(
+      req.cookies?.jwt,
+      req.headers["user-agent"],
+      req.clientIp,
+    );
+
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
       secure: config.secure_cookie,
     });
 
-    const [accessToken, refreshToken] = await AuthService.getNewTokens(token);
-
-    //! Create secure cookie with refresh token.
-    res.cookie("jwt", refreshToken, {
+    res.cookie("jwt", data.refreshToken, {
       httpOnly: true,
       sameSite: "none",
       secure: config.secure_cookie,
-      maxAge: config.jwt.exp_time.refresh * 1000,
+      maxAge: config.jwt.ttl.refresh * 1_000,
     });
 
-    const response = this.apiResponse("Success", { accessToken });
-    res.status(HttpCode.OK).json(response);
+    const response = BaseHttpResponse.success(message, {
+      accessToken: data.accessToken,
+    });
+
+    res.json(response);
   };
 
   /**
@@ -141,26 +131,11 @@ export class AuthController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static sendOTP = async (req, res) => {
-    // const { value, error } = authValidator.validateSendOTP(req.query);
-    // if (error) throw new ValidationError(null, error);
+  static requestOTP = async (req, res) => {
+    const result = await AuthService.requestToken(req.body);
+    const response = BaseHttpResponse.success(result.message, result.data);
 
-    await AuthService.sendOTP(value);
-    const response = this.apiResponse("OTP sent to email.");
-
-    res.status(HttpCode.OK).json(response);
-  };
-
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
-  static signOutAllSessions = async (req, res) => {
-    await AuthService.logOutAllSessions(req.currentUser._id, req.cookies?.jwt);
-    const response = this.apiResponse("Signed out of all devices.");
-
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   static callback = (req, res) => {

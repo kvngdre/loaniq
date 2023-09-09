@@ -10,5 +10,9 @@ export const messages = {
     LOGOUT: {
       SUCCESS: "Logout successful",
     },
+    TOKENS: {
+      GEN_SUCCESS: "Generated new tokens successfully",
+      REQ_SUCCESS: "OTP sent to email",
+    },
   },
 };
