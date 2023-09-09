@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { Types } from "mongoose";
 // import { canUserResetPwd } from '../helpers/user.helpers.js';
-import { BaseValidator } from "./lib/base-validator.js";
+import { BaseValidator } from "./lib/common.js";
 
 class UserValidator extends BaseValidator {
   #jobTitle;

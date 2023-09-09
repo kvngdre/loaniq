@@ -1,57 +1,48 @@
 import { Router } from "express";
 import UserController from "../controllers/user.controller.js";
+import { auth } from "../middleware/auth.middleware.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
-import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
 const router = Router();
 
-router.post("/", verifyJWT, UserController.createUser);
+router.post("/", auth, UserController.createUser);
 
 router.post("/forgot-password", UserController.forgotPassword);
 
-router.post(
-  "/:userId/change-password",
-  verifyJWT,
-  UserController.changePassword,
-);
+router.post("/:userId/change-password", auth, UserController.changePassword);
 
 router.post(
   "/:userId/deactivate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   UserController.deactivateUser,
 );
 
-router.get("/", verifyJWT, UserController.getUsers);
+router.get("/", auth, UserController.getUsers);
 
-router.get("/me", verifyJWT, UserController.getCurrentUser);
+router.get("/me", auth, UserController.getCurrentUser);
 
-router.get("/:userId", verifyJWT, validateIdMiddleware, UserController.getUser);
+router.get("/:userId", auth, validateIdMiddleware, UserController.getUser);
 
 router.get(
   "/:userId/reactivate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   UserController.reactivateUser,
 );
 
 router.get(
   "/:userId/reset-password",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   UserController.resetPassword,
 );
 
-router.patch(
-  "/:userId",
-  verifyJWT,
-  validateIdMiddleware,
-  UserController.updateUser,
-);
+router.patch("/:userId", auth, validateIdMiddleware, UserController.updateUser);
 
 router.delete(
   "/:userId",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   UserController.deleteUser,
 );

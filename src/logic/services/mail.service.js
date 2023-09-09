@@ -3,13 +3,11 @@ import { createTransport } from "nodemailer";
 import Sqrl from "squirrelly";
 
 import { config } from "../../config/index.js";
-import { ServerError } from "../../utils/errors/server.error.js";
+import { logger } from "../../utils/index.js";
 import { EmailTemplateService } from "./email-template.service.js";
 
 export class MailService {
-  // static async sendTest() {}
-
-  static async send({ to, templateName, context = {} }) {
+  static async send({ to, templateName, context }) {
     try {
       const template = await EmailTemplateService.getTemplate({
         name: templateName,
@@ -27,12 +25,10 @@ export class MailService {
         html,
       });
 
-      return info;
+      return { error: null, info };
     } catch (error) {
-      throw new ServerError(
-        "Operation Failed. Error sending email",
-        error.stack,
-      );
+      logger.fatal(error.message, error.stack);
+      return { error, info: null };
     }
   }
 

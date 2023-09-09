@@ -1,34 +1,51 @@
 import { Router } from "express";
 
 import { AuthController } from "../controllers/index.js";
-import { ValidateRequest } from "../middleware/index.js";
-import { authValidators } from "../validators/index.js";
+import { ValidateRequest, auth, checkStatus } from "../middleware/index.js";
+import {
+  loginValidator,
+  requestOtpValidator,
+  signUpValidator,
+  verifyValidator,
+} from "../validators/index.js";
 
 const router = Router();
-const { registerSchema, verifySchema } = authValidators;
 
 router.post(
   "/register",
-  ValidateRequest.with(registerSchema),
+  ValidateRequest.with(signUpValidator),
   AuthController.register,
 );
 
 router.post(
   "/verify",
-  ValidateRequest.with(verifySchema),
+  ValidateRequest.with(verifyValidator),
   AuthController.verify,
 );
 
-router.post("/login", AuthController.login);
+router.post(
+  "/login",
+  ValidateRequest.with(loginValidator),
+  AuthController.login,
+);
 
 router.post("/callback", AuthController.callback);
 
-router.post("/logout", AuthController.logout);
+router.post(
+  "/request-otp",
+  ValidateRequest.with(requestOtpValidator),
+  AuthController.requestOTP,
+);
 
-router.post("/request-otp", AuthController.requestOTP);
+router.post("/logout", auth, AuthController.logout);
 
-router.get("/sessions/logout", AuthController.logOutAllSessions);
+router.get(
+  "/sessions/logout",
+  auth,
+  checkStatus,
+  AuthController.logOutAllSessions,
+);
 
-router.get("/tokens", AuthController.genTokens);
+router.get("/tokens", auth, AuthController.genTokens);
 
 export default router;

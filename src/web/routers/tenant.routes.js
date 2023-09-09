@@ -1,15 +1,15 @@
 import { Router } from "express";
 
 import { TenantController } from "../controllers/index.js";
+import { auth } from "../middleware/auth.middleware.js";
 import checkPermission from "../middleware/checkPermission.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
-import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
 const router = Router();
 
 router.post(
   "/:tenantId/activate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("submitToActivateOwn", "tenant"),
   TenantController.requestTenantActivation,
@@ -17,7 +17,7 @@ router.post(
 
 router.post(
   "/:tenantId/deactivate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("requestToDeactivateOwn", "tenant"),
   TenantController.requestTenantActivation,
@@ -25,7 +25,7 @@ router.post(
 
 router.post(
   "/:tenantId/onboard",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("onBoardOwn", "tenant"),
   TenantController.onBoardTenant,
@@ -35,21 +35,21 @@ router.get("/forms/:formId", TenantController.getPublicFormData);
 
 router.get(
   "/self",
-  verifyJWT,
+  auth,
   checkPermission("viewOwn", "tenant"),
   TenantController.getCurrentTenant,
 );
 
 router.get(
   "/",
-  verifyJWT,
+  auth,
   // checkPermission("viewAny", "tenant"),
   TenantController.getTenants,
 );
 
 router.get(
   "/:tenantId",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("viewOwn", "tenant"),
   TenantController.getTenant,
@@ -57,7 +57,7 @@ router.get(
 
 router.get(
   "/:tenantId/deactivate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("deactivateAny", "tenant"),
   TenantController.requestToDeactivateTenant,
@@ -65,7 +65,7 @@ router.get(
 
 router.get(
   "/:tenantId/public-url",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("generateOwnUrl", "tenant"),
   TenantController.generatePublicUrl,
@@ -73,7 +73,7 @@ router.get(
 
 router.get(
   "/:tenantId/reactivate",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("reactivateOwn", "tenant"),
   TenantController.reactivateTenant,
@@ -81,7 +81,7 @@ router.get(
 
 router.patch(
   "/:tenantId",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("updateOwn", "tenant"),
   TenantController.updateTenant,
@@ -89,7 +89,7 @@ router.patch(
 
 router.delete(
   "/:tenantId",
-  verifyJWT,
+  auth,
   validateIdMiddleware,
   checkPermission("delete", "tenant"),
   TenantController.deleteTenant,

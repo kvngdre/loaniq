@@ -1,6 +1,7 @@
 import Joi from "joi";
-import { socials } from "../utils/common.js";
-import BaseValidator from "./base.validator.js";
+
+import { socials } from "../../utils/common.js";
+import { BaseValidator } from "./lib/common.js";
 
 class TenantConfigValidator extends BaseValidator {
   #socialSchema;

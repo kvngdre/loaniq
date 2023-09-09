@@ -1,7 +1,11 @@
 import Joi from "joi";
 
 import { companyCategory, socials, VALID_ID } from "../../utils/common.js";
-import { BaseValidator } from "./lib/base-validator.js";
+import {
+  BaseValidator,
+  businessNameSchema,
+  locationSchema,
+} from "./lib/common.js";
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema;
@@ -177,3 +181,10 @@ class TenantValidator extends BaseValidator {
 }
 
 export const tenantValidator = new TenantValidator();
+
+export const updateTenantValidator = Joi.object({
+  logo: Joi.string().uri().label("Logo"),
+  businessName: businessNameSchema,
+  address: locationSchema.extract("address"),
+  state: locationSchema.extract("state"),
+}).min(1);

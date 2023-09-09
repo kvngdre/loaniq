@@ -1,6 +1,7 @@
 import { BaseHttpResponse } from "../../utils/base-http-response.js";
 import {
   ConflictError,
+  DependencyError,
   ForbiddenError,
   NotFoundError,
   ServerError,
@@ -33,6 +34,11 @@ export function errorHandlingMiddleware(err, req, res, next) {
   if (err instanceof ConflictError) {
     const response = BaseHttpResponse.failed(err.message, err.errors);
     return res.status(409).json(response);
+  }
+
+  if (err instanceof DependencyError) {
+    const response = BaseHttpResponse.failed(err.message, err.errors);
+    return res.status(424).json(response);
   }
 
   if (err instanceof ServerError) {

@@ -1,11 +1,10 @@
 import { Schema } from "mongoose";
+import { companyCategory, feeTypes } from "../../utils/common.js";
 import {
+  DOCUMENTATION_TYPE,
   TENANT_STATUS,
   VALID_ID,
-  companyCategory,
-  feeTypes,
-  tenantDocTypes,
-} from "../../utils/common.js";
+} from "../../utils/helpers/index.js";
 
 export const tenantSchema = new Schema(
   {
@@ -60,7 +59,7 @@ export const tenantSchema = new Schema(
       type: [
         {
           name: { type: String, required: true },
-          type: { type: String, enum: tenantDocTypes },
+          type: { type: String, enum: DOCUMENTATION_TYPE },
           url: { type: String, required: true },
           expires: { type: Date, default: null },
         },
@@ -139,7 +138,7 @@ export const tenantSchema = new Schema(
           default: null,
         },
 
-        phoneNumber: {
+        phone: {
           type: String,
           default: null,
         },

@@ -12,6 +12,7 @@ import {
 } from "../../data/repositories/index.js";
 import {
   ConflictError,
+  DependencyError,
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
@@ -44,7 +45,7 @@ export class AuthService {
       });
       await TokenService.insert(newToken, session);
 
-      await MailService.send({
+      const { error } = await MailService.send({
         to: registerDto.email,
         templateName: "new-tenant-user",
         context: {
@@ -53,6 +54,9 @@ export class AuthService {
           expiresIn: ttl,
         },
       });
+      if (error) {
+        throw new DependencyError("Registration Failed. Error sending OTP");
+      }
 
       await session.commitTransaction();
 
@@ -98,15 +102,6 @@ export class AuthService {
       TokenService.deleteOne({ userId: foundUser._id, type: "register" }),
     ]);
 
-    return {
-      message: "Verification Successful",
-    };
-
-    // const accessToken = JwtService.genAccessToken({ id: foundUser._id });
-    // const refreshToken = JwtService.genRefreshToken({ id: foundUser._id });
-
-    // await SessionService.create({ refreshToken, agent, ip });
-
     // mailer({
     //   to: foundUser.email,
     //   subject: 'Welcome to AIdea!',
@@ -114,7 +109,9 @@ export class AuthService {
     //   template: 'new-tenant'
     // })
 
-    // return { accessToken, refreshToken, user: foundUser.purgeSensitiveData() };
+    return {
+      message: "Verification Successful",
+    };
   }
 
   static async login({ email, password }, token, agent, ip) {
@@ -172,6 +169,7 @@ export class AuthService {
 
     MailService.send({
       to: email,
+      // TODO: fix this
       templateName: "new-loginn",
       context: { name: foundUser.firstName, loginTime: new Date(), ip, agent },
     });

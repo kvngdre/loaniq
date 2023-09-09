@@ -4,7 +4,7 @@ import { ValidationError } from "../../utils/errors/index.js";
 import userValidator from "../validators/user.validator.js";
 import BaseController from "./base.controller.js";
 
-class UserController extends BaseController {
+export class UserController extends BaseController {
   static createUser = async (req, res) => {
     const { value, error } = userValidator.validateCreateUser(
       req.body,
