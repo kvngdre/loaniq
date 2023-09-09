@@ -3,6 +3,7 @@ import { createTransport } from "nodemailer";
 import Sqrl from "squirrelly";
 
 import { config } from "../../config/index.js";
+import { ServerError } from "../../utils/errors/server.error.js";
 import { EmailTemplateService } from "./email-template.service.js";
 
 export class MailService {
@@ -26,9 +27,12 @@ export class MailService {
         html,
       });
 
-      return { error: null, info };
+      return info;
     } catch (error) {
-      return { error, info: null };
+      throw new ServerError(
+        "Operation Failed. Error sending email",
+        error.stack,
+      );
     }
   }
 

@@ -12,10 +12,8 @@ import {
 } from "../../data/repositories/index.js";
 import {
   ConflictError,
-  DependencyError,
   ForbiddenError,
   NotFoundError,
-  ServerError,
   UnauthorizedError,
   ValidationError,
 } from "../../utils/errors/index.js";
@@ -46,7 +44,7 @@ export class AuthService {
       });
       await TokenService.insert(newToken, session);
 
-      const { error } = await MailService.send({
+      await MailService.send({
         to: registerDto.email,
         templateName: "new-tenant-user",
         context: {
@@ -55,13 +53,6 @@ export class AuthService {
           expiresIn: ttl,
         },
       });
-      if (error) {
-        // TODO: improve this later
-        throw new ServerError(
-          `Registration Failed. Error mailing OTP`,
-          error.stack,
-        );
-      }
 
       await session.commitTransaction();
 
@@ -305,14 +296,11 @@ export class AuthService {
       });
       await TokenRepository.upsert(newToken, session);
 
-      const { error } = await MailService.send({
+      await MailService.send({
         to: email,
         templateName: "otp-request",
         context: { otp: newToken.value, expiresIn: ttl },
       });
-      if (error) {
-        throw new DependencyError("Error sending OTP to email");
-      }
 
       await session.commitTransaction();
 

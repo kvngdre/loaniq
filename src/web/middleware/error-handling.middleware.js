@@ -36,8 +36,8 @@ export function errorHandlingMiddleware(err, req, res, next) {
   }
 
   if (err instanceof ServerError) {
-    logger.error(err.message, err.stack);
-    const response = BaseHttpResponse.failed(err.message, err.errors);
+    logger.error(err.message, err.errors);
+    const response = BaseHttpResponse.failed(err.message);
     return res.status(500).json(response);
   }
 
