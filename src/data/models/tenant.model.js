@@ -67,6 +67,11 @@ export const tenantSchema = new Schema(
     },
 
     configurations: {
+      userResetPassword: {
+        type: Boolean,
+        default: true,
+      },
+
       defaultParams: {
         minLoanAmount: {
           type: Number,

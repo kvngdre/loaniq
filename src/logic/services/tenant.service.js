@@ -7,6 +7,7 @@ import { TENANT_STATUS } from "../../utils/common.js";
 import {
   ConflictError,
   DependencyError,
+  NotFoundError,
   UnauthorizedError,
 } from "../../utils/errors/index.js";
 import { genRandomString } from "../../utils/randomString.js";
@@ -14,24 +15,7 @@ import { MailService } from "./mail.service.js";
 
 export class TenantService {
   static async create(createTenantDto) {
-    const session = await startSession();
-    try {
-      return TenantRepository.insert(createTenantDto);
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
-    }
-  }
-
-  static async onBoardTenant(tenantId, onBoardTenantDTO) {
-    const foundTenant = await TenantRepository.update(
-      tenantId,
-      onBoardTenantDTO,
-    );
-
-    return foundTenant;
+    return TenantRepository.insert(createTenantDto);
   }
 
   static async getTenants(filters) {
@@ -54,6 +38,15 @@ export class TenantService {
   static async deleteTenant(tenantId) {
     const deletedTenant = await TenantRepository.remove(tenantId);
     return deletedTenant;
+  }
+
+  static async onBoardTenant(tenantId, onBoardTenantDTO) {
+    const foundTenant = await TenantRepository.update(
+      tenantId,
+      onBoardTenantDTO,
+    );
+
+    return foundTenant;
   }
 
   static async requestToActivateTenant(tenantId, activateTenantDTO) {
@@ -190,5 +183,12 @@ export class TenantService {
       socials,
       theme: form_theme,
     };
+  }
+
+  static async getConfigurations(id) {
+    const tenant = await TenantRepository.findById(id);
+    if (!tenant) {
+      throw new NotFoundError("Tenant Not Found");
+    }
   }
 }

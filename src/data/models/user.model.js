@@ -133,12 +133,11 @@ userSchema.methods.validatePassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 };
 
-// ! Hashing user password before insert
+// hashing user password before insert
 userSchema.pre("save", function (next) {
   if (this.modifiedPaths()?.includes("password")) {
     this.password = bcrypt.hashSync(this.password, 12);
   }
-
   next();
 });
 

@@ -1,6 +1,7 @@
 import { TenantService } from "../../logic/services/index.js";
 import { HttpCode } from "../../utils/common.js";
 import { ValidationError } from "../../utils/errors/index.js";
+import { BaseHttpResponse } from "../lib/base-http-response.js";
 import { tenantValidator } from "../validators/tenant.validator.js";
 
 export class TenantController {
@@ -9,14 +10,11 @@ export class TenantController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static onBoardTenant = async (req, res) => {
-    const { value, error } = tenantValidator.validateOnBoarding(req.body);
-    if (error) throw new ValidationError(null, error);
+  static create = async (req, res) => {
+    const { message, data } = await TenantService.create(req.body);
+    const response = BaseHttpResponse.success(message, data);
 
-    const tenant = await TenantService.onBoardTenant(value);
-    const response = this.apiResponse("Tenant information updated.", tenant);
-
-    res.status(HttpCode.OK).json(response);
+    res.status(201).json(response);
   };
 
   /**
@@ -80,6 +78,21 @@ export class TenantController {
   static deleteTenant = async (req, res) => {
     await TenantService.deleteTenant(req.params.tenantId);
     const response = this.apiResponse("Tenant deleted.");
+
+    res.status(HttpCode.OK).json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static onBoardTenant = async (req, res) => {
+    const { value, error } = tenantValidator.validateOnBoarding(req.body);
+    if (error) throw new ValidationError(null, error);
+
+    const tenant = await TenantService.onBoardTenant(value);
+    const response = this.apiResponse("Tenant information updated.", tenant);
 
     res.status(HttpCode.OK).json(response);
   };

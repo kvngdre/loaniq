@@ -312,4 +312,40 @@ export class AuthService {
       await session.endSession();
     }
   }
+
+  static async forgotPassword({ email, otp, password }) {
+    const tenant = await TenantRepository.find()[0];
+    const session = await startSession();
+    session.startTransaction();
+
+    try {
+      const [foundUser, result] = await Promise.all([
+        UserRepository.findByEmail(email),
+        TokenService.findByTokenAndValidate({
+          token: otp,
+          type: "forgot-password",
+        }),
+      ]);
+
+      if (!foundUser) {
+        throw new NotFoundError("User not found");
+      }
+
+      if (!result.isValid) {
+        throw new ValidationError(result.reason);
+      }
+
+      // mailer({
+      //   to: email,
+      //   subject: "Password changed",
+      //   template: "password-change",
+      // });}
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
+  }
 }

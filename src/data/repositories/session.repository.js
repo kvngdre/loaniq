@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { NotFoundError, ValidationError } from "../../utils/errors/index.js";
+import { ValidationError } from "../../utils/errors/index.js";
 import dbContext from "../db-context.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
@@ -36,7 +36,22 @@ export class SessionRepository {
     return dbContext.Session.findOne({ "sessions.refreshToken": token });
   }
 
-  static async upsert(upsertSessionDto, session) {
+  static async updateById(id, updateTokenDto) {
+    try {
+      return dbContext.Session.findByIdAndUpdate(id, updateTokenDto, {
+        new: true,
+      });
+    } catch (exception) {
+      if (exception instanceof mongoose.Error.ValidationError) {
+        const errorMessage = getValidationErrorMessage(exception);
+        throw new ValidationError(errorMessage);
+      }
+
+      throw exception;
+    }
+  }
+
+  static async upsert(upsertSessionDto, session = undefined) {
     try {
       return dbContext.Session.findOneAndUpdate(
         { userId: upsertSessionDto.userId, type: upsertSessionDto.type },
@@ -52,30 +67,7 @@ export class SessionRepository {
     }
   }
 
-  static async updateOne(id, updateTokenDto, projection = {}) {
-    try {
-      const foundToken = await dbContext.Session.findById(id).select(
-        projection,
-      );
-      if (!foundToken) {
-        throw new NotFoundError("Tenant not found");
-      }
-
-      foundToken.set(updateTokenDto);
-      foundToken.save();
-
-      return foundToken;
-    } catch (exception) {
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
-      }
-
-      throw exception;
-    }
-  }
-
-  static async destroy(id) {
+  static async deleteById(id) {
     return dbContext.Session.findByIdAndDelete(id);
   }
 }

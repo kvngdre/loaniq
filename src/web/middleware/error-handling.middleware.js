@@ -1,4 +1,3 @@
-import { BaseHttpResponse } from "../../utils/base-http-response.js";
 import {
   ConflictError,
   DependencyError,
@@ -9,6 +8,7 @@ import {
   ValidationError,
 } from "../../utils/errors/index.js";
 import { logger } from "../../utils/logger.js";
+import { BaseHttpResponse } from "../lib/base-http-response.js";
 
 export function errorHandlingMiddleware(err, req, res, next) {
   if (err instanceof ValidationError) {

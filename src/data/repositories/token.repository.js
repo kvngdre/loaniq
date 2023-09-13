@@ -1,17 +1,14 @@
 import mongoose from "mongoose";
 
-import { NotFoundError, ValidationError } from "../../utils/errors/index.js";
+import { ValidationError } from "../../utils/errors/index.js";
 import dbContext from "../db-context.js";
-import { Token } from "../models/index.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class TokenRepository {
   static async insert(createTokenDto, session) {
     try {
-      const token = new Token(createTokenDto);
-      await token.save({ session });
-
-      return token;
+      const token = new dbContext.Token(createTokenDto);
+      return token.save({ session });
     } catch (exception) {
       if (exception instanceof mongoose.Error.ValidationError) {
         const msg = getValidationErrorMessage(exception);
@@ -22,16 +19,16 @@ export class TokenRepository {
     }
   }
 
-  static async find(filter = {}, projection = {}) {
-    return Token.find(filter).select(projection);
+  static async find(filter = {}) {
+    return dbContext.Token.find(filter);
   }
 
-  static async findById(id, projection = {}) {
-    return Token.findById(id).select(projection);
+  static async findById(id) {
+    return dbContext.Token.findById(id);
   }
 
-  static async findOne(filter, projection = {}) {
-    return Token.findOne(filter).select(projection);
+  static async findOne(filter) {
+    return dbContext.Token.findOne(filter);
   }
 
   static async upsert(upsertTokenDto, session) {
@@ -51,17 +48,11 @@ export class TokenRepository {
     }
   }
 
-  static async updateOne(id, updateTokenDto, projection = {}) {
+  static async updateById(id, updateTokenDto) {
     try {
-      const foundToken = await Token.findById(id).select(projection);
-      if (!foundToken) {
-        throw new NotFoundError("Tenant not found");
-      }
-
-      foundToken.set(updateTokenDto);
-      foundToken.save();
-
-      return foundToken;
+      return dbContext.Token.findByIdAndUpdate(id, updateTokenDto, {
+        new: true,
+      });
     } catch (exception) {
       if (exception instanceof mongoose.Error.ValidationError) {
         const errorMessage = getValidationErrorMessage(exception);

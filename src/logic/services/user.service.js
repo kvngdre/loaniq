@@ -175,25 +175,6 @@ export class UserService {
     return foundUser;
   };
 
-  static forgotPassword = async ({ email, new_password }) => {
-    logger.info("Sending password change email...");
-    const [user] = await Promise.all([
-      userRepository.update(
-        { email },
-        { password: new_password, resetPwd: false },
-      ),
-      mailer({
-        to: email,
-        subject: "Password changed",
-        template: "password-change",
-      }),
-    ]);
-
-    user.purgeSensitiveData();
-
-    return user;
-  };
-
   static resetPassword = async (userId) => {
     const randomPwd = genRandomString(6);
 

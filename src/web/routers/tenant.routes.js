@@ -5,9 +5,9 @@ import { auth } from "../middleware/auth.middleware.js";
 import checkPermission from "../middleware/checkPermission.js";
 import validateIdMiddleware from "../middleware/validate-id.middleware.js";
 
-const router = Router();
+export const tenantRouter = Router();
 
-router.post(
+tenantRouter.post(
   "/:tenantId/activate",
   auth,
   validateIdMiddleware,
@@ -15,7 +15,7 @@ router.post(
   TenantController.requestTenantActivation,
 );
 
-router.post(
+tenantRouter.post(
   "/:tenantId/deactivate",
   auth,
   validateIdMiddleware,
@@ -23,7 +23,7 @@ router.post(
   TenantController.requestTenantActivation,
 );
 
-router.post(
+tenantRouter.post(
   "/:tenantId/onboard",
   auth,
   validateIdMiddleware,
@@ -31,23 +31,23 @@ router.post(
   TenantController.onBoardTenant,
 );
 
-router.get("/forms/:formId", TenantController.getPublicFormData);
+tenantRouter.get("/forms/:formId", TenantController.getPublicFormData);
 
-router.get(
+tenantRouter.get(
   "/self",
   auth,
   checkPermission("viewOwn", "tenant"),
   TenantController.getCurrentTenant,
 );
 
-router.get(
+tenantRouter.get(
   "/",
   auth,
   // checkPermission("viewAny", "tenant"),
   TenantController.getTenants,
 );
 
-router.get(
+tenantRouter.get(
   "/:tenantId",
   auth,
   validateIdMiddleware,
@@ -55,7 +55,7 @@ router.get(
   TenantController.getTenant,
 );
 
-router.get(
+tenantRouter.get(
   "/:tenantId/deactivate",
   auth,
   validateIdMiddleware,
@@ -63,7 +63,7 @@ router.get(
   TenantController.requestToDeactivateTenant,
 );
 
-router.get(
+tenantRouter.get(
   "/:tenantId/public-url",
   auth,
   validateIdMiddleware,
@@ -71,7 +71,7 @@ router.get(
   TenantController.generatePublicUrl,
 );
 
-router.get(
+tenantRouter.get(
   "/:tenantId/reactivate",
   auth,
   validateIdMiddleware,
@@ -79,7 +79,7 @@ router.get(
   TenantController.reactivateTenant,
 );
 
-router.patch(
+tenantRouter.patch(
   "/:tenantId",
   auth,
   validateIdMiddleware,
@@ -87,12 +87,10 @@ router.patch(
   TenantController.updateTenant,
 );
 
-router.delete(
+tenantRouter.delete(
   "/:tenantId",
   auth,
   validateIdMiddleware,
   checkPermission("delete", "tenant"),
   TenantController.deleteTenant,
 );
-
-export default router;
