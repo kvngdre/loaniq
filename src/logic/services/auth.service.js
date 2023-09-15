@@ -29,13 +29,16 @@ export class AuthService {
     session.startTransaction();
 
     try {
-      const [user, tenant] = await Promise.all([
-        UserRepository.insert(
-          { role: "admin", resetPassword: false, ...registerDto },
-          session,
-        ),
-        TenantRepository.insert(registerDto, session),
-      ]);
+      const tenant = await TenantRepository.insert(registerDto, session);
+      const user = await UserRepository.insert(
+        {
+          tenantId: tenant._id,
+          role: "admin",
+          resetPassword: false,
+          ...registerDto,
+        },
+        session,
+      );
 
       const ttl = 10; // in minutes
       const newToken = TokenEntity.make({
@@ -314,7 +317,6 @@ export class AuthService {
   }
 
   static async forgotPassword({ email, otp, password }) {
-    const tenant = await TenantRepository.find()[0];
     const session = await startSession();
     session.startTransaction();
 

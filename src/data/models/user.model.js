@@ -7,6 +7,12 @@ import { messages } from "../../utils/index.js";
 
 export const userSchema = new Schema(
   {
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: "Tenants",
+      required: true,
+    },
+
     firstName: {
       type: String,
       trim: true,
