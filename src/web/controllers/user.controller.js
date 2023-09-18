@@ -73,19 +73,6 @@ export class UserController extends BaseController {
     res.status(HttpCode.OK).json(response);
   };
 
-  // todo Discuss with Vic your ideas on forgot password flow.
-  static forgotPassword = async (req, res) => {
-    const { value, error } = await userValidator.validateForgotPassword(
-      req.body,
-    );
-    if (error) throw new ValidationError(null, error);
-
-    await UserService.forgotPassword(value);
-    const response = this.apiResponse("User password has been reset.");
-
-    res.status(HttpCode.OK).json(response);
-  };
-
   static resetPassword = async (req, res) => {
     await UserService.resetPassword(req.params.userId);
     const response = this.apiResponse("User password has been reset.");

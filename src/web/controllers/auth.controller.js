@@ -11,8 +11,8 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static register = async (req, res) => {
-    const result = await AuthService.register(req.body);
-    const response = BaseHttpResponse.success(result.message, result.data);
+    const { message, data } = await AuthService.register(req.body);
+    const response = BaseHttpResponse.success(message, data);
 
     res.status(HttpCode.CREATED).json(response);
   };
@@ -22,9 +22,9 @@ export class AuthController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static verify = async (req, res) => {
-    const result = await AuthService.verify(req.query.email, req.body.otp);
-    const response = BaseHttpResponse.success(result.message);
+  static verifyRegistration = async (req, res) => {
+    const { message, data } = await AuthService.verifyRegistration(req.body);
+    const response = BaseHttpResponse.success(message, data);
 
     res.json(response);
   };
@@ -39,14 +39,13 @@ export class AuthController extends BaseController {
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
+      // TODO: set this permanently to TRUE
       secure: config.secure_cookie,
     });
 
-    // const { value, error } = authValidator.validateLogin(req.body);
-    // if (error) throw new ValidationError(null, error);
-
-    const { message, data, refreshToken } = await AuthService.login(
-      req.body,
+    const { message, data } = await AuthService.login(
+      req.user,
+      req.body.password,
       token,
       req.headers["user-agent"],
       req.clientIp,
@@ -54,9 +53,10 @@ export class AuthController extends BaseController {
     const response = BaseHttpResponse.success(message, data);
 
     // ! Create secure cookie with refresh token.
-    res.cookie("jwt", refreshToken, {
+    res.cookie("jwt", data.refreshToken, {
       httpOnly: true,
       sameSite: "none",
+      // TODO: set this permanently to TRUE
       secure: config.secure_cookie,
       maxAge: config.jwt.ttl.refresh * 1000,
     });
@@ -70,14 +70,16 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static logout = async (req, res) => {
-    const result = await AuthService.logout(req.cookies?.jwt);
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
+      // TODO: set this permanently to TRUE
       secure: config.secure_cookie,
     });
 
-    const response = BaseHttpResponse.success(result.message, result.data);
+    const { message, data } = await AuthService.logout(req.cookies?.jwt);
+
+    const response = BaseHttpResponse.success(message, data);
 
     res.json(response);
   };
@@ -88,8 +90,10 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static logOutAllSessions = async (req, res) => {
-    const result = await AuthService.logOutAllSessions(req.cookies?.jwt);
-    const response = BaseHttpResponse.success(result.message);
+    const { message, data } = await AuthService.logOutAllSessions(
+      req.cookies?.jwt,
+    );
+    const response = BaseHttpResponse.success(message, data);
 
     res.json(response);
   };
@@ -99,17 +103,20 @@ export class AuthController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static genTokens = async (req, res) => {
-    const { message, data } = await AuthService.genTokenSet(
-      req.cookies?.jwt,
-      req.headers["user-agent"],
-      req.clientIp,
-    );
+  static refreshTokenSet = async (req, res) => {
+    const { message, data } =
+      await AuthService.refreshAccessTokenAndGenerateNewRefreshToken(
+        req.cookies?.jwt,
+        req.headers["user-agent"],
+        req.clientIp,
+      );
 
     res.clearCookie("jwt", {
       httpOnly: true,
       sameSite: "none",
+      // TODO: set this permanently to TRUE
       secure: config.secure_cookie,
+      maxAge: config.jwt.ttl.refresh * 1000,
     });
 
     res.cookie("jwt", data.refreshToken, {
@@ -132,13 +139,49 @@ export class AuthController extends BaseController {
    * @param {import('express').Response} res
    */
   static requestOTP = async (req, res) => {
-    const result = await AuthService.requestToken(req.body);
-    const response = BaseHttpResponse.success(result.message, result.data);
+    const { message, data } = await AuthService.requestToken(req.body);
+    const response = BaseHttpResponse.success(message, data);
 
     res.json(response);
   };
 
-  static callback = (req, res) => {
-    res.status(200).json(req.body);
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static forgotPassword = async (req, res) => {
+    const { message, data } = await AuthService.initiatePasswordReset(
+      req.body.email,
+    );
+    const response = BaseHttpResponse.success(message, data);
+
+    res.json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static resetPasswordWithVerification = async (req, res) => {
+    const { message, data } =
+      await AuthService.resetUserPasswordWithVerification(req.body);
+    const response = BaseHttpResponse.success(message, data);
+
+    res.json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static resetPasswordWithoutVerification = async (req, res) => {
+    const { message, data } =
+      await AuthService.resetUserPasswordWithoutVerification(req.body);
+    const response = BaseHttpResponse.success(message, data);
+
+    res.json(response);
   };
 }

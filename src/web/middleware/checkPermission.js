@@ -7,6 +7,7 @@ import ErrorResponse from "../../utils/ErrorResponse.js";
  * @returns
  */
 const checkPermission = (action, target) => (req, res, next) => {
+  //TODO: use redis caching here
   function hasPermission() {
     return req.currentUser.role.permissions.some(
       (p) => p.action === action && p.target === target,

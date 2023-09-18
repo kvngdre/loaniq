@@ -22,9 +22,7 @@ class RoleController extends BaseController {
    * @param {import('express').Response} res
    */
   static getRoles = async (req, res) => {
-    const { count, foundRoles } = await RoleService.getRoles(
-      req.currentUser.tenantId,
-    );
+    const { count, foundRoles } = await RoleService.getRoles(req.user.tenantId);
     const message = this.getMsgFromCount(count);
     const response = this.apiResponse(message, foundRoles);
 

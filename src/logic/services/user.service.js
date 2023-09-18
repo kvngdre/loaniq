@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { startSession } from "mongoose";
 
 import { config } from "../../config/index.js";
@@ -17,23 +18,22 @@ export class UserService {
     session.startTransaction();
 
     try {
-      const password = genRandomString(6);
+      const randomPassword = randomBytes(4).toString("hex");
       const newUser = await UserRepository.insert(
-        { ...createUserDTO, password },
+        { ...createUserDTO, password: randomPassword },
         session,
       );
 
-      // Send temporary password to new user email.
-      const info = await MailService.send({
+      const { error } = await MailService.send({
         to: createUserDTO.email,
         templateName: "new-user",
         context: {
           name: createUserDTO.first_name,
-          password,
+          password: randomPassword,
         },
       });
 
-      if (info.error) {
+      if (error) {
         throw new DependencyError("Failed to send password to user email");
       }
 

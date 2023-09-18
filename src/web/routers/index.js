@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import authRouter from "./auth.routes.js";
+import { authRouter } from "./auth.routes.js";
 // import bankRouter from './bank.routes.js';
 // import customerRouter from './customer.routes.js';
 // import dashboardRouter from './dashboard.routes.js';

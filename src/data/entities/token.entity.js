@@ -1,5 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { ValidationError } from "../../utils/errors/index.js";
+import { TOKEN_TYPES } from "../../utils/helpers/token.helper.js";
+import { generateOTP } from "../../utils/index.js";
 
 export class TokenEntity {
   constructor(userId, type, token, expires) {
@@ -9,17 +11,23 @@ export class TokenEntity {
     this.expires = expires;
   }
 
-  static make({ userId, type, token, expires, ttl = 10 }) {
+  static make({
+    userId,
+    type,
+    token = undefined,
+    expires = undefined,
+    ttl = 10,
+  }) {
     if (!token) {
       switch (type) {
-        case "verify":
-          token = `${Math.floor(Math.random() * 10 ** 5)}`;
+        case TOKEN_TYPES.VERIFY:
+          token = generateOTP(5);
           break;
-        case "password":
-          token = `${Math.floor(Math.random() * 10 ** 6)}`;
+        case TOKEN_TYPES.RESET_PWD:
+          token = generateOTP(6);
           break;
         default:
-          throw new ValidationError("Invalid token type");
+          throw new ValidationError("Invalid Token Type");
       }
     }
 

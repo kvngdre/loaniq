@@ -67,9 +67,9 @@ export const tenantSchema = new Schema(
     },
 
     configurations: {
-      userResetPassword: {
+      allowUserPasswordReset: {
         type: Boolean,
-        default: true,
+        default: false,
       },
 
       defaultParams: {

@@ -11,7 +11,7 @@ export class SessionController {
   static index = async (req, res) => {
     const sessions = await SessionService.all();
     const response = BaseHttpResponse.success(
-      messages.COMMON.FETCHED("Sessions"),
+      messages.COMMON.FETCHED_Fn("Sessions"),
       sessions,
     );
 
@@ -26,7 +26,7 @@ export class SessionController {
   static create = async (req, res) => {
     const session = await SessionService.create(req.body);
     const response = BaseHttpResponse.success(
-      messages.COMMON.CREATED("Session"),
+      messages.COMMON.CREATED_Fn("Session"),
       session,
     );
 
@@ -41,7 +41,7 @@ export class SessionController {
   static show = async (req, res) => {
     const session = await SessionService.get(req.params.id);
     const response = BaseHttpResponse.success(
-      messages.COMMON.FETCHED("Session"),
+      messages.COMMON.FETCHED_Fn("Session"),
       session,
     );
 
@@ -51,7 +51,7 @@ export class SessionController {
   static edit = async (req, res) => {
     const session = await SessionService.update(req.params.id, req.body);
     const response = BaseHttpResponse.success(
-      messages.COMMON.UPDATED("Session"),
+      messages.COMMON.UPDATED_Fn("Session"),
       session,
     );
 
@@ -61,7 +61,7 @@ export class SessionController {
   static destroy = async (req, res) => {
     await SessionService.update(req.params.id, req.body);
     const response = BaseHttpResponse.success(
-      messages.COMMON.DELETED("Session"),
+      messages.COMMON.DELETED_Fn("Session"),
     );
 
     res.status(204).json(response);

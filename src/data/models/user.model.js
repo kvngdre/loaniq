@@ -2,14 +2,13 @@ import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
 import autoPopulate from "mongoose-autopopulate";
 
-import { config } from "../../config/index.js";
-import { messages } from "../../utils/index.js";
+import { USER_STATUS } from "../../utils/helpers/user.helper.js";
 
 export const userSchema = new Schema(
   {
     tenantId: {
       type: Schema.Types.ObjectId,
-      ref: "Tenants",
+      ref: "Tenant",
       required: true,
     },
 
@@ -73,13 +72,16 @@ export const userSchema = new Schema(
     },
 
     role: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Role",
       required: true,
+      autopopulate: true,
     },
 
-    active: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: Object.values(USER_STATUS),
+      default: USER_STATUS.PENDING,
     },
 
     segments: {
@@ -109,34 +111,11 @@ userSchema.methods.fullName = function () {
   return this.firstName.concat(` ${this.lastName}`);
 };
 
-userSchema.methods.permitLogin = function () {
-  const data = { message: "", redirect: { url: null } };
-
-  if (!this.isEmailVerified && !this.active) {
-    data.redirect.url = `${config.api.base_url}/auth/verify?email=${this.email}`;
-    data.message = messages.AUTH.LOGIN.ACCOUNT_UNVERIFIED;
-  } else if (!this.active) {
-    data.redirect.url = `${config.api.base_url}/tenants/contact-admin?email=${this.email}`;
-    data.message = messages.AUTH.LOGIN.ACCOUNT_DEACTIVATED;
-  } else if (this.resetPassword) {
-    data.redirect.url = `${config.api.base_url}/auth/reset-password?email=${this.email}`;
-    data.message = messages.AUTH.LOGIN.RESET_PWD;
-  } else {
-    return { isPermitted: true, data };
-  }
-
-  return { isPermitted: false, data };
-};
-
 userSchema.methods.purgeSensitiveData = function () {
   delete this._doc?.password;
   delete this._doc?.resetPassword;
 
   return this;
-};
-
-userSchema.methods.validatePassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
 };
 
 // hashing user password before insert

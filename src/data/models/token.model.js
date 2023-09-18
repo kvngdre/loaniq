@@ -1,4 +1,6 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+
+import { TOKEN_TYPES } from "../../utils/helpers/token.helper.js";
 
 export const tokenSchema = new Schema(
   {
@@ -17,6 +19,7 @@ export const tokenSchema = new Schema(
 
     type: {
       type: String,
+      enum: Object.values(TOKEN_TYPES),
       required: true,
     },
 
@@ -29,17 +32,3 @@ export const tokenSchema = new Schema(
 );
 
 tokenSchema.index({ userId: 1, type: 1 }, { unique: true });
-
-tokenSchema.methods.validateToken = (token) => {
-  if (Date.now() > this.expires) {
-    return { isValid: false, reason: "Token Expired" };
-  }
-
-  if (token !== this.value) {
-    return { isValid: false, reason: "Invalid Token" };
-  }
-
-  return { isValid: true };
-};
-
-export const Token = model("Token", tokenSchema);

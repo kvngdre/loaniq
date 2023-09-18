@@ -1,51 +1,80 @@
 import { Router } from "express";
 
 import { AuthController } from "../controllers/index.js";
-import { ValidateRequest, auth, checkStatus } from "../middleware/index.js";
 import {
+  ValidateRequest,
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+} from "../middleware/index.js";
+import {
+  forgotPasswordValidator,
   loginValidator,
   requestOtpValidator,
+  resetPasswordWithVerificationValidator,
+  resetPasswordWithoutVerificationValidator,
   signUpValidator,
-  verifyValidator,
+  verifyRegistrationValidator,
 } from "../validators/index.js";
 
-const router = Router();
+export const authRouter = Router();
 
-router.post(
+authRouter.post(
   "/register",
   ValidateRequest.with(signUpValidator),
   AuthController.register,
 );
 
-router.post(
-  "/verify",
-  ValidateRequest.with(verifyValidator),
-  AuthController.verify,
+authRouter.post(
+  "/verify-registration",
+  ValidateRequest.with(verifyRegistrationValidator),
+  AuthController.verifyRegistration,
 );
 
-router.post(
+authRouter.post(
   "/login",
   ValidateRequest.with(loginValidator),
+  requirePasswordReset,
+  checkUserStatus,
   AuthController.login,
 );
 
-router.post("/callback", AuthController.callback);
+authRouter.post("/logout", auth, AuthController.logout);
 
-router.post(
+authRouter.post(
+  "/logout-all-sessions",
+  auth,
+  checkUserStatus,
+  AuthController.logOutAllSessions,
+);
+authRouter.post(
+  "/refresh-tokens",
+  auth,
+  requirePasswordReset,
+  checkUserStatus,
+  AuthController.refreshTokenSet,
+);
+
+authRouter.post(
   "/request-otp",
   ValidateRequest.with(requestOtpValidator),
   AuthController.requestOTP,
 );
 
-router.post("/logout", auth, AuthController.logout);
-
-router.get(
-  "/sessions/logout",
-  auth,
-  checkStatus,
-  AuthController.logOutAllSessions,
+authRouter.post(
+  "/forgot-password",
+  ValidateRequest.with(forgotPasswordValidator),
+  AuthController.forgotPassword,
 );
 
-router.get("/tokens", auth, AuthController.genTokens);
+authRouter.post(
+  "/reset-password-with-verification",
+  ValidateRequest.with(resetPasswordWithVerificationValidator),
+  AuthController.resetPasswordWithVerification,
+);
 
-export default router;
+authRouter.post(
+  "/reset-password",
+  ValidateRequest.with(resetPasswordWithoutVerificationValidator),
+  AuthController.resetPasswordWithoutVerification,
+);

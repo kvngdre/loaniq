@@ -31,6 +31,21 @@ export const SOCIALS = [
   "tictok",
 ];
 
+export const USER_STATUS = {
+  ACTIVE: "active",
+  DEACTIVATED: "deactivated",
+  INACTIVE: "inactive",
+  PENDING: "pending",
+};
+
+export const USER_ROLES = {
+  ADMIN: "admin",
+  AGENT: "agent",
+  ANALYST: "analyst",
+  SUPPORT: "support",
+  UNDERWRITER: "underwriter",
+};
+
 export const VALID_ID = [
   "staff id",
   "voter's card",
@@ -38,3 +53,5 @@ export const VALID_ID = [
   "national id card",
   "drivers license",
 ];
+
+export function validatePassword() {}

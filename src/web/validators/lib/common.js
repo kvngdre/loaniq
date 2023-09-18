@@ -245,11 +245,12 @@ export const businessNameSchema = Joi.string()
     "string.max": "{#label} is too long",
   });
 
-export const confirmPasswordSchema = Joi.string()
-  .label("Confirm password")
-  .trim()
-  .equal(Joi.ref("password"))
-  .messages({ "any.only": "Passwords do not match" });
+export const makeConfirmPasswordSchema = (ref = "password") =>
+  Joi.string()
+    .label("Confirm password")
+    .trim()
+    .equal(Joi.ref(ref))
+    .messages({ "any.only": "Passwords do not match" });
 
 export const dateSchema = Joi.date().iso();
 
@@ -364,16 +365,14 @@ export const nameSchema = Joi.string()
     "string.pattern.base": "{#label} is invalid",
   });
 
-export const otpSchema = (len) =>
-  Joi.string()
-    .label("OTP")
-    .trim()
-    .pattern(new RegExp(`^[0-9]{${len}}$`))
-    .messages({
-      "string.pattern.base": "Invalid OTP",
-    });
+export const otpSchema = Joi.string()
+  .trim()
+  .pattern(/^[0-9]{4,8}$/)
+  .messages({
+    "string.pattern.base": "Invalid {#label}",
+  });
 
-export const passwordSchema = (len) =>
+export const makePasswordSchema = (len) =>
   joiPassword
     .string()
     .label("Password")

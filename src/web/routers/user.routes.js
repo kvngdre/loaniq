@@ -8,8 +8,6 @@ export const userRouter = Router();
 
 userRouter.post("/", auth, UserController.createUser);
 
-userRouter.post("/forgot-password", UserController.forgotPassword);
-
 userRouter.post(
   "/:userId/change-password",
   auth,

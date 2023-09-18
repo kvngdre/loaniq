@@ -1,16 +1,15 @@
+import { randomBytes } from "crypto";
+
 /**
  * Generates a random number string of specified length and expiration time.
  * @param {number} len The number of digits the otp should contain.
- * @param {number} expires OTP time-to-live in minutes.
- * @returns {{value: string, expires: number, ttl: number}}
+ * @returns {string}
  */
-export function generateOTP(len, ttl = 10) {
-  if (typeof len !== "number" || typeof ttl !== "number") {
-    throw new Error('Arguments must be of type "number"');
+export function generateOTP(len) {
+  if (!len || typeof len !== "number") {
+    throw new Error('Argument "len" must be of type "number"');
   }
 
-  const value = `${Math.floor(Math.random() * 10 ** len)}`;
-  const expires = Date.now() + ttl * 60 * 1_000;
-
-  return { value, expires, ttl };
+  const code = randomBytes(4).readUIntBE(0, 4) % 10 ** len;
+  return code.toString().padStart(len, "0");
 }
