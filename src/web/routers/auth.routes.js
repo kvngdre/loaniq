@@ -35,7 +35,7 @@ authRouter.post(
   "/login",
   ValidateRequest.with(loginValidator),
   requirePasswordReset,
-  checkUserStatus,
+  // checkUserStatus,
   AuthController.login,
 );
 
@@ -50,8 +50,8 @@ authRouter.post(
 authRouter.post(
   "/refresh-tokens",
   auth,
-  requirePasswordReset,
   checkUserStatus,
+  requirePasswordReset,
   AuthController.refreshTokenSet,
 );
 

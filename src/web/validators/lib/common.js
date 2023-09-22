@@ -330,6 +330,17 @@ export const ippisSchema = Joi.string().alphanum().uppercase().trim().messages({
   "string.pattern.base": "{#label} is not valid",
 });
 
+export const jobTitleSchema = Joi.string()
+  .label("Job title")
+  .trim()
+  .lowercase()
+  .min(1)
+  .max(100)
+  .messages({
+    "string.min": "{#label} is too short",
+    "string.max": "{#label} is too long",
+  });
+
 export const objectIdSchema = Joi.alternatives(
   Joi.string()
     .regex(/^[0-9a-fA-F]{24}$/)

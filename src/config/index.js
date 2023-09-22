@@ -28,11 +28,7 @@ export const config = {
   },
 
   jwt: {
-    secret: {
-      access: process.env.JWT_ACCESS_SECRET,
-      form: process.env.JWT_FORM_SECRET,
-      refresh: process.env.JWT_REFRESH_SECRET,
-    },
+    secret: process.env.JWT_SECRET,
     ttl: {
       access: parseInt(process.env.JWT_ACCESS_TTL, 10),
       form: parseInt(process.env.JWT_FORM_TTL, 10),

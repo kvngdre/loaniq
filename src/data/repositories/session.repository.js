@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
 import { ValidationError } from "../../utils/errors/index.js";
-import dbContext from "../db-context.js";
+import { Session } from "../models/index.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class SessionRepository {
   static async insert(createSessionDto, session) {
     try {
-      const newSession = new dbContext.Session(createSessionDto);
+      const newSession = new Session(createSessionDto);
       await newSession.save({ session });
 
       return newSession;
@@ -21,24 +21,24 @@ export class SessionRepository {
   }
 
   static async find(filter = {}, projection = {}) {
-    return dbContext.Session.find(filter).select(projection);
+    return Session.find(filter).select(projection);
   }
 
   static async findById(id, projection = {}) {
-    return dbContext.Session.findById(id).select(projection);
+    return Session.findById(id).select(projection);
   }
 
   static async findOne(filter) {
-    return dbContext.Session.findOne(filter);
+    return Session.findOne(filter);
   }
 
   static async findByToken(token) {
-    return dbContext.Session.findOne({ "sessions.refreshToken": token });
+    return Session.findOne({ "sessions.refreshToken": token });
   }
 
   static async updateById(id, updateTokenDto) {
     try {
-      return dbContext.Session.findByIdAndUpdate(id, updateTokenDto, {
+      return Session.findByIdAndUpdate(id, updateTokenDto, {
         new: true,
       });
     } catch (exception) {
@@ -53,7 +53,7 @@ export class SessionRepository {
 
   static async upsert(upsertSessionDto, session = undefined) {
     try {
-      return dbContext.Session.findOneAndUpdate(
+      return Session.findOneAndUpdate(
         { userId: upsertSessionDto.userId, type: upsertSessionDto.type },
         upsertSessionDto,
         { new: true, upsert: true, session },
@@ -68,6 +68,6 @@ export class SessionRepository {
   }
 
   static async deleteById(id) {
-    return dbContext.Session.findByIdAndDelete(id);
+    return Session.findByIdAndDelete(id);
   }
 }

@@ -1,38 +1,40 @@
-import { UserService } from "../../logic/services/user.service.js";
+import { UserService } from "../../logic/services/index.js";
 import { HttpCode } from "../../utils/common.js";
 import { ValidationError } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
+import { BaseHttpResponse } from "../lib/base-http-response.js";
 import userValidator from "../validators/user.validator.js";
 import BaseController from "./base.controller.js";
 
 export class UserController extends BaseController {
-  static createUser = async (req, res) => {
-    const { value, error } = userValidator.validateCreateUser(
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static index = async (req, res) => {
+    const { message, data } = await UserService.all();
+    const response = BaseHttpResponse.success(message, data);
+
+    res.json(response);
+  };
+
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static create = async (req, res) => {
+    const { message, data } = await UserService.create(
       req.body,
-      req.currentUser.tenantId,
+      req.user.tenantId,
     );
-    if (error) throw new ValidationError(null, error);
+    const response = BaseHttpResponse.success(message, data);
 
-    const newUser = await UserService.createUser(value);
-    const response = this.apiResponse(
-      "User created. Temporary password sent to user email",
-      newUser,
-    );
-
-    res.status(HttpCode.CREATED).json(response);
+    res.status(201).json(response);
   };
 
-  static getUsers = async (req, res) => {
-    const { count, users } = await UserService.getUsers(
-      req.currentUser.tenantId,
-    );
-
-    const message = this.getMsgFromCount(count);
-    const response = this.apiResponse(message, users);
-
-    res.status(HttpCode.OK).json(response);
-  };
-
-  static getUser = async (req, res) => {
+  static show = async (req, res) => {
     const user = await UserService.getUserById(req.params.userId);
     const response = this.apiResponse("Fetched user", user);
 
@@ -46,7 +48,7 @@ export class UserController extends BaseController {
     res.status(HttpCode.OK).json(response);
   };
 
-  static updateUser = async (req, res) => {
+  static edit = async (req, res) => {
     const { value, error } = userValidator.validateUpdate(req.body);
     if (error) throw new ValidationError(null, error);
 
@@ -56,11 +58,13 @@ export class UserController extends BaseController {
     res.status(HttpCode.OK).json(response);
   };
 
-  static deleteUser = async (req, res) => {
-    await UserService.deleteUser(req.params.userId);
-    const response = this.apiResponse("User account deleted");
+  static destroy = async (req, res) => {
+    await UserService.delete(req.params.id);
+    const response = BaseHttpResponse.success(
+      messages.COMMON.DELETED_Fn("User"),
+    );
 
-    res.status(HttpCode.OK).json(response);
+    res.status(204).json(response);
   };
 
   static changePassword = async (req, res) => {

@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
-import dbContext from "../db-context.js";
+import { User } from "../models/index.js";
 import { getDuplicateField } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class UserRepository {
   static async insert(createUserDto, session) {
     try {
-      const user = new dbContext.User(createUserDto);
+      const user = new User(createUserDto);
       await user.save({ session });
 
       return user;
@@ -28,34 +28,28 @@ export class UserRepository {
     }
   }
 
-  static async find(
-    filter = {},
-    projection = {},
-    sortOrder = { first_name: 1 },
-  ) {
-    return dbContext.User.find(filter).select(projection).sort(sortOrder);
+  static async find(filter = {}, sortOrder = { first_name: 1 }) {
+    return User.find(filter).sort(sortOrder);
   }
 
-  static async findById(id, projection = {}) {
-    return dbContext.User.findById(id).select(projection);
+  static async findById(id) {
+    return User.findById(id);
   }
 
-  static async findOne(filter, projection = {}) {
-    return dbContext.User.findOne(filter).select(projection);
+  static async findOne(filter) {
+    return User.findOne(filter);
   }
 
   static async findByEmail(email) {
-    return dbContext.User.findOne({ email });
+    return User.findOne({ email });
   }
 
-  static async updateById(id, changes, projection = {}) {
+  static async updateById(id, changes) {
     try {
-      const foundUser = await dbContext.User.findById(id).select(projection);
+      const foundUser = await User.findById(id);
 
       foundUser?.set(changes);
-      foundUser?.save();
-
-      return foundUser;
+      return await foundUser?.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
         const field = getDuplicateField(exception);
@@ -73,7 +67,7 @@ export class UserRepository {
 
   static async updateOne(filter, changes) {
     try {
-      return dbContext.User.findOneAndUpdate(filter, changes, {
+      return User.findOneAndUpdate(filter, changes, {
         new: true,
       });
 
@@ -95,10 +89,10 @@ export class UserRepository {
   }
 
   static async updateMany(filter, changes) {
-    return dbContext.User.updateMany(filter, changes);
+    return User.updateMany(filter, changes);
   }
 
   static async deleteById(id) {
-    return dbContext.User.findByIdAndDelete(id);
+    return User.findByIdAndDelete(id);
   }
 }

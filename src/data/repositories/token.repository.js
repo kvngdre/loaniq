@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
 import { ValidationError } from "../../utils/errors/index.js";
-import dbContext from "../db-context.js";
+import { Token } from "../models/index.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class TokenRepository {
   static async insert(createTokenDto, session) {
     try {
-      const token = new dbContext.Token(createTokenDto);
+      const token = new Token(createTokenDto);
       return token.save({ session });
     } catch (exception) {
       if (exception instanceof mongoose.Error.ValidationError) {
@@ -20,20 +20,20 @@ export class TokenRepository {
   }
 
   static async find(filter = {}) {
-    return dbContext.Token.find(filter);
+    return Token.find(filter);
   }
 
   static async findById(id) {
-    return dbContext.Token.findById(id);
+    return Token.findById(id);
   }
 
   static async findOne(filter) {
-    return dbContext.Token.findOne(filter);
+    return Token.findOne(filter);
   }
 
   static async upsert(upsertTokenDto, session) {
     try {
-      return dbContext.Token.findOneAndUpdate(
+      return Token.findOneAndUpdate(
         { userId: upsertTokenDto.userId, type: upsertTokenDto.type },
         upsertTokenDto,
         { new: true, upsert: true, session },
@@ -50,7 +50,7 @@ export class TokenRepository {
 
   static async updateById(id, updateTokenDto) {
     try {
-      return dbContext.Token.findByIdAndUpdate(id, updateTokenDto, {
+      return Token.findByIdAndUpdate(id, updateTokenDto, {
         new: true,
       });
     } catch (exception) {
@@ -64,10 +64,10 @@ export class TokenRepository {
   }
 
   static async deleteById(id) {
-    return dbContext.Token.findByIdAndDelete(id);
+    return Token.findByIdAndDelete(id);
   }
 
   static async deleteOne(filter, session) {
-    return dbContext.Token.findOneAndDelete(filter, { session });
+    return Token.findOneAndDelete(filter, { session });
   }
 }

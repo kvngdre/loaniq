@@ -111,14 +111,7 @@ userSchema.methods.fullName = function () {
   return this.firstName.concat(` ${this.lastName}`);
 };
 
-userSchema.methods.purgeSensitiveData = function () {
-  delete this._doc?.password;
-  delete this._doc?.resetPassword;
-
-  return this;
-};
-
-// hashing user password before insert
+// eslint-disable-next-line func-names
 userSchema.pre("save", function (next) {
   if (this.modifiedPaths()?.includes("password")) {
     this.password = bcrypt.hashSync(this.password, 12);

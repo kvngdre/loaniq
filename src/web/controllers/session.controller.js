@@ -59,7 +59,7 @@ export class SessionController {
   };
 
   static destroy = async (req, res) => {
-    await SessionService.update(req.params.id, req.body);
+    await SessionService.delete(req.params.id);
     const response = BaseHttpResponse.success(
       messages.COMMON.DELETED_Fn("Session"),
     );

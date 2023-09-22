@@ -25,6 +25,7 @@ import {
   USER_STATUS,
 } from "../../utils/helpers/index.js";
 import { logger, messages } from "../../utils/index.js";
+import { UserDto } from "../dtos/index.js";
 import { JwtService } from "./jwt.service.js";
 import { MailService } from "./mail.service.js";
 import { TokenService } from "./token.service.js";
@@ -171,7 +172,7 @@ export class AuthService {
       await SessionRepository.insert(newSession);
     }
 
-    UserRepository.updateById(user.id, {
+    UserRepository.updateById(user._id, {
       "configurations.lastLoginTime": new Date(),
     });
 
@@ -186,7 +187,21 @@ export class AuthService {
       message: messages.AUTH.LOGIN.SUCCESS,
       data: {
         accessToken,
-        user,
+        user: UserDto.from({
+          id: user._id,
+          tenantId: user.tenantId,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          displayName: user.displayName,
+          jobTitle: user.jobTitle,
+          phoneNumber: user.phoneNumber,
+          email: user.email,
+          role: user.role.name,
+          status: user.status,
+          configurations: user.configurations,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        }),
         redirect: null,
         refreshToken,
       },
@@ -234,12 +249,8 @@ export class AuthService {
 
   static async refreshAccessTokenAndGenerateNewRefreshToken(token, agent, ip) {
     try {
-      if (!token) {
-        throw new ValidationError("No Refresh Token Provided");
-      }
-
       const { issuer, secret } = config.jwt;
-      const decoded = jwt.verify(token, secret.refresh, { issuer });
+      const decoded = jwt.verify(token, secret, { issuer });
 
       const session = await SessionRepository.findByToken(token);
       if (!session) {

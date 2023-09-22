@@ -1,40 +1,36 @@
-import { roleRepository } from "../../data/repositories/role.repository.js";
+import { RoleRepository } from "../../data/repositories/index.js";
+import { messages } from "../../utils/messages.utils.js";
 
-class RoleService {
-  static async createRole(createRoleDTO) {
-    return roleRepository.insert(createRoleDTO);
+export class RoleService {
+  static async all() {
+    const foundRoles = await RoleRepository.find();
+
+    return { message: messages.COMMON.FETCHED_Fn("Roles"), foundRoles };
   }
 
-  async getRoles() {
-    const foundRoles = await roleRepository.find();
-    const count = Intl.NumberFormat("en-US").format(foundRoles.length);
-
-    return { count, foundRoles };
+  static async create(createRoleDTO) {
+    return RoleRepository.insert(createRoleDTO);
   }
 
-  async getRoleById(roleId) {
-    const foundRole = await roleRepository.findById(roleId);
+  static async getRoleById(id) {
+    const foundRole = await RoleRepository.findById(id);
 
     return foundRole;
   }
 
-  async getRole(filter) {
-    const foundRole = await roleRepository.findOne(filter);
+  static async getRole(filter) {
+    const foundRole = await RoleRepository.findOne(filter);
 
     return foundRole;
   }
 
-  async updateRole(roleId, updateRoleDTO) {
-    const updatedRole = await roleRepository.update(roleId, updateRoleDTO);
+  static async update(id, updateRoleDTO) {
+    const updatedRole = await RoleRepository.updateById(id, updateRoleDTO);
 
     return updatedRole;
   }
 
-  async deleteRole(roleId) {
-    const deletedRole = await roleRepository.remove(roleId);
-
-    return deletedRole;
+  static async delete(id) {
+    return RoleRepository.deleteById(id);
   }
 }
-
-export default RoleService;

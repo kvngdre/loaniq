@@ -6,21 +6,28 @@ import { UserRepository } from "../../data/repositories/index.js";
 import { events, pubsub } from "../../pubsub/index.js";
 import {
   DependencyError,
+  NotFoundError,
   UnauthorizedError,
   ValidationError,
 } from "../../utils/errors/index.js";
-import { calcSimilarity, genRandomString, logger } from "../../utils/index.js";
+import {
+  calcSimilarity,
+  genRandomString,
+  logger,
+  messages,
+} from "../../utils/index.js";
+import { UserDto } from "../dtos/index.js";
 import { MailService } from "./mail.service.js";
 
 export class UserService {
-  static async create(createUserDTO) {
+  static async create(createUserDTO, tenantId) {
     const session = await startSession();
     session.startTransaction();
 
     try {
       const randomPassword = randomBytes(4).toString("hex");
-      const newUser = await UserRepository.insert(
-        { ...createUserDTO, password: randomPassword },
+      const user = await UserRepository.insert(
+        { ...createUserDTO, password: randomPassword, tenantId },
         session,
       );
 
@@ -32,14 +39,29 @@ export class UserService {
           password: randomPassword,
         },
       });
-
       if (error) {
-        throw new DependencyError("Failed to send password to user email");
+        throw new DependencyError("Error sending password to user email");
       }
 
       await session.commitTransaction();
 
-      return newUser.purgeSensitiveData();
+      return {
+        message: messages.COMMON.CREATED_Fn("User"),
+        data: UserDto.from({
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          displayName: user.displayName,
+          jobTitle: user.jobTitle,
+          phoneNumber: user.phoneNumber,
+          email: user.email,
+          role: user.role.name,
+          status: user.status,
+          configurations: user.configurations,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        }),
+      };
     } catch (error) {
       await session.abortTransaction();
       throw error;
@@ -48,36 +70,64 @@ export class UserService {
     }
   }
 
-  static getUsers = async (
-    tenantId,
-    projection = { password: 0, resetPwd: 0, otp: 0 },
-  ) => {
-    const foundUsers = await userRepository.find({ tenantId }, projection);
-    const count = Intl.NumberFormat("en-US").format(foundUsers.length);
+  static async all() {
+    const users = await UserRepository.find();
+    if (users.length === 0) {
+      throw new NotFoundError(messages.ERROR.NOT_FOUND_Fn("Users"));
+    }
 
-    return { count, users: foundUsers };
-  };
+    return {
+      message: messages.COMMON.FETCHED_Fn("Users"),
+      data: UserDto.fromMany(users),
+    };
+  }
 
-  static getUserById = async (
-    userId,
-    projection = { password: 0, resetPwd: 0, otp: 0 },
-  ) => {
-    const foundUser = await userRepository.findById(userId, projection);
+  static async getUserById(id) {
+    const user = await UserRepository.findById(id);
+    if (!user) {
+      throw new NotFoundError(messages.ERROR.NOT_FOUND_Fn("User"));
+    }
 
-    return foundUser;
-  };
+    return UserDto.from({
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: user.displayName,
+      jobTitle: user.jobTitle,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      role: user.role.name,
+      status: user.status,
+      configurations: user.configurations,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+  }
 
-  static getUser = async (
-    filter,
-    projection = { password: 0, resetPwd: 0, otp: 0 },
-  ) => {
-    const foundUser = await userRepository.findOne(filter, projection);
+  static async getUser(filter) {
+    const user = await UserRepository.findOne(filter);
+    if (!user) {
+      throw new NotFoundError(messages.ERROR.NOT_FOUND_Fn("User"));
+    }
 
-    return foundUser;
-  };
+    return UserDto.from({
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: user.displayName,
+      jobTitle: user.jobTitle,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      role: user.role.name,
+      status: user.status,
+      configurations: user.configurations,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+  }
 
   static getCurrentUser = async (userId) => {
-    const foundUser = await userRepository.findById(userId);
+    const foundUser = await UserRepository.findById(userId);
 
     foundUser.purgeSensitiveData();
 
@@ -86,50 +136,37 @@ export class UserService {
 
   /**
    * Updates a user's record
-   * @param {string} userId The user id.
+   * @param {string} id The user id.
    * @param {UserUpdate} updateUserDTO
    * @param {object} [projection] The fields to include or exclude.
    * @returns
    */
-  static updateUser = async (
-    userId,
-    updateUserDTO,
-    projection = { password: 0, resetPwd: 0, otp: 0 },
-  ) => {
-    const updatedUser = await userRepository.update(
-      { userId },
-      updateUserDTO,
-      projection,
-    );
+  static updateUser = async (id, updateUserDTO) => {
+    const updatedUser = await UserRepository.updateById(id, updateUserDTO);
 
     return updatedUser;
   };
 
   static updateBulk = async (filter, updateDTO) => {
-    const result = await userRepository.updateMany(filter, updateDTO);
+    const result = await UserRepository.updateMany(filter, updateDTO);
 
     return result;
   };
 
-  static deleteUser = async (userId) => {
-    const [deletedUser] = await Promise.all([
-      userRepository.remove(userId),
-      UserConfigService.deleteConfig(userId),
-    ]);
-
-    return deletedUser;
-  };
+  static async delete(id) {
+    return UserRepository.deleteById(id);
+  }
 
   static changePassword = async (userId, changePasswordDTO) => {
-    const { current_password, new_password } = changePasswordDTO;
+    const { currentPassword, newPassword } = changePasswordDTO;
 
-    const foundUser = await userRepository.findById(userId);
+    const user = await UserRepository.findById(userId);
 
-    const isMatch = foundUser.comparePasswords(current_password);
+    const isMatch = user.comparePasswords(currentPassword);
     if (!isMatch) throw new UnauthorizedError("Password is incorrect.");
 
     const percentageSimilarity =
-      calcSimilarity(new_password, current_password) * 100;
+      calcSimilarity(newPassword, currentPassword) * 100;
 
     if (percentageSimilarity >= config.max_similarity) {
       throw new ValidationError("Password is too similar to old password.");
@@ -147,10 +184,10 @@ export class UserService {
 
     // Send temporary password to new user email.
     const info = await MailService.send({
-      to: foundUser.email,
+      to: user.email,
       templateName: "user_password_change",
       context: {
-        name: foundUser.first_name,
+        name: user.first_name,
         datetime: formatter.format(new Date()),
       },
     });
@@ -160,45 +197,40 @@ export class UserService {
 
     // ! Notify user of password change
     logger.debug("Sending password change email...");
-    mailer({
-      to: foundUser.email,
-      subject: "Password changed",
-      name: foundUser.first_name,
+    MailService.send({
+      to: user.email,
+      context: { name: user.firstName },
       template: "password-change",
     });
 
-    foundUser.set({ password: new_password });
-    await foundUser.save();
+    user.set({ password: newPassword });
+    await user.save();
 
-    foundUser.purgeSensitiveData();
+    user.purgeSensitiveData();
 
-    return foundUser;
+    return user;
   };
 
   static resetPassword = async (userId) => {
     const randomPwd = genRandomString(6);
 
-    const foundUser = await userRepository.update(userId, {
+    const user = await UserRepository.update(userId, {
       resetPwd: true,
       password: randomPwd,
     });
 
     logger.info("Sending password reset mail...");
-    await mailer({
-      to: foundUser.email,
-      subject: "Password reset triggered",
-      name: foundUser.first_name,
+    await MailService.send({
+      to: user.email,
+      context: { name: user.first_name, password: randomPwd },
       template: "password-reset",
-      payload: { password: randomPwd },
     });
 
-    foundUser.purgeSensitiveData();
-
-    return foundUser;
+    return user;
   };
 
   static deactivateUser = async (userId, { password }) => {
-    const foundUser = await userRepository.findById(userId);
+    const foundUser = await UserRepository.findById(userId);
 
     const isMatch = foundUser.comparePasswords(password);
     if (!isMatch) throw new UnauthorizedError("Password is incorrect.");
@@ -215,7 +247,7 @@ export class UserService {
   };
 
   static reactivateUser = async (userId) => {
-    const foundUser = await userRepository.update(userId, { active: true });
+    const foundUser = await UserRepository.update(userId, { active: true });
 
     foundUser.purgeSensitiveData();
 

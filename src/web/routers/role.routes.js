@@ -8,17 +8,12 @@ const router = Router();
 
 router.post("/", auth, RoleController.create);
 
-router.get("/", auth, RoleController.getRoles);
+router.get("/", auth, RoleController.index);
 
 router.get("/:roleId", auth, validateIdMiddleware, RoleController.getRole);
 
 router.patch("/:roleId", auth, validateIdMiddleware, RoleController.updateRole);
 
-router.delete(
-  "/:roleId",
-  auth,
-  validateIdMiddleware,
-  RoleController.deleteRole,
-);
+router.delete("/:roleId", auth, validateIdMiddleware, RoleController.destroy);
 
 export default router;

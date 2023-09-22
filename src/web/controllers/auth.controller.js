@@ -1,10 +1,8 @@
 import { config } from "../../config/index.js";
 import { AuthService } from "../../logic/services/index.js";
-import { HttpCode } from "../../utils/common.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
-import BaseController from "./base.controller.js";
 
-export class AuthController extends BaseController {
+export class AuthController {
   /**
    *
    * @param {import('express').Request} req
@@ -14,7 +12,7 @@ export class AuthController extends BaseController {
     const { message, data } = await AuthService.register(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.status(HttpCode.CREATED).json(response);
+    res.json(response);
   };
 
   /**
@@ -116,7 +114,6 @@ export class AuthController extends BaseController {
       sameSite: "none",
       // TODO: set this permanently to TRUE
       secure: config.secure_cookie,
-      maxAge: config.jwt.ttl.refresh * 1000,
     });
 
     res.cookie("jwt", data.refreshToken, {

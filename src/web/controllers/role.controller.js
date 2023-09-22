@@ -1,8 +1,19 @@
-import RoleService from "../../logic/services/role.service.js";
-import { HttpCode } from "../../utils/common.js";
-import BaseController from "./base.controller.js";
+import { RoleService } from "../../logic/services/index.js";
+import { BaseHttpResponse } from "../lib/base-http-response.js";
 
-class RoleController extends BaseController {
+class RoleController {
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  static index = async (req, res) => {
+    const { message, data } = await RoleService.getRoles();
+    const response = BaseHttpResponse.success(message, data);
+
+    res.json(response);
+  };
+
   /**
    *
    * @param {import('express').Request} req
@@ -13,20 +24,7 @@ class RoleController extends BaseController {
     const newRole = await RoleService.createRole(req.body);
     const response = this.apiResponse("Role created", newRole);
 
-    res.status(HttpCode.CREATED).json(response);
-  };
-
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
-  static getRoles = async (req, res) => {
-    const { count, foundRoles } = await RoleService.getRoles(req.user.tenantId);
-    const message = this.getMsgFromCount(count);
-    const response = this.apiResponse(message, foundRoles);
-
-    res.status(HttpCode.OK).json(response);
+    res.status(201).json(response);
   };
 
   /**
@@ -35,10 +33,10 @@ class RoleController extends BaseController {
    * @param {import('express').Response} res
    */
   static getRole = async (req, res) => {
-    const foundRole = await RoleService.getRole(req.params.roleId);
+    const foundRole = await RoleService.getRole(req.params.id);
     const response = this.apiResponse("Fetched role", foundRole);
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   /**
@@ -47,10 +45,10 @@ class RoleController extends BaseController {
    * @param {import('express').Response} res
    */
   static updateRole = async (req, res) => {
-    const role = await RoleService.updateRole(req.params.roleId);
+    const role = await RoleService.updateRole(req.params.id);
     const response = this.apiResponse("Role updated", role);
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   /**
@@ -58,11 +56,11 @@ class RoleController extends BaseController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static deleteRole = async (req, res) => {
-    await RoleService.deleteRole(req.params.roleId);
+  static destroy = async (req, res) => {
+    await RoleService.destroy(req.params.id);
     const response = this.apiResponse("Deleted role");
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 }
 

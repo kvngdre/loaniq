@@ -1,12 +1,24 @@
 import { Router } from "express";
 
 import { UserController } from "../controllers/user.controller.js";
-import { auth } from "../middleware/auth.middleware.js";
-import validateIdMiddleware from "../middleware/validate-id.middleware.js";
+import {
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+  ValidateRequest,
+} from "../middleware/index.js";
+import { createUserValidator } from "../validators/index.js";
 
 export const userRouter = Router();
 
-userRouter.post("/", auth, UserController.createUser);
+userRouter.post(
+  "/",
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+  ValidateRequest.with(createUserValidator),
+  UserController.create,
+);
 
 userRouter.post(
   "/:userId/change-password",
@@ -14,43 +26,18 @@ userRouter.post(
   UserController.changePassword,
 );
 
-userRouter.post(
-  "/:userId/deactivate",
-  auth,
-  validateIdMiddleware,
-  UserController.deactivateUser,
-);
+userRouter.post("/:userId/deactivate", auth, UserController.deactivateUser);
 
-userRouter.get("/", auth, UserController.getUsers);
+userRouter.get("/", auth, checkUserStatus, UserController.index);
 
 userRouter.get("/me", auth, UserController.getCurrentUser);
 
-userRouter.get("/:userId", auth, validateIdMiddleware, UserController.getUser);
+userRouter.get("/:userId", auth, UserController.show);
 
-userRouter.get(
-  "/:userId/reactivate",
-  auth,
-  validateIdMiddleware,
-  UserController.reactivateUser,
-);
+userRouter.get("/:userId/reactivate", auth, UserController.reactivateUser);
 
-userRouter.get(
-  "/:userId/reset-password",
-  auth,
-  validateIdMiddleware,
-  UserController.resetPassword,
-);
+userRouter.get("/:userId/reset-password", auth, UserController.resetPassword);
 
-userRouter.patch(
-  "/:userId",
-  auth,
-  validateIdMiddleware,
-  UserController.updateUser,
-);
+userRouter.patch("/:id", auth, UserController.edit);
 
-userRouter.delete(
-  "/:userId",
-  auth,
-  validateIdMiddleware,
-  UserController.deleteUser,
-);
+userRouter.delete("/:id", auth, checkUserStatus, UserController.destroy);

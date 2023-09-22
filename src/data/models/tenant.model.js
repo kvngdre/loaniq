@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import { companyCategory, feeTypes } from "../../utils/common.js";
 import {
   DOCUMENTATION_TYPE,
@@ -163,3 +163,5 @@ export const tenantSchema = new Schema(
   },
   { timestamps: true },
 );
+
+export const Tenant = model("Tenant", tenantSchema);

@@ -1,7 +1,13 @@
 import Joi from "joi";
-import { Types } from "mongoose";
 // import { canUserResetPwd } from '../helpers/user.helpers.js';
-import { BaseValidator } from "./lib/common.js";
+import {
+  BaseValidator,
+  emailSchema,
+  jobTitleSchema,
+  nameSchema,
+  objectIdSchema,
+  phoneNumberSchema,
+} from "./lib/common.js";
 
 class UserValidator extends BaseValidator {
   #jobTitle;
@@ -30,54 +36,6 @@ class UserValidator extends BaseValidator {
       .messages({ "array.min": "{#label} array cannot be empty" })
       .label("Segments");
   }
-
-  validateCreateUser = (dto, tenantId) => {
-    const newUserId = new Types.ObjectId();
-
-    const schema = Joi.object({
-      id: Joi.any().default(newUserId).forbidden(),
-      tenantId: this.objectIdSchema.label("Tenant id").default(tenantId),
-      firstname: this.nameSchema.extract("first").required(),
-      lastname: this.nameSchema.extract("last").required(),
-      middlename: this.nameSchema.extract("middle"),
-      jobtitle: this.#jobTitle,
-      dob: this.dateSchema.label("Date of birth").less("now"),
-      displayname: this.#displayNameSchema.default(
-        (parent) => `${parent.firstname} ${parent.lastname}`,
-      ),
-      phonenumber: this.phoneNumberSchema.required(),
-      email: this.emailSchema.required(),
-      role: this.objectIdSchema.required(),
-      segments: this.#segmentsSchema.when("role", {
-        is: "agent",
-        then: Joi.required(),
-        otherwise: Joi.forbidden(),
-      }),
-    });
-
-    let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this.refineError(error);
-
-    return { value, error };
-  };
-
-  validateVerifySignUp = (dto) => {
-    const schema = Joi.object({
-      email: this.emailSchema.required(),
-      otp: this.otpSchema(8),
-      currentpassword: Joi.string().trim().label("Current password"),
-      newpassword: this.passwordSchema(8).label("New password"),
-      confirmpassword: this.confirmPasswordSchema,
-    })
-      .xor("otp", "currentpassword")
-      .with("currentpassword", ["newpassword", "confirmpassword"])
-      .without("otp", ["currentpassword", "newpassword", "confirmpassword"]);
-
-    let { value, error } = schema.validate(dto, { abortEarly: false });
-    error = this.refineError(error);
-
-    return { value, error };
-  };
 
   validateUpdate = (dto) => {
     const schema = Joi.object({
@@ -159,3 +117,22 @@ class UserValidator extends BaseValidator {
 }
 
 export default new UserValidator();
+
+export const createUserValidator = Joi.object({
+  body: Joi.object({
+    firstName: nameSchema.label("First name").required(),
+    lastName: nameSchema.label("Last name").required(),
+    jobTitle: jobTitleSchema,
+    displayName: nameSchema.label("Display name"),
+    phoneNumber: phoneNumberSchema,
+    email: emailSchema.required(),
+    role: objectIdSchema.required(),
+    // segments:#segmentsSchema.when("role", {
+    //   is: "agent",
+    //   then: Joi.required(),
+    //   otherwise: Joi.forbidden(),
+    // }),
+  }),
+  query: Joi.object({}),
+  params: Joi.object({}),
+});

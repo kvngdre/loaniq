@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const roleSchema = new Schema(
+export const roleSchema = new Schema(
   {
     isDefault: {
       type: Boolean,

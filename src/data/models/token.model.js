@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 
 import { TOKEN_TYPES } from "../../utils/helpers/token.helper.js";
 
@@ -32,3 +32,5 @@ export const tokenSchema = new Schema(
 );
 
 tokenSchema.index({ userId: 1, type: 1 }, { unique: true });
+
+export const Token = model("Token", tokenSchema);
