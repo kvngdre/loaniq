@@ -1,76 +1,66 @@
 import { Error } from "mongoose";
 
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
-import EmailTemplate from "../models/email-template.model.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { messages } from "../../utils/messages.utils.js";
+import { EmailTemplate } from "../models/index.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class EmailTemplateRepository {
-  static async insert(dto, trx) {
-    try {
-      const newRecord = new EmailTemplate(dto);
-      await newRecord.save({ session: trx });
+  static async find(filter = {}) {
+    return EmailTemplate.find(filter);
+  }
 
-      return newRecord;
+  static async insert(templateInfo, session) {
+    try {
+      const template = new EmailTemplate(templateInfo);
+      await template.save({ session });
+
+      return template;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
     }
   }
 
-  static async find(filter = {}, projection = {}) {
-    const foundRecords = await EmailTemplate.find(filter).select(projection);
-
-    return foundRecords;
+  static async findById(id) {
+    return EmailTemplate.findById(id);
   }
 
-  static async findById(id, projection = {}) {
-    const foundRecord = await EmailTemplate.findById(id).select(projection);
-
-    return foundRecord;
+  static async findOne(filter) {
+    return EmailTemplate.findOne(filter);
   }
 
-  static async findOne(filter, projection = {}) {
-    const foundRecord = await EmailTemplate.findOne(filter).select(projection);
-
-    return foundRecord;
-  }
-
-  static async update(id, dto, projection = {}) {
+  static async updateById(id, changes) {
     try {
-      const foundRecord = await EmailTemplate.findById(id).select(projection);
-
-      foundRecord.set(dto);
-      await foundRecord.save();
-
-      return foundRecord;
+      return EmailTemplate.findByIdAndUpdate(id, changes, {
+        new: true,
+      });
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
     }
   }
 
-  static async remove(id) {
-    const deletedRecord = await EmailTemplate.findByIdAndDelete(id);
-
-    return deletedRecord;
+  static async deleteById(id) {
+    return EmailTemplate.findByIdAndDelete(id);
   }
 }

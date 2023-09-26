@@ -24,7 +24,7 @@ import {
   USER_ROLES,
   USER_STATUS,
 } from "../../utils/helpers/index.js";
-import { logger, messages } from "../../utils/index.js";
+import { dateFormatter, logger, messages } from "../../utils/index.js";
 import { UserDto } from "../dtos/index.js";
 import { JwtService } from "./jwt.service.js";
 import { MailService } from "./mail.service.js";
@@ -187,21 +187,7 @@ export class AuthService {
       message: messages.AUTH.LOGIN.SUCCESS,
       data: {
         accessToken,
-        user: UserDto.from({
-          id: user._id,
-          tenantId: user.tenantId,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          displayName: user.displayName,
-          jobTitle: user.jobTitle,
-          phoneNumber: user.phoneNumber,
-          email: user.email,
-          role: user.role.name,
-          status: user.status,
-          configurations: user.configurations,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        }),
+        user: UserDto.from(user),
         redirect: null,
         refreshToken,
       },
@@ -411,10 +397,9 @@ export class AuthService {
       await MailService.send({
         to: email,
         templateName: "password-change",
-        // TODO: change this to a user friendly date string
         context: {
           name: user.firstName,
-          timestamp: new Date().toUTCString(),
+          timestamp: dateFormatter.format(),
         },
       });
 
@@ -451,10 +436,9 @@ export class AuthService {
     await MailService.send({
       to: email,
       templateName: "change-password",
-      // TODO: change this to a user friendly date string
       context: {
         name: user.firstName,
-        timestamp: new Date().toUTCString(),
+        timestamp: dateFormatter.format(),
       },
     });
 

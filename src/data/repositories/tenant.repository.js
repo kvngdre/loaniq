@@ -1,28 +1,29 @@
-import mongoose from "mongoose";
-
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
 } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
 import { Tenant } from "../models/index.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class TenantRepository {
   static async insert(createTenantDto, session) {
     try {
       const tenant = new Tenant(createTenantDto);
-      return tenant.save({ session });
+      await tenant.save({ session });
+
+      return tenant;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
-        throw new ValidationError(msg);
+      if (exception instanceof Error.ValidationError) {
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
@@ -41,33 +42,30 @@ export class TenantRepository {
     return Tenant.findOne(filter).select(projection);
   }
 
-  static async updateOne(id, updateTenantDto, projection = {}) {
+  static async updateById(id, updateTenantDto) {
     try {
-      const foundTenant = await Tenant.findById(id).select(projection);
-      if (!foundTenant) {
-        throw new NotFoundError("Tenant not found");
-      }
+      const foundTenant = await Tenant.findById(id);
 
-      foundTenant.set(updateTenantDto);
-      foundTenant.save();
+      foundTenant?.set(updateTenantDto);
+      await foundTenant?.save();
 
       return foundTenant;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
     }
   }
 
-  static async destroy(id) {
+  static async deleteById(id) {
     const foundTenant = await Tenant.findById({ _id: id });
     if (!foundTenant) {
       throw new NotFoundError("Tenant not found");

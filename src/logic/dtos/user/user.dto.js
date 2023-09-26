@@ -31,35 +31,21 @@ export class UserDto {
     this.updatedAt = updatedAt;
   }
 
-  static from({
-    id,
-    tenantId,
-    firstName,
-    lastName,
-    displayName,
-    jobTitle,
-    phoneNumber,
-    email,
-    role,
-    status,
-    configurations,
-    createdAt,
-    updatedAt,
-  }) {
+  static from(user) {
     return new UserDto({
-      id,
-      tenantId,
-      firstName,
-      lastName,
-      displayName,
-      jobTitle,
-      phoneNumber,
-      email,
-      role,
-      status,
-      configurations,
-      createdAt,
-      updatedAt,
+      id: user._id,
+      tenantId: user.tenantId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: user.displayName,
+      jobTitle: user.jobTitle,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      role: user.role.name,
+      status: user.status,
+      configurations: user.configurations,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     });
   }
 
@@ -69,23 +55,6 @@ export class UserDto {
    * @returns
    */
   static fromMany(users) {
-    return users.map((user) =>
-      UserDto.from({
-        id: user._id,
-        tenantId: user.tenantId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        displayName: user.displayName,
-        jobTitle: user.jobTitle,
-        phoneNumber: user.phoneNumber,
-        email: user.email,
-        role: user.role.name,
-        status: user.status,
-        segments: user.segments,
-        configurations: user.configurations,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }),
-    );
+    return users.map((user) => UserDto.from(user));
   }
 }

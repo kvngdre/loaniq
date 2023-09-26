@@ -42,12 +42,18 @@ export const messages = {
   },
 
   ERROR: {
-    DUPLICATE_Fn: (field) => `${field} is already in use`,
     MAILING_Fn: (resource) => `Error sending ${resource} to email`,
     NOT_FOUND_Fn: (resource) => `${resource} Not Found`,
+    DUPLICATE: "Duplicate Error Occurred",
     REFRESH_TOKEN_REUSE:
       "Your session has been terminated for security reasons",
+    VALIDATION: "Validation Error Occurred",
   },
 
-  USER: {},
+  USER: {
+    DEACTIVATED: "User Deactivated Successfully",
+    REACTIVATED: "User Reactivated Successfully",
+    PASSWORD_CHANGE: "Password Changed successfully",
+    PASSWORD_RESET: "Password Reset Successfully",
+  },
 };

@@ -7,7 +7,7 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "../../utils/errors/index.js";
-import { logger } from "../../utils/logger.js";
+import { logger } from "../../utils/logger.utils.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
 
 export function errorHandlingMiddleware(err, req, res, next) {

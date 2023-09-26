@@ -1,12 +1,8 @@
 import { UserService } from "../../logic/services/index.js";
-import { HttpCode } from "../../utils/common.js";
-import { ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
-import userValidator from "../validators/user.validator.js";
-import BaseController from "./base.controller.js";
 
-export class UserController extends BaseController {
+export class UserController {
   /**
    *
    * @param {import('express').Request} req
@@ -35,27 +31,24 @@ export class UserController extends BaseController {
   };
 
   static show = async (req, res) => {
-    const user = await UserService.getUserById(req.params.userId);
-    const response = this.apiResponse("Fetched user", user);
+    const { message, data } = await UserService.get(req.params.userId);
+    const response = BaseHttpResponse.success(message, data);
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
-  static getCurrentUser = async (req, res) => {
-    const user = await UserService.getCurrentUser(req.currentUser._id);
-    const response = this.apiResponse("Fetched current user", user);
+  static showCurrentUser = async (req, res) => {
+    const { message, data } = await UserService.get(req.user._id);
+    const response = BaseHttpResponse.success(message, data);
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   static edit = async (req, res) => {
-    const { value, error } = userValidator.validateUpdate(req.body);
-    if (error) throw new ValidationError(null, error);
+    const { message, data } = await UserService.update(req.params.id, req.body);
+    const response = BaseHttpResponse.success(message, data);
 
-    const user = await UserService.updateUser(req.params.userId, value);
-    const response = this.apiResponse("User account update", user);
-
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   static destroy = async (req, res) => {
@@ -68,45 +61,36 @@ export class UserController extends BaseController {
   };
 
   static changePassword = async (req, res) => {
-    const { value, error } = userValidator.validateUpdatePassword(req.body);
-    if (error) throw new ValidationError(null, error);
+    const { message, data } = await UserService.changePassword(
+      req.user._id,
+      req.body,
+    );
+    const response = BaseHttpResponse.success(message, data);
 
-    await UserService.changePassword(req.params.userId, value);
-    const response = this.apiResponse("Password updated");
-
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
   static resetPassword = async (req, res) => {
-    await UserService.resetPassword(req.params.userId);
-    const response = this.apiResponse("User password has been reset.");
+    const { message, data } = await UserService.resetPassword(req.params.id);
+    const response = BaseHttpResponse.success(message, data);
 
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
-  static deactivateUser = async (req, res) => {
-    const { value, error } = userValidator.validateDeactivation(req.body);
-    if (error) throw new ValidationError(null, error);
+  static deactivate = async (req, res) => {
+    const { message, data } = await UserService.deactivateUser(
+      req.params.id,
+      req.user._id,
+    );
+    const response = BaseHttpResponse.success(message, data);
 
-    await UserService.deactivateUser(req.params.userId, value);
-    const response = this.apiResponse("User deactivated");
-
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 
-  static reactivateUser = async (req, res) => {
-    await UserService.reactivateUser(req.params.userId);
-    const response = this.apiResponse("User has been reactivated");
+  static reactivate = async (req, res) => {
+    const { message, data } = await UserService.reactivateUser(req.params.id);
+    const response = BaseHttpResponse.success(message, data);
 
-    res.status(HttpCode.OK).json(response);
-  };
-
-  static uploadFiles = async (req, res) => {
-    const user = await UserService.uploadImage(req.params, req.file);
-    const response = this.apiResponse("File uploaded", user);
-
-    res.status(HttpCode.OK).json(response);
+    res.json(response);
   };
 }
-
-export default UserController;

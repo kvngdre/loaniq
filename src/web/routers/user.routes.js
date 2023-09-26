@@ -7,7 +7,12 @@ import {
   requirePasswordReset,
   ValidateRequest,
 } from "../middleware/index.js";
-import { createUserValidator } from "../validators/index.js";
+import {
+  changeUserPasswordValidator,
+  createUserValidator,
+  idValidator,
+  updateUserValidator,
+} from "../validators/index.js";
 
 export const userRouter = Router();
 
@@ -20,24 +25,65 @@ userRouter.post(
   UserController.create,
 );
 
-userRouter.post(
-  "/:userId/change-password",
+userRouter.patch(
+  "/change-password",
   auth,
+  checkUserStatus,
+  ValidateRequest.with(changeUserPasswordValidator),
   UserController.changePassword,
 );
 
-userRouter.post("/:userId/deactivate", auth, UserController.deactivateUser);
+userRouter.patch(
+  "/:id",
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+  ValidateRequest.with(updateUserValidator),
+  UserController.edit,
+);
+
+userRouter.patch(
+  "/:id/deactivate",
+  auth,
+  checkUserStatus,
+  ValidateRequest.with(idValidator),
+  UserController.deactivate,
+);
+
+userRouter.patch(
+  "/:id/reactivate",
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+  ValidateRequest.with(idValidator),
+  UserController.reactivate,
+);
+
+userRouter.patch(
+  "/:id/reset-password",
+  auth,
+  checkUserStatus,
+  ValidateRequest.with(idValidator),
+  UserController.resetPassword,
+);
 
 userRouter.get("/", auth, checkUserStatus, UserController.index);
 
-userRouter.get("/me", auth, UserController.getCurrentUser);
+userRouter.get("/me", auth, checkUserStatus, UserController.showCurrentUser);
 
-userRouter.get("/:userId", auth, UserController.show);
+userRouter.get(
+  "/:id",
+  auth,
+  checkUserStatus,
+  requirePasswordReset,
+  ValidateRequest.with(idValidator),
+  UserController.show,
+);
 
-userRouter.get("/:userId/reactivate", auth, UserController.reactivateUser);
-
-userRouter.get("/:userId/reset-password", auth, UserController.resetPassword);
-
-userRouter.patch("/:id", auth, UserController.edit);
-
-userRouter.delete("/:id", auth, checkUserStatus, UserController.destroy);
+userRouter.delete(
+  "/:id",
+  auth,
+  checkUserStatus,
+  ValidateRequest.with(idValidator),
+  UserController.destroy,
+);

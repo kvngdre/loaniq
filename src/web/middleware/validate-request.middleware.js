@@ -1,4 +1,5 @@
 import { ValidationError } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
 
 export class ValidateRequest {
   /**
@@ -25,7 +26,7 @@ export class ValidateRequest {
     });
     if (error) {
       const err = this.#refineError(error);
-      throw new ValidationError("Validation error occurred", err);
+      throw new ValidationError(messages.ERROR.VALIDATION, err);
     }
 
     req.body = value.body || req.body;

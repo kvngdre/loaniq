@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
-import { ValidationError } from "../../utils/errors/index.js";
+import { ConflictError, ValidationError } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
 import { Token } from "../models/index.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class TokenRepository {
   static async insert(createTokenDto, session) {
@@ -11,7 +13,7 @@ export class TokenRepository {
       return token.save({ session });
     } catch (exception) {
       if (exception instanceof mongoose.Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
+        const msg = formatValidationError(exception);
         throw new ValidationError(msg);
       }
 
@@ -39,9 +41,14 @@ export class TokenRepository {
         { new: true, upsert: true, session },
       );
     } catch (exception) {
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+      if (exception.message.includes("E11000")) {
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
+      }
+
+      if (exception instanceof Error.ValidationError) {
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
@@ -54,9 +61,14 @@ export class TokenRepository {
         new: true,
       });
     } catch (exception) {
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+      if (exception.message.includes("E11000")) {
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
+      }
+
+      if (exception instanceof Error.ValidationError) {
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;

@@ -3,8 +3,8 @@ import { Error } from "mongoose";
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
 import { Role } from "../models/index.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class RoleRepository {
   static async find(filter = {}) {
@@ -17,13 +17,13 @@ export class RoleRepository {
       return await role.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(messages.ERROR.DUPLICATE_Fn(field));
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
-        throw new ValidationError(msg);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
@@ -45,14 +45,14 @@ export class RoleRepository {
       foundRole.set(changes);
       return await foundRole.save();
     } catch (exception) {
-      if (exception.message.include("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+      if (exception.message.includes("E11000")) {
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
-        throw new ValidationError(errorMessage);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;

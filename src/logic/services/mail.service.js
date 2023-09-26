@@ -3,13 +3,13 @@ import { createTransport } from "nodemailer";
 import Sqrl from "squirrelly";
 
 import { config } from "../../config/index.js";
+import { EmailTemplateRepository } from "../../data/repositories/email-template.repository.js";
 import { logger } from "../../utils/index.js";
-import { EmailTemplateService } from "./email-template.service.js";
 
 export class MailService {
   static async send({ to, templateName, context }) {
     try {
-      const template = await EmailTemplateService.getTemplate({
+      const template = await EmailTemplateRepository.findOne({
         name: templateName,
       });
 

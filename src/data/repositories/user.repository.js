@@ -3,33 +3,31 @@ import mongoose from "mongoose";
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
 import { User } from "../models/index.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class UserRepository {
-  static async insert(createUserDto, session) {
-    try {
-      const user = new User(createUserDto);
-      await user.save({ session });
+  static async find(filter = {}, sortOrder = { first_name: 1 }) {
+    return User.find(filter).sort(sortOrder);
+  }
 
-      return user;
+  static async insert(userInfo, session) {
+    try {
+      const user = new User(userInfo);
+      return user.save({ session });
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(messages.ERROR.DUPLICATE_Fn(field));
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof mongoose.Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
+        const msg = formatValidationError(exception);
         throw new ValidationError(msg);
       }
 
       throw exception;
     }
-  }
-
-  static async find(filter = {}, sortOrder = { first_name: 1 }) {
-    return User.find(filter).sort(sortOrder);
   }
 
   static async findById(id) {
@@ -49,16 +47,18 @@ export class UserRepository {
       const foundUser = await User.findById(id);
 
       foundUser?.set(changes);
-      return await foundUser?.save();
+      await foundUser?.save();
+
+      return foundUser;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use.`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const errMsg = getValidationErrorMessage(exception);
-        throw new ValidationError(errMsg);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
@@ -75,13 +75,13 @@ export class UserRepository {
       // foundUser.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
-        throw new ConflictError(`${field} already in use`);
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
 
       if (exception instanceof Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
-        throw new ValidationError(msg);
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
       }
 
       throw exception;
