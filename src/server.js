@@ -1,11 +1,15 @@
-import 'express-async-errors'
-import { constants } from './config'
-import loaders from './loaders'
-import routes from './routers'
+import 'dotenv/config.js';
+import 'express-async-errors';
+
+import express from "express";
+
+import config from './config/index.js';
+import loaders from './loaders/index.js';
+import routes from './routers/index.js';
 
 function startServer () {
-  const app = require('express')()
-  const port = constants.port
+  const app = express();
+  const {port} = config;
 
   loaders.init({ expressApp: app, expressRoutes: routes })
 
