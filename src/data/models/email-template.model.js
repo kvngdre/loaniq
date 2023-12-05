@@ -36,6 +36,4 @@ export const emailTemplateSchema = new Schema(
   { timestamps: true },
 );
 
-const EmailTemplate = model("email_template", emailTemplateSchema);
-
-export default EmailTemplate;
+export const EmailTemplate = model("email_template", emailTemplateSchema);

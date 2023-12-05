@@ -1,33 +1,37 @@
 import { Router } from "express";
-import EmailTemplateController from "../controllers/email-template.controller.js";
-import validateObjectId from "../middleware/validate-id.middleware.js";
-import verifyJWT from "../middleware/verify-jwt.middleware.js";
 
-const router = Router();
+import { EmailTemplateController } from "../controllers/index.js";
+import { ValidateRequest } from "../middleware/index.js";
+import {
+  createEmailTemplateValidator,
+  editEmailTemplateValidator,
+  idValidator,
+} from "../validators/index.js";
 
-router.post("/", EmailTemplateController.createTemplate);
+export const emailTemplateRouter = Router();
 
-router.get("/", EmailTemplateController.getTemplates);
-
-router.get(
-  "/:templateId",
-  verifyJWT,
-  validateObjectId,
-  EmailTemplateController.getTemplate,
+emailTemplateRouter.post(
+  "/",
+  ValidateRequest.with(createEmailTemplateValidator),
+  EmailTemplateController.create,
 );
 
-router.patch(
-  "/:templateId",
-  verifyJWT,
-  validateObjectId,
-  EmailTemplateController.updateTemplate,
+emailTemplateRouter.get("/", EmailTemplateController.index);
+
+emailTemplateRouter.get(
+  "/:id",
+  ValidateRequest.with(idValidator),
+  EmailTemplateController.show,
 );
 
-router.delete(
-  "/:templateId",
-  verifyJWT,
-  validateObjectId,
-  EmailTemplateController.deleteTemplate,
+emailTemplateRouter.patch(
+  "/:id",
+  ValidateRequest.with(editEmailTemplateValidator),
+  EmailTemplateController.edit,
 );
 
-export default router;
+emailTemplateRouter.delete(
+  "/:id",
+  ValidateRequest.with(idValidator),
+  EmailTemplateController.destroy,
+);

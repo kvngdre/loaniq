@@ -35,7 +35,7 @@ authRouter.post(
   "/login",
   ValidateRequest.with(loginValidator),
   requirePasswordReset,
-  // checkUserStatus,
+  checkUserStatus,
   AuthController.login,
 );
 

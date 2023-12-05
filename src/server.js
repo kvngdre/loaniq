@@ -4,7 +4,7 @@ import "express-async-errors";
 import http from "http";
 
 import dbContext from "./data/db-context.js";
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.utils.js";
 import { App } from "./web/application.js";
 
 async function bootstrap() {

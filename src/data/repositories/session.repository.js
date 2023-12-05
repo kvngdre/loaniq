@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
-import { ValidationError } from "../../utils/errors/index.js";
+import { ConflictError, ValidationError } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
 import { Session } from "../models/index.js";
-import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
+import { formatDuplicateFieldError } from "./lib/format-duplicate-field.js";
+import { formatValidationError } from "./lib/format-validation-error.js";
 
 export class SessionRepository {
   static async insert(createSessionDto, session) {
@@ -12,10 +14,16 @@ export class SessionRepository {
 
       return newSession;
     } catch (exception) {
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
-        throw new ValidationError(msg);
+      if (exception.message.includes("E11000")) {
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
+
+      if (exception instanceof Error.ValidationError) {
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
+      }
+
       throw exception;
     }
   }
@@ -43,7 +51,7 @@ export class SessionRepository {
       });
     } catch (exception) {
       if (exception instanceof mongoose.Error.ValidationError) {
-        const errorMessage = getValidationErrorMessage(exception);
+        const errorMessage = formatValidationError(exception);
         throw new ValidationError(errorMessage);
       }
 
@@ -59,15 +67,25 @@ export class SessionRepository {
         { new: true, upsert: true, session },
       );
     } catch (exception) {
-      if (exception instanceof mongoose.Error.ValidationError) {
-        const msg = getValidationErrorMessage(exception);
-        throw new ValidationError(msg);
+      if (exception.message.includes("E11000")) {
+        const error = formatDuplicateFieldError(exception);
+        throw new ConflictError(messages.ERROR.DUPLICATE, error);
       }
+
+      if (exception instanceof Error.ValidationError) {
+        const error = formatValidationError(exception);
+        throw new ValidationError(messages.ERROR.VALIDATION, error);
+      }
+
       throw exception;
     }
   }
 
   static async deleteById(id) {
     return Session.findByIdAndDelete(id);
+  }
+
+  static async deleteByUserId(userId) {
+    return Session.findOneAndDelete({ userId });
   }
 }

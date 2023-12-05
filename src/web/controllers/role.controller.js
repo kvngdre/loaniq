@@ -1,14 +1,14 @@
 import { RoleService } from "../../logic/services/index.js";
 import { BaseHttpResponse } from "../lib/base-http-response.js";
 
-class RoleController {
+export class RoleController {
   /**
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
   static index = async (req, res) => {
-    const { message, data } = await RoleService.getRoles();
+    const { message, data } = await RoleService.all();
     const response = BaseHttpResponse.success(message, data);
 
     res.json(response);
@@ -32,7 +32,7 @@ class RoleController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static getRole = async (req, res) => {
+  static show = async (req, res) => {
     const foundRole = await RoleService.getRole(req.params.id);
     const response = this.apiResponse("Fetched role", foundRole);
 
@@ -44,7 +44,7 @@ class RoleController {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  static updateRole = async (req, res) => {
+  static edit = async (req, res) => {
     const role = await RoleService.updateRole(req.params.id);
     const response = this.apiResponse("Role updated", role);
 
@@ -63,5 +63,3 @@ class RoleController {
     res.json(response);
   };
 }
-
-export default RoleController;

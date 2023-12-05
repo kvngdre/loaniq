@@ -54,5 +54,10 @@ export const messages = {
     },
   },
 
-  USER: {},
+  USER: {
+    DEACTIVATED: "User Deactivated Successfully",
+    REACTIVATED: "User Reactivated Successfully",
+    PASSWORD_CHANGE: "Password Changed successfully",
+    PASSWORD_RESET: "Password Reset Successfully",
+  },
 };

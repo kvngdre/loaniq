@@ -5,7 +5,7 @@ import {
   BaseValidator,
   businessNameSchema,
   locationSchema,
-} from "./lib/common.js";
+} from "./lib/common-schemas.js";
 
 class TenantValidator extends BaseValidator {
   #companyNameSchema;

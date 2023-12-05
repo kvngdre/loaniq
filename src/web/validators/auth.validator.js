@@ -7,7 +7,7 @@ import {
   makePasswordSchema,
   nameSchema,
   otpSchema,
-} from "./lib/common.js";
+} from "./lib/common-schemas.js";
 
 export const signUpValidator = Joi.object({
   body: Joi.object({

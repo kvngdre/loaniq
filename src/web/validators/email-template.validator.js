@@ -1,58 +1,43 @@
 import Joi from "joi";
-import BaseValidator from "./base.validator.js";
 
-class EmailTemplateValidator extends BaseValidator {
-  #nameSchema;
+import { descriptionSchema, objectIdSchema } from "./lib/common-schemas.js";
 
-  #templateNameSchema;
-
-  #subjectSchema;
-
-  #htmlSchema;
-
-  constructor() {
-    super();
-
-    this.#nameSchema = Joi.string().lowercase().trim().label("Name");
-    this.#templateNameSchema = Joi.string()
+export const createEmailTemplateValidator = Joi.object({
+  body: Joi.object({
+    name: Joi.string()
+      .label("Name")
+      .min(1)
+      .max(50)
       .lowercase()
       .trim()
-      .label("Template name");
-    this.#subjectSchema = Joi.string().label("Subject");
-    this.#htmlSchema = Joi.string().label("Html");
-  }
+      .required(),
+    description: descriptionSchema,
+    type: Joi.string(),
+    subject: Joi.string().label("Subject").min(1).max(50).trim().required(),
+    body: Joi.string().label("Body").required(),
+  }),
+  query: Joi.object({}),
+  params: Joi.object({}),
+});
 
-  validateCreate = (newTemplateDTO) => {
-    const schema = Joi.object({
-      name: this.#nameSchema.required(),
-      templateName: this.#templateNameSchema.required(),
-      subject: this.#subjectSchema.required(),
-      html: this.#htmlSchema.required(),
-    });
+export const editEmailTemplateValidator = Joi.object({
+  body: Joi.object({
+    name: Joi.string().label("Name").min(1).max(50).lowercase().trim(),
+    description: descriptionSchema,
+    type: Joi.string(),
+    subject: Joi.string().label("Subject").min(1).max(50).trim(),
+    body: Joi.string().label("Body"),
+  }),
+  query: Joi.object({}),
+  params: Joi.object({
+    id: objectIdSchema.required(),
+  }),
+});
 
-    let { value, error } = schema.validate(newTemplateDTO, {
-      abortEarly: false,
-    });
-    error = this._refineError(error);
-
-    return { value, error };
-  };
-
-  validateUpdate = (updateTemplateDTO) => {
-    const schema = Joi.object({
-      name: this.#nameSchema,
-      templateName: this.#templateNameSchema,
-      subject: this.#subjectSchema,
-      html: this.#htmlSchema,
-    });
-
-    let { value, error } = schema.validate(updateTemplateDTO, {
-      abortEarly: false,
-    });
-    error = this._refineError(error);
-
-    return { value, error };
-  };
-}
-
-export default new EmailTemplateValidator();
+export const emailTemplateIdValidator = Joi.object({
+  body: Joi.object({}),
+  query: Joi.object({}),
+  params: Joi.object({
+    id: objectIdSchema.required(),
+  }),
+});
