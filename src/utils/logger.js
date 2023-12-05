@@ -21,6 +21,7 @@ const custom = {
 const devFormatter = combine(
   colorize(),
   timestamp({ format: "HH:mm:ss" }),
+  format.errors({ stack: true }),
   printf(({ level, timestamp, message, meta }) => {
     const msg = message.replace("undefined", "");
     return `[${level}] ${timestamp} ${msg}  ${

@@ -1,10 +1,6 @@
 import { Schema, model } from "mongoose";
-import { companyCategory, feeTypes } from "../../utils/common.js";
-import {
-  DOCUMENTATION_TYPE,
-  TENANT_STATUS,
-  VALID_ID,
-} from "../../utils/helpers/index.js";
+
+import { TenantStatus } from "../constants/tenant-status.constant.js";
 
 export const tenantSchema = new Schema(
   {
@@ -13,53 +9,38 @@ export const tenantSchema = new Schema(
       default: null,
     },
 
-    businessName: {
+    name: {
       type: String,
       required: true,
+      unique: true,
     },
 
     address: String,
 
     state: {
-      type: {
-        code: String,
-        name: String,
-        lga: String,
-        geo: String,
-      },
+      type: String,
     },
 
     cacNumber: {
       type: String,
       default: null,
+      sparse: true,
     },
 
     category: {
       type: String,
-      enum: companyCategory,
     },
 
     status: {
       type: String,
-      enum: Object.values(TENANT_STATUS),
-      default: TENANT_STATUS.AWAITING_ACTIVATION,
-    },
-
-    identification: {
-      type: [
-        {
-          name: { type: String, required: true },
-          type: { type: String, enum: VALID_ID },
-          url: { type: String, required: true },
-        },
-      ],
+      default: TenantStatus.AWAITING_ACTIVATION,
     },
 
     documentation: {
       type: [
         {
           name: { type: String, required: true },
-          type: { type: String, enum: DOCUMENTATION_TYPE },
+          type: { type: String, required: true },
           url: { type: String, required: true },
           expires: { type: Date, default: null },
         },
@@ -115,13 +96,12 @@ export const tenantSchema = new Schema(
 
           type: {
             type: String,
-            enum: Object.values(feeTypes),
             required: true,
           },
 
           value: {
             type: Number,
-            set: (v) => Math.floor(v * 100) / 100,
+            // set: (v) => Math.floor(v * 100) / 100,
             required: true,
           },
         },
@@ -139,7 +119,6 @@ export const tenantSchema = new Schema(
       support: {
         email: {
           type: String,
-          trim: true,
           default: null,
         },
 
@@ -149,15 +128,25 @@ export const tenantSchema = new Schema(
         },
       },
 
-      formId: {
-        type: String,
-        default: null,
-      },
+      form: {
+        type: {
+          id: {
+            type: String,
+            default: null,
+          },
 
-      formTheme: {
-        backgroundColor: String,
-        font: String,
-        fontColor: String,
+          background: {
+            type: String,
+          },
+
+          font: {
+            type: String,
+          },
+
+          color: {
+            type: String,
+          },
+        },
       },
     },
   },

@@ -2,7 +2,7 @@ import { Error } from "mongoose";
 
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import EmailTemplate from "../models/email-template.model.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { formatDuplicateError } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class EmailTemplateRepository {
@@ -14,7 +14,7 @@ export class EmailTemplateRepository {
       return newRecord;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
@@ -55,7 +55,7 @@ export class EmailTemplateRepository {
       return foundRecord;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { joiPassword } from "joi-password";
 
-import { feeTypes } from "../../../utils/common.js";
+import { FeeTypes } from "../../../data/constants/fee-types.constant.js";
 import {
   MARITAL_STATUS,
   SOCIALS,
@@ -70,10 +70,10 @@ export class BaseValidator {
             .required(),
           type: Joi.number()
             .label("Fee type")
-            .valid(...Object.values(feeTypes))
+            .valid(...Object.values(FeeTypes))
             .required(),
           value: Joi.when("type", {
-            is: feeTypes.percent,
+            is: FeeTypes.percent,
             then: this.percentageSchema.label("Fee value"),
             otherwise: this.amountSchema.label("Fee value"),
           }).required(),
@@ -298,10 +298,10 @@ export const feesSchema = Joi.array()
         .required(),
       type: Joi.number()
         .label("Fee type")
-        .valid(...Object.values(feeTypes))
+        .valid(...Object.values(FeeTypes))
         .required(),
       value: Joi.when("type", {
-        is: feeTypes.percent,
+        is: FeeTypes.percent,
         then: percentageSchema.label("Fee value"),
         otherwise: amountSchema.label("Fee value"),
       }).required(),

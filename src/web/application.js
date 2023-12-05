@@ -8,7 +8,7 @@ import requestIp from "request-ip";
 import { logger } from "../utils/index.js";
 import {
   errorHandlingMiddleware,
-  resourceNotFoundHandler,
+  resourceNotFoundMiddleware,
 } from "./middleware/index.js";
 import { appRouter } from "./routers/index.js";
 
@@ -55,7 +55,7 @@ export class App {
 
     this.#app.use("/api/v1", appRouter);
 
-    this.#app.use(resourceNotFoundHandler);
+    this.#app.use(resourceNotFoundMiddleware);
     this.#app.use(errorHandlingMiddleware);
   }
 

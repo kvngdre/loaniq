@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
 import { User } from "../models/index.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { formatDuplicateError } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class UserRepository {
@@ -15,7 +15,7 @@ export class UserRepository {
       return user;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(messages.ERROR.DUPLICATE_Fn(field));
       }
 
@@ -52,7 +52,7 @@ export class UserRepository {
       return await foundUser?.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 
@@ -75,7 +75,7 @@ export class UserRepository {
       // foundUser.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use`);
       }
 

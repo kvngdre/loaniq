@@ -1,5 +1,7 @@
+export * from "./base-error.js";
 export * from "./conflict.error.js";
 export * from "./dependency.error.js";
+export * from "./duplicate-field.error.js";
 export * from "./forbidden.error.js";
 export * from "./insufficient-funds.error.js";
 export * from "./not-found.error.js";

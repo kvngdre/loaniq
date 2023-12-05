@@ -1,7 +1,5 @@
 export const companyCategory = ["mfb", "finance house", "money lender"];
 
-export const feeTypes = { percent: "percent", decimal: "decimal" };
-
 export const geoZones = [
   "north central",
   "north east",

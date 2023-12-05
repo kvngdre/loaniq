@@ -35,18 +35,23 @@ export const messages = {
   },
 
   COMMON: {
-    FETCHED_Fn: (resource) => `${resource} Fetched Successfully`,
-    CREATED_Fn: (resource) => `${resource} Created Successfully`,
-    UPDATED_Fn: (resource) => `${resource} Updated Successfully`,
-    DELETED_Fn: (resource) => `${resource} Deleted Successfully`,
+    fn: {
+      CREATED: (resource) => `${resource} Created Successfully`,
+      DELETED: (resource) => `${resource} Deleted Successfully`,
+      FETCHED: (resource) => `${resource} Fetched Successfully`,
+      UPDATED: (resource) => `${resource} Updated Successfully`,
+    },
   },
 
   ERROR: {
-    DUPLICATE_Fn: (field) => `${field} is already in use`,
-    MAILING_Fn: (resource) => `Error sending ${resource} to email`,
-    NOT_FOUND_Fn: (resource) => `${resource} Not Found`,
+    DUPLICATE: "Duplicate Error Occurred",
+    VALIDATION: "One or more validation errors occurred",
     REFRESH_TOKEN_REUSE:
       "Your session has been terminated for security reasons",
+    fn: {
+      MAILING: (resource) => `Error sending ${resource} to email`,
+      NOT_FOUND: (resource) => `${resource} Not Found`,
+    },
   },
 
   USER: {},

@@ -3,7 +3,7 @@ import { Error } from "mongoose";
 import { ConflictError, ValidationError } from "../../utils/errors/index.js";
 import { messages } from "../../utils/messages.utils.js";
 import { Role } from "../models/index.js";
-import { getDuplicateField } from "./lib/get-duplicate-field.js";
+import { formatDuplicateError } from "./lib/get-duplicate-field.js";
 import { getValidationErrorMessage } from "./lib/get-validation-error-message.js";
 
 export class RoleRepository {
@@ -17,7 +17,7 @@ export class RoleRepository {
       return await role.save();
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(messages.ERROR.DUPLICATE_Fn(field));
       }
 
@@ -46,7 +46,7 @@ export class RoleRepository {
       return await foundRole.save();
     } catch (exception) {
       if (exception.message.include("E11000")) {
-        const field = getDuplicateField(exception);
+        const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use.`);
       }
 

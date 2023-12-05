@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
 import autoPopulate from "mongoose-autopopulate";
 
-import { USER_STATUS } from "../../utils/helpers/user.helper.js";
+import { userStatus } from "../constants/index.js";
 
 export const userSchema = new Schema(
   {
@@ -10,6 +10,11 @@ export const userSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Tenant",
       required: true,
+    },
+
+    avatar: {
+      type: String,
+      default: null,
     },
 
     firstName: {
@@ -40,7 +45,7 @@ export const userSchema = new Schema(
       default: null,
     },
 
-    phoneNumber: {
+    phone: {
       type: String,
       unique: true,
       default: null,
@@ -61,14 +66,19 @@ export const userSchema = new Schema(
       default: false,
     },
 
-    password: {
+    passwordHash: {
       type: String,
       required: true,
     },
 
-    resetPassword: {
+    requirePasswordReset: {
       type: Boolean,
       default: true,
+    },
+
+    passwordChangedAt: {
+      type: Date,
+      default: null,
     },
 
     role: {
@@ -80,8 +90,7 @@ export const userSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(USER_STATUS),
-      default: USER_STATUS.PENDING,
+      default: userStatus.PENDING,
     },
 
     segments: {
@@ -89,16 +98,9 @@ export const userSchema = new Schema(
       default: null,
     },
 
-    configurations: {
-      avatar: {
-        type: String,
-        default: null,
-      },
-
-      lastLoginTime: {
-        type: Date,
-        default: null,
-      },
+    lastLoginTime: {
+      type: Date,
+      default: null,
     },
   },
 

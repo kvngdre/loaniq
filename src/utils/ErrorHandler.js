@@ -1,4 +1,4 @@
-import { BaseError } from "../utils/errors/lib/base-error.js";
+import { BaseError } from "./errors/base-error.js";
 import { logger } from "./logger.js";
 
 class ErrorHandler {

@@ -12,7 +12,7 @@ export class AuthController {
     const { message, data } = await AuthService.register(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -24,7 +24,7 @@ export class AuthController {
     const { message, data } = await AuthService.verifyRegistration(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -59,7 +59,7 @@ export class AuthController {
       maxAge: config.jwt.ttl.refresh * 1000,
     });
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -79,7 +79,7 @@ export class AuthController {
 
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -93,7 +93,7 @@ export class AuthController {
     );
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -127,7 +127,7 @@ export class AuthController {
       accessToken: data.accessToken,
     });
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -139,7 +139,7 @@ export class AuthController {
     const { message, data } = await AuthService.requestToken(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -153,7 +153,7 @@ export class AuthController {
     );
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -166,7 +166,7 @@ export class AuthController {
       await AuthService.resetUserPasswordWithVerification(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 
   /**
@@ -179,6 +179,6 @@ export class AuthController {
       await AuthService.resetUserPasswordWithoutVerification(req.body);
     const response = BaseHttpResponse.success(message, data);
 
-    res.json(response);
+    res.status(200).json(response);
   };
 }

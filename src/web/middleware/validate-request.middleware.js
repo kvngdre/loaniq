@@ -1,4 +1,5 @@
 import { ValidationError } from "../../utils/errors/index.js";
+import { messages } from "../../utils/messages.utils.js";
 
 export class ValidateRequest {
   /**
@@ -18,14 +19,17 @@ export class ValidateRequest {
    * @param {import("express").NextFunction} next
    */
   execute(req, res, next) {
-    const { value, error } = this.schema.validate({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    });
+    const { value, error } = this.schema.validate(
+      {
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      },
+      { stripUnknown: true },
+    );
     if (error) {
       const err = this.#refineError(error);
-      throw new ValidationError("Validation error occurred", err);
+      throw new ValidationError(messages.ERROR.VALIDATION, err);
     }
 
     req.body = value.body || req.body;
@@ -69,5 +73,10 @@ export class ValidateRequest {
     }
 
     return err;
+
+    return {
+      path: error.details[0].path,
+      message: this.#formatErrorMessage(error.details[0].message),
+    };
   }
 }
