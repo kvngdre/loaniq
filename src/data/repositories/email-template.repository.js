@@ -17,13 +17,8 @@ export class EmailTemplateRepository {
       return template;
     } catch (exception) {
       if (exception.message.includes("E11000")) {
-<<<<<<< HEAD
         const field = formatDuplicateError(exception);
         throw new ConflictError(`${field} already in use.`);
-=======
-        const error = formatDuplicateFieldError(exception);
-        throw new ConflictError(messages.ERROR.DUPLICATE, error);
->>>>>>> 4c55c570b30ba875e6fb963936adfb5cbf181f96
       }
 
       if (exception instanceof Error.ValidationError) {
